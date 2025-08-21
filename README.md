@@ -283,8 +283,8 @@ ctest -V
 ## Documentation
 
 - [API Reference](docs/api/README.md)
-- [Plugin Development Guide](docs/plugin_development.md)
-- [Migration Guide](docs/migration.md)
+- [Plugin Development Guide](docs/guides/plugin-development.md)
+- [Migration Guide](docs/MIGRATION.md)
 - [Examples](examples/README.md)
 
 ## License
