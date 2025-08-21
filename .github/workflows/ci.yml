@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Qt and deps
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '6.5.0'
+      - name: Configure
+        run: |
+          cmake -S . -B build -DQTPLUGIN_BUILD_TESTS=ON
+      - name: Build
+        run: cmake --build build -j
+      - name: Test
+        run: |
+          cd build
+          ctest --output-on-failure
+
