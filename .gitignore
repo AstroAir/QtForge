@@ -110,6 +110,7 @@ coverage/
 docs/html/
 docs/latex/
 docs/xml/
+docs/doxygen/
 doxygen_warnings.txt
 
 # IDE specific
