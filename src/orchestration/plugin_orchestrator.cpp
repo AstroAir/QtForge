@@ -5,13 +5,13 @@
  */
 
 #include "qtplugin/orchestration/plugin_orchestrator.hpp"
-#include "qtplugin/core/plugin_manager.hpp"
+#include <QJsonDocument>
 #include <QLoggingCategory>
 #include <QUuid>
-#include <QJsonDocument>
 #include <algorithm>
 #include <queue>
 #include <set>
+#include "qtplugin/core/plugin_manager.hpp"
 
 Q_LOGGING_CATEGORY(orchestratorLog, "qtplugin.orchestrator")
 
@@ -21,30 +21,33 @@ namespace qtplugin::orchestration {
 
 qtplugin::expected<void, PluginError> Workflow::validate() const {
     if (m_id.isEmpty()) {
-        return make_error<void>(PluginErrorCode::InvalidConfiguration, "Workflow ID cannot be empty");
+        return make_error<void>(PluginErrorCode::InvalidConfiguration,
+                                "Workflow ID cannot be empty");
     }
-    
+
     if (m_steps.empty()) {
-        return make_error<void>(PluginErrorCode::InvalidConfiguration, "Workflow must have at least one step");
+        return make_error<void>(PluginErrorCode::InvalidConfiguration,
+                                "Workflow must have at least one step");
     }
-    
+
     // Validate step dependencies
     for (const auto& [step_id, step] : m_steps) {
         for (const QString& dep_id : step.dependencies) {
             if (m_steps.find(dep_id) == m_steps.end()) {
-                return make_error<void>(PluginErrorCode::DependencyMissing,
-                                       "Step dependency not found: " + dep_id.toStdString());
+                return make_error<void>(
+                    PluginErrorCode::DependencyMissing,
+                    "Step dependency not found: " + dep_id.toStdString());
             }
         }
     }
-    
+
     // Check for circular dependencies
     auto execution_order_result = get_execution_order();
     if (execution_order_result.empty() && !m_steps.empty()) {
         return make_error<void>(PluginErrorCode::CircularDependency,
-                               "Circular dependency detected in workflow");
+                                "Circular dependency detected in workflow");
     }
-    
+
     return make_success();
 }
 
@@ -52,17 +55,18 @@ std::vector<QString> Workflow::get_execution_order() const {
     std::vector<QString> result;
     std::set<QString> visited;
     std::set<QString> visiting;
-    
-    std::function<bool(const QString&)> visit = [&](const QString& step_id) -> bool {
+
+    std::function<bool(const QString&)> visit =
+        [&](const QString& step_id) -> bool {
         if (visiting.find(step_id) != visiting.end()) {
-            return false; // Circular dependency
+            return false;  // Circular dependency
         }
         if (visited.find(step_id) != visited.end()) {
-            return true; // Already processed
+            return true;  // Already processed
         }
-        
+
         visiting.insert(step_id);
-        
+
         auto step_it = m_steps.find(step_id);
         if (step_it != m_steps.end()) {
             for (const QString& dep_id : step_it->second.dependencies) {
@@ -71,21 +75,21 @@ std::vector<QString> Workflow::get_execution_order() const {
                 }
             }
         }
-        
+
         visiting.erase(step_id);
         visited.insert(step_id);
         result.push_back(step_id);
         return true;
     };
-    
+
     for (const auto& [step_id, _] : m_steps) {
         if (visited.find(step_id) == visited.end()) {
             if (!visit(step_id)) {
-                return {}; // Circular dependency detected
+                return {};  // Circular dependency detected
             }
         }
     }
-    
+
     return result;
 }
 
@@ -96,7 +100,7 @@ QJsonObject Workflow::to_json() const {
     json["description"] = m_description;
     json["execution_mode"] = static_cast<int>(m_execution_mode);
     json["timeout"] = static_cast<int>(m_timeout.count());
-    
+
     // Serialize steps
     QJsonObject steps_json;
     for (const auto& [step_id, step] : m_steps) {
@@ -113,51 +117,54 @@ QJsonObject Workflow::to_json() const {
         step_json["retry_delay"] = static_cast<int>(step.retry_delay.count());
         step_json["critical"] = step.critical;
         step_json["metadata"] = step.metadata;
-        
+
         QJsonArray deps_array;
         for (const QString& dep : step.dependencies) {
             deps_array.append(dep);
         }
         step_json["dependencies"] = deps_array;
-        
+
         steps_json[step_id] = step_json;
     }
     json["steps"] = steps_json;
-    
+
     // Serialize rollback steps
     QJsonObject rollback_json;
     for (const auto& [step_id, rollback_step] : m_rollback_steps) {
-        rollback_json[step_id] = QJsonObject{
-            {"plugin_id", rollback_step.plugin_id},
-            {"method_name", rollback_step.method_name},
-            {"parameters", rollback_step.parameters}
-        };
+        rollback_json[step_id] =
+            QJsonObject{{"plugin_id", rollback_step.plugin_id},
+                        {"method_name", rollback_step.method_name},
+                        {"parameters", rollback_step.parameters}};
     }
     json["rollback_steps"] = rollback_json;
-    
+
     return json;
 }
 
-qtplugin::expected<Workflow, PluginError> Workflow::from_json(const QJsonObject& json) {
+qtplugin::expected<Workflow, PluginError> Workflow::from_json(
+    const QJsonObject& json) {
     if (!json.contains("id") || !json["id"].isString()) {
-        return make_error<Workflow>(PluginErrorCode::InvalidConfiguration, "Missing workflow ID");
+        return make_error<Workflow>(PluginErrorCode::InvalidConfiguration,
+                                    "Missing workflow ID");
     }
-    
+
     QString id = json["id"].toString();
     QString name = json.value("name").toString(id);
-    
+
     Workflow workflow(id, name);
     workflow.set_description(json.value("description").toString());
-    workflow.set_execution_mode(static_cast<ExecutionMode>(json.value("execution_mode").toInt()));
-    workflow.set_timeout(std::chrono::milliseconds(json.value("timeout").toInt(300000)));
-    
+    workflow.set_execution_mode(
+        static_cast<ExecutionMode>(json.value("execution_mode").toInt()));
+    workflow.set_timeout(
+        std::chrono::milliseconds(json.value("timeout").toInt(300000)));
+
     // Parse steps
     if (json.contains("steps") && json["steps"].isObject()) {
         QJsonObject steps_json = json["steps"].toObject();
         for (auto it = steps_json.begin(); it != steps_json.end(); ++it) {
             const QString& step_id = it.key();
             const QJsonObject& step_json = it.value().toObject();
-            
+
             WorkflowStep step;
             step.id = step_json.value("id").toString(step_id);
             step.name = step_json.value("name").toString();
@@ -166,53 +173,58 @@ qtplugin::expected<Workflow, PluginError> Workflow::from_json(const QJsonObject&
             step.service_name = step_json.value("service_name").toString();
             step.method_name = step_json.value("method_name").toString();
             step.parameters = step_json.value("parameters").toObject();
-            step.timeout = std::chrono::milliseconds(step_json.value("timeout").toInt(60000));
+            step.timeout = std::chrono::milliseconds(
+                step_json.value("timeout").toInt(60000));
             step.max_retries = step_json.value("max_retries").toInt(0);
-            step.retry_delay = std::chrono::milliseconds(step_json.value("retry_delay").toInt(1000));
+            step.retry_delay = std::chrono::milliseconds(
+                step_json.value("retry_delay").toInt(1000));
             step.critical = step_json.value("critical").toBool(true);
             step.metadata = step_json.value("metadata").toObject();
-            
+
             // Parse dependencies
-            if (step_json.contains("dependencies") && step_json["dependencies"].isArray()) {
+            if (step_json.contains("dependencies") &&
+                step_json["dependencies"].isArray()) {
                 QJsonArray deps_array = step_json["dependencies"].toArray();
                 for (const auto& dep_value : deps_array) {
                     step.dependencies.push_back(dep_value.toString());
                 }
             }
-            
+
             workflow.add_step(step);
         }
     }
-    
+
     // Parse rollback steps
     if (json.contains("rollback_steps") && json["rollback_steps"].isObject()) {
         QJsonObject rollback_json = json["rollback_steps"].toObject();
         for (auto it = rollback_json.begin(); it != rollback_json.end(); ++it) {
             const QString& step_id = it.key();
             const QJsonObject& rollback_json_step = it.value().toObject();
-            
+
             WorkflowStep rollback_step;
-            rollback_step.plugin_id = rollback_json_step["plugin_id"].toString();
-            rollback_step.method_name = rollback_json_step["method_name"].toString();
-            rollback_step.parameters = rollback_json_step["parameters"].toObject();
-            
+            rollback_step.plugin_id =
+                rollback_json_step["plugin_id"].toString();
+            rollback_step.method_name =
+                rollback_json_step["method_name"].toString();
+            rollback_step.parameters =
+                rollback_json_step["parameters"].toObject();
+
             workflow.add_rollback_step(step_id, rollback_step);
         }
     }
-    
+
     // Validate the workflow
     auto validation_result = workflow.validate();
     if (!validation_result) {
         return qtplugin::unexpected<PluginError>(validation_result.error());
     }
-    
+
     return workflow;
 }
 
 // === PluginOrchestrator Implementation ===
 
-PluginOrchestrator::PluginOrchestrator(QObject* parent)
-    : QObject(parent) {
+PluginOrchestrator::PluginOrchestrator(QObject* parent) : QObject(parent) {
     qCDebug(orchestratorLog) << "Plugin orchestrator created";
 }
 
@@ -224,62 +236,68 @@ PluginOrchestrator::~PluginOrchestrator() {
             state->context->cancelled = true;
         }
     }
-    
+
     // Wait for executions to complete
     for (auto& [execution_id, state] : m_active_executions) {
         if (state->execution_future.valid()) {
             state->execution_future.wait_for(std::chrono::seconds(5));
         }
     }
-    
+
     qCDebug(orchestratorLog) << "Plugin orchestrator destroyed";
 }
 
-qtplugin::expected<void, PluginError> PluginOrchestrator::register_workflow(const Workflow& workflow) {
+qtplugin::expected<void, PluginError> PluginOrchestrator::register_workflow(
+    const Workflow& workflow) {
     auto validation_result = workflow.validate();
     if (!validation_result) {
         return validation_result;
     }
-    
+
     std::unique_lock lock(m_workflows_mutex);
-    
+
     if (m_workflows.find(workflow.id()) != m_workflows.end()) {
-        return make_error<void>(PluginErrorCode::DuplicatePlugin,
-                               "Workflow already registered: " + workflow.id().toStdString());
+        return make_error<void>(
+            PluginErrorCode::DuplicatePlugin,
+            "Workflow already registered: " + workflow.id().toStdString());
     }
-    
+
     m_workflows[workflow.id()] = workflow;
-    
+
     qCDebug(orchestratorLog) << "Registered workflow:" << workflow.id();
-    
+
     return make_success();
 }
 
-qtplugin::expected<void, PluginError> PluginOrchestrator::unregister_workflow(const QString& workflow_id) {
+qtplugin::expected<void, PluginError> PluginOrchestrator::unregister_workflow(
+    const QString& workflow_id) {
     std::unique_lock lock(m_workflows_mutex);
-    
+
     auto it = m_workflows.find(workflow_id);
     if (it == m_workflows.end()) {
-        return make_error<void>(PluginErrorCode::PluginNotFound,
-                               "Workflow not found: " + workflow_id.toStdString());
+        return make_error<void>(
+            PluginErrorCode::PluginNotFound,
+            "Workflow not found: " + workflow_id.toStdString());
     }
-    
+
     m_workflows.erase(it);
-    
+
     qCDebug(orchestratorLog) << "Unregistered workflow:" << workflow_id;
-    
+
     return make_success();
 }
 
-qtplugin::expected<Workflow, PluginError> PluginOrchestrator::get_workflow(const QString& workflow_id) const {
+qtplugin::expected<Workflow, PluginError> PluginOrchestrator::get_workflow(
+    const QString& workflow_id) const {
     std::shared_lock lock(m_workflows_mutex);
-    
+
     auto it = m_workflows.find(workflow_id);
     if (it == m_workflows.end()) {
-        return make_error<Workflow>(PluginErrorCode::PluginNotFound,
-                                   "Workflow not found: " + workflow_id.toStdString());
+        return make_error<Workflow>(
+            PluginErrorCode::PluginNotFound,
+            "Workflow not found: " + workflow_id.toStdString());
     }
-    
+
     return it->second;
 }
 
@@ -287,11 +305,11 @@ std::vector<QString> PluginOrchestrator::list_workflows() const {
     std::shared_lock lock(m_workflows_mutex);
     std::vector<QString> workflows;
     workflows.reserve(m_workflows.size());
-    
+
     for (const auto& [workflow_id, _] : m_workflows) {
         workflows.push_back(workflow_id);
     }
-    
+
     return workflows;
 }
 
@@ -300,10 +318,7 @@ QString PluginOrchestrator::generate_execution_id() const {
 }
 
 qtplugin::expected<QString, PluginError> PluginOrchestrator::execute_workflow(
-    const QString& workflow_id,
-    const QJsonObject& initial_data,
-    bool async) {
-
+    const QString& workflow_id, const QJsonObject& initial_data, bool async) {
     // Get the workflow
     auto workflow_result = get_workflow(workflow_id);
     if (!workflow_result) {
@@ -327,8 +342,10 @@ qtplugin::expected<QString, PluginError> PluginOrchestrator::execute_workflow(
     // Setup timeout timer
     state->timeout_timer = std::make_unique<QTimer>(this);
     state->timeout_timer->setSingleShot(true);
-    state->timeout_timer->setInterval(static_cast<int>(workflow.timeout().count()));
-    connect(state->timeout_timer.get(), &QTimer::timeout, this, &PluginOrchestrator::on_execution_timeout);
+    state->timeout_timer->setInterval(
+        static_cast<int>(workflow.timeout().count()));
+    connect(state->timeout_timer.get(), &QTimer::timeout, this,
+            &PluginOrchestrator::on_execution_timeout);
 
     // Store execution state
     {
@@ -339,26 +356,31 @@ qtplugin::expected<QString, PluginError> PluginOrchestrator::execute_workflow(
     if (async) {
         // Execute asynchronously
         auto& exec_state = m_active_executions[execution_id];
-        exec_state->execution_future = std::async(std::launch::async, [this, execution_id]() {
-            auto exec_it = m_active_executions.find(execution_id);
-            if (exec_it != m_active_executions.end()) {
-                auto result = execute_workflow_impl(exec_it->second->workflow, *exec_it->second->context);
+        exec_state->execution_future =
+            std::async(std::launch::async, [this, execution_id]() {
+                auto exec_it = m_active_executions.find(execution_id);
+                if (exec_it != m_active_executions.end()) {
+                    auto result = execute_workflow_impl(
+                        exec_it->second->workflow, *exec_it->second->context);
 
-                if (result) {
-                    emit workflow_completed(execution_id, result.value());
-                } else {
-                    emit workflow_failed(execution_id, QString::fromStdString(result.error().message));
+                    if (result) {
+                        emit workflow_completed(execution_id, result.value());
+                    } else {
+                        emit workflow_failed(
+                            execution_id,
+                            QString::fromStdString(result.error().message));
+                    }
+
+                    // Cleanup
+                    std::unique_lock lock(m_executions_mutex);
+                    m_active_executions.erase(execution_id);
                 }
-
-                // Cleanup
-                std::unique_lock lock(m_executions_mutex);
-                m_active_executions.erase(execution_id);
-            }
-        });
+            });
     } else {
         // Execute synchronously
         auto& exec_state = m_active_executions[execution_id];
-        auto result = execute_workflow_impl(exec_state->workflow, *exec_state->context);
+        auto result =
+            execute_workflow_impl(exec_state->workflow, *exec_state->context);
 
         // Cleanup
         {
@@ -376,29 +398,35 @@ qtplugin::expected<QString, PluginError> PluginOrchestrator::execute_workflow(
     return execution_id;
 }
 
-std::future<qtplugin::expected<QJsonObject, PluginError>> PluginOrchestrator::execute_workflow_async(
-    const QString& workflow_id,
-    const QJsonObject& initial_data) {
+std::future<qtplugin::expected<QJsonObject, PluginError>>
+PluginOrchestrator::execute_workflow_async(const QString& workflow_id,
+                                           const QJsonObject& initial_data) {
+    return std::async(
+        std::launch::async,
+        [this, workflow_id,
+         initial_data]() -> qtplugin::expected<QJsonObject, PluginError> {
+            auto execution_result =
+                execute_workflow(workflow_id, initial_data, false);
+            if (!execution_result) {
+                return qtplugin::unexpected<PluginError>(
+                    execution_result.error());
+            }
 
-    return std::async(std::launch::async, [this, workflow_id, initial_data]() -> qtplugin::expected<QJsonObject, PluginError> {
-        auto execution_result = execute_workflow(workflow_id, initial_data, false);
-        if (!execution_result) {
-            return qtplugin::unexpected<PluginError>(execution_result.error());
-        }
-
-        // Since we executed synchronously, we need to get the result
-        // In a real implementation, this would be handled differently
-        return QJsonObject{{"execution_id", execution_result.value()}};
-    });
+            // Since we executed synchronously, we need to get the result
+            // In a real implementation, this would be handled differently
+            return QJsonObject{{"execution_id", execution_result.value()}};
+        });
 }
 
-qtplugin::expected<void, PluginError> PluginOrchestrator::cancel_workflow(const QString& execution_id) {
+qtplugin::expected<void, PluginError> PluginOrchestrator::cancel_workflow(
+    const QString& execution_id) {
     std::unique_lock lock(m_executions_mutex);
 
     auto it = m_active_executions.find(execution_id);
     if (it == m_active_executions.end()) {
-        return make_error<void>(PluginErrorCode::PluginNotFound,
-                               "Execution not found: " + execution_id.toStdString());
+        return make_error<void>(
+            PluginErrorCode::PluginNotFound,
+            "Execution not found: " + execution_id.toStdString());
     }
 
     it->second->context->cancelled = true;
@@ -410,13 +438,15 @@ qtplugin::expected<void, PluginError> PluginOrchestrator::cancel_workflow(const 
     return make_success();
 }
 
-qtplugin::expected<QJsonObject, PluginError> PluginOrchestrator::get_execution_status(const QString& execution_id) const {
+qtplugin::expected<QJsonObject, PluginError>
+PluginOrchestrator::get_execution_status(const QString& execution_id) const {
     std::shared_lock lock(m_executions_mutex);
 
     auto it = m_active_executions.find(execution_id);
     if (it == m_active_executions.end()) {
-        return make_error<QJsonObject>(PluginErrorCode::PluginNotFound,
-                                      "Execution not found: " + execution_id.toStdString());
+        return make_error<QJsonObject>(
+            PluginErrorCode::PluginNotFound,
+            "Execution not found: " + execution_id.toStdString());
     }
 
     const auto& state = it->second;
@@ -432,7 +462,8 @@ qtplugin::expected<QJsonObject, PluginError> PluginOrchestrator::get_execution_s
 
     // Calculate progress
     if (!state->execution_order.empty()) {
-        double progress = static_cast<double>(state->current_step_index) / state->execution_order.size() * 100.0;
+        double progress = static_cast<double>(state->current_step_index) /
+                          state->execution_order.size() * 100.0;
         status["progress"] = progress;
     }
 
@@ -442,7 +473,8 @@ qtplugin::expected<QJsonObject, PluginError> PluginOrchestrator::get_execution_s
         QJsonObject step_status;
         step_status["step_id"] = step_id;
         step_status["status"] = static_cast<int>(result.status);
-        step_status["execution_time"] = static_cast<int>(result.execution_time().count());
+        step_status["execution_time"] =
+            static_cast<int>(result.execution_time().count());
         step_status["retry_count"] = result.retry_count;
         if (!result.error_message.isEmpty()) {
             step_status["error"] = result.error_message;
@@ -466,39 +498,43 @@ std::vector<QString> PluginOrchestrator::list_active_executions() const {
     return executions;
 }
 
-qtplugin::expected<QJsonObject, PluginError> PluginOrchestrator::execute_workflow_impl(
-    const Workflow& workflow,
-    WorkflowContext& context) {
-
-    qCDebug(orchestratorLog) << "Starting workflow execution:" << context.execution_id;
+qtplugin::expected<QJsonObject, PluginError>
+PluginOrchestrator::execute_workflow_impl(const Workflow& workflow,
+                                          WorkflowContext& context) {
+    qCDebug(orchestratorLog)
+        << "Starting workflow execution:" << context.execution_id;
 
     auto execution_order = workflow.get_execution_order();
     if (execution_order.empty()) {
         return make_error<QJsonObject>(PluginErrorCode::InvalidConfiguration,
-                                      "No executable steps in workflow");
+                                       "No executable steps in workflow");
     }
 
     // Execute steps in order
     for (const QString& step_id : execution_order) {
         if (context.cancelled) {
-            qCDebug(orchestratorLog) << "Workflow execution cancelled:" << context.execution_id;
-            return make_error<QJsonObject>(PluginErrorCode::OperationCancelled, "Workflow cancelled");
+            qCDebug(orchestratorLog)
+                << "Workflow execution cancelled:" << context.execution_id;
+            return make_error<QJsonObject>(PluginErrorCode::OperationCancelled,
+                                           "Workflow cancelled");
         }
 
         const WorkflowStep* step = workflow.get_step(step_id);
         if (!step) {
-            continue; // Skip missing steps
+            continue;  // Skip missing steps
         }
 
         // Check step dependencies
         if (!check_step_dependencies(*step, context)) {
-            qCWarning(orchestratorLog) << "Step dependencies not satisfied:" << step_id;
+            qCWarning(orchestratorLog)
+                << "Step dependencies not satisfied:" << step_id;
             continue;
         }
 
         // Check step condition
         if (step->condition && !step->condition(context.shared_data)) {
-            qCDebug(orchestratorLog) << "Step condition not met, skipping:" << step_id;
+            qCDebug(orchestratorLog)
+                << "Step condition not met, skipping:" << step_id;
 
             StepResult result;
             result.step_id = step_id;
@@ -529,47 +565,57 @@ qtplugin::expected<QJsonObject, PluginError> PluginOrchestrator::execute_workflo
 
                 context.shared_data = merged_data;
 
-                emit step_completed(context.execution_id, step_id, step_result.value().result_data);
+                emit step_completed(context.execution_id, step_id,
+                                    step_result.value().result_data);
             } else if (step_result.value().status == StepStatus::Failed) {
-                emit step_failed(context.execution_id, step_id, step_result.value().error_message);
+                emit step_failed(context.execution_id, step_id,
+                                 step_result.value().error_message);
 
                 if (step->critical) {
-                    qCWarning(orchestratorLog) << "Critical step failed, stopping workflow:" << step_id;
-                    return make_error<QJsonObject>(PluginErrorCode::ExecutionFailed,
-                                                  "Critical step failed: " + step_id.toStdString());
+                    qCWarning(orchestratorLog)
+                        << "Critical step failed, stopping workflow:"
+                        << step_id;
+                    return make_error<QJsonObject>(
+                        PluginErrorCode::ExecutionFailed,
+                        "Critical step failed: " + step_id.toStdString());
                 }
             }
         } else {
-            emit step_failed(context.execution_id, step_id, QString::fromStdString(step_result.error().message));
+            emit step_failed(
+                context.execution_id, step_id,
+                QString::fromStdString(step_result.error().message));
 
             if (step->critical) {
-                qCWarning(orchestratorLog) << "Critical step failed, stopping workflow:" << step_id;
+                qCWarning(orchestratorLog)
+                    << "Critical step failed, stopping workflow:" << step_id;
                 return qtplugin::unexpected<PluginError>(step_result.error());
             }
         }
     }
 
-    qCDebug(orchestratorLog) << "Workflow execution completed:" << context.execution_id;
+    qCDebug(orchestratorLog)
+        << "Workflow execution completed:" << context.execution_id;
 
     // Return final shared data
     return context.shared_data;
 }
 
 qtplugin::expected<StepResult, PluginError> PluginOrchestrator::execute_step(
-    const WorkflowStep& step,
-    WorkflowContext& context) {
-
+    const WorkflowStep& step, WorkflowContext& context) {
     StepResult result;
     result.step_id = step.id;
     result.status = StepStatus::Running;
     result.start_time = std::chrono::system_clock::now();
 
-    qCDebug(orchestratorLog) << "Executing step:" << step.id << "in plugin:" << step.plugin_id;
+    qCDebug(orchestratorLog)
+        << "Executing step:" << step.id << "in plugin:" << step.plugin_id;
 
     // Note: In a real implementation, PluginManager would be injected
-    // For now, we'll return an error indicating the plugin manager is not available
+    // For now, we'll return an error indicating the plugin manager is not
+    // available
     result.status = StepStatus::Failed;
-    result.error_message = "Plugin manager not available - dependency injection needed";
+    result.error_message =
+        "Plugin manager not available - dependency injection needed";
     result.end_time = std::chrono::system_clock::now();
     return result;
 
@@ -583,27 +629,33 @@ qtplugin::expected<StepResult, PluginError> PluginOrchestrator::execute_step(
     }
 
     // Merge step parameters with shared data
-    QJsonObject merged_params = merge_step_data(context.shared_data, step.parameters);
+    QJsonObject merged_params =
+        merge_step_data(context.shared_data, step.parameters);
 
     // Execute with retries
     int retry_count = 0;
-    qtplugin::expected<QJsonObject, PluginError> execution_result = make_error<QJsonObject>(PluginErrorCode::NotImplemented, "Not executed yet");
+    qtplugin::expected<QJsonObject, PluginError> execution_result =
+        make_error<QJsonObject>(PluginErrorCode::NotImplemented,
+                                "Not executed yet");
 
     do {
         if (retry_count > 0) {
-            qCDebug(orchestratorLog) << "Retrying step:" << step.id << "attempt:" << retry_count;
+            qCDebug(orchestratorLog)
+                << "Retrying step:" << step.id << "attempt:" << retry_count;
             std::this_thread::sleep_for(step.retry_delay);
         }
 
         // Execute the command
-        execution_result = plugin->execute_command(step.method_name.toStdString(), merged_params);
+        execution_result = plugin->execute_command(
+            step.method_name.toStdString(), merged_params);
 
         if (execution_result) {
             result.status = StepStatus::Completed;
             result.result_data = execution_result.value();
             break;
         } else {
-            result.error_message = QString::fromStdString(execution_result.error().message);
+            result.error_message =
+                QString::fromStdString(execution_result.error().message);
             retry_count++;
         }
 
@@ -616,24 +668,28 @@ qtplugin::expected<StepResult, PluginError> PluginOrchestrator::execute_step(
     result.retry_count = retry_count;
     result.end_time = std::chrono::system_clock::now();
 
-    qCDebug(orchestratorLog) << "Step execution completed:" << step.id
-                            << "status:" << static_cast<int>(result.status)
-                            << "time:" << result.execution_time().count() << "ms";
+    qCDebug(orchestratorLog)
+        << "Step execution completed:" << step.id
+        << "status:" << static_cast<int>(result.status)
+        << "time:" << result.execution_time().count() << "ms";
 
     return result;
 }
 
-bool PluginOrchestrator::check_step_dependencies(const WorkflowStep& step, const WorkflowContext& context) const {
+bool PluginOrchestrator::check_step_dependencies(
+    const WorkflowStep& step, const WorkflowContext& context) const {
     for (const QString& dep_id : step.dependencies) {
         auto it = context.step_results.find(dep_id);
-        if (it == context.step_results.end() || it->second.status != StepStatus::Completed) {
+        if (it == context.step_results.end() ||
+            it->second.status != StepStatus::Completed) {
             return false;
         }
     }
     return true;
 }
 
-QJsonObject PluginOrchestrator::merge_step_data(const QJsonObject& shared_data, const QJsonObject& step_params) const {
+QJsonObject PluginOrchestrator::merge_step_data(
+    const QJsonObject& shared_data, const QJsonObject& step_params) const {
     QJsonObject merged = shared_data;
 
     for (auto it = step_params.begin(); it != step_params.end(); ++it) {
@@ -645,7 +701,8 @@ QJsonObject PluginOrchestrator::merge_step_data(const QJsonObject& shared_data, 
 
 void PluginOrchestrator::on_execution_timeout() {
     QTimer* timer = qobject_cast<QTimer*>(sender());
-    if (!timer) return;
+    if (!timer)
+        return;
 
     // Find the execution associated with this timer
     std::unique_lock lock(m_executions_mutex);
@@ -653,12 +710,13 @@ void PluginOrchestrator::on_execution_timeout() {
         if (state->timeout_timer.get() == timer) {
             state->context->cancelled = true;
             emit workflow_failed(execution_id, "Workflow execution timeout");
-            qCWarning(orchestratorLog) << "Workflow execution timeout:" << execution_id;
+            qCWarning(orchestratorLog)
+                << "Workflow execution timeout:" << execution_id;
             break;
         }
     }
 }
 
-} // namespace qtplugin::orchestration
+}  // namespace qtplugin::orchestration
 
 #include "plugin_orchestrator.moc"

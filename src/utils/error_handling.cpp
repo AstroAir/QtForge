@@ -81,4 +81,4 @@ const char* error_code_to_string(PluginErrorCode code) noexcept {
     }
 }
 
-} // namespace qtplugin
+}  // namespace qtplugin

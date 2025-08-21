@@ -52,12 +52,13 @@
 #define QTPLUGIN_VERSION "3.0.0"
 
 // Core components
-#include "core/plugin_interface.hpp"
-#include "core/plugin_manager.hpp"
-#include "core/plugin_loader.hpp"
-#include "core/service_plugin_interface.hpp"
 #include "core/plugin_capability_discovery.hpp"
-// #include "core/plugin_lifecycle_manager.hpp"  // Temporarily disabled due to QStateMachine dependency
+#include "core/plugin_interface.hpp"
+#include "core/plugin_loader.hpp"
+#include "core/plugin_manager.hpp"
+#include "core/service_plugin_interface.hpp"
+// #include "core/plugin_lifecycle_manager.hpp"  // Temporarily disabled due to
+// QStateMachine dependency
 
 // Enhanced plugin interfaces
 #include "interfaces/data_processor_plugin_interface.hpp"
@@ -67,7 +68,8 @@
 #ifdef QTPLUGIN_BUILD_UI
 #include "interfaces/ui_plugin_interface.hpp"
 #endif
-// #include "interfaces/scripting_plugin_interface.hpp"  // Temporarily disabled due to QJSEngine dependency
+// #include "interfaces/scripting_plugin_interface.hpp"  // Temporarily disabled
+// due to QJSEngine dependency
 
 // Platform-specific components (temporarily disabled due to conflicts)
 // #include "platform/platform_plugin_loader.hpp"
@@ -84,22 +86,21 @@
 // Managers
 #include "managers/configuration_manager.hpp"
 #include "managers/logging_manager.hpp"
-#include "managers/resource_manager.hpp"
 #include "managers/resource_lifecycle.hpp"
-// #include "managers/resource_monitor.hpp"  // Temporarily disabled due to conflicts
+#include "managers/resource_manager.hpp"
+// #include "managers/resource_monitor.hpp"  // Temporarily disabled due to
+// conflicts
 
 // For advanced component usage, include:
 // #include <qtplugin/components.hpp>
 
 // Utilities
-#include "utils/version.hpp"
-#include "utils/error_handling.hpp"
 #include "utils/concepts.hpp"
+#include "utils/error_handling.hpp"
+#include "utils/version.hpp"
 
 // Security (always available)
 #include "security/security_manager.hpp"
-
-
 
 // UI components (if available)
 #ifdef QTPLUGIN_BUILD_UI
@@ -109,7 +110,7 @@
 /**
  * @namespace qtplugin
  * @brief Main namespace for the QtPlugin library
- * 
+ *
  * All QtPlugin library classes, functions, and types are contained within
  * this namespace to avoid naming conflicts with other libraries.
  */
@@ -119,33 +120,25 @@ namespace qtplugin {
  * @brief Get the library version as a string
  * @return Version string in format "major.minor.patch"
  */
-inline constexpr const char* version() noexcept {
-    return QTPLUGIN_VERSION;
-}
+inline constexpr const char* version() noexcept { return QTPLUGIN_VERSION; }
 
 /**
  * @brief Get the major version number
  * @return Major version number
  */
-inline constexpr int version_major() noexcept {
-    return QTPLUGIN_VERSION_MAJOR;
-}
+inline constexpr int version_major() noexcept { return QTPLUGIN_VERSION_MAJOR; }
 
 /**
  * @brief Get the minor version number
  * @return Minor version number
  */
-inline constexpr int version_minor() noexcept {
-    return QTPLUGIN_VERSION_MINOR;
-}
+inline constexpr int version_minor() noexcept { return QTPLUGIN_VERSION_MINOR; }
 
 /**
  * @brief Get the patch version number
  * @return Patch version number
  */
-inline constexpr int version_patch() noexcept {
-    return QTPLUGIN_VERSION_PATCH;
-}
+inline constexpr int version_patch() noexcept { return QTPLUGIN_VERSION_PATCH; }
 
 /**
  * @brief Check if the library was compiled with network support
@@ -173,18 +166,18 @@ inline constexpr bool has_ui_support() noexcept {
 
 /**
  * @brief Initialize the QtPlugin library
- * 
+ *
  * This function should be called once at the beginning of your application
  * to initialize the plugin system. It sets up logging, registers Qt types,
  * and performs other necessary initialization tasks.
- * 
+ *
  * @return true if initialization was successful, false otherwise
  */
 bool initialize();
 
 /**
  * @brief Cleanup the QtPlugin library
- * 
+ *
  * This function should be called once at the end of your application
  * to cleanup resources used by the plugin system.
  */
@@ -192,11 +185,11 @@ void cleanup();
 
 /**
  * @brief RAII wrapper for library initialization
- * 
+ *
  * This class provides automatic initialization and cleanup of the QtPlugin
  * library using RAII principles. Create an instance at the beginning of
  * your application and it will automatically cleanup when destroyed.
- * 
+ *
  * @example
  * ```cpp
  * int main() {
@@ -204,9 +197,9 @@ void cleanup();
  *     if (!init.is_initialized()) {
  *         return -1;
  *     }
- *     
+ *
  *     // Use plugin system...
- *     
+ *
  *     return 0; // Automatic cleanup when init goes out of scope
  * }
  * ```
@@ -217,7 +210,7 @@ public:
      * @brief Constructor - initializes the library
      */
     LibraryInitializer() : m_initialized(initialize()) {}
-    
+
     /**
      * @brief Destructor - cleans up the library
      */
@@ -226,35 +219,35 @@ public:
             cleanup();
         }
     }
-    
+
     // Non-copyable, non-movable
     LibraryInitializer(const LibraryInitializer&) = delete;
     LibraryInitializer& operator=(const LibraryInitializer&) = delete;
     LibraryInitializer(LibraryInitializer&&) = delete;
     LibraryInitializer& operator=(LibraryInitializer&&) = delete;
-    
+
     /**
      * @brief Check if initialization was successful
      * @return true if the library was initialized successfully
      */
     bool is_initialized() const noexcept { return m_initialized; }
-    
+
 private:
     bool m_initialized;
 };
 
-} // namespace qtplugin
+}  // namespace qtplugin
 
 /**
  * @def QTPLUGIN_PLUGIN_METADATA
  * @brief Macro to declare plugin metadata
- * 
+ *
  * This macro should be used in plugin classes to declare metadata
  * that can be read without loading the plugin.
- * 
+ *
  * @param IID Interface identifier string
  * @param FILE JSON metadata file path
- * 
+ *
  * @example
  * ```cpp
  * class MyPlugin : public QObject, public qtplugin::IPlugin {
@@ -266,50 +259,49 @@ private:
  * };
  * ```
  */
-#define QTPLUGIN_PLUGIN_METADATA(IID, FILE) \
-    Q_PLUGIN_METADATA(IID IID FILE FILE)
+#define QTPLUGIN_PLUGIN_METADATA(IID, FILE) Q_PLUGIN_METADATA(IID IID FILE FILE)
 
 /**
  * @def QTPLUGIN_DECLARE_PLUGIN
  * @brief Convenience macro to declare a plugin class
- * 
+ *
  * This macro combines the necessary Qt macros and interface declarations
  * needed for a plugin class.
- * 
+ *
  * @param ClassName The plugin class name
  * @param IID Interface identifier string
  * @param FILE JSON metadata file path
  * @param ... Additional interfaces (optional)
- * 
+ *
  * @example
  * ```cpp
  * class MyPlugin : public QObject, public qtplugin::IPlugin {
  *     Q_OBJECT
- *     QTPLUGIN_DECLARE_PLUGIN(MyPlugin, "com.example.MyPlugin/1.0", "metadata.json")
- * public:
+ *     QTPLUGIN_DECLARE_PLUGIN(MyPlugin, "com.example.MyPlugin/1.0",
+ * "metadata.json") public:
  *     // Plugin implementation...
  * };
  * ```
  */
 #define QTPLUGIN_DECLARE_PLUGIN(ClassName, IID, FILE, ...) \
-    Q_PLUGIN_METADATA(IID IID FILE FILE) \
+    Q_PLUGIN_METADATA(IID IID FILE FILE)                   \
     Q_INTERFACES(qtplugin::IPlugin __VA_ARGS__)
 
 // Convenience aliases for commonly used types
 namespace qtplugin {
-    using PluginPtr = std::shared_ptr<IPlugin>;
-    using PluginWeakPtr = std::weak_ptr<IPlugin>;
-    using PluginUniquePtr = std::unique_ptr<IPlugin>;
-}
+using PluginPtr = std::shared_ptr<IPlugin>;
+using PluginWeakPtr = std::weak_ptr<IPlugin>;
+using PluginUniquePtr = std::unique_ptr<IPlugin>;
+}  // namespace qtplugin
 
 /**
  * @example basic_usage.cpp
  * Basic usage example showing how to create and use a plugin manager:
- * 
+ *
  * ```cpp
  * #include <qtplugin/qtplugin.hpp>
  * #include <iostream>
- * 
+ *
  * int main() {
  *     // Initialize the library
  *     qtplugin::LibraryInitializer init;
@@ -317,31 +309,31 @@ namespace qtplugin {
  *         std::cerr << "Failed to initialize QtPlugin library" << std::endl;
  *         return -1;
  *     }
- *     
+ *
  *     // Create plugin manager
  *     qtplugin::PluginManager manager;
- *     
+ *
  *     // Load a plugin
  *     auto result = manager.load_plugin("./plugins/example_plugin.so");
  *     if (!result) {
- *         std::cerr << "Failed to load plugin: " << result.error().message << std::endl;
- *         return -1;
+ *         std::cerr << "Failed to load plugin: " << result.error().message <<
+ * std::endl; return -1;
  *     }
- *     
+ *
  *     // Get the loaded plugin
  *     auto plugin = manager.get_plugin(result.value());
  *     if (plugin) {
  *         std::cout << "Loaded plugin: " << plugin->name() << std::endl;
  *         std::cout << "Version: " << plugin->version() << std::endl;
  *         std::cout << "Description: " << plugin->description() << std::endl;
- *         
+ *
  *         // Initialize the plugin
  *         auto init_result = plugin->initialize();
  *         if (init_result) {
  *             std::cout << "Plugin initialized successfully" << std::endl;
  *         }
  *     }
- *     
+ *
  *     return 0;
  * }
  * ```

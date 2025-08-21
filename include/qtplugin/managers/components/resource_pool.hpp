@@ -6,18 +6,18 @@
 
 #pragma once
 
-#include "../../utils/error_handling.hpp"
-#include "../resource_manager.hpp"
 #include <QObject>
+#include <chrono>
+#include <functional>
 #include <memory>
+#include <queue>
+#include <shared_mutex>
 #include <string>
 #include <string_view>
 #include <unordered_map>
 #include <vector>
-#include <queue>
-#include <shared_mutex>
-#include <chrono>
-#include <functional>
+#include "../../utils/error_handling.hpp"
+#include "../resource_manager.hpp"
 
 namespace qtplugin {
 
@@ -31,7 +31,7 @@ struct ResourceHandle;
 /**
  * @brief Resource pool entry
  */
-template<typename T>
+template <typename T>
 struct PooledResource {
     std::unique_ptr<T> resource;
     std::chrono::system_clock::time_point created_at;
@@ -99,7 +99,8 @@ public:
      * @param priority Resource priority
      * @return true if allocation is possible
      */
-    virtual bool can_allocate(std::string_view plugin_id, ResourcePriority priority) const = 0;
+    virtual bool can_allocate(std::string_view plugin_id,
+                              ResourcePriority priority) const = 0;
 
     /**
      * @brief Get number of available resources
@@ -117,7 +118,7 @@ public:
 /**
  * @brief Template interface for typed resource pools
  */
-template<typename T>
+template <typename T>
 class ITypedComponentResourcePool : public IComponentResourcePool {
 public:
     /**
@@ -126,8 +127,10 @@ public:
      * @param priority Resource priority
      * @return Resource handle and instance or error
      */
-    virtual qtplugin::expected<std::pair<ResourceHandle, std::unique_ptr<T>>, PluginError>
-    acquire_resource(std::string_view plugin_id, ResourcePriority priority = ResourcePriority::Normal) = 0;
+    virtual qtplugin::expected<std::pair<ResourceHandle, std::unique_ptr<T>>,
+                               PluginError>
+    acquire_resource(std::string_view plugin_id,
+                     ResourcePriority priority = ResourcePriority::Normal) = 0;
 
     /**
      * @brief Release resource back to pool
@@ -135,8 +138,8 @@ public:
      * @param resource Resource instance
      * @return Success or error
      */
-    virtual qtplugin::expected<void, PluginError>
-    release_resource(const ResourceHandle& handle, std::unique_ptr<T> resource) = 0;
+    virtual qtplugin::expected<void, PluginError> release_resource(
+        const ResourceHandle& handle, std::unique_ptr<T> resource) = 0;
 
     /**
      * @brief Set resource factory for creating new instances
@@ -192,10 +195,12 @@ signals:
  * Provides resource pooling with configurable quotas, automatic cleanup,
  * and resource reuse strategies.
  */
-template<typename T>
-class ResourcePool : public ResourcePoolBase, public ITypedComponentResourcePool<T> {
+template <typename T>
+class ResourcePool : public ResourcePoolBase,
+                     public ITypedComponentResourcePool<T> {
 public:
-    explicit ResourcePool(const std::string& name, ResourceType type, QObject* parent = nullptr);
+    explicit ResourcePool(const std::string& name, ResourceType type,
+                          QObject* parent = nullptr);
     ~ResourcePool() override;
 
     // IComponentResourcePool interface
@@ -206,16 +211,20 @@ public:
     ResourceUsageStats get_statistics() const override;
     size_t cleanup_resources() override;
     void clear() override;
-    bool can_allocate(std::string_view plugin_id, ResourcePriority priority) const override;
+    bool can_allocate(std::string_view plugin_id,
+                      ResourcePriority priority) const override;
     size_t available_count() const override;
     size_t active_count() const override;
 
     // ITypedComponentResourcePool interface
-    qtplugin::expected<std::pair<ResourceHandle, std::unique_ptr<T>>, PluginError>
-    acquire_resource(std::string_view plugin_id, ResourcePriority priority = ResourcePriority::Normal) override;
+    qtplugin::expected<std::pair<ResourceHandle, std::unique_ptr<T>>,
+                       PluginError>
+    acquire_resource(
+        std::string_view plugin_id,
+        ResourcePriority priority = ResourcePriority::Normal) override;
 
-    qtplugin::expected<void, PluginError>
-    release_resource(const ResourceHandle& handle, std::unique_ptr<T> resource) override;
+    qtplugin::expected<void, PluginError> release_resource(
+        const ResourceHandle& handle, std::unique_ptr<T> resource) override;
 
     void set_factory(std::function<std::unique_ptr<T>()> factory) override;
 
@@ -224,23 +233,26 @@ private:
     ResourceType m_resource_type;
     ResourceQuota m_quota;
     std::function<std::unique_ptr<T>()> m_factory;
-    
+
     mutable std::shared_mutex m_mutex;
-    std::unordered_map<std::string, std::unique_ptr<PooledResource<T>>> m_active_resources;
+    std::unordered_map<std::string, std::unique_ptr<PooledResource<T>>>
+        m_active_resources;
     std::queue<std::unique_ptr<PooledResource<T>>> m_available_resources;
-    
+
     // Statistics
     mutable std::atomic<size_t> m_total_acquisitions{0};
     mutable std::atomic<size_t> m_total_releases{0};
     mutable std::atomic<size_t> m_total_cleanups{0};
-    
+
     // Helper methods
     std::string generate_handle() const;
-    std::unique_ptr<PooledResource<T>> create_new_resource(std::string_view plugin_id, ResourcePriority priority);
-    std::unique_ptr<PooledResource<T>> try_reuse_resource(std::string_view plugin_id, ResourcePriority priority);
+    std::unique_ptr<PooledResource<T>> create_new_resource(
+        std::string_view plugin_id, ResourcePriority priority);
+    std::unique_ptr<PooledResource<T>> try_reuse_resource(
+        std::string_view plugin_id, ResourcePriority priority);
     bool is_resource_expired(const PooledResource<T>& resource) const;
     bool check_quota_limits(std::string_view plugin_id) const;
     size_t calculate_memory_usage() const;
 };
 
-} // namespace qtplugin
+}  // namespace qtplugin

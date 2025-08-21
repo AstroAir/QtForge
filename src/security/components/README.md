@@ -5,24 +5,28 @@ This directory contains the modularized security components extracted from the m
 ## Components
 
 ### SecurityValidator
+
 - **File**: `security_validator.cpp`
 - **Responsibility**: Core security validation logic
 - **Size Target**: ~250 lines
 - **Key Functions**: Plugin validation, security checks
 
 ### SignatureVerifier
+
 - **File**: `signature_verifier.cpp`
 - **Responsibility**: Digital signature verification
 - **Size Target**: ~200 lines
 - **Key Functions**: Cryptographic signature validation, certificate handling
 
 ### PermissionManager
+
 - **File**: `permission_manager.cpp`
 - **Responsibility**: Permission and access control management
 - **Size Target**: ~200 lines
 - **Key Functions**: Permission checking, access control policies
 
 ### SecurityPolicyEngine
+
 - **File**: `security_policy_engine.cpp`
 - **Responsibility**: Security policy evaluation and enforcement
 - **Size Target**: ~150 lines

@@ -6,26 +6,26 @@
 
 #pragma once
 
-#include "../utils/error_handling.hpp"
-#include <QObject>
-#include <QTimer>
-#include <QThread>
 #include <QJsonObject>
 #include <QJsonValue>
+#include <QObject>
 #include <QString>
+#include <QThread>
+#include <QTimer>
+#include <any>
+#include <atomic>
+#include <chrono>
+#include <functional>
+#include <future>
 #include <memory>
+#include <optional>
+#include <shared_mutex>
 #include <string>
 #include <string_view>
-#include <vector>
-#include <unordered_map>
-#include <functional>
-#include <optional>
-#include <chrono>
-#include <atomic>
-#include <shared_mutex>
-#include <future>
-#include <any>
 #include <typeindex>
+#include <unordered_map>
+#include <vector>
+#include "../utils/error_handling.hpp"
 
 namespace qtplugin {
 
@@ -33,34 +33,34 @@ namespace qtplugin {
  * @brief Resource types for management
  */
 enum class ResourceType {
-    Thread,         ///< Thread resources
-    Timer,          ///< Timer resources
-    NetworkConnection, ///< Network connection resources
-    FileHandle,     ///< File handle resources
-    DatabaseConnection, ///< Database connection resources
-    Memory,         ///< Memory resources
-    Custom          ///< Custom resource types
+    Thread,              ///< Thread resources
+    Timer,               ///< Timer resources
+    NetworkConnection,   ///< Network connection resources
+    FileHandle,          ///< File handle resources
+    DatabaseConnection,  ///< Database connection resources
+    Memory,              ///< Memory resources
+    Custom               ///< Custom resource types
 };
 
 /**
  * @brief Resource state
  */
 enum class ResourceState {
-    Available,      ///< Resource is available for use
-    InUse,          ///< Resource is currently in use
-    Reserved,       ///< Resource is reserved but not yet in use
-    Cleanup,        ///< Resource is being cleaned up
-    Error           ///< Resource is in error state
+    Available,  ///< Resource is available for use
+    InUse,      ///< Resource is currently in use
+    Reserved,   ///< Resource is reserved but not yet in use
+    Cleanup,    ///< Resource is being cleaned up
+    Error       ///< Resource is in error state
 };
 
 /**
  * @brief Resource priority levels
  */
 enum class ResourcePriority {
-    Low = 0,        ///< Low priority
-    Normal = 1,     ///< Normal priority
-    High = 2,       ///< High priority
-    Critical = 3    ///< Critical priority
+    Low = 0,      ///< Low priority
+    Normal = 1,   ///< Normal priority
+    High = 2,     ///< High priority
+    Critical = 3  ///< Critical priority
 };
 
 /**
@@ -74,9 +74,11 @@ struct ResourceUsageStats {
     std::chrono::milliseconds average_lifetime{0};
     std::chrono::milliseconds total_usage_time{0};
     size_t allocation_failures = 0;
-    
+
     double utilization_rate() const {
-        return total_created > 0 ? static_cast<double>(currently_active) / total_created : 0.0;
+        return total_created > 0
+                   ? static_cast<double>(currently_active) / total_created
+                   : 0.0;
     }
 };
 
@@ -84,13 +86,17 @@ struct ResourceUsageStats {
  * @brief Resource quota configuration
  */
 struct ResourceQuota {
-    size_t max_instances = 0;           ///< Maximum number of instances (0 = unlimited)
-    size_t max_memory_bytes = 0;        ///< Maximum memory usage in bytes (0 = unlimited)
-    std::chrono::milliseconds max_lifetime{0}; ///< Maximum lifetime (0 = unlimited)
-    ResourcePriority min_priority = ResourcePriority::Low; ///< Minimum priority for allocation
-    
+    size_t max_instances = 0;  ///< Maximum number of instances (0 = unlimited)
+    size_t max_memory_bytes =
+        0;  ///< Maximum memory usage in bytes (0 = unlimited)
+    std::chrono::milliseconds max_lifetime{
+        0};  ///< Maximum lifetime (0 = unlimited)
+    ResourcePriority min_priority =
+        ResourcePriority::Low;  ///< Minimum priority for allocation
+
     bool is_unlimited() const {
-        return max_instances == 0 && max_memory_bytes == 0 && max_lifetime.count() == 0;
+        return max_instances == 0 && max_memory_bytes == 0 &&
+               max_lifetime.count() == 0;
     }
 };
 
@@ -101,36 +107,47 @@ class ResourceHandle {
 public:
     ResourceHandle() = default;
     ResourceHandle(std::string id, ResourceType type, std::string plugin_id)
-        : m_id(std::move(id)), m_type(type), m_plugin_id(std::move(plugin_id))
-        , m_created_at(std::chrono::steady_clock::now()) {}
-    
+        : m_id(std::move(id)),
+          m_type(type),
+          m_plugin_id(std::move(plugin_id)),
+          m_created_at(std::chrono::steady_clock::now()) {}
+
     const std::string& id() const { return m_id; }
     ResourceType type() const { return m_type; }
     const std::string& plugin_id() const { return m_plugin_id; }
     ResourceState state() const { return m_state; }
     ResourcePriority priority() const { return m_priority; }
-    
-    std::chrono::steady_clock::time_point created_at() const { return m_created_at; }
-    std::chrono::steady_clock::time_point last_accessed() const { return m_last_accessed; }
-    
+
+    std::chrono::steady_clock::time_point created_at() const {
+        return m_created_at;
+    }
+    std::chrono::steady_clock::time_point last_accessed() const {
+        return m_last_accessed;
+    }
+
     std::chrono::milliseconds age() const {
         return std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::steady_clock::now() - m_created_at);
     }
-    
+
     void set_state(ResourceState state) { m_state = state; }
     void set_priority(ResourcePriority priority) { m_priority = priority; }
-    void update_access_time() { m_last_accessed = std::chrono::steady_clock::now(); }
-    
+    void update_access_time() {
+        m_last_accessed = std::chrono::steady_clock::now();
+    }
+
     // Metadata access
-    void set_metadata(const std::string& key, const std::any& value) { m_metadata[key] = value; }
+    void set_metadata(const std::string& key, const std::any& value) {
+        m_metadata[key] = value;
+    }
     std::optional<std::any> get_metadata(const std::string& key) const {
         auto it = m_metadata.find(key);
-        return it != m_metadata.end() ? std::make_optional(it->second) : std::nullopt;
+        return it != m_metadata.end() ? std::make_optional(it->second)
+                                      : std::nullopt;
     }
-    
+
     bool is_valid() const { return !m_id.empty(); }
-    
+
 private:
     std::string m_id;
     ResourceType m_type = ResourceType::Custom;
@@ -145,33 +162,33 @@ private:
 /**
  * @brief Resource factory interface for creating resources
  */
-template<typename T>
+template <typename T>
 class IResourceFactory {
 public:
     virtual ~IResourceFactory() = default;
-    
+
     /**
      * @brief Create a new resource instance
      * @param handle Resource handle for tracking
      * @return Created resource or error
      */
-    virtual qtplugin::expected<std::unique_ptr<T>, PluginError> 
-    create_resource(const ResourceHandle& handle) = 0;
-    
+    virtual qtplugin::expected<std::unique_ptr<T>, PluginError> create_resource(
+        const ResourceHandle& handle) = 0;
+
     /**
      * @brief Validate resource before creation
      * @param handle Resource handle to validate
      * @return true if resource can be created
      */
     virtual bool can_create_resource(const ResourceHandle& handle) const = 0;
-    
+
     /**
      * @brief Get estimated resource cost
      * @param handle Resource handle
      * @return Estimated memory usage in bytes
      */
     virtual size_t get_estimated_cost(const ResourceHandle& handle) const = 0;
-    
+
     /**
      * @brief Get factory name
      * @return Factory name
@@ -182,53 +199,55 @@ public:
 /**
  * @brief Resource pool interface for managing resource instances
  */
-template<typename T>
+template <typename T>
 class IResourcePool {
 public:
     virtual ~IResourcePool() = default;
-    
+
     /**
      * @brief Acquire a resource from the pool
      * @param plugin_id Plugin requesting the resource
      * @param priority Resource priority
      * @return Resource handle and instance or error
      */
-    virtual qtplugin::expected<std::pair<ResourceHandle, std::unique_ptr<T>>, PluginError>
-    acquire_resource(std::string_view plugin_id, ResourcePriority priority = ResourcePriority::Normal) = 0;
-    
+    virtual qtplugin::expected<std::pair<ResourceHandle, std::unique_ptr<T>>,
+                               PluginError>
+    acquire_resource(std::string_view plugin_id,
+                     ResourcePriority priority = ResourcePriority::Normal) = 0;
+
     /**
      * @brief Release a resource back to the pool
      * @param handle Resource handle
      * @param resource Resource instance
      * @return Success or error information
      */
-    virtual qtplugin::expected<void, PluginError>
-    release_resource(const ResourceHandle& handle, std::unique_ptr<T> resource) = 0;
-    
+    virtual qtplugin::expected<void, PluginError> release_resource(
+        const ResourceHandle& handle, std::unique_ptr<T> resource) = 0;
+
     /**
      * @brief Get pool statistics
      * @return Usage statistics
      */
     virtual ResourceUsageStats get_statistics() const = 0;
-    
+
     /**
      * @brief Set resource quota for the pool
      * @param quota Resource quota configuration
      */
     virtual void set_quota(const ResourceQuota& quota) = 0;
-    
+
     /**
      * @brief Get current quota configuration
      * @return Current quota
      */
     virtual ResourceQuota get_quota() const = 0;
-    
+
     /**
      * @brief Cleanup expired or unused resources
      * @return Number of resources cleaned up
      */
     virtual size_t cleanup_resources() = 0;
-    
+
     /**
      * @brief Get pool name
      * @return Pool name
@@ -238,31 +257,33 @@ public:
 
 /**
  * @brief Resource manager interface
- * 
+ *
  * Provides comprehensive resource management with pools, automatic cleanup,
  * usage monitoring, and resource lifecycle management.
  */
 class IResourceManager {
 public:
     virtual ~IResourceManager() = default;
-    
+
     // === Resource Pool Management ===
-    
+
     /**
      * @brief Register a resource factory
      * @param type Resource type
      * @param factory Resource factory
      * @return Success or error information
      */
-    template<typename T>
-    qtplugin::expected<void, PluginError>
-    register_factory(ResourceType type, std::unique_ptr<IResourceFactory<T>> factory) {
-        return register_factory_impl(type, std::type_index(typeid(T)), 
-                                    std::unique_ptr<void, std::function<void(void*)>>(
-                                        factory.release(), 
-                                        [](void* ptr) { delete static_cast<IResourceFactory<T>*>(ptr); }));
+    template <typename T>
+    qtplugin::expected<void, PluginError> register_factory(
+        ResourceType type, std::unique_ptr<IResourceFactory<T>> factory) {
+        return register_factory_impl(
+            type, std::type_index(typeid(T)),
+            std::unique_ptr<void, std::function<void(void*)>>(
+                factory.release(), [](void* ptr) {
+                    delete static_cast<IResourceFactory<T>*>(ptr);
+                }));
     }
-    
+
     /**
      * @brief Create a resource pool
      * @param type Resource type
@@ -270,34 +291,36 @@ public:
      * @param quota Resource quota
      * @return Success or error information
      */
-    virtual qtplugin::expected<void, PluginError>
-    create_pool(ResourceType type, std::string_view pool_name, const ResourceQuota& quota = {}) = 0;
-    
+    virtual qtplugin::expected<void, PluginError> create_pool(
+        ResourceType type, std::string_view pool_name,
+        const ResourceQuota& quota = {}) = 0;
+
     /**
      * @brief Remove a resource pool
      * @param pool_name Pool name
      * @return Success or error information
      */
-    virtual qtplugin::expected<void, PluginError>
-    remove_pool(std::string_view pool_name) = 0;
-    
+    virtual qtplugin::expected<void, PluginError> remove_pool(
+        std::string_view pool_name) = 0;
+
     /**
      * @brief Get resource pool
      * @param pool_name Pool name
      * @return Resource pool or error
      */
-    template<typename T>
-    qtplugin::expected<IResourcePool<T>*, PluginError>
-    get_pool(std::string_view pool_name) {
+    template <typename T>
+    qtplugin::expected<IResourcePool<T>*, PluginError> get_pool(
+        std::string_view pool_name) {
         auto result = get_pool_impl(pool_name, std::type_index(typeid(T)));
         if (!result) {
-            return qtplugin::expected<IResourcePool<T>*, PluginError>(qtplugin::unexpected(result.error()));
+            return qtplugin::expected<IResourcePool<T>*, PluginError>(
+                qtplugin::unexpected(result.error()));
         }
         return static_cast<IResourcePool<T>*>(result.value());
     }
-    
+
     // === Resource Acquisition ===
-    
+
     /**
      * @brief Acquire a resource
      * @param type Resource type
@@ -305,46 +328,52 @@ public:
      * @param priority Resource priority
      * @return Resource handle and instance or error
      */
-    template<typename T>
-    qtplugin::expected<std::pair<ResourceHandle, std::unique_ptr<T>>, PluginError>
-    acquire_resource(ResourceType type, std::string_view plugin_id, 
-                    ResourcePriority priority = ResourcePriority::Normal) {
+    template <typename T>
+    qtplugin::expected<std::pair<ResourceHandle, std::unique_ptr<T>>,
+                       PluginError>
+    acquire_resource(ResourceType type, std::string_view plugin_id,
+                     ResourcePriority priority = ResourcePriority::Normal) {
         return acquire_resource_impl<T>(type, plugin_id, priority);
     }
-    
+
     /**
      * @brief Release a resource
      * @param handle Resource handle
      * @param resource Resource instance
      * @return Success or error information
      */
-    template<typename T>
-    qtplugin::expected<void, PluginError>
-    release_resource(const ResourceHandle& handle, std::unique_ptr<T> resource) {
-        return release_resource_impl(handle, std::unique_ptr<void, std::function<void(void*)>>(
-            resource.release(), 
-            [](void* ptr) { delete static_cast<T*>(ptr); }));
+    template <typename T>
+    qtplugin::expected<void, PluginError> release_resource(
+        const ResourceHandle& handle, std::unique_ptr<T> resource) {
+        return release_resource_impl(
+            handle, std::unique_ptr<void, std::function<void(void*)>>(
+                        resource.release(),
+                        [](void* ptr) { delete static_cast<T*>(ptr); }));
     }
 
 protected:
-    virtual qtplugin::expected<void, PluginError>
-    register_factory_impl(ResourceType type, std::type_index type_index, 
-                          std::unique_ptr<void, std::function<void(void*)>> factory) = 0;
-    
-    virtual qtplugin::expected<void*, PluginError>
-    get_pool_impl(std::string_view pool_name, std::type_index type_index) = 0;
-    
-    template<typename T>
-    qtplugin::expected<std::pair<ResourceHandle, std::unique_ptr<T>>, PluginError>
-    acquire_resource_impl(ResourceType type, std::string_view plugin_id, ResourcePriority priority) {
+    virtual qtplugin::expected<void, PluginError> register_factory_impl(
+        ResourceType type, std::type_index type_index,
+        std::unique_ptr<void, std::function<void(void*)>> factory) = 0;
+
+    virtual qtplugin::expected<void*, PluginError> get_pool_impl(
+        std::string_view pool_name, std::type_index type_index) = 0;
+
+    template <typename T>
+    qtplugin::expected<std::pair<ResourceHandle, std::unique_ptr<T>>,
+                       PluginError>
+    acquire_resource_impl(ResourceType type, std::string_view plugin_id,
+                          ResourcePriority priority) {
         // Implementation will be in concrete class
-        return qtplugin::make_error<std::pair<ResourceHandle, std::unique_ptr<T>>>(
-            qtplugin::PluginErrorCode::NotImplemented, "acquire_resource_impl not implemented");
+        return qtplugin::make_error<
+            std::pair<ResourceHandle, std::unique_ptr<T>>>(
+            qtplugin::PluginErrorCode::NotImplemented,
+            "acquire_resource_impl not implemented");
     }
-    
-    virtual qtplugin::expected<void, PluginError>
-    release_resource_impl(const ResourceHandle& handle,
-                         std::unique_ptr<void, std::function<void(void*)>> resource) = 0;
+
+    virtual qtplugin::expected<void, PluginError> release_resource_impl(
+        const ResourceHandle& handle,
+        std::unique_ptr<void, std::function<void(void*)>> resource) = 0;
 
 public:
     // === Resource Monitoring ===
@@ -355,15 +384,17 @@ public:
      * @param plugin_id Plugin ID (optional)
      * @return Usage statistics
      */
-    virtual ResourceUsageStats get_usage_statistics(std::optional<ResourceType> type = std::nullopt,
-                                                   std::string_view plugin_id = {}) const = 0;
+    virtual ResourceUsageStats get_usage_statistics(
+        std::optional<ResourceType> type = std::nullopt,
+        std::string_view plugin_id = {}) const = 0;
 
     /**
      * @brief Get all active resource handles
      * @param plugin_id Plugin ID filter (optional)
      * @return List of active resource handles
      */
-    virtual std::vector<ResourceHandle> get_active_resources(std::string_view plugin_id = {}) const = 0;
+    virtual std::vector<ResourceHandle> get_active_resources(
+        std::string_view plugin_id = {}) const = 0;
 
     /**
      * @brief Set resource quota for plugin
@@ -372,8 +403,9 @@ public:
      * @param quota Resource quota
      * @return Success or error information
      */
-    virtual qtplugin::expected<void, PluginError>
-    set_plugin_quota(std::string_view plugin_id, ResourceType type, const ResourceQuota& quota) = 0;
+    virtual qtplugin::expected<void, PluginError> set_plugin_quota(
+        std::string_view plugin_id, ResourceType type,
+        const ResourceQuota& quota) = 0;
 
     /**
      * @brief Get resource quota for plugin
@@ -381,8 +413,8 @@ public:
      * @param type Resource type
      * @return Resource quota or error
      */
-    virtual qtplugin::expected<ResourceQuota, PluginError>
-    get_plugin_quota(std::string_view plugin_id, ResourceType type) const = 0;
+    virtual qtplugin::expected<ResourceQuota, PluginError> get_plugin_quota(
+        std::string_view plugin_id, ResourceType type) const = 0;
 
     // === Resource Lifecycle ===
 
@@ -392,15 +424,17 @@ public:
      * @param type Resource type (optional)
      * @return Number of resources cleaned up
      */
-    virtual size_t cleanup_plugin_resources(std::string_view plugin_id,
-                                           std::optional<ResourceType> type = std::nullopt) = 0;
+    virtual size_t cleanup_plugin_resources(
+        std::string_view plugin_id,
+        std::optional<ResourceType> type = std::nullopt) = 0;
 
     /**
      * @brief Force cleanup of expired resources
      * @param max_age Maximum age for resources
      * @return Number of resources cleaned up
      */
-    virtual size_t cleanup_expired_resources(std::chrono::milliseconds max_age) = 0;
+    virtual size_t cleanup_expired_resources(
+        std::chrono::milliseconds max_age) = 0;
 
     /**
      * @brief Set automatic cleanup interval
@@ -424,7 +458,8 @@ public:
      * @return Subscription ID for unsubscribing
      */
     virtual std::string subscribe_to_events(
-        std::function<void(const ResourceHandle&, ResourceState, ResourceState)> callback,
+        std::function<void(const ResourceHandle&, ResourceState, ResourceState)>
+            callback,
         std::optional<ResourceType> type = std::nullopt,
         std::string_view plugin_id = {}) = 0;
 
@@ -433,8 +468,8 @@ public:
      * @param subscription_id Subscription ID
      * @return Success or error information
      */
-    virtual qtplugin::expected<void, PluginError>
-    unsubscribe_from_events(const std::string& subscription_id) = 0;
+    virtual qtplugin::expected<void, PluginError> unsubscribe_from_events(
+        const std::string& subscription_id) = 0;
 
     // === Utility Functions ===
 
@@ -462,7 +497,8 @@ public:
      * @param plugin_id Plugin ID filter (optional)
      * @return Total memory usage in bytes
      */
-    virtual size_t get_total_memory_usage(std::string_view plugin_id = {}) const = 0;
+    virtual size_t get_total_memory_usage(
+        std::string_view plugin_id = {}) const = 0;
 
     /**
      * @brief Enable or disable resource tracking
@@ -507,4 +543,4 @@ std::string resource_state_to_string(ResourceState state);
  */
 std::string resource_priority_to_string(ResourcePriority priority);
 
-} // namespace qtplugin
+}  // namespace qtplugin

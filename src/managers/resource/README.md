@@ -5,24 +5,28 @@ This directory contains the modularized resource management components extracted
 ## Components
 
 ### ResourceManager (Core)
+
 - **File**: `resource_manager.cpp`
 - **Responsibility**: Main API facade for resource operations
 - **Size Target**: ~250 lines
 - **Key Functions**: Public API, resource coordination
 
 ### ResourcePool
+
 - **File**: `resource_pool.cpp`
 - **Responsibility**: Resource pooling and reuse logic
 - **Size Target**: ~200 lines
 - **Key Functions**: Pool management, resource allocation/deallocation
 
 ### ResourceAllocator
+
 - **File**: `resource_allocator.cpp`
 - **Responsibility**: Resource allocation strategies and policies
 - **Size Target**: ~200 lines
 - **Key Functions**: Allocation algorithms, resource limits
 
 ### ResourceMonitor (Enhanced)
+
 - **File**: `resource_monitor.cpp`
 - **Responsibility**: Resource usage monitoring and reporting
 - **Size Target**: ~150 lines

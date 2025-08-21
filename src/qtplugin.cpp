@@ -18,17 +18,16 @@ bool initialize() {
     qRegisterMetaType<PluginCapability>("PluginCapability");
     qRegisterMetaType<PluginPriority>("PluginPriority");
     qRegisterMetaType<SecurityLevel>("SecurityLevel");
-    
+
     // Set up logging
     QLoggingCategory::setFilterRules("qtplugin.debug=true");
-    
-    qCDebug(qtpluginLog) << "QtPlugin library initialized, version" << version();
-    
+
+    qCDebug(qtpluginLog) << "QtPlugin library initialized, version"
+                         << version();
+
     return true;
 }
 
-void cleanup() {
-    qCDebug(qtpluginLog) << "QtPlugin library cleanup completed";
-}
+void cleanup() { qCDebug(qtpluginLog) << "QtPlugin library cleanup completed"; }
 
-} // namespace qtplugin
+}  // namespace qtplugin
