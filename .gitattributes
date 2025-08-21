@@ -1,0 +1,14 @@
+# Normalize line endings for text files
+* text=auto eol=lf
+
+# Treat common source files as text
+*.cpp text
+*.hpp text
+*.h text
+*.c text
+*.cmake text
+CMakeLists.txt text
+*.md text
+*.yml text
+*.json text
+

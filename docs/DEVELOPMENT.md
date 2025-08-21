@@ -18,6 +18,13 @@ ctest --output-on-failure
 - Thread safety with std::mutex/shared_mutex
 - Public API documented with Doxygen-style comments
 
+## Formatting
+- Configure your editor to use the repo .clang-format
+- To format: find . -regex ".*\.[ch]pp" -o -name "*.c" -o -name "*.h" | xargs clang-format -i
+
+## Documentation
+- Generate API docs with: doxygen Doxyfile (outputs to docs/doxygen)
+
 ## Pre-commit
 - Run clang-format
 - Build and run tests
