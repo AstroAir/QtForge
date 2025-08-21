@@ -28,8 +28,8 @@ We welcome several types of contributions:
 
 1. **Fork and Clone**
    ```bash
-   git clone https://github.com/your-username/qt-plugin-sample.git
-   cd qt-plugin-sample/lib
+   git clone https://github.com/YourOrg/QtForge.git
+   cd QtForge
    ```
 
 2. **Create Development Branch**
