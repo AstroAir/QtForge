@@ -394,6 +394,15 @@ if(QTPLUGIN_BUILD_TESTS)
     add_subdirectory(tests)
 endif()
 
+# Doxygen documentation target (optional)
+find_package(Doxygen QUIET)
+if(DOXYGEN_FOUND)
+    add_custom_target(docs
+        COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_SOURCE_DIR}/Doxyfile
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Generating API documentation with Doxygen" VERBATIM)
+endif()
+
 # Print configuration summary
 message(STATUS "")
 message(STATUS "QtPlugin Library Configuration:")

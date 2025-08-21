@@ -34,7 +34,7 @@ QtPlugin is a comprehensive plugin management library designed for Qt applicatio
 
 ## Library Structure
 
-```
+```text
 lib/
 ├── include/qtplugin/           # Public headers
 │   ├── core/                   # Core plugin system
