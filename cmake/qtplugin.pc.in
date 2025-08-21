@@ -1,0 +1,13 @@
+# QtPlugin pkg-config file
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=${prefix}
+libdir=${prefix}/@CMAKE_INSTALL_LIBDIR@
+includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
+
+Name: QtPlugin
+Description: A modern, type-safe plugin system for Qt applications with modular component architecture
+Version: @PROJECT_VERSION@
+URL: https://github.com/example/qtplugin
+Requires: Qt6Core >= 6.0.0
+Libs: -L${libdir} -lqtplugin-core
+Cflags: -I${includedir}
