@@ -56,6 +56,7 @@ set(QTPLUGIN_CORE_SOURCES
     src/monitoring/plugin_hot_reload_manager.cpp
     src/monitoring/plugin_metrics_collector.cpp
     src/communication/message_bus.cpp
+    src/communication/request_response_system.cpp
     src/utils/version.cpp
     src/utils/error_handling.cpp
     src/security/security_manager.cpp
@@ -73,7 +74,7 @@ set(QTPLUGIN_CORE_SOURCES
     src/managers/resource_lifecycle.cpp
     src/managers/components/resource_pool.cpp
     src/managers/components/resource_allocator.cpp
-    src/managers/components/resource_monitor.cpp
+    src/managers/resource_monitor.cpp
     # Enhanced plugin system sources (v3.1.0)
     src/communication/plugin_service_contracts.cpp
     src/core/enhanced_plugin_interface.cpp
@@ -94,6 +95,7 @@ set(QTPLUGIN_CORE_HEADERS
     include/qtplugin/core/service_plugin_interface.hpp
     include/qtplugin/communication/message_bus.hpp
     include/qtplugin/communication/message_types.hpp
+    include/qtplugin/communication/request_response_system.hpp
     include/qtplugin/utils/version.hpp
     include/qtplugin/utils/error_handling.hpp
     include/qtplugin/security/security_manager.hpp
@@ -116,7 +118,7 @@ set(QTPLUGIN_CORE_HEADERS
     include/qtplugin/managers/resource_lifecycle_impl.hpp
     include/qtplugin/managers/components/resource_pool.hpp
     include/qtplugin/managers/components/resource_allocator.hpp
-    include/qtplugin/managers/components/resource_monitor.hpp
+    include/qtplugin/managers/resource_monitor_impl.hpp
     include/qtplugin/qtplugin.hpp
     include/qtplugin/components.hpp
     # Enhanced plugin system headers (v3.1.0)
@@ -186,10 +188,10 @@ if(QTPLUGIN_BUILD_NETWORK)
     set(QTPLUGIN_NETWORK_HEADERS
         # Network headers will be added later
     )
-    
+
     add_library(QtPluginNetwork ${QTPLUGIN_NETWORK_SOURCES} ${QTPLUGIN_NETWORK_HEADERS})
     add_library(QtPlugin::Network ALIAS QtPluginNetwork)
-    
+
     set_target_properties(QtPluginNetwork PROPERTIES
         VERSION ${PROJECT_VERSION}
         SOVERSION ${PROJECT_VERSION_MAJOR}
@@ -197,13 +199,13 @@ if(QTPLUGIN_BUILD_NETWORK)
         OUTPUT_NAME qtplugin-network
         AUTOMOC ON
     )
-    
+
     target_include_directories(QtPluginNetwork
         PUBLIC
             $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
             $<INSTALL_INTERFACE:include>
     )
-    
+
     target_link_libraries(QtPluginNetwork
         PUBLIC
             QtPlugin::Core
@@ -220,10 +222,10 @@ if(QTPLUGIN_BUILD_UI)
     set(QTPLUGIN_UI_HEADERS
         include/qtplugin/ui/ui_plugin_interface.hpp
     )
-    
+
     add_library(QtPluginUI ${QTPLUGIN_UI_SOURCES} ${QTPLUGIN_UI_HEADERS})
     add_library(QtPlugin::UI ALIAS QtPluginUI)
-    
+
     set_target_properties(QtPluginUI PROPERTIES
         VERSION ${PROJECT_VERSION}
         SOVERSION ${PROJECT_VERSION_MAJOR}
@@ -231,13 +233,13 @@ if(QTPLUGIN_BUILD_UI)
         OUTPUT_NAME qtplugin-ui
         AUTOMOC ON
     )
-    
+
     target_include_directories(QtPluginUI
         PUBLIC
             $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
             $<INSTALL_INTERFACE:include>
     )
-    
+
     target_link_libraries(QtPluginUI
         PUBLIC
             QtPlugin::Core

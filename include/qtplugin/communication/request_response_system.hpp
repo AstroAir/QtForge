@@ -518,6 +518,9 @@ private slots:
     void process_pending_requests();
 
 private:
+    void handle_request_timeout(const QString& request_id);
+
+private:
     class Private;
     std::unique_ptr<Private> d;
 };

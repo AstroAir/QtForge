@@ -229,15 +229,18 @@ void CompositePlugin::shutdown() noexcept {
     try {
         m_state = PluginState::Stopping;
 
-        // Shutdown component plugins in reverse order
-        for (auto it = m_component_plugins.rbegin();
-             it != m_component_plugins.rend(); ++it) {
+        // Shutdown component plugins in reverse insertion order
+        std::vector<QString> keys;
+        keys.reserve(m_component_plugins.size());
+        for (const auto& kv : m_component_plugins) keys.push_back(kv.first);
+        for (auto it = keys.rbegin(); it != keys.rend(); ++it) {
             try {
-                it->second->shutdown();
+                auto found = m_component_plugins.find(*it);
+                if (found != m_component_plugins.end() && found->second)
+                    found->second->shutdown();
             } catch (const std::exception& e) {
                 qCWarning(compositionLog)
-                    << "Exception during component plugin shutdown:"
-                    << e.what();
+                    << "Exception during component plugin shutdown:" << e.what();
             }
         }
 
@@ -281,12 +284,10 @@ qtplugin::expected<void, PluginError> CompositePlugin::configure(
 
 PluginMetadata CompositePlugin::metadata() const {
     PluginMetadata meta;
-    meta.id = m_id;
     meta.name = m_name;
     meta.description = m_description;
     meta.version = m_version;
     meta.author = m_author;
-    meta.plugin_type = "composite";
     meta.capabilities = m_capabilities;
 
     // Add component plugin information as custom data
@@ -341,7 +342,8 @@ std::vector<std::string> CompositePlugin::available_commands() const {
 
 qtplugin::expected<void, PluginError>
 CompositePlugin::load_component_plugins() {
-    auto* plugin_manager = PluginManager::instance();
+    // PluginManager dependency to be injected by the host application; not available here
+    auto* plugin_manager = static_cast<PluginManager*>(nullptr);
     if (!plugin_manager) {
         return make_error<void>(PluginErrorCode::SystemError,
                                 "Plugin manager not available");
@@ -537,6 +539,49 @@ QJsonObject CompositePlugin::get_health_status() const {
     health["components"] = components_health;
 
     return health;
+}
+
+// === IEnhancedPlugin service delegation to component plugins ===
+qtplugin::expected<QJsonObject, PluginError> CompositePlugin::call_service(
+    const QString& service_name, const QString& method_name,
+    const QJsonObject& parameters,
+    std::chrono::milliseconds timeout) {
+    // For now, composite doesn’t handle services directly; return not implemented
+    return make_error<QJsonObject>(PluginErrorCode::NotFound,
+                                   "No component plugin provides service: " + service_name.toStdString());
+}
+
+std::future<qtplugin::expected<QJsonObject, PluginError>>
+CompositePlugin::call_service_async(const QString& service_name,
+                                    const QString& method_name,
+                                    const QJsonObject& parameters,
+                                    std::chrono::milliseconds timeout) {
+    return std::async(std::launch::deferred, [] {
+        return make_error<QJsonObject>(PluginErrorCode::NotImplemented,
+                                       "CompositePlugin::call_service_async not implemented");
+    });
+}
+
+qtplugin::expected<QJsonObject, PluginError> CompositePlugin::handle_service_call(
+    const QString& service_name, const QString& method_name,
+    const QJsonObject& parameters) {
+    return make_error<QJsonObject>(PluginErrorCode::NotImplemented,
+                                   "CompositePlugin::handle_service_call not implemented");
+}
+
+qtplugin::expected<void, PluginError> CompositePlugin::handle_event(
+    const QString& event_type, const QJsonObject& event_data) {
+    Q_UNUSED(event_type)
+    Q_UNUSED(event_data)
+    return make_success();
+}
+
+std::vector<QString> CompositePlugin::get_supported_events() const { return {}; }
+
+void CompositePlugin::on_component_plugin_state_changed(const QString& plugin_id,
+                                                        int new_state) {
+    Q_UNUSED(plugin_id)
+    Q_UNUSED(new_state)
 }
 
 }  // namespace qtplugin::composition

@@ -103,6 +103,7 @@ struct StepResult {
  */
 class Workflow {
 public:
+    Workflow() = default;
     Workflow(const QString& workflow_id, const QString& name = "")
         : m_id(workflow_id), m_name(name.isEmpty() ? workflow_id : name) {}
 

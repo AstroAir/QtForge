@@ -618,62 +618,6 @@ qtplugin::expected<StepResult, PluginError> PluginOrchestrator::execute_step(
         "Plugin manager not available - dependency injection needed";
     result.end_time = std::chrono::system_clock::now();
     return result;
-
-    // Get the plugin
-    auto plugin = plugin_manager->get_plugin(step.plugin_id.toStdString());
-    if (!plugin) {
-        result.status = StepStatus::Failed;
-        result.error_message = "Plugin not found: " + step.plugin_id;
-        result.end_time = std::chrono::system_clock::now();
-        return result;
-    }
-
-    // Merge step parameters with shared data
-    QJsonObject merged_params =
-        merge_step_data(context.shared_data, step.parameters);
-
-    // Execute with retries
-    int retry_count = 0;
-    qtplugin::expected<QJsonObject, PluginError> execution_result =
-        make_error<QJsonObject>(PluginErrorCode::NotImplemented,
-                                "Not executed yet");
-
-    do {
-        if (retry_count > 0) {
-            qCDebug(orchestratorLog)
-                << "Retrying step:" << step.id << "attempt:" << retry_count;
-            std::this_thread::sleep_for(step.retry_delay);
-        }
-
-        // Execute the command
-        execution_result = plugin->execute_command(
-            step.method_name.toStdString(), merged_params);
-
-        if (execution_result) {
-            result.status = StepStatus::Completed;
-            result.result_data = execution_result.value();
-            break;
-        } else {
-            result.error_message =
-                QString::fromStdString(execution_result.error().message);
-            retry_count++;
-        }
-
-    } while (retry_count <= step.max_retries && !context.cancelled);
-
-    if (!execution_result) {
-        result.status = StepStatus::Failed;
-    }
-
-    result.retry_count = retry_count;
-    result.end_time = std::chrono::system_clock::now();
-
-    qCDebug(orchestratorLog)
-        << "Step execution completed:" << step.id
-        << "status:" << static_cast<int>(result.status)
-        << "time:" << result.execution_time().count() << "ms";
-
-    return result;
 }
 
 bool PluginOrchestrator::check_step_dependencies(

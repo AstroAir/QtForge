@@ -325,10 +325,7 @@ ServiceContractRegistry::register_contract(const QString& plugin_id,
     }
 
     // Add the contract
-    ContractInfo info;
-    info.plugin_id = plugin_id;
-    info.contract = contract;
-    info.registered_at = std::chrono::system_clock::now();
+    ContractInfo info(plugin_id, contract);
 
     contracts.push_back(info);
     m_plugin_services[plugin_id].push_back(service_name);

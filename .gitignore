@@ -167,3 +167,5 @@ examples/*/build*/
 tests/build*/
 tests/*/build*/
 test_output/
+
+.cache/
