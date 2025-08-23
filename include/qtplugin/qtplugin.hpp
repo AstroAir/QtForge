@@ -57,8 +57,7 @@
 #include "core/plugin_loader.hpp"
 #include "core/plugin_manager.hpp"
 #include "core/service_plugin_interface.hpp"
-// #include "core/plugin_lifecycle_manager.hpp"  // Temporarily disabled due to
-// QStateMachine dependency
+#include "core/plugin_lifecycle_manager.hpp"  // Re-enabled with custom state machine
 
 // Enhanced plugin interfaces
 #include "interfaces/data_processor_plugin_interface.hpp"
@@ -102,10 +101,10 @@
 // Security (always available)
 #include "security/security_manager.hpp"
 
-// UI components (if available)
-#ifdef QTPLUGIN_BUILD_UI
-#include "ui/ui_plugin_interface.hpp"
-#endif
+// UI components (if available) - using comprehensive interface from interfaces/
+// #ifdef QTPLUGIN_BUILD_UI
+// #include "ui/ui_plugin_interface.hpp"  // Disabled to avoid duplicate with interfaces/ui_plugin_interface.hpp
+// #endif
 
 /**
  * @namespace qtplugin

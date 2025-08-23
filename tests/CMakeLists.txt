@@ -297,6 +297,78 @@ set_tests_properties(ComponentArchitectureTests PROPERTIES
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
+# Plugin Lifecycle Manager Tests
+add_executable(test_lifecycle_manager
+    test_lifecycle_manager.cpp
+)
+
+target_include_directories(test_lifecycle_manager PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+target_link_libraries(test_lifecycle_manager PRIVATE
+    Qt6::Test
+    Qt6::Core
+    QtPluginCore
+)
+
+# Add test to CTest
+add_test(NAME LifecycleManagerTests COMMAND test_lifecycle_manager)
+
+# Set test properties
+set_tests_properties(LifecycleManagerTests PROPERTIES
+    TIMEOUT 60
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+# Simple Lifecycle Manager Tests
+add_executable(test_lifecycle_simple
+    test_lifecycle_simple.cpp
+)
+
+target_include_directories(test_lifecycle_simple PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+target_link_libraries(test_lifecycle_simple PRIVATE
+    Qt6::Test
+    Qt6::Core
+    QtPluginCore
+)
+
+# Add test to CTest
+add_test(NAME LifecycleSimpleTests COMMAND test_lifecycle_simple)
+
+# Set test properties
+set_tests_properties(LifecycleSimpleTests PROPERTIES
+    TIMEOUT 30
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+# Lifecycle Manager Compilation Tests
+add_executable(test_lifecycle_compilation
+    test_lifecycle_compilation.cpp
+)
+
+target_include_directories(test_lifecycle_compilation PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+target_link_libraries(test_lifecycle_compilation PRIVATE
+    Qt6::Test
+    Qt6::Core
+    QtPluginCore
+)
+
+# Add test to CTest
+add_test(NAME LifecycleCompilationTests COMMAND test_lifecycle_compilation)
+
+# Set test properties
+set_tests_properties(LifecycleCompilationTests PROPERTIES
+    TIMEOUT 30
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+
 # Manager-Component Integration Tests
 add_executable(test_manager_component_integration
     test_manager_component_integration.cpp

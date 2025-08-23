@@ -1,0 +1,272 @@
+{
+  "name": "UI Example Plugin",
+  "description": "A comprehensive UI plugin demonstrating Qt Widgets integration and theme support",
+  "version": "1.0.0",
+  "author": "QtPlugin Development Team",
+  "id": "com.example.ui_plugin",
+  "category": "UI",
+  "license": "MIT",
+  "homepage": "https://github.com/example/qtplugin",
+  "uuid": "87654321-4321-8765-dcba-876543210987",
+  "capabilities": ["UI", "Configuration", "Logging", "Monitoring"],
+  "priority": "Normal",
+  "dependencies": {
+    "required": [],
+    "optional": ["qtplugin.ConfigurationManager", "qtplugin.ThemeManager"]
+  },
+  "configuration": {
+    "default_theme": {
+      "type": "string",
+      "default": "default",
+      "enum": ["default", "dark", "light", "blue", "green"],
+      "description": "Default theme to apply on startup"
+    },
+    "logging_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable/disable logging"
+    },
+    "auto_save_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable automatic saving of widget states"
+    },
+    "refresh_interval": {
+      "type": "integer",
+      "default": 1000,
+      "min": 100,
+      "max": 10000,
+      "description": "Widget refresh interval in milliseconds"
+    },
+    "show_tooltips": {
+      "type": "boolean",
+      "default": true,
+      "description": "Show tooltips on UI elements"
+    },
+    "enable_animations": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable UI animations and transitions"
+    },
+    "window_opacity": {
+      "type": "number",
+      "default": 1.0,
+      "min": 0.0,
+      "max": 1.0,
+      "description": "Window opacity level"
+    }
+  },
+  "commands": [
+    {
+      "name": "widget",
+      "description": "Widget management operations",
+      "parameters": {
+        "action": {
+          "type": "string",
+          "enum": ["create", "list", "destroy"],
+          "description": "Widget action to perform"
+        },
+        "widget_id": {
+          "type": "string",
+          "description": "Widget identifier (required for create/destroy)"
+        }
+      }
+    },
+    {
+      "name": "action",
+      "description": "Action management operations",
+      "parameters": {
+        "action": {
+          "type": "string",
+          "enum": ["list", "trigger"],
+          "description": "Action operation to perform"
+        },
+        "action_id": {
+          "type": "string",
+          "description": "Action identifier (required for trigger)"
+        }
+      }
+    },
+    {
+      "name": "dialog",
+      "description": "Dialog management operations",
+      "parameters": {
+        "action": {
+          "type": "string",
+          "enum": ["create", "show", "list"],
+          "description": "Dialog action to perform"
+        },
+        "dialog_id": {
+          "type": "string",
+          "description": "Dialog identifier (required for create/show)"
+        }
+      }
+    },
+    {
+      "name": "theme",
+      "description": "Theme management operations",
+      "parameters": {
+        "action": {
+          "type": "string",
+          "enum": ["list", "apply", "current"],
+          "description": "Theme action to perform"
+        },
+        "theme_name": {
+          "type": "string",
+          "description": "Theme name (required for apply)"
+        }
+      }
+    },
+    {
+      "name": "settings",
+      "description": "Settings management operations",
+      "parameters": {
+        "action": {
+          "type": "string",
+          "enum": ["get", "set", "reset"],
+          "description": "Settings action to perform"
+        },
+        "settings": {
+          "type": "object",
+          "description": "Settings object (required for set)"
+        }
+      }
+    },
+    {
+      "name": "status",
+      "description": "Get comprehensive plugin status",
+      "parameters": {}
+    }
+  ],
+  "ui_components": {
+    "supported_types": [
+      "Widget",
+      "Dialog",
+      "ToolBar",
+      "MenuBar",
+      "ContextMenu",
+      "Settings",
+      "PropertyEditor",
+      "TreeView",
+      "ListView",
+      "TableView"
+    ],
+    "integration_points": [
+      "MainWindow",
+      "MenuBar",
+      "ToolBar",
+      "DockArea",
+      "CentralWidget",
+      "ContextMenu",
+      "SettingsDialog"
+    ],
+    "widgets": [
+      {
+        "id": "demo_widget",
+        "name": "Demo Widget",
+        "description": "Comprehensive demo widget showcasing various Qt controls",
+        "type": "Widget",
+        "resizable": true,
+        "closable": true,
+        "dockable": true
+      },
+      {
+        "id": "settings_widget",
+        "name": "Settings Widget",
+        "description": "Plugin settings configuration widget",
+        "type": "Settings",
+        "resizable": true,
+        "closable": true,
+        "dockable": false
+      }
+    ],
+    "dialogs": [
+      {
+        "id": "settings",
+        "name": "Settings Dialog",
+        "description": "Plugin settings configuration dialog",
+        "modal": true
+      },
+      {
+        "id": "about",
+        "name": "About Dialog",
+        "description": "Plugin information dialog",
+        "modal": true
+      }
+    ],
+    "actions": [
+      {
+        "id": "show_demo",
+        "text": "Show Demo Widget",
+        "tooltip": "Show the demo widget with various controls",
+        "menu_path": "View/Demo",
+        "priority": 100
+      },
+      {
+        "id": "show_settings",
+        "text": "Settings...",
+        "tooltip": "Open plugin settings dialog",
+        "menu_path": "Tools/Settings",
+        "priority": 200
+      },
+      {
+        "id": "show_about",
+        "text": "About UI Plugin...",
+        "tooltip": "Show information about the UI plugin",
+        "menu_path": "Help/About",
+        "priority": 300
+      }
+    ]
+  },
+  "themes": [
+    {
+      "name": "default",
+      "display_name": "Default",
+      "description": "Default system theme",
+      "is_dark": false
+    },
+    {
+      "name": "dark",
+      "display_name": "Dark",
+      "description": "Dark theme with high contrast",
+      "is_dark": true
+    },
+    {
+      "name": "light",
+      "display_name": "Light",
+      "description": "Light theme with soft colors",
+      "is_dark": false
+    },
+    {
+      "name": "blue",
+      "display_name": "Blue",
+      "description": "Blue-themed interface",
+      "is_dark": false
+    },
+    {
+      "name": "green",
+      "display_name": "Green",
+      "description": "Green-themed interface",
+      "is_dark": false
+    }
+  ],
+  "threading": {
+    "thread_safe": true,
+    "thread_model": "main-thread",
+    "ui_thread_required": true
+  },
+  "resources": {
+    "estimated_memory_kb": 2048,
+    "estimated_cpu_percent": 0.2,
+    "requires_network": false,
+    "requires_filesystem": false,
+    "requires_ui": true
+  },
+  "examples": {
+    "basic_usage": "auto plugin = UIPluginFactory::create_plugin(); plugin->initialize();",
+    "create_widget": "plugin->execute_command(\"widget\", {{\"action\", \"create\"}, {\"widget_id\", \"demo_widget\"}});",
+    "apply_theme": "plugin->execute_command(\"theme\", {{\"action\", \"apply\"}, {\"theme_name\", \"dark\"}});",
+    "show_dialog": "plugin->execute_command(\"dialog\", {{\"action\", \"show\"}, {\"dialog_id\", \"settings\"}});",
+    "trigger_action": "plugin->execute_command(\"action\", {{\"action\", \"trigger\"}, {\"action_id\", \"show_demo\"}});"
+  }
+}

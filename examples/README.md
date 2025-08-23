@@ -5,9 +5,11 @@ This directory contains comprehensive example plugins and applications demonstra
 ## 🚀 Examples Overview
 
 ### 📦 Basic Plugin (`basic_plugin/`)
+
 A foundational example demonstrating core plugin interface implementation.
 
 **Features:**
+
 - ✅ Complete plugin lifecycle (initialize, shutdown)
 - ✅ Command execution with parameter handling
 - ✅ JSON-based configuration management
@@ -16,15 +18,18 @@ A foundational example demonstrating core plugin interface implementation.
 - ✅ Thread-safe operations
 
 **Commands Supported:**
+
 - `hello` - Greeting with customizable name parameter
 - `status` - Plugin status and health information
 - `echo` - Echo input parameters for testing
 - `config` - Display current configuration
 
 ### 🔧 Service Plugin (`service_plugin/`)
+
 Advanced service-oriented plugin with background processing capabilities.
 
 **Features:**
+
 - ✅ Service registration and discovery
 - ✅ Background task execution with threading
 - ✅ Inter-plugin communication via message bus
@@ -33,9 +38,11 @@ Advanced service-oriented plugin with background processing capabilities.
 - ✅ Performance metrics and monitoring
 
 ### 📊 Data Processor Plugin (`data_processor/`)
+
 High-performance data processing with pipeline integration.
 
 **Features:**
+
 - ✅ Stream-based data transformation
 - ✅ Pipeline processing with filters
 - ✅ Batch and real-time processing modes
@@ -46,12 +53,14 @@ High-performance data processing with pipeline integration.
 ## 🛠️ Building Examples
 
 ### Prerequisites
+
 - QtPlugin library v3.0.0+ installed
 - Qt6 with Core, Network, Widgets, Test modules
 - CMake 3.21 or later
 - C++20 compatible compiler
 
 ### Build All Examples
+
 ```bash
 # Clone and setup
 git clone <repository-url>
@@ -67,6 +76,7 @@ ctest --output-on-failure
 ```
 
 ### Build Individual Example
+
 ```bash
 cd basic_plugin
 mkdir build && cd build
@@ -80,6 +90,7 @@ cmake --build .
 ## 🚀 Running Examples
 
 ### Basic Plugin Test
+
 ```bash
 cd build/basic_plugin
 ./basic_plugin_test
@@ -92,6 +103,7 @@ cd build/basic_plugin
 ```
 
 ### Interactive Plugin Manager Demo
+
 ```bash
 cd build
 ./plugin_manager_demo --plugin-dir examples/plugins --interactive
@@ -108,18 +120,21 @@ cd build
 ## 📖 Learning Path
 
 ### 🎯 Beginner Level
+
 1. **Basic Plugin** - Learn fundamental concepts and interface implementation
 2. **Configuration** - Understand JSON-based configuration management
 3. **Commands** - Implement command execution with parameters
 4. **Error Handling** - Master expected<T,E> error handling pattern
 
 ### 🚀 Intermediate Level
+
 5. **Service Plugin** - Explore background services and threading
 6. **Communication** - Implement inter-plugin messaging
 7. **Resource Management** - Handle resources and lifecycle properly
 8. **Testing** - Write comprehensive unit and integration tests
 
 ### 🏆 Advanced Level
+
 9. **Data Processor** - Optimize for high-performance data processing
 10. **Network Plugin** - Implement network protocols and communication
 11. **UI Integration** - Create rich user interfaces
@@ -128,6 +143,7 @@ cd build
 ## 🔧 Common Patterns
 
 ### Plugin Registration and Metadata
+
 ```cpp
 // Plugin class declaration
 class MyPlugin : public QObject, public qtplugin::IPlugin {
@@ -145,6 +161,7 @@ public:
 ```
 
 ### Modern Error Handling
+
 ```cpp
 // Command execution with error handling
 auto result = plugin->execute_command("process_data", params);
@@ -170,6 +187,7 @@ auto final_result = plugin->execute_command("step1", params)
 ```
 
 ### Configuration Management
+
 ```cpp
 // Comprehensive configuration with validation
 qtplugin::expected<void, qtplugin::PluginError> MyPlugin::configure(const QJsonObject& config) {
@@ -200,6 +218,7 @@ qtplugin::expected<void, qtplugin::PluginError> MyPlugin::configure(const QJsonO
 ```
 
 ### Inter-Plugin Communication
+
 ```cpp
 // Publisher plugin
 void MyPlugin::publishEvent(const QString& event, const QJsonObject& data) {
@@ -222,24 +241,28 @@ void MyPlugin::initialize() {
 ## ✅ Best Practices
 
 ### 🏗️ Architecture
+
 1. **Follow SOLID Principles** - Single responsibility, open/closed, etc.
 2. **Use Dependency Injection** - Make components testable and flexible
 3. **Implement Proper Interfaces** - Clear contracts between components
 4. **Design for Concurrency** - Thread-safe operations from the start
 
 ### 🔧 Implementation
+
 5. **Always Use expected<T,E>** - Modern error handling without exceptions
 6. **Validate All Inputs** - Configuration, commands, and parameters
 7. **Follow RAII** - Automatic resource management and cleanup
 8. **Use Smart Pointers** - Automatic memory management
 
 ### 🧪 Testing
+
 9. **Write Comprehensive Tests** - Unit, integration, and performance tests
 10. **Mock Dependencies** - Isolate components for testing
 11. **Test Error Paths** - Ensure proper error handling
 12. **Performance Testing** - Validate performance requirements
 
 ### 📖 Documentation
+
 13. **Document APIs Clearly** - Comprehensive API documentation
 14. **Provide Usage Examples** - Real-world usage scenarios
 15. **Version Compatibility** - Clear version requirements and compatibility
@@ -250,36 +273,45 @@ void MyPlugin::initialize() {
 ### Common Issues and Solutions
 
 #### 🚫 Plugin Loading Failures
+
 **Symptoms:**
+
 - Plugin fails to load
 - "Invalid plugin file format" errors
 - Missing symbol errors
 
 **Solutions:**
+
 - Ensure plugin file has correct permissions
 - Validate JSON metadata syntax with `jq`
 - Verify all required Qt modules are available
 - Check plugin interface implementation completeness
 
 #### ⚙️ Configuration Errors
+
 **Symptoms:**
+
 - Configuration validation failures
 - Type mismatch errors
 - Missing required fields
 
 **Solutions:**
+
 - Validate JSON configuration format and syntax
 - Check required vs optional fields in metadata
 - Verify data types match plugin expectations
 - Use configuration validation schemas
 
 #### 🏃 Runtime Errors
+
 **Symptoms:**
+
 - Plugin crashes during execution
 - Memory access violations
 - Thread safety issues
 
 **Solutions:**
+
 - Verify plugin initialization completed successfully
 - Check resource availability and limits
 - Monitor memory usage for leaks
@@ -309,6 +341,7 @@ int main(int argc, char *argv[]) {
 ### Adding New Examples
 
 1. **Create Directory Structure**
+
    ```bash
    mkdir examples/my_example
    cd examples/my_example
@@ -321,6 +354,7 @@ int main(int argc, char *argv[]) {
    - Implement unit tests
 
 3. **Add Build Configuration**
+
    ```cmake
    # CMakeLists.txt
    cmake_minimum_required(VERSION 3.21)

@@ -171,25 +171,73 @@ void TestComponentArchitecture::testPluginDependencyResolverComponent()
     auto load_order = resolver->get_load_order();
     QCOMPARE(load_order.size(), 3);
 
-    // Verify correct order: a, b, c
-    // Note: There's a known issue with the dependency resolver returning incorrect order
+    // Verify correct dependency order: a, b, c
+    // plugin.a has no dependencies, so it loads first
+    // plugin.b depends on plugin.a, so it loads second
+    // plugin.c depends on plugin.b, so it loads third
     qDebug() << "Load order:" << QString::fromStdString(load_order[0])
              << QString::fromStdString(load_order[1])
              << QString::fromStdString(load_order[2]);
 
-    // TODO: Fix dependency resolver topological sort algorithm
-    // Expected: plugin.a, plugin.b, plugin.c
-    // Actual: plugin.c, plugin.b, plugin.a (reverse order)
+    // Verify exact dependency order
+    QCOMPARE(QString::fromStdString(load_order[0]), "plugin.a");
+    QCOMPARE(QString::fromStdString(load_order[1]), "plugin.b");
+    QCOMPARE(QString::fromStdString(load_order[2]), "plugin.c");
 
-    // For now, just verify we got all 3 plugins in some order
-    QStringList expected_plugins = {"plugin.a", "plugin.b", "plugin.c"};
-    QStringList actual_plugins;
-    for (const auto& plugin : load_order) {
-        actual_plugins << QString::fromStdString(plugin);
+    // Test edge case: single plugin with no dependencies
+    auto single_registry = std::make_unique<PluginRegistry>();
+    auto single_plugin = std::make_unique<PluginInfo>();
+    single_plugin->id = "single.plugin";
+    single_plugin->metadata.dependencies = {};
+
+    single_registry->register_plugin("single.plugin", std::move(single_plugin));
+    resolver->update_dependency_graph(single_registry.get());
+
+    auto single_order = resolver->get_load_order();
+    QCOMPARE(single_order.size(), 1);
+    QCOMPARE(QString::fromStdString(single_order[0]), "single.plugin");
+
+    // Test edge case: multiple independent plugins
+    auto multi_registry = std::make_unique<PluginRegistry>();
+    auto plugin_x = std::make_unique<PluginInfo>();
+    plugin_x->id = "plugin.x";
+    plugin_x->metadata.dependencies = {};
+
+    auto plugin_y = std::make_unique<PluginInfo>();
+    plugin_y->id = "plugin.y";
+    plugin_y->metadata.dependencies = {};
+
+    multi_registry->register_plugin("plugin.x", std::move(plugin_x));
+    multi_registry->register_plugin("plugin.y", std::move(plugin_y));
+    resolver->update_dependency_graph(multi_registry.get());
+
+    auto multi_order = resolver->get_load_order();
+    QCOMPARE(multi_order.size(), 2);
+    // Independent plugins can load in any order, just verify both are present
+    QStringList multi_plugins;
+    for (const auto& plugin : multi_order) {
+        multi_plugins << QString::fromStdString(plugin);
     }
-    actual_plugins.sort();
-    expected_plugins.sort();
-    QCOMPARE(actual_plugins, expected_plugins);
+    QVERIFY(multi_plugins.contains("plugin.x"));
+    QVERIFY(multi_plugins.contains("plugin.y"));
+
+    // Test circular dependency detection
+    auto circular_registry = std::make_unique<PluginRegistry>();
+    auto plugin_p = std::make_unique<PluginInfo>();
+    plugin_p->id = "plugin.p";
+    plugin_p->metadata.dependencies = {"plugin.q"};
+
+    auto plugin_q = std::make_unique<PluginInfo>();
+    plugin_q->id = "plugin.q";
+    plugin_q->metadata.dependencies = {"plugin.p"};  // Circular dependency
+
+    circular_registry->register_plugin("plugin.p", std::move(plugin_p));
+    circular_registry->register_plugin("plugin.q", std::move(plugin_q));
+    resolver->update_dependency_graph(circular_registry.get());
+
+    auto circular_order = resolver->get_load_order();
+    // Should return empty vector when circular dependency is detected
+    QVERIFY(circular_order.empty());
 }
 
 void TestComponentArchitecture::testSecurityValidatorComponent()
