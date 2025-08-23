@@ -80,7 +80,10 @@
 #include "communication/message_types.hpp"
 // #include "communication/typed_event_system.hpp"  // Temporarily disabled
 // #include "communication/request_response_system.hpp"  // Temporarily disabled
+// Network-dependent headers are conditionally included
+#ifdef QT_NETWORK_LIB
 #include "communication/plugin_service_discovery.hpp"
+#endif
 
 // Managers
 #include "managers/configuration_manager.hpp"

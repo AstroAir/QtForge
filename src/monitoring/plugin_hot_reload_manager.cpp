@@ -166,7 +166,7 @@ void PluginHotReloadManager::on_file_changed(const QString& path) {
     // Call reload callback if set
     if (m_reload_callback) {
         // Execute reload asynchronously to avoid blocking the file watcher
-        std::async(std::launch::async, [this, plugin_id]() {
+        static_cast<void>(std::async(std::launch::async, [this, plugin_id]() {
             try {
                 m_reload_callback(plugin_id);
             } catch (const std::exception& e) {
@@ -176,7 +176,7 @@ void PluginHotReloadManager::on_file_changed(const QString& path) {
                 qCWarning(hotReloadLog)
                     << "Unknown exception in reload callback";
             }
-        });
+        }));
     }
 }
 

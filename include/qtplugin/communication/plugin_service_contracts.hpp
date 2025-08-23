@@ -15,17 +15,13 @@
 #include <QJsonObject>
 #include <QMetaType>
 #include <QString>
+
 #include <chrono>
-#include <functional>
-#include <memory>
 #include <shared_mutex>
 #include <string>
-#include <string_view>
-#include <type_traits>
 #include <unordered_map>
 #include <vector>
-#include "../core/plugin_interface.hpp"
-#include "../utils/concepts.hpp"
+
 #include "../utils/error_handling.hpp"
 
 namespace qtplugin::contracts {
@@ -74,36 +70,42 @@ enum class ServiceCapability : uint32_t {
 using ServiceCapabilities = uint32_t;
 
 // Bitwise operators for ServiceCapability enum
-inline ServiceCapability operator|(ServiceCapability lhs, ServiceCapability rhs) {
-    return static_cast<ServiceCapability>(
-        static_cast<uint32_t>(lhs) | static_cast<uint32_t>(rhs));
+inline ServiceCapability operator|(ServiceCapability lhs,
+                                   ServiceCapability rhs) {
+    return static_cast<ServiceCapability>(static_cast<uint32_t>(lhs) |
+                                          static_cast<uint32_t>(rhs));
 }
 
-inline ServiceCapability operator&(ServiceCapability lhs, ServiceCapability rhs) {
-    return static_cast<ServiceCapability>(
-        static_cast<uint32_t>(lhs) & static_cast<uint32_t>(rhs));
+inline ServiceCapability operator&(ServiceCapability lhs,
+                                   ServiceCapability rhs) {
+    return static_cast<ServiceCapability>(static_cast<uint32_t>(lhs) &
+                                          static_cast<uint32_t>(rhs));
 }
 
-inline ServiceCapability operator^(ServiceCapability lhs, ServiceCapability rhs) {
-    return static_cast<ServiceCapability>(
-        static_cast<uint32_t>(lhs) ^ static_cast<uint32_t>(rhs));
+inline ServiceCapability operator^(ServiceCapability lhs,
+                                   ServiceCapability rhs) {
+    return static_cast<ServiceCapability>(static_cast<uint32_t>(lhs) ^
+                                          static_cast<uint32_t>(rhs));
 }
 
 inline ServiceCapability operator~(ServiceCapability cap) {
     return static_cast<ServiceCapability>(~static_cast<uint32_t>(cap));
 }
 
-inline ServiceCapability& operator|=(ServiceCapability& lhs, ServiceCapability rhs) {
+inline ServiceCapability& operator|=(ServiceCapability& lhs,
+                                     ServiceCapability rhs) {
     lhs = lhs | rhs;
     return lhs;
 }
 
-inline ServiceCapability& operator&=(ServiceCapability& lhs, ServiceCapability rhs) {
+inline ServiceCapability& operator&=(ServiceCapability& lhs,
+                                     ServiceCapability rhs) {
     lhs = lhs & rhs;
     return lhs;
 }
 
-inline ServiceCapability& operator^=(ServiceCapability& lhs, ServiceCapability rhs) {
+inline ServiceCapability& operator^=(ServiceCapability& lhs,
+                                     ServiceCapability rhs) {
     lhs = lhs ^ rhs;
     return lhs;
 }

@@ -14,11 +14,12 @@
 #include <QJsonObject>
 #include <QObject>
 #include <QString>
+
 #include <functional>
 #include <memory>
-#include <set>
 #include <unordered_map>
 #include <vector>
+
 #include "../communication/plugin_service_contracts.hpp"
 #include "../core/enhanced_plugin_interface.hpp"
 #include "../core/plugin_interface.hpp"

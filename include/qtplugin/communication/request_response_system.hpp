@@ -13,6 +13,7 @@
 #include <QString>
 #include <QTimer>
 #include <QUuid>
+
 #include <chrono>
 #include <functional>
 #include <future>
@@ -20,7 +21,7 @@
 #include <optional>
 #include <unordered_map>
 #include <vector>
-#include "../core/plugin_interface.hpp"
+
 #include "../utils/error_handling.hpp"
 
 namespace qtplugin {

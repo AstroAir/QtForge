@@ -145,8 +145,8 @@ public:
     TransactionContext(const QString& transaction_id,
                        IsolationLevel isolation = IsolationLevel::ReadCommitted)
         : m_transaction_id(transaction_id),
-          m_isolation_level(isolation),
           m_state(TransactionState::Active),
+          m_isolation_level(isolation),
           m_start_time(std::chrono::system_clock::now()) {}
 
     // === Transaction Information ===

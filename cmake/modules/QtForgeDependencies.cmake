@@ -1,0 +1,357 @@
+# QtForgeDependencies.cmake
+# Dependency management module for QtForge
+# Provides centralized dependency detection and configuration
+
+include_guard(GLOBAL)
+
+# Include platform detection
+include(${CMAKE_CURRENT_LIST_DIR}/QtForgePlatform.cmake)
+
+# Dependency detection variables
+set(QTFORGE_QT_FOUND FALSE)
+set(QTFORGE_QT_VERSION "unknown")
+set(QTFORGE_QT_COMPONENTS_FOUND "")
+
+#[=======================================================================[.rst:
+qtforge_find_qt
+---------------
+
+Finds Qt6 and its components with intelligent fallback to Qt5.
+
+Options:
+- REQUIRED: Make Qt a required dependency
+- COMPONENTS: List of Qt components to find
+- OPTIONAL_COMPONENTS: List of optional Qt components
+
+Sets the following variables:
+- QTFORGE_QT_FOUND: TRUE if Qt was found
+- QTFORGE_QT_VERSION: Qt version string
+- QTFORGE_QT_MAJOR_VERSION: Qt major version (5 or 6)
+- QTFORGE_QT_COMPONENTS_FOUND: List of found components
+#]=======================================================================]
+function(qtforge_find_qt)
+    cmake_parse_arguments(QT
+        "REQUIRED"
+        ""
+        "COMPONENTS;OPTIONAL_COMPONENTS"
+        ${ARGN}
+    )
+
+    # Default components
+    if(NOT QT_COMPONENTS)
+        set(QT_COMPONENTS Core)
+    endif()
+
+    # Try Qt6 first
+    find_package(Qt6 QUIET COMPONENTS ${QT_COMPONENTS})
+
+    if(Qt6_FOUND)
+        set(QTFORGE_QT_FOUND TRUE PARENT_SCOPE)
+        set(QTFORGE_QT_VERSION "${Qt6_VERSION}" PARENT_SCOPE)
+        set(QTFORGE_QT_MAJOR_VERSION 6 PARENT_SCOPE)
+        set(QT_VERSION_MAJOR 6 PARENT_SCOPE)
+
+        # Check for optional components
+        if(QT_OPTIONAL_COMPONENTS)
+            find_package(Qt6 QUIET COMPONENTS ${QT_OPTIONAL_COMPONENTS})
+        endif()
+
+        # Build list of found components
+        set(FOUND_COMPONENTS "")
+        foreach(COMPONENT ${QT_COMPONENTS} ${QT_OPTIONAL_COMPONENTS})
+            if(TARGET Qt6::${COMPONENT})
+                list(APPEND FOUND_COMPONENTS ${COMPONENT})
+            endif()
+        endforeach()
+        set(QTFORGE_QT_COMPONENTS_FOUND "${FOUND_COMPONENTS}" PARENT_SCOPE)
+
+        message(STATUS "QtForge: Found Qt6 ${Qt6_VERSION}")
+        message(STATUS "QtForge: Qt6 components: ${FOUND_COMPONENTS}")
+
+    else()
+        # Fallback to Qt5
+        find_package(Qt5 QUIET COMPONENTS ${QT_COMPONENTS})
+
+        if(Qt5_FOUND)
+            set(QTFORGE_QT_FOUND TRUE PARENT_SCOPE)
+            set(QTFORGE_QT_VERSION "${Qt5_VERSION}" PARENT_SCOPE)
+            set(QTFORGE_QT_MAJOR_VERSION 5 PARENT_SCOPE)
+            set(QT_VERSION_MAJOR 5 PARENT_SCOPE)
+
+            # Check for optional components
+            if(QT_OPTIONAL_COMPONENTS)
+                find_package(Qt5 QUIET COMPONENTS ${QT_OPTIONAL_COMPONENTS})
+            endif()
+
+            # Build list of found components
+            set(FOUND_COMPONENTS "")
+            foreach(COMPONENT ${QT_COMPONENTS} ${QT_OPTIONAL_COMPONENTS})
+                if(TARGET Qt5::${COMPONENT})
+                    list(APPEND FOUND_COMPONENTS ${COMPONENT})
+                endif()
+            endforeach()
+            set(QTFORGE_QT_COMPONENTS_FOUND "${FOUND_COMPONENTS}" PARENT_SCOPE)
+
+            message(STATUS "QtForge: Found Qt5 ${Qt5_VERSION}")
+            message(STATUS "QtForge: Qt5 components: ${FOUND_COMPONENTS}")
+
+        else()
+            set(QTFORGE_QT_FOUND FALSE PARENT_SCOPE)
+
+            if(QT_REQUIRED)
+                message(FATAL_ERROR "QtForge: Qt6 or Qt5 is required but not found")
+            else()
+                message(WARNING "QtForge: Qt6 or Qt5 not found")
+            endif()
+        endif()
+    endif()
+endfunction()
+
+#[=======================================================================[.rst:
+qtforge_find_system_dependencies
+--------------------------------
+
+Finds system dependencies based on platform and enabled features.
+#]=======================================================================]
+function(qtforge_find_system_dependencies)
+    # Threading support (required)
+    find_package(Threads REQUIRED)
+
+    # Platform-specific dependencies
+    if(QTFORGE_IS_LINUX)
+        # Find X11 for Linux desktop applications
+        find_package(X11)
+        if(X11_FOUND)
+            message(STATUS "QtForge: Found X11 support")
+        endif()
+
+        # Find Wayland for modern Linux
+        find_package(PkgConfig QUIET)
+        if(PkgConfig_FOUND)
+            pkg_check_modules(WAYLAND QUIET wayland-client)
+            if(WAYLAND_FOUND)
+                message(STATUS "QtForge: Found Wayland support")
+            endif()
+        endif()
+
+    elseif(QTFORGE_IS_WINDOWS)
+        # Windows-specific libraries are typically found automatically
+        message(STATUS "QtForge: Using Windows system libraries")
+
+    elseif(QTFORGE_IS_MACOS)
+        # macOS frameworks
+        find_library(COCOA_FRAMEWORK Cocoa)
+        find_library(FOUNDATION_FRAMEWORK Foundation)
+        if(COCOA_FRAMEWORK AND FOUNDATION_FRAMEWORK)
+            message(STATUS "QtForge: Found macOS frameworks")
+        endif()
+
+    elseif(QTFORGE_IS_ANDROID)
+        # Android-specific setup
+        if(NOT ANDROID_NDK)
+            message(FATAL_ERROR "QtForge: ANDROID_NDK must be set for Android builds")
+        endif()
+        message(STATUS "QtForge: Using Android NDK: ${ANDROID_NDK}")
+
+    elseif(QTFORGE_IS_IOS)
+        # iOS-specific setup
+        message(STATUS "QtForge: Configuring for iOS")
+    endif()
+endfunction()
+
+#[=======================================================================[.rst:
+qtforge_find_development_dependencies
+------------------------------------
+
+Finds development and testing dependencies.
+#]=======================================================================]
+function(qtforge_find_development_dependencies)
+    # Documentation generation
+    if(QTFORGE_BUILD_DOCS)
+        find_package(Doxygen QUIET)
+        if(DOXYGEN_FOUND)
+            message(STATUS "QtForge: Found Doxygen for documentation generation")
+        else()
+            message(WARNING "QtForge: Doxygen not found, documentation will not be generated")
+        endif()
+    endif()
+
+    # Testing framework
+    if(QTFORGE_BUILD_TESTS)
+        # Try to find Google Test
+        find_package(GTest QUIET)
+        if(GTest_FOUND)
+            message(STATUS "QtForge: Found Google Test")
+        else()
+            # Fallback to Qt Test
+            if(QTFORGE_QT_FOUND AND QT_VERSION_MAJOR EQUAL 6)
+                find_package(Qt6 QUIET COMPONENTS Test)
+                if(Qt6Test_FOUND)
+                    message(STATUS "QtForge: Using Qt6 Test framework")
+                endif()
+            elseif(QTFORGE_QT_FOUND AND QT_VERSION_MAJOR EQUAL 5)
+                find_package(Qt5 QUIET COMPONENTS Test)
+                if(Qt5Test_FOUND)
+                    message(STATUS "QtForge: Using Qt5 Test framework")
+                endif()
+            endif()
+        endif()
+    endif()
+
+    # Benchmarking
+    if(QTFORGE_BUILD_BENCHMARKS)
+        find_package(benchmark QUIET)
+        if(benchmark_FOUND)
+            message(STATUS "QtForge: Found Google Benchmark")
+        else()
+            message(WARNING "QtForge: Google Benchmark not found, benchmarks will not be built")
+        endif()
+    endif()
+endfunction()
+
+#[=======================================================================[.rst:
+qtforge_configure_qt_features
+-----------------------------
+
+Configures Qt-specific features and components based on availability.
+#]=======================================================================]
+function(qtforge_configure_qt_features)
+    if(NOT QTFORGE_QT_FOUND)
+        return()
+    endif()
+
+    # Configure Qt components
+    set(QT_PREFIX "Qt${QT_VERSION_MAJOR}")
+
+    # Core is always required
+    if(NOT TARGET ${QT_PREFIX}::Core)
+        message(FATAL_ERROR "QtForge: Qt Core component is required")
+    endif()
+
+    # Network component
+    if("Network" IN_LIST QTFORGE_QT_COMPONENTS_FOUND)
+        set(QTFORGE_HAS_NETWORK TRUE PARENT_SCOPE)
+        message(STATUS "QtForge: Network support enabled")
+    else()
+        set(QTFORGE_HAS_NETWORK FALSE PARENT_SCOPE)
+        if(QTFORGE_BUILD_NETWORK)
+            message(WARNING "QtForge: Network component requested but not found")
+        endif()
+    endif()
+
+    # UI components
+    if("Widgets" IN_LIST QTFORGE_QT_COMPONENTS_FOUND)
+        set(QTFORGE_HAS_WIDGETS TRUE PARENT_SCOPE)
+        message(STATUS "QtForge: Widgets support enabled")
+    else()
+        set(QTFORGE_HAS_WIDGETS FALSE PARENT_SCOPE)
+        if(QTFORGE_BUILD_UI)
+            message(WARNING "QtForge: Widgets component requested but not found")
+        endif()
+    endif()
+
+    # SQL component
+    if("Sql" IN_LIST QTFORGE_QT_COMPONENTS_FOUND)
+        set(QTFORGE_HAS_SQL TRUE PARENT_SCOPE)
+        message(STATUS "QtForge: SQL support enabled")
+    else()
+        set(QTFORGE_HAS_SQL FALSE PARENT_SCOPE)
+    endif()
+
+    # Concurrent component
+    if("Concurrent" IN_LIST QTFORGE_QT_COMPONENTS_FOUND)
+        set(QTFORGE_HAS_CONCURRENT TRUE PARENT_SCOPE)
+        message(STATUS "QtForge: Concurrent support enabled")
+    else()
+        set(QTFORGE_HAS_CONCURRENT FALSE PARENT_SCOPE)
+    endif()
+
+    # State Machine component
+    if("StateMachine" IN_LIST QTFORGE_QT_COMPONENTS_FOUND)
+        set(QTFORGE_HAS_STATEMACHINE TRUE PARENT_SCOPE)
+        message(STATUS "QtForge: StateMachine support enabled")
+    else()
+        set(QTFORGE_HAS_STATEMACHINE FALSE PARENT_SCOPE)
+    endif()
+endfunction()
+
+#[=======================================================================[.rst:
+qtforge_setup_dependencies
+--------------------------
+
+Main function to set up all dependencies for QtForge.
+This should be called from the main CMakeLists.txt.
+#]=======================================================================]
+function(qtforge_setup_dependencies)
+    message(STATUS "QtForge: Setting up dependencies...")
+
+    # Find Qt with required and optional components
+    set(QT_REQUIRED_COMPONENTS Core)
+    set(QT_OPTIONAL_COMPONENTS Network Widgets Sql Concurrent StateMachine Test)
+
+    qtforge_find_qt(
+        REQUIRED
+        COMPONENTS ${QT_REQUIRED_COMPONENTS}
+        OPTIONAL_COMPONENTS ${QT_OPTIONAL_COMPONENTS}
+    )
+
+    # Find system dependencies
+    qtforge_find_system_dependencies()
+
+    # Find development dependencies
+    qtforge_find_development_dependencies()
+
+    # Configure Qt features
+    qtforge_configure_qt_features()
+
+    # Propagate Qt variables to parent scope
+    set(QTFORGE_QT_FOUND ${QTFORGE_QT_FOUND} PARENT_SCOPE)
+    set(QTFORGE_QT_VERSION ${QTFORGE_QT_VERSION} PARENT_SCOPE)
+    set(QTFORGE_QT_MAJOR_VERSION ${QTFORGE_QT_MAJOR_VERSION} PARENT_SCOPE)
+    set(QT_VERSION_MAJOR ${QT_VERSION_MAJOR} PARENT_SCOPE)
+    set(QTFORGE_QT_COMPONENTS_FOUND ${QTFORGE_QT_COMPONENTS_FOUND} PARENT_SCOPE)
+
+    # Propagate feature flags to parent scope
+    set(QTFORGE_HAS_NETWORK ${QTFORGE_HAS_NETWORK} PARENT_SCOPE)
+    set(QTFORGE_HAS_WIDGETS ${QTFORGE_HAS_WIDGETS} PARENT_SCOPE)
+    set(QTFORGE_HAS_SQL ${QTFORGE_HAS_SQL} PARENT_SCOPE)
+    set(QTFORGE_HAS_CONCURRENT ${QTFORGE_HAS_CONCURRENT} PARENT_SCOPE)
+    set(QTFORGE_HAS_STATEMACHINE ${QTFORGE_HAS_STATEMACHINE} PARENT_SCOPE)
+
+    message(STATUS "QtForge: Dependency setup complete")
+endfunction()
+
+#[=======================================================================[.rst:
+qtforge_link_qt_libraries
+-------------------------
+
+Helper function to link Qt libraries to a target.
+
+Usage:
+  qtforge_link_qt_libraries(target_name COMPONENTS Core Network Widgets)
+#]=======================================================================]
+function(qtforge_link_qt_libraries TARGET_NAME)
+    cmake_parse_arguments(LINK
+        ""
+        ""
+        "COMPONENTS"
+        ${ARGN}
+    )
+
+    if(NOT QTFORGE_QT_FOUND)
+        message(FATAL_ERROR "QtForge: Qt not found, cannot link Qt libraries")
+    endif()
+
+    set(QT_PREFIX "Qt${QT_VERSION_MAJOR}")
+
+    foreach(COMPONENT ${LINK_COMPONENTS})
+        if(TARGET ${QT_PREFIX}::${COMPONENT})
+            target_link_libraries(${TARGET_NAME} PRIVATE ${QT_PREFIX}::${COMPONENT})
+        else()
+            message(WARNING "QtForge: Qt component ${COMPONENT} not available for linking")
+        endif()
+    endforeach()
+endfunction()
+
+# Note: qtforge_setup_dependencies() should be called explicitly from main CMakeLists.txt
+# after all options are configured, not automatically when this module is included

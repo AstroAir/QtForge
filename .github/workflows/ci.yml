@@ -65,10 +65,11 @@ jobs:
         run: |
           cmake -S . -B build \
             -DCMAKE_BUILD_TYPE=Release \
-            -DQTPLUGIN_BUILD_TESTS=ON \
-            -DQTPLUGIN_BUILD_EXAMPLES=ON \
-            -DQTPLUGIN_BUILD_NETWORK=ON \
-            -DQTPLUGIN_BUILD_UI=ON \
+            -DQTFORGE_BUILD_TESTS=ON \
+            -DQTFORGE_BUILD_EXAMPLES=ON \
+            -DQTFORGE_BUILD_NETWORK=ON \
+            -DQTFORGE_BUILD_UI=ON \
+            -DQTFORGE_ENABLE_WARNINGS=ON \
             ${{ runner.os == 'Linux' && '-G Ninja' || '' }}
 
       - name: Build
@@ -158,10 +159,11 @@ jobs:
         run: |
           cmake -S . -B build-pkg \
             -DCMAKE_BUILD_TYPE=Release \
-            -DQTPLUGIN_BUILD_EXAMPLES=ON \
-            -DQTPLUGIN_BUILD_TESTS=OFF \
-            -DQTPLUGIN_BUILD_NETWORK=ON \
-            -DQTPLUGIN_BUILD_UI=ON \
+            -DQTFORGE_BUILD_EXAMPLES=ON \
+            -DQTFORGE_BUILD_TESTS=OFF \
+            -DQTFORGE_BUILD_NETWORK=ON \
+            -DQTFORGE_BUILD_UI=ON \
+            -DQTFORGE_CREATE_PACKAGES=ON \
             -DCPACK_GENERATOR="${{ matrix.package_types }}" \
             ${{ runner.os == 'Linux' && '-G Ninja' || '' }}
 
@@ -266,9 +268,82 @@ jobs:
       - name: Upload Flatpak
         uses: actions/upload-artifact@v3
         with:
-          name: qtplugin-flatpak
-          path: qtplugin.flatpak
+          name: qtforge-flatpak
+          path: qtforge.flatpak
           retention-days: 30
+
+  # Cross-compilation testing
+  cross-compile:
+    name: Cross-compile (${{ matrix.target }})
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main')
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: linux-arm64
+            toolchain: cmake/toolchains/linux-arm64.cmake
+            packages: "gcc-aarch64-linux-gnu g++-aarch64-linux-gnu"
+          - target: android-arm64
+            toolchain: cmake/toolchains/android.cmake
+            packages: ""
+          - target: embedded-riscv
+            toolchain: cmake/toolchains/embedded/riscv.cmake
+            packages: ""
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup CMake
+        uses: jwlawson/actions-setup-cmake@v1.14
+        with:
+          cmake-version: ${{ env.CMAKE_VERSION }}
+
+      - name: Setup Ninja
+        uses: seanmiddleditch/gha-setup-ninja@master
+
+      - name: Install cross-compilation tools
+        if: matrix.packages != ''
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ${{ matrix.packages }}
+
+      - name: Setup Android NDK
+        if: matrix.target == 'android-arm64'
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r25c
+
+      - name: Setup RISC-V toolchain
+        if: matrix.target == 'embedded-riscv'
+        run: |
+          wget -q https://github.com/riscv-collab/riscv-gnu-toolchain/releases/download/2023.07.07/riscv64-elf-ubuntu-20.04-gcc-nightly-2023.07.07-nightly.tar.gz
+          tar -xzf riscv64-elf-ubuntu-20.04-gcc-nightly-2023.07.07-nightly.tar.gz
+          echo "$PWD/riscv/bin" >> $GITHUB_PATH
+
+      - name: Configure cross-compilation
+        run: |
+          cmake -S . -B build-cross \
+            -DCMAKE_TOOLCHAIN_FILE=${{ matrix.toolchain }} \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DQTFORGE_BUILD_EXAMPLES=OFF \
+            -DQTFORGE_BUILD_TESTS=OFF \
+            -DQTFORGE_BUILD_NETWORK=OFF \
+            -DQTFORGE_BUILD_UI=OFF \
+            -G Ninja
+
+      - name: Build cross-compilation
+        run: cmake --build build-cross --config Release
+
+      - name: Upload cross-compilation artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: qtforge-${{ matrix.target }}
+          path: build-cross/install/
+          retention-days: 7
 
   # Release Creation - Only on tags
   create-release:

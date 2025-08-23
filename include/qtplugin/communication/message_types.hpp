@@ -7,13 +7,78 @@
 #pragma once
 
 #include <QJsonObject>
+
+#include <array>
 #include <chrono>
 #include <string>
 #include <string_view>
-#include "../core/plugin_interface.hpp"
+
 #include "message_bus.hpp"
 
 namespace qtplugin::messages {
+
+// Helper functions for reducing code duplication
+namespace detail {
+/**
+ * @brief Convert timestamp to JSON string format
+ */
+inline QString timestamp_to_json_string(
+    const std::chrono::system_clock::time_point& tp) {
+    return QString::number(
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+            tp.time_since_epoch())
+            .count());
+}
+
+/**
+ * @brief Convert string_view to QString efficiently
+ */
+inline QString to_qstring(std::string_view sv) {
+    return QString::fromUtf8(sv.data(), static_cast<int>(sv.size()));
+}
+
+/**
+ * @brief Create base JSON object with common fields
+ */
+inline QJsonObject create_base_json(
+    const char* type, std::string_view sender,
+    const std::chrono::system_clock::time_point& timestamp) {
+    return QJsonObject{{"type", type},
+                       {"sender", to_qstring(sender)},
+                       {"timestamp", timestamp_to_json_string(timestamp)}};
+}
+
+/**
+ * @brief Add optional string field to JSON if value is not empty
+ */
+inline void add_optional_field(QJsonObject& json, const char* key,
+                               std::string_view value) {
+    if (!value.empty()) {
+        json[key] = to_qstring(value);
+    }
+}
+
+/**
+ * @brief Template for enum-to-string conversion using lookup arrays
+ */
+template <typename EnumType, size_t N>
+constexpr const char* enum_to_string(
+    EnumType value, const std::array<const char*, N>& strings) {
+    const auto index = static_cast<size_t>(value);
+    return (index < N) ? strings[index] : "unknown";
+}
+
+// Enum-to-string mapping arrays
+constexpr std::array lifecycle_event_strings = {
+    "loading",  "loaded",  "initializing", "initialized", "starting", "started",
+    "stopping", "stopped", "unloading",    "unloaded",    "error"};
+
+constexpr std::array system_status_strings = {
+    "starting", "running", "stopping", "stopped", "error", "maintenance"};
+
+constexpr std::array log_level_strings = {"debug", "info", "warning", "error",
+                                          "critical"};
+}  // namespace detail
 
 /**
  * @brief Plugin lifecycle event message
@@ -42,49 +107,17 @@ public:
     Event event() const noexcept { return m_event; }
 
     QJsonObject to_json() const override {
-        return QJsonObject{
-            {"type", "plugin_lifecycle"},
-            {"sender", QString::fromStdString(std::string(sender()))},
-            {"plugin_id", QString::fromStdString(m_plugin_id)},
-            {"event", event_to_string(m_event)},
-            {"timestamp",
-             QString::number(
-                 std::chrono::duration_cast<std::chrono::milliseconds>(
-                     timestamp().time_since_epoch())
-                     .count())}};
+        auto json =
+            detail::create_base_json("plugin_lifecycle", sender(), timestamp());
+        json["plugin_id"] = detail::to_qstring(m_plugin_id);
+        json["event"] =
+            detail::enum_to_string(m_event, detail::lifecycle_event_strings);
+        return json;
     }
 
 private:
     std::string m_plugin_id;
     Event m_event;
-
-    static const char* event_to_string(Event event) {
-        switch (event) {
-            case Event::Loading:
-                return "loading";
-            case Event::Loaded:
-                return "loaded";
-            case Event::Initializing:
-                return "initializing";
-            case Event::Initialized:
-                return "initialized";
-            case Event::Starting:
-                return "starting";
-            case Event::Started:
-                return "started";
-            case Event::Stopping:
-                return "stopping";
-            case Event::Stopped:
-                return "stopped";
-            case Event::Unloading:
-                return "unloading";
-            case Event::Unloaded:
-                return "unloaded";
-            case Event::Error:
-                return "error";
-        }
-        return "unknown";
-    }
 };
 
 /**
@@ -111,17 +144,12 @@ public:
     }
 
     QJsonObject to_json() const override {
-        return QJsonObject{
-            {"type", "configuration_changed"},
-            {"sender", QString::fromStdString(std::string(sender()))},
-            {"plugin_id", QString::fromStdString(m_plugin_id)},
-            {"old_config", m_old_config},
-            {"new_config", m_new_config},
-            {"timestamp",
-             QString::number(
-                 std::chrono::duration_cast<std::chrono::milliseconds>(
-                     timestamp().time_since_epoch())
-                     .count())}};
+        auto json = detail::create_base_json("configuration_changed", sender(),
+                                             timestamp());
+        json["plugin_id"] = detail::to_qstring(m_plugin_id);
+        json["old_config"] = m_old_config;
+        json["new_config"] = m_new_config;
+        return json;
     }
 
 private:
@@ -150,18 +178,13 @@ public:
     const QJsonObject& parameters() const noexcept { return m_parameters; }
 
     QJsonObject to_json() const override {
-        return QJsonObject{
-            {"type", "plugin_command"},
-            {"sender", QString::fromStdString(std::string(sender()))},
-            {"target_plugin", QString::fromStdString(m_target_plugin)},
-            {"command", QString::fromStdString(m_command)},
-            {"parameters", m_parameters},
-            {"priority", static_cast<int>(priority())},
-            {"timestamp",
-             QString::number(
-                 std::chrono::duration_cast<std::chrono::milliseconds>(
-                     timestamp().time_since_epoch())
-                     .count())}};
+        auto json =
+            detail::create_base_json("plugin_command", sender(), timestamp());
+        json["target_plugin"] = detail::to_qstring(m_target_plugin);
+        json["command"] = detail::to_qstring(m_command);
+        json["parameters"] = m_parameters;
+        json["priority"] = static_cast<int>(priority());
+        return json;
     }
 
 private:
@@ -192,22 +215,12 @@ public:
     std::string_view error_message() const noexcept { return m_error_message; }
 
     QJsonObject to_json() const override {
-        QJsonObject json{
-            {"type", "plugin_command_response"},
-            {"sender", QString::fromStdString(std::string(sender()))},
-            {"request_id", QString::fromStdString(m_request_id)},
-            {"success", m_success},
-            {"result", m_result},
-            {"timestamp",
-             QString::number(
-                 std::chrono::duration_cast<std::chrono::milliseconds>(
-                     timestamp().time_since_epoch())
-                     .count())}};
-
-        if (!m_error_message.empty()) {
-            json["error_message"] = QString::fromStdString(m_error_message);
-        }
-
+        auto json = detail::create_base_json("plugin_command_response",
+                                             sender(), timestamp());
+        json["request_id"] = detail::to_qstring(m_request_id);
+        json["success"] = m_success;
+        json["result"] = m_result;
+        detail::add_optional_field(json, "error_message", m_error_message);
         return json;
     }
 
@@ -242,44 +255,17 @@ public:
     std::string_view details() const noexcept { return m_details; }
 
     QJsonObject to_json() const override {
-        QJsonObject json{
-            {"type", "system_status"},
-            {"sender", QString::fromStdString(std::string(sender()))},
-            {"status", status_to_string(m_status)},
-            {"timestamp",
-             QString::number(
-                 std::chrono::duration_cast<std::chrono::milliseconds>(
-                     timestamp().time_since_epoch())
-                     .count())}};
-
-        if (!m_details.empty()) {
-            json["details"] = QString::fromStdString(m_details);
-        }
-
+        auto json =
+            detail::create_base_json("system_status", sender(), timestamp());
+        json["status"] =
+            detail::enum_to_string(m_status, detail::system_status_strings);
+        detail::add_optional_field(json, "details", m_details);
         return json;
     }
 
 private:
     Status m_status;
     std::string m_details;
-
-    static const char* status_to_string(Status status) {
-        switch (status) {
-            case Status::Starting:
-                return "starting";
-            case Status::Running:
-                return "running";
-            case Status::Stopping:
-                return "stopping";
-            case Status::Stopped:
-                return "stopped";
-            case Status::Error:
-                return "error";
-            case Status::Maintenance:
-                return "maintenance";
-        }
-        return "unknown";
-    }
 };
 
 /**
@@ -305,20 +291,16 @@ public:
     }
 
     QJsonObject to_json() const override {
-        return QJsonObject{
-            {"type", "resource_usage"},
-            {"sender", QString::fromStdString(std::string(sender()))},
-            {"plugin_id", QString::fromStdString(m_plugin_id)},
-            {"cpu_usage", m_resource_info.cpu_usage},
-            {"memory_usage", static_cast<qint64>(m_resource_info.memory_usage)},
-            {"disk_usage", static_cast<qint64>(m_resource_info.disk_usage)},
-            {"thread_count", static_cast<int>(m_resource_info.thread_count)},
-            {"handle_count", static_cast<int>(m_resource_info.handle_count)},
-            {"timestamp",
-             QString::number(
-                 std::chrono::duration_cast<std::chrono::milliseconds>(
-                     timestamp().time_since_epoch())
-                     .count())}};
+        auto json =
+            detail::create_base_json("resource_usage", sender(), timestamp());
+        json["plugin_id"] = detail::to_qstring(m_plugin_id);
+        json["cpu_usage"] = m_resource_info.cpu_usage;
+        json["memory_usage"] =
+            static_cast<qint64>(m_resource_info.memory_usage);
+        json["disk_usage"] = static_cast<qint64>(m_resource_info.disk_usage);
+        json["thread_count"] = static_cast<int>(m_resource_info.thread_count);
+        json["handle_count"] = static_cast<int>(m_resource_info.handle_count);
+        return json;
     }
 
 private:
@@ -340,17 +322,12 @@ public:
     const QJsonObject& data() const noexcept { return m_data; }
 
     QJsonObject to_json() const override {
-        return QJsonObject{
-            {"type", "custom_data"},
-            {"sender", QString::fromStdString(std::string(sender()))},
-            {"data_type", QString::fromStdString(m_data_type)},
-            {"data", m_data},
-            {"priority", static_cast<int>(priority())},
-            {"timestamp",
-             QString::number(
-                 std::chrono::duration_cast<std::chrono::milliseconds>(
-                     timestamp().time_since_epoch())
-                     .count())}};
+        auto json =
+            detail::create_base_json("custom_data", sender(), timestamp());
+        json["data_type"] = detail::to_qstring(m_data_type);
+        json["data"] = m_data;
+        json["priority"] = static_cast<int>(priority());
+        return json;
     }
 
 private:
@@ -373,18 +350,12 @@ public:
     const PluginError& error() const noexcept { return m_error; }
 
     QJsonObject to_json() const override {
-        return QJsonObject{
-            {"type", "error"},
-            {"sender", QString::fromStdString(std::string(sender()))},
-            {"plugin_id", QString::fromStdString(m_plugin_id)},
-            {"error_code", static_cast<int>(m_error.code)},
-            {"error_message", QString::fromStdString(m_error.message)},
-            {"error_details", QString::fromStdString(m_error.details)},
-            {"timestamp",
-             QString::number(
-                 std::chrono::duration_cast<std::chrono::milliseconds>(
-                     timestamp().time_since_epoch())
-                     .count())}};
+        auto json = detail::create_base_json("error", sender(), timestamp());
+        json["plugin_id"] = detail::to_qstring(m_plugin_id);
+        json["error_code"] = static_cast<int>(m_error.code);
+        json["error_message"] = detail::to_qstring(m_error.message);
+        json["error_details"] = detail::to_qstring(m_error.details);
+        return json;
     }
 
 private:
@@ -411,21 +382,11 @@ public:
     std::string_view category() const noexcept { return m_category; }
 
     QJsonObject to_json() const override {
-        QJsonObject json{
-            {"type", "log"},
-            {"sender", QString::fromStdString(std::string(sender()))},
-            {"level", level_to_string(m_level)},
-            {"message", QString::fromStdString(m_message)},
-            {"timestamp",
-             QString::number(
-                 std::chrono::duration_cast<std::chrono::milliseconds>(
-                     timestamp().time_since_epoch())
-                     .count())}};
-
-        if (!m_category.empty()) {
-            json["category"] = QString::fromStdString(m_category);
-        }
-
+        auto json = detail::create_base_json("log", sender(), timestamp());
+        json["level"] =
+            detail::enum_to_string(m_level, detail::log_level_strings);
+        json["message"] = detail::to_qstring(m_message);
+        detail::add_optional_field(json, "category", m_category);
         return json;
     }
 
@@ -433,22 +394,6 @@ private:
     Level m_level;
     std::string m_message;
     std::string m_category;
-
-    static const char* level_to_string(Level level) {
-        switch (level) {
-            case Level::Debug:
-                return "debug";
-            case Level::Info:
-                return "info";
-            case Level::Warning:
-                return "warning";
-            case Level::Error:
-                return "error";
-            case Level::Critical:
-                return "critical";
-        }
-        return "unknown";
-    }
 };
 
 }  // namespace qtplugin::messages

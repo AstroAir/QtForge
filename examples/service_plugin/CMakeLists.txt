@@ -7,8 +7,7 @@ project(ServicePluginExample
     LANGUAGES CXX
 )
 
-# Find required packages
-find_package(Qt6 REQUIRED COMPONENTS Core)
+# Qt6 is already found by the parent project
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 20)

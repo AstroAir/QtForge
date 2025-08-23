@@ -3,8 +3,7 @@ cmake_minimum_required(VERSION 3.21)
 
 project(BasicPluginExample)
 
-# Find Qt6
-find_package(Qt6 REQUIRED COMPONENTS Core)
+# Qt6 is already found by the parent project
 
 # Create the plugin library
 add_library(BasicPlugin MODULE

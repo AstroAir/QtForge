@@ -16,15 +16,14 @@
 #include <QString>
 #include <QStringList>
 #include <QTimer>
+
 #include <chrono>
 #include <functional>
 #include <memory>
-#include <optional>
-#include <unordered_map>
 #include <vector>
+
 #include "../core/plugin_interface.hpp"
 #include "../utils/error_handling.hpp"
-#include "request_response_system.hpp"
 
 namespace qtplugin {
 

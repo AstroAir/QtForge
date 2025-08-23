@@ -18,14 +18,14 @@
 #include <QTimer>
 #include <QUuid>
 #include <QVariant>
+
 #include <chrono>
 #include <functional>
 #include <future>
 #include <memory>
-#include <typeindex>
 #include <unordered_map>
 #include <vector>
-#include "../core/plugin_interface.hpp"
+
 #include "../utils/error_handling.hpp"
 
 namespace qtplugin {

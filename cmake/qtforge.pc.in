@@ -1,0 +1,13 @@
+# QtForge pkg-config file
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=${prefix}
+libdir=${prefix}/@CMAKE_INSTALL_LIBDIR@
+includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
+
+Name: QtForge
+Description: A modern, type-safe plugin system for Qt applications with modular component architecture
+Version: @PROJECT_VERSION@
+URL: https://github.com/qtforge/qtforge
+Requires: Qt6Core >= 6.0.0
+Libs: -L${libdir} -lqtforge-core
+Cflags: -I${includedir}

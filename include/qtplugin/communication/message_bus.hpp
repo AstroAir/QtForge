@@ -9,6 +9,7 @@
 #include <QJsonObject>
 #include <QObject>
 #include <QString>
+
 #include <any>
 #include <atomic>
 #include <chrono>
@@ -21,8 +22,8 @@
 #include <typeindex>
 #include <unordered_map>
 #include <unordered_set>
-#include <variant>
 #include <vector>
+
 #include "../utils/error_handling.hpp"
 
 namespace qtplugin {

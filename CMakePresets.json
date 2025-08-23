@@ -1,0 +1,290 @@
+{
+    "version": 6,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 21,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "default",
+            "displayName": "Default Configuration",
+            "description": "Default build configuration with auto-detected settings",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "generator": "Ninja Multi-Config",
+            "cacheVariables": {
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                "QTFORGE_BUILD_EXAMPLES": "ON",
+                "QTFORGE_BUILD_TESTS": "OFF"
+            }
+        },
+        {
+            "name": "debug",
+            "displayName": "Debug Build",
+            "description": "Debug build with all debugging features enabled",
+            "inherits": "default",
+            "binaryDir": "${sourceDir}/build/debug",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "QTFORGE_BUILD_TESTS": "ON",
+                "QTFORGE_ENABLE_SANITIZERS": "ON",
+                "QTFORGE_ENABLE_COMPONENT_LOGGING": "ON"
+            }
+        },
+        {
+            "name": "release",
+            "displayName": "Release Build",
+            "description": "Optimized release build",
+            "inherits": "default",
+            "binaryDir": "${sourceDir}/build/release",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "QTFORGE_ENABLE_LTO": "ON",
+                "QTFORGE_CREATE_PACKAGES": "ON"
+            }
+        },
+        {
+            "name": "windows-msvc",
+            "displayName": "Windows MSVC",
+            "description": "Windows build using MSVC compiler",
+            "inherits": "default",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            },
+            "generator": "Visual Studio 17 2022",
+            "architecture": "x64",
+            "cacheVariables": {
+                "CMAKE_MSVC_RUNTIME_LIBRARY": "MultiThreadedDLL"
+            }
+        },
+        {
+            "name": "windows-clang",
+            "displayName": "Windows Clang",
+            "description": "Windows build using Clang compiler",
+            "inherits": "default",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            },
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "clang",
+                "CMAKE_CXX_COMPILER": "clang++"
+            }
+        },
+        {
+            "name": "linux-gcc",
+            "displayName": "Linux GCC",
+            "description": "Linux build using GCC compiler",
+            "inherits": "default",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Linux"
+            },
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "gcc",
+                "CMAKE_CXX_COMPILER": "g++"
+            }
+        },
+        {
+            "name": "linux-clang",
+            "displayName": "Linux Clang",
+            "description": "Linux build using Clang compiler",
+            "inherits": "default",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Linux"
+            },
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "clang",
+                "CMAKE_CXX_COMPILER": "clang++"
+            }
+        },
+        {
+            "name": "macos",
+            "displayName": "macOS",
+            "description": "macOS build configuration",
+            "inherits": "default",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Darwin"
+            },
+            "generator": "Xcode",
+            "cacheVariables": {
+                "CMAKE_OSX_DEPLOYMENT_TARGET": "10.15"
+            }
+        },
+        {
+            "name": "android-arm64",
+            "displayName": "Android ARM64",
+            "description": "Android build for ARM64 architecture",
+            "inherits": "default",
+            "toolchainFile": "${sourceDir}/cmake/toolchains/android.cmake",
+            "cacheVariables": {
+                "ANDROID_ABI": "arm64-v8a",
+                "ANDROID_PLATFORM": "android-21",
+                "QTFORGE_BUILD_SHARED": "OFF",
+                "QTFORGE_BUILD_STATIC": "ON"
+            }
+        },
+        {
+            "name": "ios",
+            "displayName": "iOS",
+            "description": "iOS build configuration",
+            "inherits": "default",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Darwin"
+            },
+            "toolchainFile": "${sourceDir}/cmake/toolchains/ios.cmake",
+            "cacheVariables": {
+                "CMAKE_SYSTEM_NAME": "iOS",
+                "CMAKE_OSX_DEPLOYMENT_TARGET": "12.0",
+                "QTFORGE_BUILD_SHARED": "OFF",
+                "QTFORGE_BUILD_STATIC": "ON"
+            }
+        },
+        {
+            "name": "cross-linux-arm64",
+            "displayName": "Cross-compile Linux ARM64",
+            "description": "Cross-compilation for Linux ARM64",
+            "inherits": "default",
+            "toolchainFile": "${sourceDir}/cmake/toolchains/linux-arm64.cmake",
+            "cacheVariables": {
+                "CMAKE_SYSTEM_NAME": "Linux",
+                "CMAKE_SYSTEM_PROCESSOR": "aarch64"
+            }
+        },
+        {
+            "name": "embedded-riscv",
+            "displayName": "Embedded RISC-V",
+            "description": "Embedded RISC-V build configuration",
+            "inherits": "default",
+            "toolchainFile": "${sourceDir}/cmake/toolchains/embedded/riscv.cmake",
+            "cacheVariables": {
+                "QTFORGE_BUILD_EXAMPLES": "OFF",
+                "QTFORGE_BUILD_TESTS": "OFF",
+                "QTFORGE_BUILD_SHARED": "OFF",
+                "QTFORGE_BUILD_STATIC": "ON"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "debug",
+            "displayName": "Debug Build",
+            "configurePreset": "debug",
+            "configuration": "Debug"
+        },
+        {
+            "name": "release",
+            "displayName": "Release Build",
+            "configurePreset": "release",
+            "configuration": "Release"
+        },
+        {
+            "name": "windows-msvc-debug",
+            "displayName": "Windows MSVC Debug",
+            "configurePreset": "windows-msvc",
+            "configuration": "Debug"
+        },
+        {
+            "name": "windows-msvc-release",
+            "displayName": "Windows MSVC Release",
+            "configurePreset": "windows-msvc",
+            "configuration": "Release"
+        },
+        {
+            "name": "linux-gcc-debug",
+            "displayName": "Linux GCC Debug",
+            "configurePreset": "linux-gcc",
+            "configuration": "Debug"
+        },
+        {
+            "name": "linux-gcc-release",
+            "displayName": "Linux GCC Release",
+            "configurePreset": "linux-gcc",
+            "configuration": "Release"
+        },
+        {
+            "name": "macos-debug",
+            "displayName": "macOS Debug",
+            "configurePreset": "macos",
+            "configuration": "Debug"
+        },
+        {
+            "name": "macos-release",
+            "displayName": "macOS Release",
+            "configurePreset": "macos",
+            "configuration": "Release"
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "debug",
+            "displayName": "Debug Tests",
+            "configurePreset": "debug",
+            "output": {
+                "outputOnFailure": true
+            },
+            "execution": {
+                "noTestsAction": "error",
+                "stopOnFailure": false
+            }
+        },
+        {
+            "name": "release",
+            "displayName": "Release Tests",
+            "configurePreset": "release",
+            "output": {
+                "outputOnFailure": true
+            }
+        }
+    ],
+    "packagePresets": [
+        {
+            "name": "release",
+            "displayName": "Release Package",
+            "configurePreset": "release",
+            "generators": [
+                "TGZ",
+                "ZIP"
+            ]
+        },
+        {
+            "name": "windows-release",
+            "displayName": "Windows Release Package",
+            "configurePreset": "windows-msvc",
+            "generators": [
+                "NSIS",
+                "ZIP",
+                "WIX"
+            ]
+        },
+        {
+            "name": "linux-release",
+            "displayName": "Linux Release Package",
+            "configurePreset": "linux-gcc",
+            "generators": [
+                "DEB",
+                "RPM",
+                "TGZ"
+            ]
+        },
+        {
+            "name": "macos-release",
+            "displayName": "macOS Release Package",
+            "configurePreset": "macos",
+            "generators": [
+                "DragNDrop",
+                "TGZ"
+            ]
+        }
+    ]
+}
