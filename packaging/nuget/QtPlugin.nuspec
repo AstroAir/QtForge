@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+  <metadata>
+    <id>QtPlugin</id>
+    <version>3.0.0</version>
+    <title>QtPlugin Library</title>
+    <authors>QtForge</authors>
+    <owners>QtForge</owners>
+    <license type="expression">MIT</license>
+    <projectUrl>https://github.com/QtForge/QtPlugin</projectUrl>
+    <repository type="git" url="https://github.com/QtForge/QtPlugin.git" />
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Modern C++ Plugin System for Qt Applications with modular component architecture, security features, and comprehensive plugin management capabilities.</description>
+    <releaseNotes>
+      Version 3.0.0:
+      - New modular component architecture
+      - Enhanced security validation
+      - Improved plugin lifecycle management
+      - Better cross-platform support
+      - Comprehensive test coverage
+    </releaseNotes>
+    <copyright>Copyright (c) 2024 QtForge</copyright>
+    <tags>qt plugin cpp modular architecture security native</tags>
+    <dependencies>
+      <group targetFramework="native">
+        <!-- Qt6 dependencies would be specified here if available on NuGet -->
+      </group>
+    </dependencies>
+  </metadata>
+  <files>
+    <!-- Headers -->
+    <file src="include\qtplugin\**\*.hpp" target="build\native\include\qtplugin\" />
+    
+    <!-- Libraries - Debug -->
+    <file src="lib\Debug\qtplugin-core.lib" target="build\native\lib\Debug\" />
+    <file src="lib\Debug\qtplugin-security.lib" target="build\native\lib\Debug\" />
+    <file src="lib\Debug\qtplugin-network.lib" target="build\native\lib\Debug\" />
+    <file src="lib\Debug\qtplugin-ui.lib" target="build\native\lib\Debug\" />
+    
+    <!-- Libraries - Release -->
+    <file src="lib\Release\qtplugin-core.lib" target="build\native\lib\Release\" />
+    <file src="lib\Release\qtplugin-security.lib" target="build\native\lib\Release\" />
+    <file src="lib\Release\qtplugin-network.lib" target="build\native\lib\Release\" />
+    <file src="lib\Release\qtplugin-ui.lib" target="build\native\lib\Release\" />
+    
+    <!-- DLLs - Debug (if building shared) -->
+    <file src="bin\Debug\qtplugin-core.dll" target="build\native\bin\Debug\" />
+    <file src="bin\Debug\qtplugin-security.dll" target="build\native\bin\Debug\" />
+    <file src="bin\Debug\qtplugin-network.dll" target="build\native\bin\Debug\" />
+    <file src="bin\Debug\qtplugin-ui.dll" target="build\native\bin\Debug\" />
+    
+    <!-- DLLs - Release (if building shared) -->
+    <file src="bin\Release\qtplugin-core.dll" target="build\native\bin\Release\" />
+    <file src="bin\Release\qtplugin-security.dll" target="build\native\bin\Release\" />
+    <file src="bin\Release\qtplugin-network.dll" target="build\native\bin\Release\" />
+    <file src="bin\Release\qtplugin-ui.dll" target="build\native\bin\Release\" />
+    
+    <!-- CMake files -->
+    <file src="cmake\**\*" target="build\native\cmake\" />
+    
+    <!-- MSBuild targets -->
+    <file src="QtPlugin.targets" target="build\native\" />
+    
+    <!-- Documentation -->
+    <file src="README.md" target="docs\" />
+    <file src="LICENSE" target="docs\" />
+    <file src="docs\**\*" target="docs\" />
+    
+    <!-- Examples -->
+    <file src="examples\**\*" target="examples\" />
+  </files>
+</package>

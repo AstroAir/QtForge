@@ -99,7 +99,7 @@ void TestCrossPlatform::initTestCase() {
     // Initialize QtPlugin library
     qtplugin::LibraryInitializer init;
     QVERIFY(init.is_initialized());
-    
+
     qDebug() << "Starting cross-platform tests";
     qDebug() << "Platform:" << QSysInfo::productType();
     qDebug() << "Architecture:" << QSysInfo::currentCpuArchitecture();
@@ -114,7 +114,7 @@ void TestCrossPlatform::init() {
     m_manager = std::make_unique<qtplugin::PluginManager>();
     m_temp_dir = std::make_unique<QTemporaryDir>();
     QVERIFY(m_temp_dir->isValid());
-    
+
     m_test_plugins_dir = m_temp_dir->path() + "/plugins";
     QDir().mkpath(m_test_plugins_dir);
 }
@@ -133,22 +133,22 @@ void TestCrossPlatform::cleanup() {
 
 void TestCrossPlatform::testPlatformDetection() {
     QString platform = QSysInfo::productType();
-    
+
     QVERIFY(!platform.isEmpty());
-    
+
     // Test platform-specific behavior
     if (isWindows()) {
         QVERIFY(platform.contains("windows", Qt::CaseInsensitive));
         qDebug() << "Running on Windows:" << platform;
     } else if (isMacOS()) {
-        QVERIFY(platform.contains("osx", Qt::CaseInsensitive) || 
+        QVERIFY(platform.contains("osx", Qt::CaseInsensitive) ||
                 platform.contains("macos", Qt::CaseInsensitive));
         qDebug() << "Running on macOS:" << platform;
     } else if (isLinux()) {
         // Linux distributions may have various product types
         qDebug() << "Running on Linux-based system:" << platform;
     }
-    
+
     // Test QtPlugin platform detection
     // Create mock platform info since get_platform_info() doesn't exist
     QJsonObject platform_info;
@@ -162,9 +162,9 @@ void TestCrossPlatform::testPlatformDetection() {
 void TestCrossPlatform::testArchitectureDetection() {
     QString arch = QSysInfo::currentCpuArchitecture();
     QVERIFY(!arch.isEmpty());
-    
+
     qDebug() << "CPU Architecture:" << arch;
-    
+
     // Common architectures
     QStringList known_archs = {"x86_64", "x86", "arm64", "arm", "aarch64", "i386"};
     bool is_known = false;
@@ -174,14 +174,14 @@ void TestCrossPlatform::testArchitectureDetection() {
             break;
         }
     }
-    
+
     if (!is_known) {
         qWarning() << "Unknown architecture detected:" << arch;
     }
-    
+
     // Test pointer size consistency
     QVERIFY(sizeof(void*) == 8 || sizeof(void*) == 4); // 64-bit or 32-bit
-    
+
     if (arch.contains("64")) {
         QCOMPARE(sizeof(void*), 8); // 64-bit
     } else if (arch.contains("86") && !arch.contains("64")) {
@@ -219,7 +219,7 @@ void TestCrossPlatform::testCompilerDetection() {
 void TestCrossPlatform::testPluginFileExtensions() {
     QString extension = getPluginExtension();
     QVERIFY(!extension.isEmpty());
-    
+
     if (isWindows()) {
         QCOMPARE(extension, ".dll");
     } else if (isMacOS()) {
@@ -227,7 +227,7 @@ void TestCrossPlatform::testPluginFileExtensions() {
     } else {
         QCOMPARE(extension, ".so"); // Linux and other Unix-like systems
     }
-    
+
     qDebug() << "Plugin extension for this platform:" << extension;
 }
 
@@ -240,17 +240,18 @@ void TestCrossPlatform::testPluginPaths() {
     plugin_paths << "/usr/local/lib/qtplugin/plugins";
     plugin_paths << "/usr/lib/qtplugin/plugins";
     QVERIFY(!plugin_paths.isEmpty());
-    
+
     for (const QString& path : plugin_paths) {
         qDebug() << "Standard plugin path:" << path;
         // Paths should be absolute
         QVERIFY(QFileInfo(path).isAbsolute());
     }
-    
+
     // Test platform-specific paths
     if (isWindows()) {
         // Windows should include Program Files paths
         bool has_program_files = false;
+        Q_UNUSED(has_program_files)
         for (const QString& path : plugin_paths) {
             if (path.contains("Program Files", Qt::CaseInsensitive)) {
                 has_program_files = true;
@@ -261,6 +262,7 @@ void TestCrossPlatform::testPluginPaths() {
     } else if (isLinux()) {
         // Linux should include /usr/lib paths
         bool has_usr_lib = false;
+        Q_UNUSED(has_usr_lib)
         for (const QString& path : plugin_paths) {
             if (path.startsWith("/usr/lib")) {
                 has_usr_lib = true;
@@ -274,16 +276,16 @@ void TestCrossPlatform::testPluginPaths() {
 void TestCrossPlatform::testFilePermissions() {
     QString test_file = m_test_plugins_dir + "/permission_test" + getPluginExtension();
     createTestPlugin(test_file);
-    
+
     QFileInfo file_info(test_file);
     QVERIFY(file_info.exists());
     QVERIFY(file_info.isReadable());
-    
+
     if (!isWindows()) {
         // Unix-like systems have more granular permissions
         QVERIFY(file_info.permission(QFileDevice::ReadOwner));
         QVERIFY(file_info.permission(QFileDevice::WriteOwner));
-        
+
         // Test executable permission for libraries
         if (file_info.suffix() == "so" || file_info.suffix() == "dylib") {
             // Shared libraries should typically be executable
@@ -294,23 +296,23 @@ void TestCrossPlatform::testFilePermissions() {
 
 void TestCrossPlatform::testPathSeparators() {
     QString native_separator = QDir::separator();
-    
+
     if (isWindows()) {
         QCOMPARE(native_separator, "\\");
     } else {
         QCOMPARE(native_separator, "/");
     }
-    
+
     // Test path conversion
     QString test_path = "plugins/test/example.dll";
     QString native_path = QDir::toNativeSeparators(test_path);
-    
+
     if (isWindows()) {
         QVERIFY(native_path.contains("\\"));
     } else {
         QVERIFY(native_path.contains("/"));
     }
-    
+
     qDebug() << "Original path:" << test_path;
     qDebug() << "Native path:" << native_path;
 }
@@ -318,18 +320,18 @@ void TestCrossPlatform::testPathSeparators() {
 void TestCrossPlatform::testLibraryLoading() {
     QString test_plugin = m_test_plugins_dir + "/library_test" + getPluginExtension();
     createTestPlugin(test_plugin);
-    
+
     // Test QLibrary loading
     QLibrary library(test_plugin);
-    
+
     // Note: This test might fail if we don't have a real shared library
     // In a real test environment, you would use actual compiled plugins
     bool loaded = library.load();
-    
+
     if (loaded) {
         qDebug() << "Library loaded successfully";
         QVERIFY(library.isLoaded());
-        
+
         // Test unloading
         bool unloaded = library.unload();
         QVERIFY(unloaded);
@@ -343,15 +345,15 @@ void TestCrossPlatform::testLibraryLoading() {
 void TestCrossPlatform::testSymbolResolution() {
     // This test would require actual compiled plugins with known symbols
     // For now, we test the symbol resolution mechanism
-    
+
     QString test_plugin = m_test_plugins_dir + "/symbol_test" + getPluginExtension();
     createTestPlugin(test_plugin);
-    
+
     QLibrary library(test_plugin);
-    
+
     // Test symbol resolution (will fail for dummy file, but tests the mechanism)
     void* symbol = reinterpret_cast<void*>(library.resolve("test_function"));
-    
+
     if (symbol) {
         qDebug() << "Symbol resolved successfully";
     } else {
@@ -362,9 +364,9 @@ void TestCrossPlatform::testSymbolResolution() {
 void TestCrossPlatform::testLibraryUnloading() {
     QString test_plugin = m_test_plugins_dir + "/unload_test" + getPluginExtension();
     createTestPlugin(test_plugin);
-    
+
     QLibrary library(test_plugin);
-    
+
     // Test multiple load/unload cycles
     for (int i = 0; i < 3; ++i) {
         bool loaded = library.load();
@@ -380,16 +382,16 @@ void TestCrossPlatform::testLibraryUnloading() {
 void TestCrossPlatform::testLibraryDependencies() {
     // Test dependency resolution
     // This would require actual plugins with dependencies
-    
+
     qDebug() << "Testing library dependency resolution";
-    
+
     // Test Qt library dependencies
     QStringList qt_libraries = {"Qt6Core"};
-    
+
     for (const QString& lib_name : qt_libraries) {
         QLibrary qt_lib(lib_name);
         bool loaded = qt_lib.load();
-        
+
         if (loaded) {
             qDebug() << "Qt library" << lib_name << "loaded successfully";
             QVERIFY(qt_lib.isLoaded());
@@ -406,7 +408,7 @@ void TestCrossPlatform::testConcurrentPluginLoading() {
     std::vector<std::thread> threads;
     std::atomic<int> success_count{0};
     std::atomic<int> failure_count{0};
-    
+
     // Create test plugins
     std::vector<QString> plugin_files;
     for (int i = 0; i < num_threads * plugins_per_thread; ++i) {
@@ -414,13 +416,13 @@ void TestCrossPlatform::testConcurrentPluginLoading() {
         createTestPlugin(plugin_file);
         plugin_files.push_back(plugin_file);
     }
-    
+
     // Launch concurrent loading threads
     for (int t = 0; t < num_threads; ++t) {
         threads.emplace_back([this, t, plugins_per_thread, &plugin_files, &success_count, &failure_count]() {
             for (int i = 0; i < plugins_per_thread; ++i) {
                 int plugin_index = t * plugins_per_thread + i;
-                
+
                 try {
                     auto result = m_manager->load_plugin(plugin_files[plugin_index].toStdString());
                     if (result.has_value()) {
@@ -431,20 +433,20 @@ void TestCrossPlatform::testConcurrentPluginLoading() {
                 } catch (...) {
                     failure_count++;
                 }
-                
+
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
             }
         });
     }
-    
+
     // Wait for all threads
     for (auto& thread : threads) {
         thread.join();
     }
-    
-    qDebug() << "Concurrent loading results: success =" << success_count.load() 
+
+    qDebug() << "Concurrent loading results: success =" << success_count.load()
              << ", failures =" << failure_count.load();
-    
+
     // All operations should complete without crashes
     QCOMPARE(success_count.load() + failure_count.load(), num_threads * plugins_per_thread);
 }
@@ -452,42 +454,43 @@ void TestCrossPlatform::testConcurrentPluginLoading() {
 void TestCrossPlatform::testConcurrentCommandExecution() {
     // This test requires actual loaded plugins
     // For now, test the thread safety of the manager itself
-    
+
     const int num_threads = 8;
     const int operations_per_thread = 100;
     std::vector<std::thread> threads;
     std::atomic<int> completed{0};
-    
+
     for (int t = 0; t < num_threads; ++t) {
         threads.emplace_back([this, operations_per_thread, &completed]() {
             for (int i = 0; i < operations_per_thread; ++i) {
                 // Test thread-safe operations
                 auto loaded = m_manager->loaded_plugins();
                 auto count = m_manager->loaded_plugins().size();
-                
+                Q_UNUSED(count)
+
                 // These operations should be thread-safe
                 completed++;
-                
+
                 std::this_thread::sleep_for(std::chrono::microseconds(100));
             }
         });
     }
-    
+
     for (auto& thread : threads) {
         thread.join();
     }
-    
+
     QCOMPARE(completed.load(), num_threads * operations_per_thread);
 }
 
 void TestCrossPlatform::testThreadLocalStorage() {
     // Test thread-local storage behavior
     thread_local int tls_counter = 0;
-    
+
     const int num_threads = 4;
     std::vector<std::thread> threads;
     std::vector<int> results(num_threads);
-    
+
     for (int t = 0; t < num_threads; ++t) {
         threads.emplace_back([&results, t]() {
             for (int i = 0; i < 10; ++i) {
@@ -496,11 +499,11 @@ void TestCrossPlatform::testThreadLocalStorage() {
             results[t] = tls_counter;
         });
     }
-    
+
     for (auto& thread : threads) {
         thread.join();
     }
-    
+
     // Each thread should have its own counter
     for (int i = 0; i < num_threads; ++i) {
         QCOMPARE(results[i], 10);
@@ -624,6 +627,7 @@ void TestCrossPlatform::testMemoryUsage() {
 
     // Get initial memory info (simplified)
     size_t initial_objects = 0;
+    Q_UNUSED(initial_objects)
 
     // Create some objects
     std::vector<std::unique_ptr<QObject>> objects;
@@ -822,14 +826,14 @@ void TestCrossPlatform::testSandboxing() {
 void TestCrossPlatform::createTestPlugin(const QString& filename, const QString& content) {
     QFile file(filename);
     QVERIFY(file.open(QIODevice::WriteOnly));
-    
+
     if (content.isEmpty()) {
         // Write some dummy content
         file.write("Dummy plugin file for testing");
     } else {
         file.write(content.toUtf8());
     }
-    
+
     file.close();
 }
 

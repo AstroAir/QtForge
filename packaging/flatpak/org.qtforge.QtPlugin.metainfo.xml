@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="library">
+  <id>org.qtforge.QtPlugin</id>
+  <name>QtPlugin Library</name>
+  <summary>Modern C++ Plugin System for Qt Applications</summary>
+  <description>
+    <p>
+      QtPlugin is a modern, type-safe plugin system for Qt applications with modular 
+      component architecture, security features, and comprehensive plugin management capabilities.
+    </p>
+    <p>Features:</p>
+    <ul>
+      <li>Type-safe plugin interfaces with C++20 concepts</li>
+      <li>Modular component architecture</li>
+      <li>Security validation and permission management</li>
+      <li>Hot-reload support for development</li>
+      <li>Comprehensive plugin lifecycle management</li>
+      <li>Thread-safe operations</li>
+      <li>Cross-platform compatibility</li>
+    </ul>
+  </description>
+  
+  <metadata_license>MIT</metadata_license>
+  <project_license>MIT</project_license>
+  
+  <url type="homepage">https://github.com/QtForge/QtPlugin</url>
+  <url type="bugtracker">https://github.com/QtForge/QtPlugin/issues</url>
+  <url type="help">https://github.com/QtForge/QtPlugin/wiki</url>
+  <url type="donation">https://github.com/sponsors/QtForge</url>
+  
+  <developer_name>QtForge</developer_name>
+  
+  <categories>
+    <category>Development</category>
+    <category>Building</category>
+  </categories>
+  
+  <keywords>
+    <keyword>qt</keyword>
+    <keyword>plugin</keyword>
+    <keyword>library</keyword>
+    <keyword>development</keyword>
+    <keyword>c++</keyword>
+  </keywords>
+  
+  <releases>
+    <release version="3.0.0" date="2024-01-01">
+      <description>
+        <p>Major release with enhanced component architecture and security features.</p>
+        <ul>
+          <li>New modular component architecture</li>
+          <li>Enhanced security validation</li>
+          <li>Improved plugin lifecycle management</li>
+          <li>Better cross-platform support</li>
+          <li>Comprehensive test coverage</li>
+        </ul>
+      </description>
+    </release>
+  </releases>
+  
+  <content_rating type="oars-1.1" />
+</component>

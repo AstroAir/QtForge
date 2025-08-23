@@ -1,0 +1,90 @@
+#!/bin/bash
+# QtPlugin macOS package post-installation script
+
+set -e
+
+# Package information
+PACKAGE_NAME="QtPlugin"
+INSTALL_PREFIX="/usr/local"
+LIBRARY_PATH="$INSTALL_PREFIX/lib"
+INCLUDE_PATH="$INSTALL_PREFIX/include"
+PKG_CONFIG_PATH="$INSTALL_PREFIX/lib/pkgconfig"
+
+echo "Configuring QtPlugin library for macOS..."
+
+# Update dynamic library cache
+if command -v update_dyld_shared_cache >/dev/null 2>&1; then
+    echo "Updating dynamic library cache..."
+    update_dyld_shared_cache 2>/dev/null || true
+fi
+
+# Ensure proper permissions
+if [ -d "$LIBRARY_PATH" ]; then
+    chmod 755 "$LIBRARY_PATH"/libqtplugin-*.dylib 2>/dev/null || true
+    chmod 755 "$LIBRARY_PATH"/libqtplugin-*.a 2>/dev/null || true
+fi
+
+if [ -d "$INCLUDE_PATH/qtplugin" ]; then
+    chmod -R 644 "$INCLUDE_PATH"/qtplugin/*.hpp 2>/dev/null || true
+    find "$INCLUDE_PATH/qtplugin" -type d -exec chmod 755 {} \; 2>/dev/null || true
+fi
+
+# Update pkg-config cache
+if command -v pkg-config >/dev/null 2>&1; then
+    echo "Updating pkg-config cache..."
+    export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$PKG_CONFIG_PATH"
+    pkg-config --list-all | grep -q qtplugin && echo "QtPlugin pkg-config found" || true
+fi
+
+# Add to CMake package registry for current user
+USER_CMAKE_REGISTRY="$HOME/.cmake/packages/QtPlugin"
+if [ ! -d "$USER_CMAKE_REGISTRY" ]; then
+    mkdir -p "$USER_CMAKE_REGISTRY" 2>/dev/null || true
+fi
+
+if [ -d "$USER_CMAKE_REGISTRY" ]; then
+    echo "$INSTALL_PREFIX/lib/cmake/QtPlugin" > "$USER_CMAKE_REGISTRY/qtplugin-system" 2>/dev/null || true
+fi
+
+# Create Homebrew-style symlinks if Homebrew is installed
+if command -v brew >/dev/null 2>&1; then
+    BREW_PREFIX=$(brew --prefix 2>/dev/null || echo "/usr/local")
+    if [ -d "$BREW_PREFIX" ] && [ "$INSTALL_PREFIX" != "$BREW_PREFIX" ]; then
+        echo "Creating Homebrew-compatible symlinks..."
+        
+        # Create lib symlinks
+        if [ -d "$BREW_PREFIX/lib" ]; then
+            for lib in "$LIBRARY_PATH"/libqtplugin-*.dylib; do
+                if [ -f "$lib" ]; then
+                    ln -sf "$lib" "$BREW_PREFIX/lib/" 2>/dev/null || true
+                fi
+            done
+        fi
+        
+        # Create include symlinks
+        if [ -d "$BREW_PREFIX/include" ] && [ -d "$INCLUDE_PATH/qtplugin" ]; then
+            ln -sf "$INCLUDE_PATH/qtplugin" "$BREW_PREFIX/include/" 2>/dev/null || true
+        fi
+        
+        # Create pkg-config symlinks
+        if [ -d "$BREW_PREFIX/lib/pkgconfig" ] && [ -f "$PKG_CONFIG_PATH/qtplugin.pc" ]; then
+            ln -sf "$PKG_CONFIG_PATH/qtplugin.pc" "$BREW_PREFIX/lib/pkgconfig/" 2>/dev/null || true
+        fi
+    fi
+fi
+
+echo "QtPlugin library configured successfully."
+echo ""
+echo "Installation completed in: $INSTALL_PREFIX"
+echo ""
+echo "To use QtPlugin in your CMake projects, add:"
+echo "  find_package(QtPlugin REQUIRED COMPONENTS Core)"
+echo ""
+echo "For pkg-config, use:"
+echo "  pkg-config --cflags --libs qtplugin"
+echo ""
+echo "Make sure to add $LIBRARY_PATH to your DYLD_LIBRARY_PATH if needed:"
+echo "  export DYLD_LIBRARY_PATH=\"$LIBRARY_PATH:\$DYLD_LIBRARY_PATH\""
+echo ""
+
+exit 0

@@ -5,11 +5,12 @@
  */
 
 #include "../../../include/qtplugin/managers/components/resource_pool.hpp"
+#include "../../../include/qtplugin/managers/resource_manager_impl.hpp"
+#include "../../../include/qtplugin/managers/resource_pools.hpp"
 #include <QDebug>
 #include <QLoggingCategory>
 #include <QUuid>
 #include <algorithm>
-#include <random>
 
 Q_LOGGING_CATEGORY(resourcePoolLog, "qtplugin.resource.pool")
 
@@ -224,7 +225,7 @@ qtplugin::expected<void, PluginError> ResourcePool<T>::release_resource(
     const ResourceHandle& handle, std::unique_ptr<T> resource) {
     std::unique_lock lock(m_mutex);
 
-    auto it = m_active_resources.find(handle.id);
+    auto it = m_active_resources.find(handle.id());
     if (it == m_active_resources.end()) {
         return make_error<void>(PluginErrorCode::InvalidArgument,
                                 "Invalid resource handle");
@@ -358,5 +359,12 @@ size_t ResourcePool<T>::calculate_memory_usage() const {
         m_active_resources.size() + m_available_resources.size();
     return total_resources * sizeof(T);  // Rough estimate
 }
+
+// Explicit template instantiations for the types used in resource pools
+template class ResourcePool<QThread>;
+template class ResourcePool<QTimer>;
+template class ResourcePool<MemoryResource>;
+template class ResourcePool<NetworkConnection>;
+template class ResourcePool<std::string>;
 
 }  // namespace qtplugin

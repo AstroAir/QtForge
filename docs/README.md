@@ -1,55 +1,107 @@
 # QtPlugin Documentation
 
-Welcome to the comprehensive documentation for the QtPlugin library - a modern, enterprise-grade C++ plugin system built on Qt 6.
+This directory contains the comprehensive documentation for QtPlugin, built with [MkDocs](https://www.mkdocs.org/) and the [Material theme](https://squidfunk.github.io/mkdocs-material/).
 
-## 📚 Documentation Overview
+## 📚 Documentation Structure
 
-### 🚀 Quick Start
-- [Main README](../README.md) - Library overview and quick start guide
-- [Examples](../examples/README.md) - Working examples and tutorials
-- [Building](../README.md#building-from-source) - Build instructions and requirements
+```
+docs/
+├── index.md                    # Main documentation homepage
+├── getting-started/            # Getting started guides
+│   ├── overview.md
+│   ├── installation.md
+│   ├── quick-start.md
+│   └── first-plugin.md
+├── user-guide/                 # User guides
+│   ├── plugin-management.md
+│   ├── configuration.md
+│   ├── security.md
+│   ├── performance.md
+│   └── troubleshooting.md
+├── developer-guide/            # Developer guides
+│   ├── plugin-development.md
+│   ├── advanced-patterns.md
+│   ├── testing.md
+│   ├── best-practices.md
+│   └── migration.md
+├── api/                        # API reference
+│   ├── index.md
+│   ├── core/
+│   ├── communication/
+│   ├── security/
+│   ├── utils/
+│   └── optional/
+├── examples/                   # Examples and tutorials
+│   ├── index.md
+│   ├── basic-plugin.md
+│   ├── service-plugin.md
+│   ├── network-plugin.md
+│   ├── ui-plugin.md
+│   └── advanced.md
+├── architecture/               # Architecture documentation
+│   ├── system-design.md
+│   ├── components.md
+│   ├── patterns.md
+│   ├── performance.md
+│   └── security.md
+├── contributing/               # Contributing guides
+│   ├── index.md
+│   ├── development-setup.md
+│   ├── coding-standards.md
+│   ├── testing.md
+│   ├── documentation.md
+│   └── release-process.md
+├── appendix/                   # Additional resources
+│   ├── faq.md
+│   ├── glossary.md
+│   ├── changelog.md
+│   └── license.md
+├── mkdocs.yml                  # MkDocs configuration
+├── requirements.txt            # Python dependencies
+└── setup-mkdocs.py            # Setup script
+```
 
-### 📖 API Reference
-- [Complete API Reference](api/README.md) - Comprehensive API documentation
-  - Core Components (Plugin Interface, Manager, Loader)
-  - Communication System (Message Bus, Types)
-  - Resource Management (Lifecycle, Monitoring)
-  - Security System (Validation, Trust Management)
-  - Error Handling (Expected Pattern, Error Codes)
-  - Utility Classes (Version, Concepts)
+## 🚀 Quick Setup
 
-### 🏗️ Development Guides
-- [Plugin Development Guide](guides/plugin-development.md) - Step-by-step plugin creation
-- [Architecture Guide](guides/architecture.md) - System design and patterns
-- [Contributing Guide](../CONTRIBUTING.md) - How to contribute to the project
+### Prerequisites
 
-### 📋 Project Information
-- [Changelog](../CHANGELOG.md) - Version history and release notes
-- [License](../LICENSE) - MIT License terms
-- [Contributing](../CONTRIBUTING.md) - Contribution guidelines
+- Python 3.8 or higher
+- pip (Python package manager)
 
-## 🎯 Getting Started
+### Automated Setup
 
-### For Plugin Users
-If you want to use QtPlugin in your application:
+Run the setup script to install MkDocs and all dependencies:
 
-1. **Installation**: See [building instructions](../README.md#building-from-source)
-2. **Quick Start**: Follow the [basic usage example](../README.md#basic-usage)
-3. **Examples**: Explore [working examples](../examples/README.md)
+```bash
+cd docs
+python setup-mkdocs.py
+```
 
-### For Plugin Developers
-If you want to create plugins for QtPlugin:
+This script will:
+- ✅ Check Python version compatibility
+- ✅ Install MkDocs and required plugins
+- ✅ Validate the documentation structure
+- ✅ Test the MkDocs configuration
+- ✅ Build the documentation
+- ✅ Optionally start the development server
 
-1. **Plugin Development Guide**: Start with the [plugin development guide](guides/plugin-development.md)
-2. **API Reference**: Consult the [API documentation](api/README.md)
-3. **Examples**: Study the [example plugins](../examples/README.md)
+### Manual Setup
 
-### For Contributors
-If you want to contribute to QtPlugin:
+If you prefer manual setup:
 
-1. **Contributing Guide**: Read the [contributing guidelines](../CONTRIBUTING.md)
-2. **Architecture Guide**: Understand the [system architecture](guides/architecture.md)
-3. **Development Setup**: Follow the [development setup](../CONTRIBUTING.md#development-setup)
+```bash
+# Install dependencies
+pip install -r docs/requirements.txt
+
+# Validate configuration
+mkdocs config
+
+# Build documentation
+mkdocs build
+
+# Start development server
+mkdocs serve
+```
 
 ## 🏗️ Architecture Overview
 

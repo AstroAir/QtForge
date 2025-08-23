@@ -1,0 +1,49 @@
+app-id: org.qtforge.QtPlugin
+runtime: org.kde.Platform
+runtime-version: '5.15-22.08'
+sdk: org.kde.Sdk
+command: qtplugin-demo
+finish-args:
+  - --share=ipc
+  - --socket=x11
+  - --socket=wayland
+  - --device=dri
+  - --filesystem=home
+  - --filesystem=/tmp
+
+modules:
+  - name: cmake
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=Release
+    sources:
+      - type: archive
+        url: https://github.com/Kitware/CMake/releases/download/v3.27.7/cmake-3.27.7.tar.gz
+        sha256: 08f71a106036bf051f692760ef9558c0577c42ac39e96ba097e7662bd4158d8e
+
+  - name: qt6-base
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=Release
+      - -DQT_BUILD_EXAMPLES=OFF
+      - -DQT_BUILD_TESTS=OFF
+    sources:
+      - type: archive
+        url: https://download.qt.io/official_releases/qt/6.5/6.5.3/submodules/qtbase-everywhere-src-6.5.3.tar.xz
+        sha256: 3db4c729b4d80a9d8fda8dd77128406353baff4755ca619177eda4cddae71269
+
+  - name: qtplugin
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=Release
+      - -DQTPLUGIN_BUILD_EXAMPLES=ON
+      - -DQTPLUGIN_BUILD_TESTS=OFF
+      - -DQTPLUGIN_BUILD_NETWORK=ON
+      - -DQTPLUGIN_BUILD_UI=ON
+    sources:
+      - type: dir
+        path: ../..
+    post-install:
+      - install -Dm644 packaging/flatpak/org.qtforge.QtPlugin.desktop /app/share/applications/org.qtforge.QtPlugin.desktop
+      - install -Dm644 packaging/flatpak/org.qtforge.QtPlugin.svg /app/share/icons/hicolor/scalable/apps/org.qtforge.QtPlugin.svg
+      - install -Dm644 packaging/flatpak/org.qtforge.QtPlugin.metainfo.xml /app/share/metainfo/org.qtforge.QtPlugin.metainfo.xml

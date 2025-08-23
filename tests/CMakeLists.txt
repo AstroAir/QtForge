@@ -542,7 +542,28 @@ if(QTPLUGIN_BUILD_COMPREHENSIVE_TESTS)
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
 
-    install(TARGETS test_service_contracts test_plugin_orchestration
+    # Plugin Version Manager Tests (v3.1.0)
+    add_executable(test_plugin_version_manager
+        test_plugin_version_manager.cpp
+    )
+
+    target_include_directories(test_plugin_version_manager PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+    )
+
+    target_link_libraries(test_plugin_version_manager PRIVATE
+        Qt6::Test
+        Qt6::Core
+        QtPluginCore
+    )
+
+    add_test(NAME PluginVersionManagerTests COMMAND test_plugin_version_manager)
+    set_tests_properties(PluginVersionManagerTests PROPERTIES
+        TIMEOUT 120
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
+
+    install(TARGETS test_service_contracts test_plugin_orchestration test_plugin_version_manager
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}/tests
     )
 endif()

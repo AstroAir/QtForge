@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=QtPlugin Library
+GenericName=Plugin System Library
+Comment=Modern C++ Plugin System for Qt Applications
+Icon=org.qtforge.QtPlugin
+Exec=qtplugin-demo
+Categories=Development;Building;
+Keywords=qt;plugin;library;development;c++;
+Terminal=false
+StartupNotify=true
+MimeType=text/x-cmake;text/x-c++src;text/x-c++hdr;

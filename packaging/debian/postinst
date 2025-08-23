@@ -1,0 +1,72 @@
+#!/bin/bash
+# QtPlugin Debian package post-installation script
+
+set -e
+
+# Package information
+PACKAGE_NAME="qtplugin"
+LIBRARY_PATH="/usr/lib"
+INCLUDE_PATH="/usr/include"
+PKG_CONFIG_PATH="/usr/lib/pkgconfig"
+
+case "$1" in
+    configure)
+        echo "Configuring QtPlugin library..."
+        
+        # Update library cache
+        if command -v ldconfig >/dev/null 2>&1; then
+            echo "Updating library cache..."
+            ldconfig
+        fi
+        
+        # Update pkg-config cache
+        if command -v pkg-config >/dev/null 2>&1; then
+            echo "Updating pkg-config cache..."
+            pkg-config --list-all | grep -q qtplugin && echo "QtPlugin pkg-config found" || true
+        fi
+        
+        # Create symbolic links for development
+        if [ -d "$LIBRARY_PATH" ] && [ -d "$INCLUDE_PATH" ]; then
+            # Ensure proper permissions
+            chmod 644 "$LIBRARY_PATH"/libqtplugin-*.so.* 2>/dev/null || true
+            chmod 644 "$INCLUDE_PATH"/qtplugin/*.hpp 2>/dev/null || true
+        fi
+        
+        # Register with CMake package registry (optional)
+        CMAKE_REGISTRY_DIR="$HOME/.cmake/packages/QtPlugin"
+        if [ -n "$SUDO_USER" ]; then
+            USER_HOME=$(getent passwd "$SUDO_USER" | cut -d: -f6)
+            CMAKE_REGISTRY_DIR="$USER_HOME/.cmake/packages/QtPlugin"
+        fi
+        
+        if [ ! -d "$CMAKE_REGISTRY_DIR" ]; then
+            mkdir -p "$CMAKE_REGISTRY_DIR" 2>/dev/null || true
+            if [ -n "$SUDO_USER" ]; then
+                chown -R "$SUDO_USER:$SUDO_USER" "$USER_HOME/.cmake" 2>/dev/null || true
+            fi
+        fi
+        
+        # Add to CMake registry
+        echo "/usr/lib/cmake/QtPlugin" > "$CMAKE_REGISTRY_DIR/qtplugin-system" 2>/dev/null || true
+        
+        echo "QtPlugin library configured successfully."
+        echo ""
+        echo "To use QtPlugin in your CMake projects, add:"
+        echo "  find_package(QtPlugin REQUIRED COMPONENTS Core)"
+        echo ""
+        echo "For pkg-config, use:"
+        echo "  pkg-config --cflags --libs qtplugin"
+        echo ""
+        ;;
+        
+    abort-upgrade|abort-remove|abort-deconfigure)
+        # Nothing to do
+        ;;
+        
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 1
+        ;;
+esac
+
+exit 0

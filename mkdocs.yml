@@ -1,0 +1,222 @@
+site_name: QtPlugin Documentation
+site_description: Modern C++ Plugin System for Qt Applications
+site_author: QtForge Team
+site_url: https://qtforge.github.io/QtPlugin/
+
+# Repository
+repo_name: QtForge/QtPlugin
+repo_url: https://github.com/QtForge/QtPlugin
+edit_uri: edit/main/docs/
+
+# Copyright
+copyright: Copyright &copy; 2024 QtForge Team
+
+# Configuration
+theme:
+  name: material
+  language: en
+  palette:
+    # Palette toggle for automatic mode
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
+  font:
+    text: Roboto
+    code: Roboto Mono
+  features:
+    - announce.dismiss
+    - content.action.edit
+    - content.action.view
+    - content.code.annotate
+    - content.code.copy
+    - content.code.select
+    - content.tabs.link
+    - content.tooltips
+    - header.autohide
+    - navigation.expand
+    - navigation.footer
+    - navigation.indexes
+    - navigation.instant
+    - navigation.instant.prefetch
+    - navigation.instant.progress
+    - navigation.prune
+    - navigation.sections
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.top
+    - navigation.tracking
+    - search.highlight
+    - search.share
+    - search.suggest
+    - toc.follow
+    - toc.integrate
+  icon:
+    repo: fontawesome/brands/github
+    edit: material/pencil
+    view: material/eye
+
+# Plugins
+plugins:
+  - search:
+      separator: '[\s\-,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
+  - minify:
+      minify_html: true
+  - git-revision-date-localized:
+      enable_creation_date: true
+      type: timeago
+  - git-committers:
+      repository: QtForge/QtPlugin
+      branch: main
+  - tags
+
+# Customization
+extra:
+  version:
+    provider: mike
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/QtForge/QtPlugin
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/QtForge
+  tags:
+    API: api
+    Guide: guide
+    Tutorial: tutorial
+    Example: example
+    Advanced: advanced
+
+# Extensions
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - toc:
+      permalink: true
+      title: On this page
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink:
+      normalize_issue_symbols: true
+      repo_url_shorthand: true
+      user: QtForge
+      repo: QtPlugin
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.snippets:
+      auto_append:
+        - includes/abbreviations.md
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+      combine_header_slug: true
+      slugify: !!python/object/apply:pymdownx.slugs.slugify
+        kwds:
+          case: lower
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+# Page tree
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Overview: getting-started/overview.md
+    - Installation: getting-started/installation.md
+    - Quick Start: getting-started/quick-start.md
+    - First Plugin: getting-started/first-plugin.md
+  - User Guide:
+    - Plugin Management: user-guide/plugin-management.md
+    - Configuration: user-guide/configuration.md
+    - Security: user-guide/security.md
+    - Performance: user-guide/performance.md
+    - Troubleshooting: user-guide/troubleshooting.md
+  - Developer Guide:
+    - Plugin Development: developer-guide/plugin-development.md
+    - Advanced Patterns: developer-guide/advanced-patterns.md
+    - Testing: developer-guide/testing.md
+    - Best Practices: developer-guide/best-practices.md
+    - Migration: developer-guide/migration.md
+  - API Reference:
+    - Overview: api/index.md
+    - Core:
+      - Plugin Interface: api/core/plugin-interface.md
+      - Plugin Manager: api/core/plugin-manager.md
+      - Plugin Loader: api/core/plugin-loader.md
+      - Plugin Registry: api/core/plugin-registry.md
+    - Communication:
+      - Message Bus: api/communication/message-bus.md
+      - Message Types: api/communication/message-types.md
+    - Security:
+      - Security Manager: api/security/security-manager.md
+      - Plugin Validator: api/security/plugin-validator.md
+    - Utils:
+      - Error Handling: api/utils/error-handling.md
+      - Version: api/utils/version.md
+      - Concepts: api/utils/concepts.md
+      - Helpers: api/utils/helpers.md
+    - Optional Components:
+      - Network: api/optional/network.md
+      - UI: api/optional/ui.md
+  - Examples:
+    - Overview: examples/index.md
+    - Basic Plugin: examples/basic-plugin.md
+    - Service Plugin: examples/service-plugin.md
+    - Network Plugin: examples/network-plugin.md
+    - UI Plugin: examples/ui-plugin.md
+    - Advanced Examples: examples/advanced.md
+  - Architecture:
+    - System Design: architecture/system-design.md
+    - Component Architecture: architecture/components.md
+    - Design Patterns: architecture/patterns.md
+    - Performance: architecture/performance.md
+    - Security Model: architecture/security.md
+  - Contributing:
+    - Overview: contributing/index.md
+    - Development Setup: contributing/development-setup.md
+    - Coding Standards: contributing/coding-standards.md
+    - Testing Guidelines: contributing/testing.md
+    - Documentation: contributing/documentation.md
+    - Release Process: contributing/release-process.md
+  - Appendix:
+    - FAQ: appendix/faq.md
+    - Glossary: appendix/glossary.md
+    - Changelog: appendix/changelog.md
+    - License: appendix/license.md
+    - Tags: tags.md

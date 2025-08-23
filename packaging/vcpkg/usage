@@ -1,0 +1,17 @@
+QtPlugin provides CMake targets:
+
+    find_package(QtPlugin CONFIG REQUIRED)
+    target_link_libraries(main PRIVATE QtPlugin::Core)
+
+Available components:
+- Core: Essential plugin system functionality
+- Security: Security validation and permission management
+- Network: Network plugin support (requires network feature)
+- UI: User interface plugin support (requires ui feature)
+
+Example usage:
+    find_package(QtPlugin CONFIG REQUIRED COMPONENTS Core Security)
+    target_link_libraries(main PRIVATE QtPlugin::Core QtPlugin::Security)
+
+For pkg-config users:
+    pkg-config --cflags --libs qtplugin

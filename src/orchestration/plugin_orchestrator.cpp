@@ -230,17 +230,23 @@ PluginOrchestrator::PluginOrchestrator(QObject* parent) : QObject(parent) {
 
 PluginOrchestrator::~PluginOrchestrator() {
     // Cancel all active executions
-    std::unique_lock lock(m_executions_mutex);
-    for (auto& [execution_id, state] : m_active_executions) {
-        if (state->context) {
-            state->context->cancelled = true;
+    std::vector<std::future<void>> futures_to_wait;
+    {
+        std::unique_lock lock(m_executions_mutex);
+        for (auto& [execution_id, state] : m_active_executions) {
+            if (state->context) {
+                state->context->cancelled = true;
+            }
+            if (state->execution_future.valid()) {
+                futures_to_wait.push_back(std::move(state->execution_future));
+            }
         }
-    }
+    } // Release mutex before waiting
 
-    // Wait for executions to complete
-    for (auto& [execution_id, state] : m_active_executions) {
-        if (state->execution_future.valid()) {
-            state->execution_future.wait_for(std::chrono::seconds(5));
+    // Wait for executions to complete without holding the mutex
+    for (auto& future : futures_to_wait) {
+        if (future.valid()) {
+            future.wait_for(std::chrono::seconds(5));
         }
     }
 
@@ -354,24 +360,36 @@ qtplugin::expected<QString, PluginError> PluginOrchestrator::execute_workflow(
     }
 
     if (async) {
-        // Execute asynchronously
+        // Execute asynchronously - simplified approach to avoid deadlocks
         auto& exec_state = m_active_executions[execution_id];
         exec_state->execution_future =
             std::async(std::launch::async, [this, execution_id]() {
-                auto exec_it = m_active_executions.find(execution_id);
-                if (exec_it != m_active_executions.end()) {
-                    auto result = execute_workflow_impl(
-                        exec_it->second->workflow, *exec_it->second->context);
+                // Execute the workflow implementation directly
+                qtplugin::expected<QJsonObject, PluginError> result = make_error<QJsonObject>(PluginErrorCode::ExecutionFailed, "Execution not found");
 
-                    if (result) {
-                        emit workflow_completed(execution_id, result.value());
-                    } else {
-                        emit workflow_failed(
-                            execution_id,
-                            QString::fromStdString(result.error().message));
+                // Get execution state with minimal lock time
+                {
+                    std::shared_lock lock(m_executions_mutex);
+                    auto exec_it = m_active_executions.find(execution_id);
+                    if (exec_it != m_active_executions.end()) {
+                        // Execute directly with the original context - this is safe because
+                        // the context is only accessed by this thread during execution
+                        result = execute_workflow_impl(
+                            exec_it->second->workflow, *exec_it->second->context);
                     }
+                } // Release lock immediately after getting the result
 
-                    // Cleanup
+                // Emit signals without holding any locks
+                if (result) {
+                    emit workflow_completed(execution_id, result.value());
+                } else {
+                    emit workflow_failed(
+                        execution_id,
+                        QString::fromStdString(result.error().message));
+                }
+
+                // Cleanup with minimal lock time
+                {
                     std::unique_lock lock(m_executions_mutex);
                     m_active_executions.erase(execution_id);
                 }
@@ -420,16 +438,18 @@ PluginOrchestrator::execute_workflow_async(const QString& workflow_id,
 
 qtplugin::expected<void, PluginError> PluginOrchestrator::cancel_workflow(
     const QString& execution_id) {
-    std::unique_lock lock(m_executions_mutex);
+    {
+        std::unique_lock lock(m_executions_mutex);
 
-    auto it = m_active_executions.find(execution_id);
-    if (it == m_active_executions.end()) {
-        return make_error<void>(
-            PluginErrorCode::PluginNotFound,
-            "Execution not found: " + execution_id.toStdString());
-    }
+        auto it = m_active_executions.find(execution_id);
+        if (it == m_active_executions.end()) {
+            return make_error<void>(
+                PluginErrorCode::PluginNotFound,
+                "Execution not found: " + execution_id.toStdString());
+        }
 
-    it->second->context->cancelled = true;
+        it->second->context->cancelled = true;
+    } // Release mutex before emitting signal
 
     emit workflow_cancelled(execution_id);
 

@@ -19,7 +19,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 find_package(Qt6 REQUIRED COMPONENTS Core)
 
 # Optional components
-find_package(Qt6 COMPONENTS Network Widgets Sql StateMachine QUIET)
+find_package(Qt6 COMPONENTS Network Widgets Sql StateMachine Concurrent QUIET)
 
 # Library configuration options
 option(QTPLUGIN_BUILD_NETWORK "Build network plugin support" OFF)
@@ -81,6 +81,8 @@ set(QTPLUGIN_CORE_SOURCES
     src/orchestration/plugin_orchestrator.cpp
     src/composition/plugin_composition.cpp
     src/transactions/plugin_transaction_manager.cpp
+    # Version management sources (v3.1.0)
+    src/managers/plugin_version_manager.cpp
 )
 
 # Core library headers
@@ -127,6 +129,8 @@ set(QTPLUGIN_CORE_HEADERS
     include/qtplugin/orchestration/plugin_orchestrator.hpp
     include/qtplugin/composition/plugin_composition.hpp
     include/qtplugin/transactions/plugin_transaction_manager.hpp
+    # Version management headers (v3.1.0)
+    include/qtplugin/managers/plugin_version_manager.hpp
 )
 
 # Create core library
@@ -163,6 +167,10 @@ endif()
 
 if(Qt6Sql_FOUND)
     target_link_libraries(QtPluginCore PUBLIC Qt6::Sql)
+endif()
+
+if(Qt6Concurrent_FOUND)
+    target_link_libraries(QtPluginCore PUBLIC Qt6::Concurrent)
 endif()
 
 # Enable Qt MOC for core library
@@ -282,44 +290,7 @@ target_link_libraries(QtPluginSecurity
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
-# Install libraries
-install(TARGETS QtPluginCore
-    EXPORT QtPluginCoreTargets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
-
-if(QTPLUGIN_BUILD_NETWORK)
-    install(TARGETS QtPluginNetwork
-        EXPORT QtPluginNetworkTargets
-        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-    )
-endif()
-
-if(QTPLUGIN_BUILD_UI)
-    install(TARGETS QtPluginUI
-        EXPORT QtPluginUITargets
-        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-    )
-endif()
-
-install(TARGETS QtPluginSecurity
-    EXPORT QtPluginSecurityTargets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
-
-# Install headers
-install(DIRECTORY include/qtplugin
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-    FILES_MATCHING PATTERN "*.hpp"
-)
+# Note: Install rules are now defined in the CPack section below with component support
 
 # Create and install package config files
 set(QTPLUGIN_CMAKE_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/QtPlugin)
@@ -405,6 +376,208 @@ if(DOXYGEN_FOUND)
         COMMENT "Generating API documentation with Doxygen" VERBATIM)
 endif()
 
+# CPack configuration for multi-platform packaging
+include(CPack)
+
+# Basic package information
+set(CPACK_PACKAGE_NAME "QtPlugin")
+set(CPACK_PACKAGE_VENDOR "QtForge")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Modern C++ Plugin System for Qt Applications")
+set(CPACK_PACKAGE_DESCRIPTION "QtPlugin is a modern, type-safe plugin system for Qt applications with modular component architecture, security features, and comprehensive plugin management capabilities.")
+set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
+set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
+set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
+set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
+set(CPACK_PACKAGE_CONTACT "support@qtforge.dev")
+set(CPACK_PACKAGE_HOMEPAGE_URL "https://github.com/QtForge/QtPlugin")
+
+# Package files and directories
+set(CPACK_PACKAGE_DIRECTORY "${CMAKE_BINARY_DIR}/packages")
+set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}")
+
+# Resource files
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE")
+set(CPACK_RESOURCE_FILE_README "${CMAKE_SOURCE_DIR}/README.md")
+set(CPACK_RESOURCE_FILE_WELCOME "${CMAKE_SOURCE_DIR}/README.md")
+
+# Component definitions for selective installation
+set(CPACK_COMPONENTS_ALL Core Security Network UI Examples Documentation)
+set(CPACK_COMPONENT_CORE_DISPLAY_NAME "QtPlugin Core Library")
+set(CPACK_COMPONENT_CORE_DESCRIPTION "Core plugin system with essential functionality")
+set(CPACK_COMPONENT_CORE_REQUIRED TRUE)
+
+set(CPACK_COMPONENT_SECURITY_DISPLAY_NAME "Security Module")
+set(CPACK_COMPONENT_SECURITY_DESCRIPTION "Security validation and permission management")
+set(CPACK_COMPONENT_SECURITY_DEPENDS Core)
+
+if(QTPLUGIN_BUILD_NETWORK)
+    set(CPACK_COMPONENT_NETWORK_DISPLAY_NAME "Network Support")
+    set(CPACK_COMPONENT_NETWORK_DESCRIPTION "Network plugin support and communication")
+    set(CPACK_COMPONENT_NETWORK_DEPENDS Core)
+endif()
+
+if(QTPLUGIN_BUILD_UI)
+    set(CPACK_COMPONENT_UI_DISPLAY_NAME "UI Support")
+    set(CPACK_COMPONENT_UI_DESCRIPTION "User interface plugin support")
+    set(CPACK_COMPONENT_UI_DEPENDS Core)
+endif()
+
+if(QTPLUGIN_BUILD_EXAMPLES)
+    set(CPACK_COMPONENT_EXAMPLES_DISPLAY_NAME "Example Plugins")
+    set(CPACK_COMPONENT_EXAMPLES_DESCRIPTION "Sample plugins and demonstrations")
+    set(CPACK_COMPONENT_EXAMPLES_DEPENDS Core)
+endif()
+
+set(CPACK_COMPONENT_DOCUMENTATION_DISPLAY_NAME "Documentation")
+set(CPACK_COMPONENT_DOCUMENTATION_DESCRIPTION "API documentation and guides")
+
+# Platform-specific packaging configuration
+if(WIN32)
+    # Windows-specific packaging
+    set(CPACK_GENERATOR "NSIS;ZIP;WIX")
+
+    # NSIS (Nullsoft Scriptable Install System) configuration
+    set(CPACK_NSIS_DISPLAY_NAME "QtPlugin Library")
+    set(CPACK_NSIS_PACKAGE_NAME "QtPlugin")
+    set(CPACK_NSIS_CONTACT "${CPACK_PACKAGE_CONTACT}")
+    set(CPACK_NSIS_URL_INFO_ABOUT "${CPACK_PACKAGE_HOMEPAGE_URL}")
+    set(CPACK_NSIS_HELP_LINK "${CPACK_PACKAGE_HOMEPAGE_URL}")
+    set(CPACK_NSIS_MODIFY_PATH ON)
+    set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL ON)
+
+    # Create desktop shortcut for documentation
+    set(CPACK_NSIS_CREATE_ICONS_EXTRA
+        "CreateShortCut '$DESKTOP\\\\QtPlugin Documentation.lnk' '$INSTDIR\\\\share\\\\doc\\\\qtplugin\\\\README.md'"
+    )
+    set(CPACK_NSIS_DELETE_ICONS_EXTRA
+        "Delete '$DESKTOP\\\\QtPlugin Documentation.lnk'"
+    )
+
+    # WiX (Windows Installer XML) configuration for MSI packages
+    set(CPACK_WIX_UPGRADE_GUID "12345678-1234-1234-1234-123456789012")
+    set(CPACK_WIX_PRODUCT_GUID "87654321-4321-4321-4321-210987654321")
+    set(CPACK_WIX_PRODUCT_ICON "${CMAKE_SOURCE_DIR}/resources/qtplugin.ico")
+    set(CPACK_WIX_UI_BANNER "${CMAKE_SOURCE_DIR}/resources/banner.bmp")
+    set(CPACK_WIX_UI_DIALOG "${CMAKE_SOURCE_DIR}/resources/dialog.bmp")
+    set(CPACK_WIX_PROGRAM_MENU_FOLDER "QtPlugin")
+    set(CPACK_WIX_PROPERTY_ARPHELPLINK "${CPACK_PACKAGE_HOMEPAGE_URL}")
+    set(CPACK_WIX_PROPERTY_ARPURLINFOABOUT "${CPACK_PACKAGE_HOMEPAGE_URL}")
+
+elseif(APPLE)
+    # macOS-specific packaging
+    set(CPACK_GENERATOR "DragNDrop;TGZ;productbuild")
+
+    # DragNDrop (DMG) configuration
+    set(CPACK_DMG_VOLUME_NAME "QtPlugin ${PROJECT_VERSION}")
+    set(CPACK_DMG_FORMAT "UDBZ")
+    set(CPACK_DMG_BACKGROUND_IMAGE "${CMAKE_SOURCE_DIR}/resources/dmg_background.png")
+    set(CPACK_DMG_DS_STORE_SETUP_SCRIPT "${CMAKE_SOURCE_DIR}/packaging/macos/setup_dmg.applescript")
+
+    # ProductBuild (PKG) configuration
+    set(CPACK_PRODUCTBUILD_IDENTITY_NAME "Developer ID Installer: QtForge")
+    set(CPACK_PRODUCTBUILD_KEYCHAIN_PATH "")
+
+else()
+    # Linux and other Unix-like systems
+    set(CPACK_GENERATOR "DEB;RPM;TGZ;STGZ")
+
+    # DEB package configuration
+    set(CPACK_DEBIAN_PACKAGE_MAINTAINER "${CPACK_PACKAGE_CONTACT}")
+    set(CPACK_DEBIAN_PACKAGE_SECTION "libs")
+    set(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
+    set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "${CPACK_PACKAGE_HOMEPAGE_URL}")
+    set(CPACK_DEBIAN_PACKAGE_DEPENDS "libqt6core6 (>= 6.0.0)")
+    set(CPACK_DEBIAN_PACKAGE_RECOMMENDS "libqt6network6, libqt6widgets6")
+    set(CPACK_DEBIAN_PACKAGE_SUGGESTS "qtplugin-examples, qtplugin-doc")
+    set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA
+        "${CMAKE_SOURCE_DIR}/packaging/debian/postinst"
+        "${CMAKE_SOURCE_DIR}/packaging/debian/prerm"
+    )
+
+    # RPM package configuration
+    set(CPACK_RPM_PACKAGE_SUMMARY "${CPACK_PACKAGE_DESCRIPTION_SUMMARY}")
+    set(CPACK_RPM_PACKAGE_DESCRIPTION "${CPACK_PACKAGE_DESCRIPTION}")
+    set(CPACK_RPM_PACKAGE_GROUP "Development/Libraries")
+    set(CPACK_RPM_PACKAGE_LICENSE "MIT")
+    set(CPACK_RPM_PACKAGE_URL "${CPACK_PACKAGE_HOMEPAGE_URL}")
+    set(CPACK_RPM_PACKAGE_REQUIRES "qt6-qtbase >= 6.0.0")
+    set(CPACK_RPM_PACKAGE_SUGGESTS "qtplugin-examples, qtplugin-doc")
+    set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE "${CMAKE_SOURCE_DIR}/packaging/rpm/postinstall.sh")
+    set(CPACK_RPM_PRE_UNINSTALL_SCRIPT_FILE "${CMAKE_SOURCE_DIR}/packaging/rpm/preuninstall.sh")
+
+    # Set architecture
+    if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
+        set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "amd64")
+        set(CPACK_RPM_PACKAGE_ARCHITECTURE "x86_64")
+    elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "i[3-6]86")
+        set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "i386")
+        set(CPACK_RPM_PACKAGE_ARCHITECTURE "i686")
+    elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|arm64")
+        set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "arm64")
+        set(CPACK_RPM_PACKAGE_ARCHITECTURE "aarch64")
+    elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "armv7")
+        set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "armhf")
+        set(CPACK_RPM_PACKAGE_ARCHITECTURE "armv7hl")
+    endif()
+endif()
+
+# Component-specific install rules
+install(TARGETS QtPluginCore
+    EXPORT QtPluginCoreTargets
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Core
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Core
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Core
+)
+
+install(TARGETS QtPluginSecurity
+    EXPORT QtPluginSecurityTargets
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Security
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Security
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Security
+)
+
+if(QTPLUGIN_BUILD_NETWORK)
+    install(TARGETS QtPluginNetwork
+        EXPORT QtPluginNetworkTargets
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Network
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Network
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Network
+    )
+endif()
+
+if(QTPLUGIN_BUILD_UI)
+    install(TARGETS QtPluginUI
+        EXPORT QtPluginUITargets
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT UI
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT UI
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT UI
+    )
+endif()
+
+# Install headers with component
+install(DIRECTORY include/qtplugin
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    COMPONENT Core
+    FILES_MATCHING PATTERN "*.hpp"
+)
+
+# Install documentation
+install(FILES
+    "${CMAKE_SOURCE_DIR}/README.md"
+    "${CMAKE_SOURCE_DIR}/LICENSE"
+    "${CMAKE_SOURCE_DIR}/CHANGELOG.md"
+    "${CMAKE_SOURCE_DIR}/CODE_OF_CONDUCT.md"
+    "${CMAKE_SOURCE_DIR}/CONTRIBUTING.md"
+    DESTINATION ${CMAKE_INSTALL_DOCDIR}
+    COMPONENT Documentation
+)
+
+install(DIRECTORY "${CMAKE_SOURCE_DIR}/docs/"
+    DESTINATION ${CMAKE_INSTALL_DOCDIR}
+    COMPONENT Documentation
+    PATTERN "*.md"
+)
+
 # Print configuration summary
 message(STATUS "")
 message(STATUS "QtPlugin Library Configuration:")
@@ -418,4 +591,10 @@ message(STATUS "  Build tests: ${QTPLUGIN_BUILD_TESTS}")
 message(STATUS "  Build component tests: ${QTPLUGIN_BUILD_COMPONENT_TESTS}")
 message(STATUS "  Enable component logging: ${QTPLUGIN_ENABLE_COMPONENT_LOGGING}")
 message(STATUS "  Install prefix: ${CMAKE_INSTALL_PREFIX}")
+message(STATUS "")
+message(STATUS "Packaging Configuration:")
+message(STATUS "  Package generators: ${CPACK_GENERATOR}")
+message(STATUS "  Package directory: ${CPACK_PACKAGE_DIRECTORY}")
+message(STATUS "  Package filename: ${CPACK_PACKAGE_FILE_NAME}")
+message(STATUS "  Components: ${CPACK_COMPONENTS_ALL}")
 message(STATUS "")

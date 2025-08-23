@@ -19,6 +19,10 @@
 // Include the plugin system headers
 #include "qtplugin/core/plugin_manager.hpp"
 #include "qtplugin/managers/configuration_manager_impl.hpp"
+#include "qtplugin/managers/logging_manager_impl.hpp"
+#include "qtplugin/managers/resource_manager_impl.hpp"
+#include "qtplugin/managers/resource_lifecycle.hpp"
+#include "qtplugin/managers/resource_monitor.hpp"
 #include "qtplugin/communication/message_bus.hpp"
 #include "qtplugin/communication/message_types.hpp"
 
@@ -29,22 +33,22 @@ class PerformanceTests : public QObject
 private slots:
     void initTestCase();
     void cleanupTestCase();
-    
+
     // Plugin loading performance tests
     void testPluginLoadingPerformance();
     void testMultiplePluginLoadingPerformance();
     void testPluginUnloadingPerformance();
-    
+
     // Configuration performance tests
     void testConfigurationReadPerformance();
     void testConfigurationWritePerformance();
     void testLargeConfigurationPerformance();
-    
+
     // Message bus performance tests
     void testMessageBusPerformance();
     void testHighFrequencyMessagingPerformance();
     void testConcurrentMessagingPerformance();
-    
+
     // Memory usage tests
     void testMemoryUsageBaseline();
     void testMemoryUsageWithPlugins();
@@ -52,9 +56,9 @@ private slots:
 
 private:
     std::unique_ptr<qtplugin::PluginManager> m_pluginManager;
-    std::unique_ptr<qtplugin::ConfigurationManager> m_configManager;
+    std::unique_ptr<qtplugin::IConfigurationManager> m_configManager;
     std::unique_ptr<qtplugin::MessageBus> m_messageBus;
-    
+
     // Performance measurement helpers
     void measureExecutionTime(const QString& testName, std::function<void()> testFunction);
     void logPerformanceResult(const QString& testName, qint64 elapsedMs, const QString& details = QString());
@@ -64,12 +68,14 @@ private:
 void PerformanceTests::initTestCase()
 {
     qDebug() << "Initializing Performance Tests...";
-    
+
     // Initialize core components
-    m_configManager = std::make_unique<qtplugin::ConfigurationManager>();
+    m_configManager = qtplugin::create_configuration_manager();
     m_messageBus = std::make_unique<qtplugin::MessageBus>();
-    m_pluginManager = std::make_unique<qtplugin::PluginManager>();
-    
+    // Create PluginManager with explicit nullptr parameters to avoid incomplete type issues
+    m_pluginManager = std::make_unique<qtplugin::PluginManager>(
+        nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+
     // Set up test environment
     m_configManager->set_value("test.performance.enabled", true);
     m_configManager->set_value("test.performance.iterations", 1000);
@@ -78,7 +84,7 @@ void PerformanceTests::initTestCase()
 void PerformanceTests::cleanupTestCase()
 {
     qDebug() << "Cleaning up Performance Tests...";
-    
+
     // Clean up in reverse order
     m_pluginManager.reset();
     m_messageBus.reset();
@@ -89,16 +95,16 @@ void PerformanceTests::testPluginLoadingPerformance()
 {
     const int iterations = 100;
     QElapsedTimer timer;
-    
+
     timer.start();
     for (int i = 0; i < iterations; ++i) {
         // Simulate plugin loading operations
         m_pluginManager->load_all_plugins();
     }
     qint64 elapsed = timer.elapsed();
-    
+
     logPerformanceResult("Plugin Loading", elapsed, QString("Iterations: %1").arg(iterations));
-    
+
     // Performance threshold: should complete within reasonable time
     QVERIFY2(elapsed < 5000, QString("Plugin loading took too long: %1ms").arg(elapsed).toLocal8Bit());
 }
@@ -134,7 +140,7 @@ void PerformanceTests::testConfigurationReadPerformance()
     for (int i = 0; i < 100; ++i) {
         m_configManager->set_value(QString("test.key.%1").arg(i).toStdString(), QString("value_%1").arg(i));
     }
-    
+
     measureExecutionTime("Configuration Read", [this, iterations]() {
         for (int i = 0; i < iterations; ++i) {
             auto value = m_configManager->get_value(QString("test.key.%1").arg(i % 100).toStdString());
@@ -146,7 +152,7 @@ void PerformanceTests::testConfigurationReadPerformance()
 void PerformanceTests::testConfigurationWritePerformance()
 {
     const int iterations = 1000;
-    
+
     measureExecutionTime("Configuration Write", [this, iterations]() {
         for (int i = 0; i < iterations; ++i) {
             m_configManager->set_value(QString("perf.test.%1").arg(i).toStdString(), QString("value_%1").arg(i));
@@ -158,7 +164,7 @@ void PerformanceTests::testLargeConfigurationPerformance()
 {
     const int largeDataSize = 10000;
     QString largeValue = QString("x").repeated(largeDataSize);
-    
+
     measureExecutionTime("Large Configuration", [this, largeValue]() {
         m_configManager->set_value("large.data.test", largeValue);
         auto retrievedValue = m_configManager->get_value("large.data.test");
@@ -171,7 +177,7 @@ void PerformanceTests::testLargeConfigurationPerformance()
 void PerformanceTests::testMessageBusPerformance()
 {
     const int messageCount = 1000;
-    
+
     measureExecutionTime("Message Bus", [this, messageCount]() {
         for (int i = 0; i < messageCount; ++i) {
             QJsonObject data;
@@ -186,7 +192,7 @@ void PerformanceTests::testMessageBusPerformance()
 void PerformanceTests::testHighFrequencyMessagingPerformance()
 {
     const int highFrequencyCount = 5000;
-    
+
     measureExecutionTime("High Frequency Messaging", [this, highFrequencyCount]() {
         for (int i = 0; i < highFrequencyCount; ++i) {
             QJsonObject data;
@@ -201,10 +207,10 @@ void PerformanceTests::testConcurrentMessagingPerformance()
 {
     const int threadCount = 4;
     const int messagesPerThread = 250;
-    
+
     measureExecutionTime("Concurrent Messaging", [this, threadCount, messagesPerThread]() {
         QList<QThread*> threads;
-        
+
         for (int t = 0; t < threadCount; ++t) {
             QThread* thread = QThread::create([this, t, messagesPerThread]() {
                 for (int i = 0; i < messagesPerThread; ++i) {
@@ -218,7 +224,7 @@ void PerformanceTests::testConcurrentMessagingPerformance()
             threads.append(thread);
             thread->start();
         }
-        
+
         // Wait for all threads to complete
         for (auto* thread : threads) {
             thread->wait();
@@ -268,9 +274,9 @@ void PerformanceTests::measureExecutionTime(const QString& testName, std::functi
 {
     QElapsedTimer timer;
     timer.start();
-    
+
     testFunction();
-    
+
     qint64 elapsed = timer.elapsed();
     logPerformanceResult(testName, elapsed);
 }
@@ -282,7 +288,7 @@ void PerformanceTests::logPerformanceResult(const QString& testName, qint64 elap
         message += QString(" (%1)").arg(details);
     }
     qDebug() << message;
-    
+
     // You could also write results to a file or database for analysis
 }
 

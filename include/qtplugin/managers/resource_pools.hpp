@@ -15,6 +15,8 @@
 #include <deque>
 #include <queue>
 #include "resource_manager.hpp"
+#include "resource_manager_impl.hpp"
+#include "components/resource_pool.hpp"
 
 namespace qtplugin {
 
@@ -26,8 +28,7 @@ namespace qtplugin {
 class ThreadPool : public ResourcePool<QThread> {
 public:
     explicit ThreadPool(const ResourceQuota& quota = {})
-        : ResourcePool<QThread>(
-              "thread_pool", std::make_unique<ThreadResourceFactory>(), quota) {
+        : ResourcePool<QThread>("thread_pool", ResourceType::Thread) {
         // Set reasonable defaults for thread pool
         ResourceQuota default_quota;
         default_quota.max_instances = QThread::idealThreadCount() * 2;
@@ -106,8 +107,7 @@ private:
 class TimerPool : public ResourcePool<QTimer> {
 public:
     explicit TimerPool(const ResourceQuota& quota = {})
-        : ResourcePool<QTimer>(
-              "timer_pool", std::make_unique<TimerResourceFactory>(), quota) {
+        : ResourcePool<QTimer>("timer_pool", ResourceType::Timer) {
         // Set reasonable defaults for timer pool
         ResourceQuota default_quota;
         default_quota.max_instances = 1000;  // Allow many timers
@@ -190,8 +190,7 @@ private:
 class MemoryPool : public ResourcePool<MemoryResource> {
 public:
     explicit MemoryPool(const ResourceQuota& quota = {})
-        : ResourcePool<MemoryResource>(
-              "memory_pool", std::make_unique<MemoryResourceFactory>(), quota) {
+        : ResourcePool<MemoryResource>("memory_pool", ResourceType::Memory) {
         // Set reasonable defaults for memory pool
         ResourceQuota default_quota;
         default_quota.max_instances = 1000;
@@ -376,9 +375,7 @@ public:
 class NetworkConnectionPool : public ResourcePool<NetworkConnection> {
 public:
     explicit NetworkConnectionPool(const ResourceQuota& quota = {})
-        : ResourcePool<NetworkConnection>(
-              "network_pool", std::make_unique<NetworkConnectionFactory>(),
-              quota) {
+        : ResourcePool<NetworkConnection>("network_pool", ResourceType::NetworkConnection) {
         // Set reasonable defaults for network pool
         ResourceQuota default_quota;
         default_quota.max_instances = 100;  // Reasonable connection limit

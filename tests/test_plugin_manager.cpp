@@ -12,7 +12,15 @@
 #include <filesystem>
 
 #include "qtplugin/core/plugin_manager.hpp"
+#include "qtplugin/communication/message_bus.hpp"
 #include "qtplugin/utils/error_handling.hpp"
+#include "qtplugin/managers/configuration_manager_impl.hpp"
+#include "qtplugin/managers/logging_manager_impl.hpp"
+#include "qtplugin/managers/resource_manager_impl.hpp"
+#include "qtplugin/managers/resource_lifecycle_impl.hpp"
+#include "qtplugin/managers/resource_monitor_impl.hpp"
+#include "qtplugin/security/security_manager.hpp"
+#include "qtplugin/core/plugin_loader.hpp"
 
 class TestPluginManager : public QObject
 {
@@ -28,7 +36,7 @@ private slots:
     void testPluginManagerCreation();
     void testPluginManagerDestruction();
     void testPluginManagerInitialization();
-    
+
     // Plugin loading tests
     void testLoadValidPlugin();
     void testLoadInvalidPlugin();
@@ -38,7 +46,7 @@ private:
     std::unique_ptr<qtplugin::PluginManager> m_plugin_manager;
     std::unique_ptr<QTemporaryDir> m_temp_dir;
     std::filesystem::path m_plugin_dir;
-    
+
     // Helper methods
     void createMockPlugin(const QString& name, const QString& version = "1.0.0");
     void createInvalidPlugin(const QString& name);
@@ -48,7 +56,7 @@ private:
 void TestPluginManager::initTestCase()
 {
     qDebug() << "Starting plugin manager tests";
-    
+
     // Create temporary directory for test plugins
     m_temp_dir = std::make_unique<QTemporaryDir>();
     QVERIFY(m_temp_dir->isValid());
@@ -63,8 +71,8 @@ void TestPluginManager::cleanupTestCase()
 void TestPluginManager::init()
 {
     // Create fresh plugin manager for each test with all required components
-    m_plugin_manager = std::make_unique<qtplugin::PluginManager>(
-        nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+    // Create PluginManager with default implementations
+    m_plugin_manager = std::make_unique<qtplugin::PluginManager>();
     QVERIFY(m_plugin_manager != nullptr);
 
     // Add our test plugin directory to search paths
@@ -146,7 +154,7 @@ void TestPluginManager::testLoadValidPlugin()
 void TestPluginManager::testLoadInvalidPlugin()
 {
     createInvalidPlugin("invalid_plugin");
-    
+
     auto result = m_plugin_manager->load_plugin(getPluginPath("invalid_plugin"));
     QVERIFY(!result.has_value());
     QCOMPARE(result.error().code, qtplugin::PluginErrorCode::InvalidFormat);
@@ -169,9 +177,9 @@ void TestPluginManager::createMockPlugin(const QString& name, const QString& ver
     metadata["description"] = QString("Mock plugin %1").arg(name);
     metadata["author"] = "Test Suite";
     metadata["api_version"] = "3.0.0";
-    
+
     QJsonDocument doc(metadata);
-    
+
     QString plugin_path = QString::fromStdString((m_plugin_dir / (name.toStdString() + ".json")).string());
     QFile file(plugin_path);
     QVERIFY(file.open(QIODevice::WriteOnly));

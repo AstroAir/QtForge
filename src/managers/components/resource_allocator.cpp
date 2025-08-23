@@ -208,7 +208,13 @@ ResourceUsageStats ResourceAllocator::get_allocation_statistics(
 
     ResourceUsageStats stats;
 
-    // Count allocations matching filters
+    // Use total counters for overall statistics
+    stats.total_created = m_total_allocations.load();
+    stats.total_destroyed = m_total_deallocations.load();
+    stats.allocation_failures = m_failed_allocations.load();
+
+    // Count currently active allocations matching filters
+    size_t active_count = 0;
     for (const auto& [allocation_id, record] : m_active_allocations) {
         bool matches = true;
 
@@ -221,16 +227,11 @@ ResourceUsageStats ResourceAllocator::get_allocation_statistics(
         }
 
         if (matches) {
-            stats.total_created++;
-            // Note: allocation_size not available in ResourceUsageStats
-            // stats.allocation_size += record.allocation_size;
+            active_count++;
         }
     }
 
-    // Note: total_requests and failed_requests not available in
-    // ResourceUsageStats Using available members instead
-    stats.currently_active = stats.total_created - stats.total_destroyed;
-    stats.allocation_failures = m_failed_allocations.load();
+    stats.currently_active = active_count;
 
     return stats;
 }

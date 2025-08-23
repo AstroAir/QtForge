@@ -1,0 +1,39 @@
+#!/bin/bash
+# QtPlugin Debian package pre-removal script
+
+set -e
+
+# Package information
+PACKAGE_NAME="qtplugin"
+
+case "$1" in
+    remove|upgrade|deconfigure)
+        echo "Preparing to remove QtPlugin library..."
+        
+        # Remove from CMake package registry
+        CMAKE_REGISTRY_DIR="$HOME/.cmake/packages/QtPlugin"
+        if [ -n "$SUDO_USER" ]; then
+            USER_HOME=$(getent passwd "$SUDO_USER" | cut -d: -f6)
+            CMAKE_REGISTRY_DIR="$USER_HOME/.cmake/packages/QtPlugin"
+        fi
+        
+        if [ -f "$CMAKE_REGISTRY_DIR/qtplugin-system" ]; then
+            rm -f "$CMAKE_REGISTRY_DIR/qtplugin-system" 2>/dev/null || true
+            # Remove directory if empty
+            rmdir "$CMAKE_REGISTRY_DIR" 2>/dev/null || true
+        fi
+        
+        echo "QtPlugin library removal prepared."
+        ;;
+        
+    failed-upgrade)
+        # Nothing to do
+        ;;
+        
+    *)
+        echo "prerm called with unknown argument \`$1'" >&2
+        exit 1
+        ;;
+esac
+
+exit 0

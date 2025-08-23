@@ -1,27 +1,367 @@
-name: CI
+name: CI/CD
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, develop ]
+    tags: [ 'v*' ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, develop ]
+
+env:
+  QT_VERSION: '6.5.3'
+  CMAKE_VERSION: '3.27.7'
 
 jobs:
-  build:
+  # Continuous Integration - Build and Test
+  build-and-test:
+    name: Build & Test (${{ matrix.os }})
     strategy:
+      fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            qt_arch: gcc_64
+            cmake_preset: linux-release
+          - os: windows-latest
+            qt_arch: win64_msvc2022_64
+            cmake_preset: windows-release
+          - os: macos-latest
+            qt_arch: clang_64
+            cmake_preset: macos-release
+
     runs-on: ${{ matrix.os }}
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for version detection
+
+      - name: Cache Qt
+        id: cache-qt
+        uses: actions/cache@v3
+        with:
+          path: ../Qt
+          key: ${{ runner.os }}-QtCache-${{ env.QT_VERSION }}-${{ matrix.qt_arch }}
+
       - name: Install Qt
         uses: jurplel/install-qt-action@v3
         with:
-          version: '6.5.0'
-      - name: Configure
-        run: cmake -S . -B build -DQTPLUGIN_BUILD_TESTS=ON
+          version: ${{ env.QT_VERSION }}
+          arch: ${{ matrix.qt_arch }}
+          cached: ${{ steps.cache-qt.outputs.cache-hit }}
+          setup-python: false
+
+      - name: Setup CMake
+        uses: jwlawson/actions-setup-cmake@v1.14
+        with:
+          cmake-version: ${{ env.CMAKE_VERSION }}
+
+      - name: Setup Ninja (Linux/macOS)
+        if: runner.os != 'Windows'
+        uses: seanmiddleditch/gha-setup-ninja@master
+
+      - name: Configure CMake
+        run: |
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DQTPLUGIN_BUILD_TESTS=ON \
+            -DQTPLUGIN_BUILD_EXAMPLES=ON \
+            -DQTPLUGIN_BUILD_NETWORK=ON \
+            -DQTPLUGIN_BUILD_UI=ON \
+            ${{ runner.os == 'Linux' && '-G Ninja' || '' }}
+
       - name: Build
-        run: cmake --build build -j
+        run: cmake --build build --config Release --parallel
+
       - name: Test
-        run: ctest --test-dir build --output-on-failure
+        run: ctest --test-dir build --output-on-failure --parallel
+
+      - name: Install
+        run: cmake --install build --prefix install
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: qtplugin-${{ matrix.os }}-build
+          path: |
+            install/
+            build/compile_commands.json
+          retention-days: 7
+
+  # Package Creation - Only on tags or main branch
+  create-packages:
+    name: Create Packages (${{ matrix.os }})
+    if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main')
+    needs: build-and-test
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            qt_arch: gcc_64
+            package_types: "DEB;RPM;TGZ;STGZ"
+          - os: windows-latest
+            qt_arch: win64_msvc2022_64
+            package_types: "NSIS;ZIP;WIX"
+          - os: macos-latest
+            qt_arch: clang_64
+            package_types: "DragNDrop;TGZ"
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Cache Qt
+        id: cache-qt
+        uses: actions/cache@v3
+        with:
+          path: ../Qt
+          key: ${{ runner.os }}-QtCache-${{ env.QT_VERSION }}-${{ matrix.qt_arch }}
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: ${{ env.QT_VERSION }}
+          arch: ${{ matrix.qt_arch }}
+          cached: ${{ steps.cache-qt.outputs.cache-hit }}
+          setup-python: false
+
+      - name: Setup CMake
+        uses: jwlawson/actions-setup-cmake@v1.14
+        with:
+          cmake-version: ${{ env.CMAKE_VERSION }}
+
+      - name: Setup Ninja (Linux/macOS)
+        if: runner.os != 'Windows'
+        uses: seanmiddleditch/gha-setup-ninja@master
+
+      - name: Install packaging dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y rpm alien fakeroot
+
+      - name: Install packaging dependencies (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          # Install NSIS
+          choco install nsis -y
+          # Install WiX Toolset
+          choco install wixtoolset -y
+
+      - name: Configure for packaging
+        run: |
+          cmake -S . -B build-pkg \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DQTPLUGIN_BUILD_EXAMPLES=ON \
+            -DQTPLUGIN_BUILD_TESTS=OFF \
+            -DQTPLUGIN_BUILD_NETWORK=ON \
+            -DQTPLUGIN_BUILD_UI=ON \
+            -DCPACK_GENERATOR="${{ matrix.package_types }}" \
+            ${{ runner.os == 'Linux' && '-G Ninja' || '' }}
+
+      - name: Build for packaging
+        run: cmake --build build-pkg --config Release --parallel
+
+      - name: Create packages
+        run: |
+          cd build-pkg
+          cpack --config CPackConfig.cmake
+
+      - name: List created packages
+        run: |
+          echo "Created packages:"
+          ls -la build-pkg/packages/ || ls -la build-pkg/*.exe || ls -la build-pkg/*.dmg || ls -la build-pkg/*.deb || ls -la build-pkg/*.rpm || true
+
+      - name: Upload packages
+        uses: actions/upload-artifact@v3
+        with:
+          name: qtplugin-packages-${{ matrix.os }}
+          path: |
+            build-pkg/packages/
+            build-pkg/*.exe
+            build-pkg/*.msi
+            build-pkg/*.dmg
+            build-pkg/*.deb
+            build-pkg/*.rpm
+            build-pkg/*.tar.gz
+            build-pkg/*.zip
+          retention-days: 30
+
+  # AppImage Build (Linux only)
+  build-appimage:
+    name: Build AppImage
+    if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main')
+    needs: build-and-test
+    runs-on: ubuntu-20.04  # Use older Ubuntu for better compatibility
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: ${{ env.QT_VERSION }}
+          arch: gcc_64
+          setup-python: false
+
+      - name: Setup CMake
+        uses: jwlawson/actions-setup-cmake@v1.14
+        with:
+          cmake-version: ${{ env.CMAKE_VERSION }}
+
+      - name: Setup Ninja
+        uses: seanmiddleditch/gha-setup-ninja@master
+
+      - name: Install AppImage dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget file
+
+      - name: Build AppImage
+        run: |
+          chmod +x packaging/appimage/build-appimage.sh
+          ./packaging/appimage/build-appimage.sh
+
+      - name: Upload AppImage
+        uses: actions/upload-artifact@v3
+        with:
+          name: qtplugin-appimage
+          path: build-appimage/*.AppImage
+          retention-days: 30
+
+  # Flatpak Build (Linux only)
+  build-flatpak:
+    name: Build Flatpak
+    if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main')
+    needs: build-and-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Flatpak
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y flatpak flatpak-builder
+          sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+          sudo flatpak install -y flathub org.kde.Platform//5.15-22.08 org.kde.Sdk//5.15-22.08
+
+      - name: Build Flatpak
+        run: |
+          flatpak-builder --force-clean --repo=repo build-flatpak packaging/flatpak/org.qtforge.QtPlugin.yml
+          flatpak build-bundle repo qtplugin.flatpak org.qtforge.QtPlugin
+
+      - name: Upload Flatpak
+        uses: actions/upload-artifact@v3
+        with:
+          name: qtplugin-flatpak
+          path: qtplugin.flatpak
+          retention-days: 30
+
+  # Release Creation - Only on tags
+  create-release:
+    name: Create Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [create-packages, build-appimage, build-flatpak]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts
+
+      - name: Organize release assets
+        run: |
+          mkdir -p release-assets
+
+          # Copy packages
+          find artifacts -name "*.exe" -o -name "*.msi" -o -name "*.dmg" -o -name "*.deb" -o -name "*.rpm" -o -name "*.tar.gz" -o -name "*.zip" | while read file; do
+            cp "$file" release-assets/
+          done
+
+          # Copy AppImage and Flatpak
+          find artifacts -name "*.AppImage" -o -name "*.flatpak" | while read file; do
+            cp "$file" release-assets/
+          done
+
+          # List all release assets
+          echo "Release assets:"
+          ls -la release-assets/
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          echo "RELEASE_NOTES<<EOF" >> $GITHUB_OUTPUT
+          echo "# QtPlugin v${{ steps.get_version.outputs.VERSION }}" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "## 📦 Downloads" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "### Windows" >> $GITHUB_OUTPUT
+          echo "- **Installer (NSIS)**: \`QtPlugin-${{ steps.get_version.outputs.VERSION }}-Windows-*.exe\`" >> $GITHUB_OUTPUT
+          echo "- **MSI Package**: \`QtPlugin-${{ steps.get_version.outputs.VERSION }}-Windows-*.msi\`" >> $GITHUB_OUTPUT
+          echo "- **ZIP Archive**: \`QtPlugin-${{ steps.get_version.outputs.VERSION }}-Windows-*.zip\`" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "### macOS" >> $GITHUB_OUTPUT
+          echo "- **DMG Installer**: \`QtPlugin-${{ steps.get_version.outputs.VERSION }}-Darwin-*.dmg\`" >> $GITHUB_OUTPUT
+          echo "- **TAR Archive**: \`QtPlugin-${{ steps.get_version.outputs.VERSION }}-Darwin-*.tar.gz\`" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "### Linux" >> $GITHUB_OUTPUT
+          echo "- **DEB Package**: \`QtPlugin-${{ steps.get_version.outputs.VERSION }}-Linux-*.deb\`" >> $GITHUB_OUTPUT
+          echo "- **RPM Package**: \`QtPlugin-${{ steps.get_version.outputs.VERSION }}-Linux-*.rpm\`" >> $GITHUB_OUTPUT
+          echo "- **AppImage**: \`QtPlugin-${{ steps.get_version.outputs.VERSION }}-x86_64.AppImage\`" >> $GITHUB_OUTPUT
+          echo "- **Flatpak**: \`qtplugin.flatpak\`" >> $GITHUB_OUTPUT
+          echo "- **TAR Archive**: \`QtPlugin-${{ steps.get_version.outputs.VERSION }}-Linux-*.tar.gz\`" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "## 🚀 Installation" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "### Quick Install (Unix/Linux/macOS)" >> $GITHUB_OUTPUT
+          echo "\`\`\`bash" >> $GITHUB_OUTPUT
+          echo "curl -sSL https://raw.githubusercontent.com/QtForge/QtPlugin/main/scripts/install.py | python3" >> $GITHUB_OUTPUT
+          echo "\`\`\`" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "### Manual Installation" >> $GITHUB_OUTPUT
+          echo "1. Download the appropriate package for your platform" >> $GITHUB_OUTPUT
+          echo "2. Install using your system's package manager or run the installer" >> $GITHUB_OUTPUT
+          echo "3. Follow the platform-specific installation instructions in the documentation" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "## 📚 Documentation" >> $GITHUB_OUTPUT
+          echo "- [Installation Guide](https://github.com/QtForge/QtPlugin/wiki/Installation)" >> $GITHUB_OUTPUT
+          echo "- [Getting Started](https://github.com/QtForge/QtPlugin/wiki/Getting-Started)" >> $GITHUB_OUTPUT
+          echo "- [API Documentation](https://qtforge.github.io/QtPlugin/)" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: QtPlugin v${{ steps.get_version.outputs.VERSION }}
+          body: ${{ steps.release_notes.outputs.RELEASE_NOTES }}
+          files: release-assets/*
+          draft: false
+          prerelease: ${{ contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'rc') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

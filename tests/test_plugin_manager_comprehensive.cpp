@@ -45,7 +45,7 @@ public:
 
     qtplugin::expected<void, qtplugin::PluginError> initialize() override {
         if (m_should_fail) {
-            return qtplugin::make_error<void>(qtplugin::PluginErrorCode::InitializationFailed, 
+            return qtplugin::make_error<void>(qtplugin::PluginErrorCode::InitializationFailed,
                                              "Test initialization failure");
         }
         m_state = qtplugin::PluginState::Running;
@@ -62,13 +62,14 @@ public:
 
     qtplugin::expected<QJsonObject, qtplugin::PluginError>
     execute_command(std::string_view command, const QJsonObject& params = {}) override {
+        Q_UNUSED(params)
         if (command == "test") {
             QJsonObject result;
             result["success"] = true;
             result["plugin_id"] = QString::fromStdString(id());
             return result;
         }
-        return qtplugin::make_error<QJsonObject>(qtplugin::PluginErrorCode::CommandNotFound, 
+        return qtplugin::make_error<QJsonObject>(qtplugin::PluginErrorCode::CommandNotFound,
                                                 "Unknown command");
     }
 
@@ -154,7 +155,7 @@ void TestPluginManager::initTestCase() {
     // Initialize QtPlugin library
     qtplugin::LibraryInitializer init;
     QVERIFY(init.is_initialized());
-    
+
     qDebug() << "Starting PluginManager tests";
 }
 
@@ -166,7 +167,7 @@ void TestPluginManager::init() {
     m_manager = std::make_unique<qtplugin::PluginManager>();
     m_temp_dir = std::make_unique<QTemporaryDir>();
     QVERIFY(m_temp_dir->isValid());
-    
+
     m_plugins_dir = m_temp_dir->path() + "/plugins";
     QDir().mkpath(m_plugins_dir);
 }
@@ -185,11 +186,11 @@ void TestPluginManager::cleanup() {
 
 void TestPluginManager::testManagerCreation() {
     QVERIFY(m_manager != nullptr);
-    
+
     // Initially no plugins should be loaded
     auto loaded = m_manager->loaded_plugins();
     QVERIFY(loaded.empty());
-    
+
     // Plugin count should be zero
     QCOMPARE(m_manager->loaded_plugins().size(), 0);
 }
@@ -199,7 +200,7 @@ void TestPluginManager::testPluginLoading() {
     QString plugin_file = m_plugins_dir + "/test_plugin.qtplugin";
     createTestPlugin(plugin_file);
     createTestMetadata(plugin_file + ".json");
-    
+
     // Test loading - expect failure with dummy file but test error handling
     auto result = m_manager->load_plugin(plugin_file.toStdString());
 
@@ -312,7 +313,7 @@ void TestPluginManager::testPluginStateManagement() {
 
 void TestPluginManager::testLoadNonexistentPlugin() {
     QString non_existent_file = m_plugins_dir + "/nonexistent.qtplugin";
-    
+
     auto result = m_manager->load_plugin(non_existent_file.toStdString());
     QVERIFY(!result.has_value());
     QCOMPARE(result.error().code, qtplugin::PluginErrorCode::FileNotFound);
@@ -324,7 +325,7 @@ void TestPluginManager::testLoadInvalidPlugin() {
     QFile file(invalid_file);
     QVERIFY(file.open(QIODevice::WriteOnly));
     file.close();
-    
+
     auto result = m_manager->load_plugin(invalid_file.toStdString());
     QVERIFY(!result.has_value());
     // The exact error code depends on the implementation
@@ -352,7 +353,7 @@ void TestPluginManager::testDoubleLoading() {
     QString plugin_file = m_plugins_dir + "/test_plugin.qtplugin";
     createTestPlugin(plugin_file);
     createTestMetadata(plugin_file + ".json");
-    
+
     // First load should fail (dummy file)
     auto result1 = m_manager->load_plugin(plugin_file.toStdString());
     QVERIFY(!result1.has_value());
@@ -369,7 +370,7 @@ void TestPluginManager::createTestPlugin(const QString& filename, const QString&
     // For testing purposes, we'll create a placeholder file
     QFile file(filename);
     QVERIFY(file.open(QIODevice::WriteOnly));
-    
+
     // Write some dummy content to simulate a plugin library
     QByteArray content = QString("Test plugin: %1").arg(plugin_id).toUtf8();
     file.write(content);
