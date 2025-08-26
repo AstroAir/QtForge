@@ -53,7 +53,7 @@ function(qtforge_detect_compiler)
         set(QTFORGE_COMPILER_NAME "msvc" PARENT_SCOPE)
         set(QTFORGE_IS_MSVC TRUE PARENT_SCOPE)
         set(QTFORGE_COMPILER_VERSION "${MSVC_VERSION}" PARENT_SCOPE)
-        
+
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         if(MINGW)
             set(QTFORGE_COMPILER_NAME "mingw" PARENT_SCOPE)
@@ -63,24 +63,24 @@ function(qtforge_detect_compiler)
             set(QTFORGE_IS_GCC TRUE PARENT_SCOPE)
         endif()
         set(QTFORGE_COMPILER_VERSION "${CMAKE_CXX_COMPILER_VERSION}" PARENT_SCOPE)
-        
+
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
         set(QTFORGE_COMPILER_NAME "clang" PARENT_SCOPE)
         set(QTFORGE_IS_CLANG TRUE PARENT_SCOPE)
         set(QTFORGE_COMPILER_VERSION "${CMAKE_CXX_COMPILER_VERSION}" PARENT_SCOPE)
-        
+
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
         set(QTFORGE_COMPILER_NAME "intel" PARENT_SCOPE)
         set(QTFORGE_IS_INTEL TRUE PARENT_SCOPE)
         set(QTFORGE_COMPILER_VERSION "${CMAKE_CXX_COMPILER_VERSION}" PARENT_SCOPE)
-        
+
     else()
         set(QTFORGE_COMPILER_NAME "unknown" PARENT_SCOPE)
         message(WARNING "QtForge: Unknown compiler: ${CMAKE_CXX_COMPILER_ID}")
     endif()
 
     set(QTFORGE_COMPILER_DETECTED TRUE PARENT_SCOPE)
-    
+
     message(STATUS "QtForge: Detected compiler: ${QTFORGE_COMPILER_NAME} ${QTFORGE_COMPILER_VERSION}")
 endfunction()
 
@@ -186,7 +186,7 @@ function(qtforge_configure_msvc)
     # Warning configuration
     if(MSVC_ENABLE_WARNINGS)
         add_compile_options(/W4)
-        
+
         if(MSVC_ENABLE_WERROR)
             add_compile_options(/WX)
         endif()
@@ -233,7 +233,7 @@ function(qtforge_configure_gcc)
     # Warning configuration
     if(GCC_ENABLE_WARNINGS)
         add_compile_options(-Wall -Wextra -Wpedantic)
-        
+
         if(GCC_ENABLE_WERROR)
             add_compile_options(-Werror)
         endif()
@@ -246,10 +246,11 @@ function(qtforge_configure_gcc)
     endif()
 
     # Link Time Optimization
-    if(GCC_ENABLE_LTO)
-        add_compile_options($<$<CONFIG:Release>:-flto>)
-        add_link_options($<$<CONFIG:Release>:-flto>)
-    endif()
+    # Temporarily disabled due to linking issues with GCC 15.2.0
+    # if(GCC_ENABLE_LTO)
+    #     add_compile_options($<$<CONFIG:Release>:-flto>)
+    #     add_link_options($<$<CONFIG:Release>:-flto>)
+    # endif()
 
     # Fast math
     if(GCC_ENABLE_FAST_MATH)
@@ -289,7 +290,7 @@ function(qtforge_configure_clang)
     # Warning configuration
     if(CLANG_ENABLE_WARNINGS)
         add_compile_options(-Wall -Wextra -Wpedantic)
-        
+
         if(CLANG_ENABLE_WERROR)
             add_compile_options(-Werror)
         endif()
@@ -338,7 +339,7 @@ function(qtforge_configure_intel)
     # Warning configuration
     if(INTEL_ENABLE_WARNINGS)
         add_compile_options(-Wall)
-        
+
         if(INTEL_ENABLE_WERROR)
             add_compile_options(-Werror)
         endif()

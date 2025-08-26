@@ -546,6 +546,10 @@ qtplugin::expected<QJsonObject, PluginError> CompositePlugin::call_service(
     const QString& service_name, const QString& method_name,
     const QJsonObject& parameters,
     std::chrono::milliseconds timeout) {
+    Q_UNUSED(method_name)
+    Q_UNUSED(parameters)
+    Q_UNUSED(timeout)
+
     // For now, composite doesn’t handle services directly; return not implemented
     return make_error<QJsonObject>(PluginErrorCode::NotFound,
                                    "No component plugin provides service: " + service_name.toStdString());
@@ -556,6 +560,11 @@ CompositePlugin::call_service_async(const QString& service_name,
                                     const QString& method_name,
                                     const QJsonObject& parameters,
                                     std::chrono::milliseconds timeout) {
+    Q_UNUSED(service_name)
+    Q_UNUSED(method_name)
+    Q_UNUSED(parameters)
+    Q_UNUSED(timeout)
+
     return std::async(std::launch::deferred, [] {
         return make_error<QJsonObject>(PluginErrorCode::NotImplemented,
                                        "CompositePlugin::call_service_async not implemented");
@@ -565,6 +574,10 @@ CompositePlugin::call_service_async(const QString& service_name,
 qtplugin::expected<QJsonObject, PluginError> CompositePlugin::handle_service_call(
     const QString& service_name, const QString& method_name,
     const QJsonObject& parameters) {
+    Q_UNUSED(service_name)
+    Q_UNUSED(method_name)
+    Q_UNUSED(parameters)
+
     return make_error<QJsonObject>(PluginErrorCode::NotImplemented,
                                    "CompositePlugin::handle_service_call not implemented");
 }

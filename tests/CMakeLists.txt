@@ -5,8 +5,13 @@ project(QtPluginTests VERSION 1.0.0)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Find Qt6 Test component
-find_package(Qt6 REQUIRED COMPONENTS Test Core Network Sql Concurrent)
+# Find Qt6 Test component - make Test optional due to MinGW issues
+find_package(Qt6 REQUIRED COMPONENTS Core Network Sql Concurrent)
+find_package(Qt6 COMPONENTS Test QUIET)
+
+if(NOT Qt6Test_FOUND)
+    message(WARNING "Qt6Test not found - some tests may be disabled")
+endif()
 
 # Enable automatic MOC
 set(CMAKE_AUTOMOC ON)

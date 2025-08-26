@@ -7,8 +7,12 @@
 #pragma once
 
 #include <QFile>
+#ifdef QTFORGE_HAS_NETWORK
 #include <QNetworkAccessManager>
+#endif
+#ifdef QTFORGE_HAS_SQL
 #include <QSqlDatabase>
+#endif
 #include <QThread>
 #include <QThreadPool>
 #include <QTimer>
@@ -298,6 +302,7 @@ private:
     }
 };
 
+#ifdef QTFORGE_HAS_NETWORK
 // === Network Connection Pool ===
 
 /**
@@ -429,5 +434,7 @@ private:
         return connection && connection->is_connected();
     }
 };
+
+#endif // QTFORGE_HAS_NETWORK
 
 }  // namespace qtplugin

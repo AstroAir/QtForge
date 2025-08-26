@@ -7,6 +7,8 @@
 
 #pragma once
 
+#ifdef QTFORGE_HAS_NETWORK
+
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QMetaType>
@@ -490,3 +492,5 @@ Q_DECLARE_METATYPE(qtplugin::ServiceDiscoveryQuery)
 Q_DECLARE_METATYPE(qtplugin::ServiceDiscoveryResult)
 Q_DECLARE_METATYPE(qtplugin::ServiceHealthCheck)
 Q_DECLARE_METATYPE(qtplugin::ServiceLoadBalancing)
+
+#endif // QTFORGE_HAS_NETWORK

@@ -622,6 +622,8 @@ PluginOrchestrator::execute_workflow_impl(const Workflow& workflow,
 
 qtplugin::expected<StepResult, PluginError> PluginOrchestrator::execute_step(
     const WorkflowStep& step, WorkflowContext& context) {
+    Q_UNUSED(context)  // TODO: Use context when plugin manager is injected
+
     StepResult result;
     result.step_id = step.id;
     result.status = StepStatus::Running;

@@ -136,16 +136,24 @@ QJsonObject PluginMetricsCollector::get_system_metrics(
         switch (plugin_info.state) {
             case PluginState::Loaded:
             case PluginState::Running:
+            case PluginState::Paused:
                 loaded_plugins++;
                 break;
             case PluginState::Error:
                 failed_plugins++;
                 break;
             case PluginState::Unloaded:
+            case PluginState::Stopped:
                 unloaded_plugins++;
                 break;
             case PluginState::Initializing:
+            case PluginState::Loading:
+            case PluginState::Reloading:
                 initializing_plugins++;
+                break;
+            case PluginState::Stopping:
+                // Plugins that are stopping are transitioning to unloaded
+                unloaded_plugins++;
                 break;
         }
     }

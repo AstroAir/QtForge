@@ -137,8 +137,9 @@ SecurityValidationResult SecurityValidator::validate_metadata(
                        header[2] == 'L' && header[3] == 'F') {
                 // ELF format (Linux SO)
                 has_valid_format = true;
-            } else if (header[0] == 0xfe && header[1] == 0xed &&
-                       header[2] == 0xfa) {
+            } else if (static_cast<unsigned char>(header[0]) == 0xfe &&
+                       static_cast<unsigned char>(header[1]) == 0xed &&
+                       static_cast<unsigned char>(header[2]) == 0xfa) {
                 // Mach-O format (macOS dylib)
                 has_valid_format = true;
             } else {

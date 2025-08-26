@@ -76,7 +76,6 @@ size_t ResourcePool<T>::cleanup_resources() {
     std::unique_lock lock(m_mutex);
 
     size_t cleaned_count = 0;
-    auto now = std::chrono::system_clock::now();
 
     // Clean up expired available resources
     std::queue<std::unique_ptr<PooledResource<T>>> new_available;
@@ -364,7 +363,9 @@ size_t ResourcePool<T>::calculate_memory_usage() const {
 template class ResourcePool<QThread>;
 template class ResourcePool<QTimer>;
 template class ResourcePool<MemoryResource>;
+#ifdef QTFORGE_HAS_NETWORK
 template class ResourcePool<NetworkConnection>;
+#endif
 template class ResourcePool<std::string>;
 
 }  // namespace qtplugin
