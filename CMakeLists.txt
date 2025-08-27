@@ -1,6 +1,15 @@
 # QtForge Library CMakeLists.txt
 cmake_minimum_required(VERSION 3.21)
 
+# Set CMake policies to resolve warnings
+if(POLICY CMP0156)
+    cmake_policy(SET CMP0156 NEW)  # De-duplicate libraries on link lines based on linker capabilities
+endif()
+
+if(POLICY CMP0181)
+    cmake_policy(SET CMP0181 NEW)  # Link command-line fragment variables are parsed and re-quoted
+endif()
+
 project(QtForge
     VERSION 3.0.0
     DESCRIPTION "Modern C++ Plugin System for Qt Applications with Modular Architecture"
@@ -69,6 +78,16 @@ set(QTFORGE_CORE_SOURCES
     src/transactions/plugin_transaction_manager.cpp
     # Version management sources (v3.1.0)
     src/managers/plugin_version_manager.cpp
+    # Dynamic plugin system sources (v3.2.0)
+    src/core/dynamic_plugin_interface.cpp
+    # Multi-language plugin bridges (v3.2.0)
+    src/bridges/python_plugin_bridge.cpp
+    # Advanced security and sandboxing (v3.2.0)
+    src/security/sandbox/plugin_sandbox.cpp
+    # Enhanced plugin composition (v3.2.0)
+    src/orchestration/advanced/plugin_orchestrator_v2.cpp
+    # Plugin marketplace integration (v3.2.0)
+    src/marketplace/plugin_marketplace.cpp
 )
 
 # Core library headers
@@ -118,6 +137,16 @@ set(QTFORGE_CORE_HEADERS
     include/qtplugin/transactions/plugin_transaction_manager.hpp
     # Version management headers (v3.1.0)
     include/qtplugin/managers/plugin_version_manager.hpp
+    # Dynamic plugin system headers (v3.2.0)
+    include/qtplugin/core/dynamic_plugin_interface.hpp
+    # Multi-language plugin bridge headers (v3.2.0)
+    include/qtplugin/bridges/python_plugin_bridge.hpp
+    # Advanced security and sandboxing headers (v3.2.0)
+    include/qtplugin/security/sandbox/plugin_sandbox.hpp
+    # Enhanced plugin composition headers (v3.2.0)
+    include/qtplugin/orchestration/advanced/plugin_orchestrator_v2.hpp
+    # Plugin marketplace integration headers (v3.2.0)
+    include/qtplugin/marketplace/plugin_marketplace.hpp
 )
 
 # Create core library using the modular target system
@@ -126,7 +155,7 @@ qtforge_add_library(
     SOURCES ${QTFORGE_CORE_SOURCES}
     HEADERS ${QTFORGE_CORE_HEADERS}
     PUBLIC_HEADERS ${QTFORGE_CORE_HEADERS}
-    QT_COMPONENTS Core
+    QT_COMPONENTS Core Network Widgets
     EXPORT_NAME Core
     OUTPUT_NAME qtforge-core
     VERSION ${PROJECT_VERSION}
