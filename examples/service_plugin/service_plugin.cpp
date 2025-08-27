@@ -592,19 +592,18 @@ QJsonObject ServicePlugin::resource_usage() const {
     if (m_worker_thread && m_worker_thread->isRunning())
         cpu_estimate += 0.5;
 
-    return QJsonObject{
-        {"estimated_memory_kb", static_cast<qint64>(memory_estimate)},
-        {"estimated_cpu_percent", cpu_estimate},
-        {"thread_count",
-         m_worker_thread && m_worker_thread->isRunning() ? 2 : 1},
-        {"timer_count", 2},
-        {"active_timers",
-         (m_processing_timer && m_processing_timer->isActive() ? 1 : 0) +
-             (m_heartbeat_timer && m_heartbeat_timer->isActive() ? 1 : 0)},
-        {"message_bus_connected", m_message_bus != nullptr},
-        {"service_discovery_connected", m_service_discovery != nullptr},
-        {"error_log_size", static_cast<qint64>(m_error_log.size())},
-        {"dependencies_satisfied", dependencies_satisfied()}};
+    QJsonObject result;
+    result["estimated_memory_kb"] = static_cast<qint64>(memory_estimate);
+    result["estimated_cpu_percent"] = cpu_estimate;
+    result["thread_count"] = m_worker_thread && m_worker_thread->isRunning() ? 2 : 1;
+    result["timer_count"] = 2;
+    result["active_timers"] = (m_processing_timer && m_processing_timer->isActive() ? 1 : 0) +
+                              (m_heartbeat_timer && m_heartbeat_timer->isActive() ? 1 : 0);
+    result["message_bus_connected"] = m_message_bus != nullptr;
+    result["service_discovery_connected"] = m_service_discovery != nullptr;
+    result["error_log_size"] = static_cast<qint64>(m_error_log.size());
+    result["dependencies_satisfied"] = dependencies_satisfied();
+    return result;
 }
 
 // === Slot Handlers ===

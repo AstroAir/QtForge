@@ -321,3 +321,110 @@ function(qtforge_install_targets)
         INCLUDES DESTINATION ${QTFORGE_INSTALL_INCLUDE_DIR}
     )
 endfunction()
+
+#[=======================================================================[.rst:
+qtforge_add_python_module
+--------------------------
+
+Creates a Python binding module using pybind11.
+
+Usage:
+  qtforge_add_python_module(
+    NAME module_name
+    SOURCES source1.cpp source2.cpp
+    [HEADERS header1.hpp header2.hpp]
+    [DEPENDENCIES target1 target2]
+    [QT_COMPONENTS Core Network Widgets]
+    [DEFINITIONS DEFINE1 DEFINE2]
+    [INCLUDE_DIRECTORIES dir1 dir2]
+    [MODULE_NAME python_module_name]
+    [INSTALL_COMPONENT component_name]
+  )
+#]=======================================================================]
+function(qtforge_add_python_module)
+    if(NOT QTFORGE_BUILD_PYTHON_BINDINGS OR NOT QTFORGE_PYTHON_FOUND OR NOT QTFORGE_PYBIND11_FOUND)
+        message(STATUS "QtForge: Skipping Python module ${ARGV0} - Python bindings not available")
+        return()
+    endif()
+
+    cmake_parse_arguments(PY_MOD
+        ""
+        "NAME;MODULE_NAME;INSTALL_COMPONENT"
+        "SOURCES;HEADERS;DEPENDENCIES;QT_COMPONENTS;DEFINITIONS;INCLUDE_DIRECTORIES"
+        ${ARGN}
+    )
+
+    if(NOT PY_MOD_NAME)
+        message(FATAL_ERROR "qtforge_add_python_module: NAME is required")
+    endif()
+
+    if(NOT PY_MOD_SOURCES)
+        message(FATAL_ERROR "qtforge_add_python_module: SOURCES is required")
+    endif()
+
+    # Set defaults
+    if(NOT PY_MOD_MODULE_NAME)
+        set(PY_MOD_MODULE_NAME ${PY_MOD_NAME})
+    endif()
+
+    if(NOT PY_MOD_INSTALL_COMPONENT)
+        set(PY_MOD_INSTALL_COMPONENT PythonBindings)
+    endif()
+
+    # Create the pybind11 module
+    pybind11_add_module(${PY_MOD_NAME} ${PY_MOD_SOURCES} ${PY_MOD_HEADERS})
+
+    # Set module properties
+    set_target_properties(${PY_MOD_NAME} PROPERTIES
+        OUTPUT_NAME ${PY_MOD_MODULE_NAME}
+        CXX_VISIBILITY_PRESET hidden
+        VISIBILITY_INLINES_HIDDEN ON
+    )
+
+    # Configure include directories
+    target_include_directories(${PY_MOD_NAME} PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_CURRENT_BINARY_DIR}
+        ${PY_MOD_INCLUDE_DIRECTORIES}
+    )
+
+    # Add compile definitions
+    if(PY_MOD_DEFINITIONS)
+        target_compile_definitions(${PY_MOD_NAME} PRIVATE ${PY_MOD_DEFINITIONS})
+    endif()
+
+    # Link Qt components
+    if(PY_MOD_QT_COMPONENTS)
+        qtforge_link_qt_libraries(${PY_MOD_NAME} COMPONENTS ${PY_MOD_QT_COMPONENTS})
+    endif()
+
+    # Link dependencies
+    if(PY_MOD_DEPENDENCIES)
+        target_link_libraries(${PY_MOD_NAME} PRIVATE ${PY_MOD_DEPENDENCIES})
+    endif()
+
+    # Install the module
+    if(QTFORGE_PYTHON_BINDINGS_INSTALL)
+        if(QTFORGE_PYTHON_INSTALL_DIR)
+            set(PYTHON_INSTALL_DIR ${QTFORGE_PYTHON_INSTALL_DIR})
+        else()
+            # Auto-detect Python site-packages directory
+            execute_process(
+                COMMAND ${QTFORGE_PYTHON_EXECUTABLE} -c "import site; print(site.getsitepackages()[0])"
+                OUTPUT_VARIABLE PYTHON_INSTALL_DIR
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+                ERROR_QUIET
+            )
+        endif()
+
+        if(PYTHON_INSTALL_DIR)
+            install(TARGETS ${PY_MOD_NAME}
+                COMPONENT ${PY_MOD_INSTALL_COMPONENT}
+                LIBRARY DESTINATION ${PYTHON_INSTALL_DIR}/qtforge
+            )
+            message(STATUS "QtForge: Python module ${PY_MOD_NAME} will be installed to ${PYTHON_INSTALL_DIR}/qtforge")
+        else()
+            message(WARNING "QtForge: Could not determine Python installation directory for module ${PY_MOD_NAME}")
+        endif()
+    endif()
+endfunction()

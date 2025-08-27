@@ -60,6 +60,11 @@ function(qtforge_define_options)
     option(QTFORGE_BUILD_BENCHMARKS "Build performance benchmarks" OFF)
     option(QTFORGE_BUILD_DOCS "Build documentation" OFF)
 
+    # Python binding options
+    option(QTFORGE_BUILD_PYTHON_BINDINGS "Build Python bindings using pybind11" OFF)
+    option(QTFORGE_PYTHON_BINDINGS_INSTALL "Install Python bindings" ON)
+    option(QTFORGE_PYTHON_BINDINGS_TESTS "Build Python binding tests" OFF)
+
     # Advanced options
     option(QTFORGE_BUILD_COMPONENT_TESTS "Build component-specific tests" OFF)
     option(QTFORGE_ENABLE_COMPONENT_LOGGING "Enable detailed component logging" OFF)
@@ -115,6 +120,13 @@ function(qtforge_define_options)
     set(QTFORGE_INSTALL_CMAKE_DIR "lib/cmake/QtForge" CACHE STRING "CMake files installation directory")
     set(QTFORGE_INSTALL_PKGCONFIG_DIR "lib/pkgconfig" CACHE STRING "pkg-config files installation directory")
     set(QTFORGE_INSTALL_DOC_DIR "share/doc/qtforge" CACHE STRING "Documentation installation directory")
+
+    # Python binding installation options
+    if(QTFORGE_BUILD_PYTHON_BINDINGS)
+        set(QTFORGE_PYTHON_INSTALL_DIR "" CACHE STRING "Python module installation directory (auto-detected if empty)")
+        set(QTFORGE_PYTHON_MIN_VERSION "3.8" CACHE STRING "Minimum required Python version")
+        set(QTFORGE_PYTHON_MAX_VERSION "3.12" CACHE STRING "Maximum supported Python version")
+    endif()
 
     # Print configuration summary
     qtforge_print_configuration_summary()

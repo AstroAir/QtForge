@@ -149,6 +149,24 @@ set(QTFORGE_CORE_HEADERS
     include/qtplugin/marketplace/plugin_marketplace.hpp
 )
 
+# Prepare compile definitions based on available features
+set(QTFORGE_CORE_DEFINITIONS)
+if(QTFORGE_HAS_NETWORK)
+    list(APPEND QTFORGE_CORE_DEFINITIONS QTFORGE_HAS_NETWORK)
+endif()
+if(QTFORGE_HAS_WIDGETS)
+    list(APPEND QTFORGE_CORE_DEFINITIONS QTFORGE_HAS_WIDGETS)
+endif()
+if(QTFORGE_HAS_SQL)
+    list(APPEND QTFORGE_CORE_DEFINITIONS QTFORGE_HAS_SQL)
+endif()
+if(QTFORGE_HAS_CONCURRENT)
+    list(APPEND QTFORGE_CORE_DEFINITIONS QTFORGE_HAS_CONCURRENT)
+endif()
+if(QTFORGE_HAS_STATEMACHINE)
+    list(APPEND QTFORGE_CORE_DEFINITIONS QTFORGE_HAS_STATEMACHINE)
+endif()
+
 # Create core library using the modular target system
 qtforge_add_library(
     NAME QtForgeCore
@@ -156,6 +174,7 @@ qtforge_add_library(
     HEADERS ${QTFORGE_CORE_HEADERS}
     PUBLIC_HEADERS ${QTFORGE_CORE_HEADERS}
     QT_COMPONENTS Core Network Widgets
+    DEFINITIONS ${QTFORGE_CORE_DEFINITIONS}
     EXPORT_NAME Core
     OUTPUT_NAME qtforge-core
     VERSION ${PROJECT_VERSION}
@@ -295,6 +314,59 @@ configure_file(
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/qtforge.pc
     DESTINATION ${QTFORGE_INSTALL_PKGCONFIG_DIR}
 )
+
+# Python bindings
+if(QTFORGE_BUILD_PYTHON_BINDINGS AND QTFORGE_PYTHON_FOUND AND QTFORGE_PYBIND11_FOUND)
+    message(STATUS "QtForge: Building Python bindings")
+
+    # Python binding sources
+    set(QTFORGE_PYTHON_SOURCES
+        src/python/qtforge_python.cpp
+        src/python/qt_conversions.cpp
+        src/python/core/core_bindings.cpp
+        src/python/utils/utils_bindings.cpp
+    )
+
+    # Create Python module (minimal version without Qt dependencies for now)
+    pybind11_add_module(qtforge_python ${QTFORGE_PYTHON_SOURCES})
+
+    # Set module properties
+    set_target_properties(qtforge_python PROPERTIES
+        OUTPUT_NAME qtforge
+        CXX_VISIBILITY_PRESET hidden
+        VISIBILITY_INLINES_HIDDEN ON
+    )
+
+    # Configure include directories
+    target_include_directories(qtforge_python PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/python
+    )
+
+    # Add compile definitions
+    target_compile_definitions(qtforge_python PRIVATE
+        QTPLUGIN_VERSION_MAJOR=${PROJECT_VERSION_MAJOR}
+        QTPLUGIN_VERSION_MINOR=${PROJECT_VERSION_MINOR}
+        QTPLUGIN_VERSION_PATCH=${PROJECT_VERSION_PATCH}
+    )
+
+    # Create Python package structure
+    if(QTFORGE_PYTHON_BINDINGS_INSTALL)
+        # Install __init__.py for the package
+        configure_file(
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/python/__init__.py.in
+            ${CMAKE_CURRENT_BINARY_DIR}/python/__init__.py
+            @ONLY
+        )
+
+        install(FILES ${CMAKE_CURRENT_BINARY_DIR}/python/__init__.py
+            DESTINATION ${PYTHON_INSTALL_DIR}/qtforge
+            COMPONENT PythonBindings
+        )
+    endif()
+else()
+    message(STATUS "QtForge: Python bindings disabled or dependencies not found")
+endif()
 
 # Add subdirectories
 if(QTFORGE_BUILD_EXAMPLES)

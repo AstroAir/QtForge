@@ -210,6 +210,57 @@ function(qtforge_find_development_dependencies)
 endfunction()
 
 #[=======================================================================[.rst:
+qtforge_find_python_dependencies
+---------------------------------
+
+Finds Python interpreter and pybind11 for Python bindings.
+#]=======================================================================]
+function(qtforge_find_python_dependencies)
+    if(NOT QTFORGE_BUILD_PYTHON_BINDINGS)
+        return()
+    endif()
+
+    message(STATUS "QtForge: Finding Python dependencies...")
+
+    # Find Python interpreter
+    set(Python_FIND_STRATEGY LOCATION)
+    find_package(Python COMPONENTS Interpreter Development QUIET)
+
+    if(Python_FOUND)
+        message(STATUS "QtForge: Found Python ${Python_VERSION} at ${Python_EXECUTABLE}")
+
+        # Check Python version requirements
+        if(Python_VERSION VERSION_LESS ${QTFORGE_PYTHON_MIN_VERSION})
+            message(WARNING "QtForge: Python ${Python_VERSION} is below minimum required version ${QTFORGE_PYTHON_MIN_VERSION}")
+            set(QTFORGE_PYTHON_FOUND FALSE PARENT_SCOPE)
+            return()
+        endif()
+
+        if(Python_VERSION VERSION_GREATER ${QTFORGE_PYTHON_MAX_VERSION})
+            message(WARNING "QtForge: Python ${Python_VERSION} is above maximum supported version ${QTFORGE_PYTHON_MAX_VERSION}")
+        endif()
+
+        # Find pybind11
+        find_package(pybind11 QUIET)
+        if(pybind11_FOUND)
+            message(STATUS "QtForge: Found pybind11 ${pybind11_VERSION}")
+            set(QTFORGE_PYBIND11_FOUND TRUE PARENT_SCOPE)
+            set(QTFORGE_PYTHON_FOUND TRUE PARENT_SCOPE)
+            set(QTFORGE_PYTHON_VERSION ${Python_VERSION} PARENT_SCOPE)
+            set(QTFORGE_PYTHON_EXECUTABLE ${Python_EXECUTABLE} PARENT_SCOPE)
+        else()
+            message(WARNING "QtForge: pybind11 not found, Python bindings will not be built")
+            set(QTFORGE_PYTHON_FOUND FALSE PARENT_SCOPE)
+            set(QTFORGE_PYBIND11_FOUND FALSE PARENT_SCOPE)
+        endif()
+    else()
+        message(WARNING "QtForge: Python interpreter not found, Python bindings will not be built")
+        set(QTFORGE_PYTHON_FOUND FALSE PARENT_SCOPE)
+        set(QTFORGE_PYBIND11_FOUND FALSE PARENT_SCOPE)
+    endif()
+endfunction()
+
+#[=======================================================================[.rst:
 qtforge_configure_qt_features
 -----------------------------
 
@@ -301,6 +352,9 @@ function(qtforge_setup_dependencies)
     # Find development dependencies
     qtforge_find_development_dependencies()
 
+    # Find Python dependencies
+    qtforge_find_python_dependencies()
+
     # Configure Qt features
     qtforge_configure_qt_features()
 
@@ -317,6 +371,12 @@ function(qtforge_setup_dependencies)
     set(QTFORGE_HAS_SQL ${QTFORGE_HAS_SQL} PARENT_SCOPE)
     set(QTFORGE_HAS_CONCURRENT ${QTFORGE_HAS_CONCURRENT} PARENT_SCOPE)
     set(QTFORGE_HAS_STATEMACHINE ${QTFORGE_HAS_STATEMACHINE} PARENT_SCOPE)
+
+    # Propagate Python variables to parent scope
+    set(QTFORGE_PYTHON_FOUND ${QTFORGE_PYTHON_FOUND} PARENT_SCOPE)
+    set(QTFORGE_PYBIND11_FOUND ${QTFORGE_PYBIND11_FOUND} PARENT_SCOPE)
+    set(QTFORGE_PYTHON_VERSION ${QTFORGE_PYTHON_VERSION} PARENT_SCOPE)
+    set(QTFORGE_PYTHON_EXECUTABLE ${QTFORGE_PYTHON_EXECUTABLE} PARENT_SCOPE)
 
     message(STATUS "QtForge: Dependency setup complete")
 endfunction()

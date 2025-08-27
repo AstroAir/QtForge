@@ -1,0 +1,84 @@
+"""
+QtForge Python Bindings
+
+A modern, type-safe plugin system for Qt applications with Python integration.
+
+This package provides Python bindings for the QtForge C++ library, enabling
+Python applications to use QtForge's plugin management, communication, and
+security features.
+
+Version: @PROJECT_VERSION@
+"""
+
+__version__ = "@PROJECT_VERSION@"
+__version_info__ = (@PROJECT_VERSION_MAJOR@, @PROJECT_VERSION_MINOR@, @PROJECT_VERSION_PATCH@)
+
+# Import the compiled extension module
+try:
+    from .qtforge import *
+    from . import qtforge as _qtforge_module
+
+    # Re-export commonly used classes and functions
+    __all__ = [
+        # Core classes
+        'PluginManager',
+        'IPlugin',
+        'PluginLoader',
+        'PluginMetadata',
+
+        # Communication
+        'MessageBus',
+
+        # Security
+        'SecurityManager',
+
+        # Utils
+        'Version',
+
+        # Enums
+        'PluginState',
+        'PluginCapability',
+        'PluginPriority',
+
+        # Functions
+        'version',
+        'version_info',
+    ]
+
+    # Module-level convenience functions
+    def create_plugin_manager():
+        """Create a new PluginManager instance with default settings."""
+        return PluginManager()
+
+    def get_version():
+        """Get the QtForge version string."""
+        return _qtforge_module.version()
+
+    def get_version_info():
+        """Get the QtForge version as a tuple (major, minor, patch)."""
+        return _qtforge_module.version_info()
+
+except ImportError as e:
+    import sys
+    import os
+
+    # Provide helpful error message
+    error_msg = f"""
+Failed to import QtForge Python bindings: {e}
+
+This could be due to:
+1. QtForge Python bindings not properly installed
+2. Missing Qt6 libraries
+3. Incompatible Python version (requires Python 3.8+)
+4. Missing pybind11 dependencies
+
+Please ensure:
+- QtForge is properly installed with Python bindings enabled
+- Qt6 Core is available in your system
+- You're using a supported Python version
+
+Installation directory: {os.path.dirname(__file__)}
+Python version: {sys.version}
+"""
+
+    raise ImportError(error_msg) from e
