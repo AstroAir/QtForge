@@ -27,7 +27,9 @@
 #include <memory>
 #include <mutex>
 #include <qtplugin/communication/message_bus.hpp>
+#ifdef QTFORGE_HAS_NETWORK
 #include <qtplugin/communication/plugin_service_discovery.hpp>
+#endif
 #include <qtplugin/qtplugin.hpp>
 #include <queue>
 #include <shared_mutex>
@@ -273,7 +275,9 @@ private:
     qtplugin::MessageBus* m_message_bus = nullptr;
 
     // === Service Registration ===
+#ifdef QTFORGE_HAS_NETWORK
     qtplugin::PluginServiceDiscovery* m_service_discovery = nullptr;
+#endif
     QString m_registered_service_id;
 
     // === Error Handling ===

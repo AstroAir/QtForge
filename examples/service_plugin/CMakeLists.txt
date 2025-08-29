@@ -41,7 +41,7 @@ set_target_properties(ServicePlugin PROPERTIES
 target_link_libraries(ServicePlugin
     PRIVATE
         Qt6::Core
-        QtPluginCore
+        QtForgeCore
 )
 
 # Include directories
@@ -77,13 +77,13 @@ add_executable(ServicePluginTaskTest
 target_link_libraries(ServicePluginTest
     PRIVATE
         Qt6::Core
-        QtPluginCore
+        QtForgeCore
 )
 
 target_link_libraries(ServicePluginTaskTest
     PRIVATE
         Qt6::Core
-        QtPluginCore
+        QtForgeCore
 )
 
 target_include_directories(ServicePluginTest

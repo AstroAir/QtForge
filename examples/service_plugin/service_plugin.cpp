@@ -600,7 +600,11 @@ QJsonObject ServicePlugin::resource_usage() const {
     result["active_timers"] = (m_processing_timer && m_processing_timer->isActive() ? 1 : 0) +
                               (m_heartbeat_timer && m_heartbeat_timer->isActive() ? 1 : 0);
     result["message_bus_connected"] = m_message_bus != nullptr;
+#ifdef QTFORGE_HAS_NETWORK
     result["service_discovery_connected"] = m_service_discovery != nullptr;
+#else
+    result["service_discovery_connected"] = false;
+#endif
     result["error_log_size"] = static_cast<qint64>(m_error_log.size());
     result["dependencies_satisfied"] = dependencies_satisfied();
     return result;
@@ -776,6 +780,7 @@ void ServicePlugin::update_metrics() {
 
 qtplugin::expected<void, qtplugin::PluginError>
 ServicePlugin::register_service() {
+#ifdef QTFORGE_HAS_NETWORK
     try {
         // Create service registration
         qtplugin::ServiceRegistration registration;
@@ -815,6 +820,11 @@ ServicePlugin::register_service() {
         return qtplugin::make_error<void>(
             qtplugin::PluginErrorCode::ExecutionFailed, error_msg);
     }
+#else
+    // Network features not available, return success but log warning
+    log_info("Service registration skipped - network features not available");
+    return qtplugin::make_success();
+#endif
 }
 
 qtplugin::expected<void, qtplugin::PluginError>

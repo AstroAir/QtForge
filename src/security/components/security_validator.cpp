@@ -127,8 +127,9 @@ SecurityValidationResult SecurityValidator::validate_metadata(
         bool has_valid_format = true;
 
         // Check for common executable formats
+        qDebug() << "Security validator checking extension:" << QString::fromStdString(file_path.extension().string());
         if (file_path.extension() == ".dll" || file_path.extension() == ".so" ||
-            file_path.extension() == ".dylib") {
+            file_path.extension() == ".dylib" || file_path.extension() == ".qtplugin") {
             // Check for PE/ELF/Mach-O headers (simplified)
             if (header[0] == 'M' && header[1] == 'Z') {
                 // PE format (Windows DLL)

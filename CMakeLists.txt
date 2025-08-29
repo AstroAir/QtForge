@@ -173,7 +173,7 @@ qtforge_add_library(
     SOURCES ${QTFORGE_CORE_SOURCES}
     HEADERS ${QTFORGE_CORE_HEADERS}
     PUBLIC_HEADERS ${QTFORGE_CORE_HEADERS}
-    QT_COMPONENTS Core Network Widgets
+    QT_COMPONENTS Core Network Widgets Sql Concurrent StateMachine
     DEFINITIONS ${QTFORGE_CORE_DEFINITIONS}
     EXPORT_NAME Core
     OUTPUT_NAME qtforge-core

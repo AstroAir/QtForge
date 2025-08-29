@@ -29,7 +29,7 @@ target_include_directories(BasicPlugin PRIVATE
 # Link libraries
 target_link_libraries(BasicPlugin PRIVATE
     Qt6::Core
-    QtPluginCore
+    QtForgeCore
 )
 
 # Install plugin
@@ -54,7 +54,7 @@ target_include_directories(BasicPluginTest PRIVATE
 
 target_link_libraries(BasicPluginTest PRIVATE
     Qt6::Core
-    QtPluginCore
+    QtForgeCore
 )
 
 # Install test application

@@ -13,13 +13,81 @@ project(UIPluginExample
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Plugin sources
+# Widget Components Library
+add_library(ui_plugin_widgets STATIC
+    widgets/demo_widget.cpp
+    widgets/demo_widget.hpp
+)
+
+target_link_libraries(ui_plugin_widgets
+    PRIVATE
+        Qt6::Core
+        Qt6::Widgets
+        Qt6::Gui
+)
+
+target_include_directories(ui_plugin_widgets PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+set_target_properties(ui_plugin_widgets PROPERTIES
+    AUTOMOC ON
+)
+
+# Dialog Components Library
+add_library(ui_plugin_dialogs STATIC
+    dialogs/settings_dialog.cpp
+    dialogs/settings_dialog.hpp
+    dialogs/about_dialog.cpp
+    dialogs/about_dialog.hpp
+)
+
+target_link_libraries(ui_plugin_dialogs
+    PRIVATE
+        Qt6::Core
+        Qt6::Widgets
+        Qt6::Gui
+)
+
+target_include_directories(ui_plugin_dialogs PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+set_target_properties(ui_plugin_dialogs PROPERTIES
+    AUTOMOC ON
+)
+
+# Core Plugin Library
+add_library(ui_plugin_core_lib STATIC
+    core/ui_plugin_core.cpp
+    core/ui_plugin_core.hpp
+)
+
+target_link_libraries(ui_plugin_core_lib
+    PRIVATE
+        Qt6::Core
+        Qt6::Widgets
+        Qt6::Gui
+        QtPluginCore
+        ui_plugin_widgets
+        ui_plugin_dialogs
+)
+
+target_include_directories(ui_plugin_core_lib PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+set_target_properties(ui_plugin_core_lib PROPERTIES
+    AUTOMOC ON
+)
+
+# Plugin sources (reorganized)
 set(PLUGIN_SOURCES
-    ui_plugin.hpp
-    ui_plugin.cpp
-    ui_plugin_impl.cpp
-    ui_plugin_helpers.cpp
-    ui_plugin_commands.cpp
+    core/ui_plugin_core.hpp
+    core/ui_plugin_core.cpp
 )
 
 # Plugin metadata
@@ -27,7 +95,7 @@ set(PLUGIN_METADATA
     ui_plugin.json
 )
 
-# Create the plugin library
+# Create the plugin library (reorganized)
 add_library(UIPlugin MODULE ${PLUGIN_SOURCES})
 
 # Set plugin properties
@@ -40,12 +108,42 @@ set_target_properties(UIPlugin PROPERTIES
     AUTOMOC ON
 )
 
-# Link libraries
+# Link libraries (with reorganized components)
 target_link_libraries(UIPlugin
     PRIVATE
         Qt6::Core
         Qt6::Widgets
         QtPluginCore
+        ui_plugin_widgets
+        ui_plugin_dialogs
+        ui_plugin_core_lib
+)
+
+# Reorganized Example Application
+add_executable(ui_plugin_example
+    main.cpp
+)
+
+target_link_libraries(ui_plugin_example
+    PRIVATE
+        Qt6::Core
+        Qt6::Widgets
+        Qt6::Gui
+        QtPluginCore
+        ui_plugin_widgets
+        ui_plugin_dialogs
+        ui_plugin_core_lib
+)
+
+target_include_directories(ui_plugin_example
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/include
+)
+
+set_target_properties(ui_plugin_example PROPERTIES
+    AUTOMOC ON
+    OUTPUT_NAME "ui_plugin_reorganized"
 )
 
 # Include directories
@@ -141,9 +239,27 @@ install(TARGETS UIPluginTest
     COMPONENT Examples
 )
 
-# Documentation
-install(FILES README.md
+# Install reorganized example application
+install(TARGETS ui_plugin_example
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}/examples
+    COMPONENT Examples
+)
+
+# Install reorganized source files for reference
+install(FILES
+    main.cpp
+    README.md
     DESTINATION ${CMAKE_INSTALL_DOCDIR}/examples/ui_plugin
+    COMPONENT Documentation
+)
+
+# Install modular component files
+install(DIRECTORY
+    widgets/
+    dialogs/
+    core/
+    DESTINATION ${CMAKE_INSTALL_DOCDIR}/examples/ui_plugin
+    FILES_MATCHING PATTERN "*.cpp" PATTERN "*.hpp"
     COMPONENT Documentation
 )
 
