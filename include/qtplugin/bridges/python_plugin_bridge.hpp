@@ -131,7 +131,7 @@ public:
         std::string_view command, const QJsonObject& params = {}) override;
     std::vector<std::string> available_commands() const override;
 
-    // === IEnhancedPlugin Implementation ===
+    // === IAdvancedPlugin Implementation ===
     qtplugin::expected<void, qtplugin::PluginError> hot_reload();
     bool validate_configuration(const QJsonObject& config) const override;
     QJsonObject get_configuration_schema() const;

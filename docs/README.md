@@ -1,65 +1,69 @@
-# QtPlugin Documentation
+# QtForge Documentation
 
-This directory contains the comprehensive documentation for QtPlugin, built with [MkDocs](https://www.mkdocs.org/) and the [Material theme](https://squidfunk.github.io/mkdocs-material/).
+!!! info "Documentation Overview"
+    **Version**: QtForge v3.0+
+    **Last Updated**: December 2024
+    **Status**: Complete and up-to-date
+
+Welcome to the comprehensive QtForge documentation. This documentation covers everything from basic plugin development to advanced orchestration and marketplace integration.
+
+## Quick Start
+
+New to QtForge? Start here:
+
+- **[Getting Started Tutorial](tutorials/getting-started-tutorial.md)** - Complete step-by-step tutorial
+- **[Installation Guide](installation.md)** - Set up your development environment
+- **[Basic Plugin Examples](examples/basic-plugin-examples.md)** - Working code examples
 
 ## 📚 Documentation Structure
 
-```
-docs/
-├── index.md                    # Main documentation homepage
-├── getting-started/            # Getting started guides
-│   ├── overview.md
-│   ├── installation.md
-│   ├── quick-start.md
-│   └── first-plugin.md
-├── user-guide/                 # User guides
-│   ├── plugin-management.md
-│   ├── configuration.md
-│   ├── security.md
-│   ├── performance.md
-│   └── troubleshooting.md
-├── developer-guide/            # Developer guides
-│   ├── plugin-development.md
-│   ├── advanced-patterns.md
-│   ├── testing.md
-│   ├── best-practices.md
-│   └── migration.md
-├── api/                        # API reference
-│   ├── index.md
-│   ├── core/
-│   ├── communication/
-│   ├── security/
-│   ├── utils/
-│   └── optional/
-├── examples/                   # Examples and tutorials
-│   ├── index.md
-│   ├── basic-plugin.md
-│   ├── service-plugin.md
-│   ├── network-plugin.md
-│   ├── ui-plugin.md
-│   └── advanced.md
-├── architecture/               # Architecture documentation
-│   ├── system-design.md
-│   ├── components.md
-│   ├── patterns.md
-│   ├── performance.md
-│   └── security.md
-├── contributing/               # Contributing guides
-│   ├── index.md
-│   ├── development-setup.md
-│   ├── coding-standards.md
-│   ├── testing.md
-│   ├── documentation.md
-│   └── release-process.md
-├── appendix/                   # Additional resources
-│   ├── faq.md
-│   ├── glossary.md
-│   ├── changelog.md
-│   └── license.md
-├── mkdocs.yml                  # MkDocs configuration
-├── requirements.txt            # Python dependencies
-└── setup-mkdocs.py            # Setup script
-```
+### User Guides
+Comprehensive guides for different aspects of QtForge:
+
+#### Core Functionality
+- **[Plugin Development Guide](user-guide/plugin-development.md)** - Basic plugin creation
+- **[Advanced Plugin Development](user-guide/advanced-plugin-development.md)** - Advanced patterns and techniques
+- **[Plugin Architecture Guide](user-guide/plugin-architecture.md)** - Design principles and best practices
+
+#### Advanced Features
+- **[Workflow Orchestration](user-guide/workflow-orchestration.md)** - Multi-plugin workflows and coordination
+- **[Marketplace Integration](user-guide/marketplace-integration.md)** - Plugin discovery and distribution
+- **[Python Integration](user-guide/python-integration.md)** - Using QtForge with Python
+- **[Security Configuration](user-guide/security-configuration.md)** - Security best practices
+- **[Performance Optimization](user-guide/performance-optimization.md)** - Optimization techniques
+
+### API Reference
+Complete API documentation for all QtForge components:
+
+#### Core APIs
+- **[Overview](api/overview.md)** - API structure and conventions
+- **[Core Module](api/core/)** - Plugin management and interfaces
+- **[Orchestration](api/orchestration/)** - Workflow management
+- **[Transactions](api/transactions/)** - ACID transaction support
+- **[Marketplace](api/marketplace/)** - Plugin marketplace integration
+- **[Monitoring](api/monitoring/)** - Performance monitoring and hot reload
+- **[Security](api/security/)** - Security and validation
+
+#### Python Bindings
+- **[Python API Overview](api/python/overview.md)** - Python integration overview
+- **[Core Python APIs](api/python/core/)** - Core functionality in Python
+- **[Orchestration Python APIs](api/python/orchestration/)** - Workflow management in Python
+
+### Examples and Tutorials
+Practical examples and step-by-step tutorials:
+
+#### Tutorials
+- **[Getting Started Tutorial](tutorials/getting-started-tutorial.md)** - Complete beginner tutorial
+- **[Advanced Plugin Tutorial](tutorials/advanced-plugin-tutorial.md)** - Advanced plugin development
+- **[Orchestration Tutorial](tutorials/orchestration-tutorial.md)** - Workflow management tutorial
+- **[Python Integration Tutorial](tutorials/python-integration-tutorial.md)** - Python bindings tutorial
+
+#### Examples
+- **[Basic Plugin Examples](examples/basic-plugin-examples.md)** - Simple plugin implementations
+- **[Advanced Plugin Examples](examples/advanced-plugin-examples.md)** - Complex plugin patterns
+- **[Orchestration Examples](examples/orchestration-examples.md)** - Workflow examples
+- **[Python Examples](examples/python-examples.md)** - Python integration examples
+- **[Marketplace Examples](examples/marketplace-examples.md)** - Marketplace integration examples
 
 ## 🚀 Quick Setup
 

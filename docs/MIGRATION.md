@@ -60,7 +60,7 @@ cmake --list-presets
 cmake --preset release
 ```
 
-### 2. Enhanced Cross-Compilation
+### 2. Advanced Cross-Compilation
 ```bash
 cmake --preset android-arm64
 cmake --preset ios

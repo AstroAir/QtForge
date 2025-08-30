@@ -21,7 +21,7 @@
 #include <vector>
 
 #include "../communication/plugin_service_contracts.hpp"
-#include "../core/enhanced_plugin_interface.hpp"
+#include "../core/advanced_plugin_interface.hpp"
 #include "../core/plugin_interface.hpp"
 #include "../utils/error_handling.hpp"
 
@@ -175,7 +175,7 @@ private:
  * A composite plugin that aggregates multiple plugins and presents
  * them as a single unified interface.
  */
-class CompositePlugin : public QObject, public virtual IEnhancedPlugin {
+class CompositePlugin : public QObject, public virtual IAdvancedPlugin {
     Q_OBJECT
 
 public:
@@ -208,7 +208,7 @@ public:
 
     std::vector<std::string> available_commands() const override;
 
-    // === IEnhancedPlugin Implementation ===
+    // === IAdvancedPlugin Implementation ===
     std::vector<contracts::ServiceContract> get_service_contracts()
         const override;
 

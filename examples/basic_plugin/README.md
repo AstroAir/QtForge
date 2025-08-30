@@ -1,10 +1,10 @@
-# Enhanced Basic Plugin Example
+# Advanced Basic Plugin Example
 
-This enhanced basic plugin serves as a comprehensive example and template for all QtPlugin system features, demonstrating every public API method with proper error handling, thread safety, and documentation.
+This advanced basic plugin serves as a comprehensive example and template for all QtPlugin system features, demonstrating every public API method with proper error handling, thread safety, and documentation.
 
 ## Overview
 
-The Enhanced Basic Plugin demonstrates **ALL** functionality of the QtPlugin system including:
+The Advanced Basic Plugin demonstrates **ALL** functionality of the QtPlugin system including:
 
 - ✅ **Complete lifecycle management** (initialize, pause, resume, restart, shutdown)
 - ✅ **Comprehensive configuration management** with validation

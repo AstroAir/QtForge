@@ -24,7 +24,7 @@
 #include <shared_mutex>
 #include <unordered_map>
 #include <vector>
-#include "../core/enhanced_plugin_interface.hpp"
+#include "../core/advanced_plugin_interface.hpp"
 #include "../core/plugin_interface.hpp"
 #include "../utils/error_handling.hpp"
 

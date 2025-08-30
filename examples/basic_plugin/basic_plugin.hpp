@@ -27,7 +27,7 @@
 #include <vector>
 
 /**
- * @brief Enhanced basic example plugin
+ * @brief Advanced basic example plugin
  *
  * This plugin demonstrates ALL functionality of the QtPlugin system including:
  * - Complete lifecycle management (initialize, pause, resume, restart,
@@ -180,7 +180,7 @@ private:
     std::vector<std::string> m_optional_dependencies;
     std::atomic<bool> m_dependencies_satisfied{true};
 
-    // === Enhanced command handlers ===
+    // === Advanced command handlers ===
     QJsonObject handle_status_command(const QJsonObject& params);
     QJsonObject handle_echo_command(const QJsonObject& params);
     QJsonObject handle_config_command(const QJsonObject& params);

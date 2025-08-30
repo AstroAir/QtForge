@@ -161,7 +161,7 @@ All plugins require a `metadata.json` file:
 
 ### Dynamic Interface System
 
-The enhanced plugin system supports:
+The advanced plugin system supports:
 
 - **Runtime Interface Discovery**: Plugins can discover and adapt to interfaces at runtime
 - **Interface Versioning**: Semantic versioning for interface compatibility
