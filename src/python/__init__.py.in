@@ -24,6 +24,7 @@ try:
         'PluginManager',
         'IPlugin',
         'PluginLoader',
+        'PluginRegistry',
         'PluginMetadata',
 
         # Communication
@@ -32,6 +33,15 @@ try:
         # Security
         'SecurityManager',
 
+        # Managers
+        'ConfigurationManager',
+
+        # Orchestration
+        'PluginOrchestrator',
+        'Workflow',
+        'WorkflowStep',
+        'StepResult',
+
         # Utils
         'Version',
 
@@ -39,10 +49,71 @@ try:
         'PluginState',
         'PluginCapability',
         'PluginPriority',
+        'StepStatus',
+        'ExecutionMode',
 
-        # Functions
+        # Core functions
         'version',
         'version_info',
+        'test_function',
+        'get_version',
+        'create_plugin_manager',
+        'create_plugin_loader',
+        'create_plugin_registry',
+
+        # Communication functions
+        'create_message_bus',
+
+        # Manager functions
+        'create_configuration_manager',
+        'create_logging_manager',
+        'create_resource_manager',
+
+        # Orchestration functions
+        'create_orchestrator',
+        'create_workflow',
+        'create_workflow_step',
+
+        # Monitoring functions
+        'create_hot_reload_manager',
+        'create_metrics_collector',
+        'setup_monitoring_system',
+
+        # Transaction functions
+        'create_transaction_manager',
+        'create_transaction_operation',
+        'create_transaction_context',
+        'execute_atomic_operation',
+
+        # Composition functions
+        'create_composition_manager',
+        'create_composition',
+        'create_composition_binding',
+        'create_pipeline_composition',
+        'create_facade_composition',
+
+        # Marketplace functions
+        'create_marketplace',
+        'create_search_filters',
+        'search_free_plugins',
+        'get_top_rated_plugins',
+
+        # Threading functions
+        'create_thread_pool',
+        'create_thread_pool_manager',
+
+        # Submodules
+        'core',
+        'utils',
+        'communication',
+        'security',
+        'managers',
+        'orchestration',
+        'monitoring',
+        'transactions',
+        'composition',
+        'marketplace',
+        'threading',
     ]
 
     # Module-level convenience functions

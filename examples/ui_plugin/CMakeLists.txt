@@ -260,7 +260,6 @@ install(DIRECTORY
     core/
     DESTINATION ${CMAKE_INSTALL_DOCDIR}/examples/ui_plugin
     FILES_MATCHING PATTERN "*.cpp" PATTERN "*.hpp"
-    COMPONENT Documentation
 )
 
 # Enable testing

@@ -9,15 +9,16 @@
 #include <QJsonObject>
 #include <chrono>
 #include <string>
+#include <string_view>
 
-#include "qtplugin/communication/message_types.hpp"
+#include "qtplugin/communication/message_bus.hpp"
 
 namespace qtplugin::examples {
 
 /**
  * @brief Custom message type for system events
  */
-class SystemEventMessage : public IMessage {
+class SystemEventMessage : public qtplugin::IMessage {
 public:
     enum class EventType {
         SystemStartup,
@@ -28,23 +29,16 @@ public:
         ErrorOccurred
     };
 
-    enum class Priority {
-        Low = 1,
-        Normal = 2,
-        High = 3,
-        Critical = 4
-    };
-
-    SystemEventMessage(EventType event_type, Priority priority = Priority::Normal);
-    ~SystemEventMessage() override = default;
+    SystemEventMessage(EventType event_type, qtplugin::MessagePriority priority = qtplugin::MessagePriority::Normal);
+    ~SystemEventMessage() = default;
 
     // IMessage interface
-    std::string type() const override { return "system_event"; }
-    std::string sender() const override { return m_sender; }
-    std::string topic() const override { return m_topic; }
+    std::string_view type() const noexcept override { return "system_event"; }
+    std::string_view sender() const noexcept override { return m_sender; }
+    std::chrono::system_clock::time_point timestamp() const noexcept override { return m_timestamp; }
+    qtplugin::MessagePriority priority() const noexcept override { return m_priority; }
     QJsonObject to_json() const override;
-    void from_json(const QJsonObject& json) override;
-    std::chrono::system_clock::time_point timestamp() const override { return m_timestamp; }
+    std::string id() const noexcept override { return m_id; }
 
     // Custom properties
     EventType event_type() const { return m_event_type; }
@@ -56,8 +50,9 @@ public:
 
 private:
     EventType m_event_type;
-    Priority m_priority;
+    qtplugin::MessagePriority m_priority;
     std::string m_sender;
+    std::string m_id;
     std::string m_topic;
     QJsonObject m_data;
     std::chrono::system_clock::time_point m_timestamp;

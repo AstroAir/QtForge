@@ -338,7 +338,7 @@ function(qtforge_setup_dependencies)
 
     # Find Qt with required and optional components
     set(QT_REQUIRED_COMPONENTS Core)
-    set(QT_OPTIONAL_COMPONENTS Network Widgets Sql Concurrent StateMachine Test)
+    set(QT_OPTIONAL_COMPONENTS Network Widgets Sql Concurrent StateMachine Test WebSockets HttpServer)
 
     qtforge_find_qt(
         REQUIRED

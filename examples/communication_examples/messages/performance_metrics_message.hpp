@@ -9,26 +9,28 @@
 #include <QJsonObject>
 #include <chrono>
 #include <string>
+#include <string_view>
+#include <unordered_map>
 
-#include "qtplugin/communication/message_types.hpp"
+#include "qtplugin/communication/message_bus.hpp"
 
 namespace qtplugin::examples {
 
 /**
  * @brief Performance monitoring message
  */
-class PerformanceMetricsMessage : public IMessage {
+class PerformanceMetricsMessage : public qtplugin::IMessage {
 public:
     PerformanceMetricsMessage();
-    ~PerformanceMetricsMessage() override = default;
+    ~PerformanceMetricsMessage() = default;
 
     // IMessage interface
-    std::string type() const override { return "performance_metrics"; }
-    std::string sender() const override { return m_sender; }
-    std::string topic() const override { return "system.metrics"; }
+    std::string_view type() const noexcept override { return "performance_metrics"; }
+    std::string_view sender() const noexcept override { return m_sender; }
+    std::chrono::system_clock::time_point timestamp() const noexcept override { return m_timestamp; }
+    qtplugin::MessagePriority priority() const noexcept override { return qtplugin::MessagePriority::Normal; }
     QJsonObject to_json() const override;
-    void from_json(const QJsonObject& json) override;
-    std::chrono::system_clock::time_point timestamp() const override { return m_timestamp; }
+    std::string id() const noexcept override { return m_id; }
 
     // Metrics data
     void set_cpu_usage(double cpu_percent) { m_cpu_usage = cpu_percent; }
@@ -42,6 +44,7 @@ public:
 
 private:
     std::string m_sender;
+    std::string m_id;
     double m_cpu_usage = 0.0;
     size_t m_memory_usage = 0;
     size_t m_message_throughput = 0;

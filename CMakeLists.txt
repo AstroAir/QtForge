@@ -319,13 +319,35 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/qtforge.pc
 if(QTFORGE_BUILD_PYTHON_BINDINGS AND QTFORGE_PYTHON_FOUND AND QTFORGE_PYBIND11_FOUND)
     message(STATUS "QtForge: Building Python bindings")
 
-    # Python binding sources
+    # Python binding sources - core components (always included)
     set(QTFORGE_PYTHON_SOURCES
         src/python/qtforge_python.cpp
         src/python/qt_conversions.cpp
         src/python/core/core_bindings.cpp
         src/python/utils/utils_bindings.cpp
     )
+
+    # Add optional binding sources based on available Qt components
+    list(APPEND QTFORGE_PYTHON_SOURCES
+        src/python/security/security_bindings.cpp
+        src/python/managers/managers_bindings.cpp
+        src/python/orchestration/orchestration_bindings.cpp
+        src/python/monitoring/monitoring_bindings.cpp
+        src/python/transactions/transaction_bindings.cpp
+        src/python/composition/composition_bindings.cpp
+        src/python/marketplace/marketplace_bindings.cpp
+        src/python/threading/threading_bindings.cpp
+    )
+
+    # Communication bindings (requires Qt6::Network for some features)
+    if(Qt6Network_FOUND OR NOT QTFORGE_REQUIRE_NETWORK_FOR_COMMUNICATION)
+        list(APPEND QTFORGE_PYTHON_SOURCES
+            src/python/communication/communication_bindings.cpp
+        )
+        message(STATUS "QtForge: Including communication bindings")
+    else()
+        message(STATUS "QtForge: Skipping communication bindings (Qt6::Network not found)")
+    endif()
 
     # Create Python module (minimal version without Qt dependencies for now)
     pybind11_add_module(qtforge_python ${QTFORGE_PYTHON_SOURCES})
@@ -342,6 +364,30 @@ if(QTFORGE_BUILD_PYTHON_BINDINGS AND QTFORGE_PYTHON_FOUND AND QTFORGE_PYBIND11_F
         ${CMAKE_CURRENT_SOURCE_DIR}/include
         ${CMAKE_CURRENT_SOURCE_DIR}/src/python
     )
+
+    # Link Qt components required by bindings
+    target_link_libraries(qtforge_python PRIVATE
+        Qt6::Core
+    )
+
+    # Link optional Qt components if available
+    if(Qt6Network_FOUND)
+        target_link_libraries(qtforge_python PRIVATE Qt6::Network)
+        target_compile_definitions(qtforge_python PRIVATE QTFORGE_NETWORK_AVAILABLE)
+    endif()
+
+    if(Qt6Widgets_FOUND)
+        target_link_libraries(qtforge_python PRIVATE Qt6::Widgets)
+        target_compile_definitions(qtforge_python PRIVATE QTFORGE_WIDGETS_AVAILABLE)
+    endif()
+
+    if(Qt6Sql_FOUND)
+        target_link_libraries(qtforge_python PRIVATE Qt6::Sql)
+        target_compile_definitions(qtforge_python PRIVATE QTFORGE_SQL_AVAILABLE)
+    endif()
+
+    # Link QtForge core library
+    target_link_libraries(qtforge_python PRIVATE QtForgeCore)
 
     # Add compile definitions
     target_compile_definitions(qtforge_python PRIVATE

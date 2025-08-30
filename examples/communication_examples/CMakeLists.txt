@@ -1,9 +1,7 @@
 cmake_minimum_required(VERSION 3.21)
 project(QtForgeCommunicationExamples)
 
-# Find QtForge
-find_package(QtForge REQUIRED COMPONENTS Core Communication)
-find_package(Qt6 REQUIRED COMPONENTS Core Network)
+# Qt6 is already found by parent CMakeLists.txt
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 20)
@@ -21,8 +19,7 @@ add_library(communication_messages STATIC
 )
 
 target_link_libraries(communication_messages
-    QtForge::Core
-    QtForge::Communication
+    QtForgeCore
     Qt6::Core
 )
 
@@ -37,8 +34,7 @@ add_library(communication_filters STATIC
 )
 
 target_link_libraries(communication_filters
-    QtForge::Core
-    QtForge::Communication
+    QtForgeCore
     Qt6::Core
     communication_messages
 )
@@ -54,8 +50,7 @@ add_library(communication_statistics STATIC
 )
 
 target_link_libraries(communication_statistics
-    QtForge::Core
-    QtForge::Communication
+    QtForgeCore
     Qt6::Core
 )
 
@@ -70,8 +65,7 @@ add_library(communication_utils STATIC
 )
 
 target_link_libraries(communication_utils
-    QtForge::Core
-    QtForge::Communication
+    QtForgeCore
     Qt6::Core
     communication_messages
 )
@@ -88,8 +82,7 @@ add_executable(advanced_message_bus
 )
 
 target_link_libraries(advanced_message_bus
-    QtForge::Core
-    QtForge::Communication
+    QtForgeCore
     Qt6::Core
     Qt6::Network
     communication_messages
@@ -98,59 +91,31 @@ target_link_libraries(advanced_message_bus
     communication_utils
 )
 
-# Request-Response Example
-add_executable(request_response_example
-    request_response_example.cpp
-    request_response_example.hpp
+# Main communication examples executable
+add_executable(communication_examples_main
+    main.cpp
 )
 
-target_link_libraries(request_response_example
-    QtForge::Core
-    QtForge::Communication
+target_link_libraries(communication_examples_main
+    QtForgeCore
     Qt6::Core
     Qt6::Network
-)
-
-# Event Broadcasting Example
-add_executable(event_broadcasting_example
-    event_broadcasting_example.cpp
-    event_broadcasting_example.hpp
-)
-
-target_link_libraries(event_broadcasting_example
-    QtForge::Core
-    QtForge::Communication
-    Qt6::Core
-    Qt6::Network
-)
-
-# Message Filtering Example
-add_executable(message_filtering_example
-    message_filtering_example.cpp
-    message_filtering_example.hpp
-)
-
-target_link_libraries(message_filtering_example
-    QtForge::Core
-    QtForge::Communication
-    Qt6::Core
-    Qt6::Network
+    communication_messages
+    communication_filters
+    communication_statistics
+    communication_utils
 )
 
 # Test targets
 enable_testing()
 
 add_test(NAME AdvancedMessageBusTest COMMAND advanced_message_bus)
-add_test(NAME RequestResponseTest COMMAND request_response_example)
-add_test(NAME EventBroadcastingTest COMMAND event_broadcasting_example)
-add_test(NAME MessageFilteringTest COMMAND message_filtering_example)
+add_test(NAME CommunicationExamplesTest COMMAND communication_examples_main)
 
 # Install examples
 install(TARGETS
     advanced_message_bus
-    request_response_example
-    event_broadcasting_example
-    message_filtering_example
+    communication_examples_main
     DESTINATION bin/examples/communication
 )
 
