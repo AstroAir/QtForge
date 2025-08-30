@@ -286,5 +286,3 @@ SecurityValidationResult SignatureVerifier::create_signature_result(
 }
 
 }  // namespace qtplugin
-
-

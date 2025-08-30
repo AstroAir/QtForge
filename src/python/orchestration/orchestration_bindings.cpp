@@ -5,10 +5,10 @@
  * @author QtForge Development Team
  */
 
+#include <pybind11/chrono.h>
+#include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include <pybind11/functional.h>
-#include <pybind11/chrono.h>
 
 #include <qtplugin/orchestration/plugin_orchestrator.hpp>
 
@@ -55,7 +55,7 @@ void bind_orchestration(py::module& m) {
         .def_readwrite("critical", &WorkflowStep::critical)
         .def_readwrite("metadata", &WorkflowStep::metadata)
         .def("__repr__", [](const WorkflowStep& step) {
-            return "<WorkflowStep id='" + step.id.toStdString() + "' plugin='" + 
+            return "<WorkflowStep id='" + step.id.toStdString() + "' plugin='" +
                    step.plugin_id.toStdString() + "'>";
         });
 
@@ -69,7 +69,8 @@ void bind_orchestration(py::module& m) {
         .def_readwrite("retry_count", &StepResult::retry_count)
         .def("execution_time", &StepResult::execution_time)
         .def("__repr__", [](const StepResult& result) {
-            return "<StepResult step='" + result.step_id.toStdString() + "' status=" + 
+            return "<StepResult step='" + result.step_id.toStdString() +
+                   "' status=" +
                    std::to_string(static_cast<int>(result.status)) + ">";
         });
 
@@ -77,21 +78,26 @@ void bind_orchestration(py::module& m) {
     py::class_<Workflow>(m, "Workflow")
         .def(py::init<>())
         .def(py::init<const QString&, const QString&>())
-        .def("set_description", &Workflow::set_description, py::return_value_policy::reference)
-        .def("set_execution_mode", &Workflow::set_execution_mode, py::return_value_policy::reference)
-        .def("add_step", &Workflow::add_step, py::return_value_policy::reference)
-        .def("add_rollback_step", &Workflow::add_rollback_step, py::return_value_policy::reference)
+        .def("set_description", &Workflow::set_description,
+             py::return_value_policy::reference)
+        .def("set_execution_mode", &Workflow::set_execution_mode,
+             py::return_value_policy::reference)
+        .def("add_step", &Workflow::add_step,
+             py::return_value_policy::reference)
+        .def("add_rollback_step", &Workflow::add_rollback_step,
+             py::return_value_policy::reference)
         .def("id", &Workflow::id)
         .def("name", &Workflow::name)
         .def("description", &Workflow::description)
         .def("execution_mode", &Workflow::execution_mode)
         .def("__repr__", [](const Workflow& workflow) {
-            return "<Workflow id='" + workflow.id().toStdString() + "' name='" + 
+            return "<Workflow id='" + workflow.id().toStdString() + "' name='" +
                    workflow.name().toStdString() + "'>";
         });
 
     // Plugin orchestrator
-    py::class_<PluginOrchestrator, std::shared_ptr<PluginOrchestrator>>(m, "PluginOrchestrator")
+    py::class_<PluginOrchestrator, std::shared_ptr<PluginOrchestrator>>(
+        m, "PluginOrchestrator")
         .def(py::init<>())
         .def_static("create", &PluginOrchestrator::create)
         .def("register_workflow", &PluginOrchestrator::register_workflow)
@@ -105,7 +111,7 @@ void bind_orchestration(py::module& m) {
         .def("get_workflow_results", &PluginOrchestrator::get_workflow_results)
         .def("clear_workflows", &PluginOrchestrator::clear_workflows)
         .def("__repr__", [](const PluginOrchestrator& orchestrator) {
-            return "<PluginOrchestrator workflows=" + 
+            return "<PluginOrchestrator workflows=" +
                    std::to_string(orchestrator.list_workflows().size()) + ">";
         });
 
@@ -120,17 +126,18 @@ void bind_orchestration(py::module& m) {
     m.def(
         "create_workflow",
         [](const std::string& id, const std::string& name) -> Workflow {
-            return Workflow(QString::fromStdString(id), QString::fromStdString(name));
+            return Workflow(QString::fromStdString(id),
+                            QString::fromStdString(name));
         },
-        py::arg("id"), py::arg("name") = "",
-        "Create a new Workflow instance");
+        py::arg("id"), py::arg("name") = "", "Create a new Workflow instance");
 
     m.def(
         "create_workflow_step",
-        [](const std::string& id, const std::string& plugin_id, const std::string& method) -> WorkflowStep {
-            return WorkflowStep(QString::fromStdString(id), 
-                              QString::fromStdString(plugin_id), 
-                              QString::fromStdString(method));
+        [](const std::string& id, const std::string& plugin_id,
+           const std::string& method) -> WorkflowStep {
+            return WorkflowStep(QString::fromStdString(id),
+                                QString::fromStdString(plugin_id),
+                                QString::fromStdString(method));
         },
         py::arg("id"), py::arg("plugin_id"), py::arg("method"),
         "Create a new WorkflowStep instance");

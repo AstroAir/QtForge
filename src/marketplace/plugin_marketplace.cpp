@@ -1,20 +1,21 @@
 /**
  * @file plugin_marketplace.cpp
- * @brief Implementation of plugin marketplace client for discovery, installation, and updates
+ * @brief Implementation of plugin marketplace client for discovery,
+ * installation, and updates
  * @version 3.2.0
  */
 
 #include "../../include/qtplugin/marketplace/plugin_marketplace.hpp"
 #include <QDebug>
-#include <QLoggingCategory>
-#include <QUuid>
-#include <QJsonDocument>
-#include <QMutexLocker>
-#include <QStandardPaths>
 #include <QDir>
 #include <QFile>
+#include <QJsonDocument>
+#include <QLoggingCategory>
+#include <QMutexLocker>
 #include <QNetworkRequest>
+#include <QStandardPaths>
 #include <QUrlQuery>
+#include <QUuid>
 #include <algorithm>
 
 Q_LOGGING_CATEGORY(marketplaceLog, "qtplugin.marketplace")
@@ -56,12 +57,14 @@ QJsonObject MarketplacePlugin::to_json() const {
     return json;
 }
 
-qtplugin::expected<MarketplacePlugin, PluginError> MarketplacePlugin::from_json(const QJsonObject& json) {
+qtplugin::expected<MarketplacePlugin, PluginError> MarketplacePlugin::from_json(
+    const QJsonObject& json) {
     MarketplacePlugin plugin;
 
     if (!json.contains("plugin_id") || !json.contains("name")) {
-        return qtplugin::unexpected(PluginError{PluginErrorCode::InvalidConfiguration,
-                                               "Missing required fields in MarketplacePlugin JSON"});
+        return qtplugin::unexpected(
+            PluginError{PluginErrorCode::InvalidConfiguration,
+                        "Missing required fields in MarketplacePlugin JSON"});
     }
 
     plugin.plugin_id = json["plugin_id"].toString();
@@ -79,8 +82,10 @@ qtplugin::expected<MarketplacePlugin, PluginError> MarketplacePlugin::from_json(
     plugin.rating = json["rating"].toDouble();
     plugin.review_count = json["review_count"].toInt();
     plugin.download_count = json["download_count"].toInt();
-    plugin.created_date = QDateTime::fromString(json["created_date"].toString(), Qt::ISODate);
-    plugin.updated_date = QDateTime::fromString(json["updated_date"].toString(), Qt::ISODate);
+    plugin.created_date =
+        QDateTime::fromString(json["created_date"].toString(), Qt::ISODate);
+    plugin.updated_date =
+        QDateTime::fromString(json["updated_date"].toString(), Qt::ISODate);
     plugin.verified = json["verified"].toBool();
     plugin.premium = json["premium"].toBool();
     plugin.price = json["price"].toDouble();
@@ -114,12 +119,14 @@ QJsonObject PluginReview::to_json() const {
     return json;
 }
 
-qtplugin::expected<PluginReview, PluginError> PluginReview::from_json(const QJsonObject& json) {
+qtplugin::expected<PluginReview, PluginError> PluginReview::from_json(
+    const QJsonObject& json) {
     PluginReview review;
 
     if (!json.contains("review_id") || !json.contains("plugin_id")) {
-        return qtplugin::unexpected(PluginError{PluginErrorCode::InvalidConfiguration,
-                                               "Missing required fields in PluginReview JSON"});
+        return qtplugin::unexpected(
+            PluginError{PluginErrorCode::InvalidConfiguration,
+                        "Missing required fields in PluginReview JSON"});
     }
 
     review.review_id = json["review_id"].toString();
@@ -129,7 +136,8 @@ qtplugin::expected<PluginReview, PluginError> PluginReview::from_json(const QJso
     review.rating = json["rating"].toDouble();
     review.title = json["title"].toString();
     review.content = json["content"].toString();
-    review.created_date = QDateTime::fromString(json["created_date"].toString(), Qt::ISODate);
+    review.created_date =
+        QDateTime::fromString(json["created_date"].toString(), Qt::ISODate);
     review.verified_purchase = json["verified_purchase"].toBool();
     review.helpful_count = json["helpful_count"].toInt();
 
@@ -181,24 +189,26 @@ QJsonObject InstallationProgress::to_json() const {
 }
 
 // PluginMarketplace implementation
-PluginMarketplace::PluginMarketplace(const QString& marketplace_url, QObject* parent)
-    : QObject(parent)
-    , m_marketplace_url(marketplace_url)
-    , m_network_manager(std::make_unique<QNetworkAccessManager>(this)) {
-
-    connect(m_network_manager.get(), &QNetworkAccessManager::finished,
-            this, &PluginMarketplace::handle_network_reply);
-    connect(m_network_manager.get(), &QNetworkAccessManager::sslErrors,
-            this, &PluginMarketplace::handle_ssl_errors);
+PluginMarketplace::PluginMarketplace(const QString& marketplace_url,
+                                     QObject* parent)
+    : QObject(parent),
+      m_marketplace_url(marketplace_url),
+      m_network_manager(std::make_unique<QNetworkAccessManager>(this)) {
+    connect(m_network_manager.get(), &QNetworkAccessManager::finished, this,
+            &PluginMarketplace::handle_network_reply);
+    connect(m_network_manager.get(), &QNetworkAccessManager::sslErrors, this,
+            &PluginMarketplace::handle_ssl_errors);
 
     load_installed_plugins();
 
-    qCDebug(marketplaceLog) << "Plugin marketplace initialized with URL:" << marketplace_url;
+    qCDebug(marketplaceLog)
+        << "Plugin marketplace initialized with URL:" << marketplace_url;
 }
 
 PluginMarketplace::~PluginMarketplace() = default;
 
-qtplugin::expected<void, PluginError> PluginMarketplace::initialize(const QString& api_key) {
+qtplugin::expected<void, PluginError> PluginMarketplace::initialize(
+    const QString& api_key) {
     QMutexLocker locker(&m_mutex);
 
     m_api_key = api_key;
@@ -208,14 +218,15 @@ qtplugin::expected<void, PluginError> PluginMarketplace::initialize(const QStrin
     // - Authenticate with API key if provided
     // - Load marketplace metadata
 
-    qCDebug(marketplaceLog) << "Marketplace initialized" << (api_key.isEmpty() ? "without" : "with") << "API key";
+    qCDebug(marketplaceLog)
+        << "Marketplace initialized" << (api_key.isEmpty() ? "without" : "with")
+        << "API key";
 
     return {};
 }
 
-qtplugin::expected<std::vector<MarketplacePlugin>, PluginError> PluginMarketplace::search_plugins(
-    const SearchFilters& filters) {
-
+qtplugin::expected<std::vector<MarketplacePlugin>, PluginError>
+PluginMarketplace::search_plugins(const SearchFilters& filters) {
     // TODO: Implement plugin search
     // - Build search query from filters
     // - Make API request to marketplace
@@ -227,16 +238,19 @@ qtplugin::expected<std::vector<MarketplacePlugin>, PluginError> PluginMarketplac
     return std::vector<MarketplacePlugin>{};
 }
 
-qtplugin::expected<MarketplacePlugin, PluginError> PluginMarketplace::get_plugin_details(const QString& plugin_id) {
+qtplugin::expected<MarketplacePlugin, PluginError>
+PluginMarketplace::get_plugin_details(const QString& plugin_id) {
     // TODO: Implement plugin details retrieval
     qCDebug(marketplaceLog) << "Getting plugin details for:" << plugin_id;
 
-    return qtplugin::unexpected(PluginError{PluginErrorCode::NotImplemented, "Not implemented yet"});
+    return qtplugin::unexpected(
+        PluginError{PluginErrorCode::NotImplemented, "Not implemented yet"});
 }
 
-qtplugin::expected<std::vector<PluginReview>, PluginError> PluginMarketplace::get_plugin_reviews(
-    const QString& plugin_id, [[maybe_unused]] int limit, [[maybe_unused]] int offset) {
-
+qtplugin::expected<std::vector<PluginReview>, PluginError>
+PluginMarketplace::get_plugin_reviews(const QString& plugin_id,
+                                      [[maybe_unused]] int limit,
+                                      [[maybe_unused]] int offset) {
     // TODO: Implement plugin reviews retrieval
     qCDebug(marketplaceLog) << "Getting reviews for plugin:" << plugin_id;
 
@@ -245,7 +259,6 @@ qtplugin::expected<std::vector<PluginReview>, PluginError> PluginMarketplace::ge
 
 qtplugin::expected<QString, PluginError> PluginMarketplace::install_plugin(
     const QString& plugin_id, const QString& version) {
-
     QMutexLocker locker(&m_mutex);
 
     QString installation_id = generate_installation_id();
@@ -266,19 +279,24 @@ qtplugin::expected<QString, PluginError> PluginMarketplace::install_plugin(
     // - Extract and install plugin
     // - Update installed plugins list
 
-    qCDebug(marketplaceLog) << "Started installation of plugin:" << plugin_id << "version:" << version;
+    qCDebug(marketplaceLog) << "Started installation of plugin:" << plugin_id
+                            << "version:" << version;
 
-    return qtplugin::unexpected(PluginError{PluginErrorCode::NotImplemented, "Plugin installation is not implemented yet"});
+    return qtplugin::unexpected(
+        PluginError{PluginErrorCode::NotImplemented,
+                    "Plugin installation is not implemented yet"});
 }
 
-qtplugin::expected<QString, PluginError> PluginMarketplace::update_plugin(const QString& plugin_id) {
+qtplugin::expected<QString, PluginError> PluginMarketplace::update_plugin(
+    const QString& plugin_id) {
     // TODO: Implement plugin update
     qCDebug(marketplaceLog) << "Updating plugin:" << plugin_id;
 
-    return install_plugin(plugin_id); // Reuse install logic for now
+    return install_plugin(plugin_id);  // Reuse install logic for now
 }
 
-qtplugin::expected<void, PluginError> PluginMarketplace::uninstall_plugin(const QString& plugin_id) {
+qtplugin::expected<void, PluginError> PluginMarketplace::uninstall_plugin(
+    const QString& plugin_id) {
     QMutexLocker locker(&m_mutex);
 
     // TODO: Implement plugin uninstallation
@@ -294,15 +312,15 @@ qtplugin::expected<void, PluginError> PluginMarketplace::uninstall_plugin(const 
     return {};
 }
 
-qtplugin::expected<InstallationProgress, PluginError> PluginMarketplace::get_installation_progress(
-    const QString& installation_id) {
-
+qtplugin::expected<InstallationProgress, PluginError>
+PluginMarketplace::get_installation_progress(const QString& installation_id) {
     QMutexLocker locker(&m_mutex);
 
     auto it = m_installations.find(installation_id);
     if (it == m_installations.end()) {
-        return qtplugin::unexpected(PluginError{PluginErrorCode::PluginNotFound,
-                                               ("Installation not found: " + installation_id).toStdString()});
+        return qtplugin::unexpected(PluginError{
+            PluginErrorCode::PluginNotFound,
+            ("Installation not found: " + installation_id).toStdString()});
     }
 
     return it->second;
@@ -346,34 +364,44 @@ void PluginMarketplace::handle_network_reply() {
     // TODO: Handle network reply
 }
 
-void PluginMarketplace::handle_download_progress([[maybe_unused]] qint64 bytes_received, [[maybe_unused]] qint64 bytes_total) {
+void PluginMarketplace::handle_download_progress(
+    [[maybe_unused]] qint64 bytes_received,
+    [[maybe_unused]] qint64 bytes_total) {
     // TODO: Handle download progress updates
 }
 
-void PluginMarketplace::handle_ssl_errors([[maybe_unused]] QNetworkReply* reply, const QList<QSslError>& errors) {
+void PluginMarketplace::handle_ssl_errors([[maybe_unused]] QNetworkReply* reply,
+                                          const QList<QSslError>& errors) {
     // TODO: Handle SSL errors
     qCWarning(marketplaceLog) << "SSL errors occurred:" << errors.size();
 }
 
 // Stub implementations for remaining methods
-qtplugin::expected<std::vector<MarketplacePlugin>, PluginError> PluginMarketplace::check_for_updates() {
+qtplugin::expected<std::vector<MarketplacePlugin>, PluginError>
+PluginMarketplace::check_for_updates() {
     return std::vector<MarketplacePlugin>{};
 }
 
 qtplugin::expected<void, PluginError> PluginMarketplace::submit_review(
-    [[maybe_unused]] const QString& plugin_id, [[maybe_unused]] double rating, [[maybe_unused]] const QString& title, [[maybe_unused]] const QString& content) {
-    return qtplugin::unexpected(PluginError{PluginErrorCode::NotImplemented, "Not implemented yet"});
+    [[maybe_unused]] const QString& plugin_id, [[maybe_unused]] double rating,
+    [[maybe_unused]] const QString& title,
+    [[maybe_unused]] const QString& content) {
+    return qtplugin::unexpected(
+        PluginError{PluginErrorCode::NotImplemented, "Not implemented yet"});
 }
 
-qtplugin::expected<QStringList, PluginError> PluginMarketplace::get_categories() {
+qtplugin::expected<QStringList, PluginError>
+PluginMarketplace::get_categories() {
     return QStringList{};
 }
 
-qtplugin::expected<std::vector<MarketplacePlugin>, PluginError> PluginMarketplace::get_popular_plugins([[maybe_unused]] int limit) {
+qtplugin::expected<std::vector<MarketplacePlugin>, PluginError>
+PluginMarketplace::get_popular_plugins([[maybe_unused]] int limit) {
     return std::vector<MarketplacePlugin>{};
 }
 
-qtplugin::expected<std::vector<MarketplacePlugin>, PluginError> PluginMarketplace::get_featured_plugins([[maybe_unused]] int limit) {
+qtplugin::expected<std::vector<MarketplacePlugin>, PluginError>
+PluginMarketplace::get_featured_plugins([[maybe_unused]] int limit) {
     return std::vector<MarketplacePlugin>{};
 }
 
@@ -383,7 +411,8 @@ MarketplaceManager& MarketplaceManager::instance() {
     return instance;
 }
 
-void MarketplaceManager::add_marketplace(const QString& name, std::shared_ptr<PluginMarketplace> marketplace) {
+void MarketplaceManager::add_marketplace(
+    const QString& name, std::shared_ptr<PluginMarketplace> marketplace) {
     QMutexLocker locker(&m_mutex);
     m_marketplaces[name] = marketplace;
     emit marketplace_added(name);
@@ -395,7 +424,8 @@ void MarketplaceManager::remove_marketplace(const QString& name) {
     emit marketplace_removed(name);
 }
 
-std::shared_ptr<PluginMarketplace> MarketplaceManager::get_marketplace(const QString& name) {
+std::shared_ptr<PluginMarketplace> MarketplaceManager::get_marketplace(
+    const QString& name) {
     QMutexLocker locker(&m_mutex);
     auto it = m_marketplaces.find(name);
     return (it != m_marketplaces.end()) ? it->second : nullptr;
@@ -410,17 +440,17 @@ std::vector<QString> MarketplaceManager::get_marketplace_names() const {
     return names;
 }
 
-qtplugin::expected<std::vector<MarketplacePlugin>, PluginError> MarketplaceManager::search_all_marketplaces(
+qtplugin::expected<std::vector<MarketplacePlugin>, PluginError>
+MarketplaceManager::search_all_marketplaces(
     [[maybe_unused]] const SearchFilters& filters) {
     // TODO: Implement search across all marketplaces
     return std::vector<MarketplacePlugin>{};
 }
 
-qtplugin::expected<std::vector<MarketplacePlugin>, PluginError> MarketplaceManager::check_all_updates() {
+qtplugin::expected<std::vector<MarketplacePlugin>, PluginError>
+MarketplaceManager::check_all_updates() {
     // TODO: Implement update checking across all marketplaces
     return std::vector<MarketplacePlugin>{};
 }
 
-} // namespace qtplugin
-
-
+}  // namespace qtplugin

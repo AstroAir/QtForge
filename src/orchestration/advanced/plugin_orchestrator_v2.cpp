@@ -6,10 +6,10 @@
 
 #include "../../../include/qtplugin/orchestration/advanced/plugin_orchestrator_v2.hpp"
 #include <QDebug>
-#include <QLoggingCategory>
-#include <QUuid>
 #include <QJsonDocument>
+#include <QLoggingCategory>
 #include <QMutexLocker>
+#include <QUuid>
 #include <algorithm>
 
 Q_LOGGING_CATEGORY(orchestratorV2Log, "qtplugin.orchestrator.v2")
@@ -41,12 +41,14 @@ QJsonObject WorkflowNode::to_json() const {
     return json;
 }
 
-qtplugin::expected<WorkflowNode, PluginError> WorkflowNode::from_json(const QJsonObject& json) {
+qtplugin::expected<WorkflowNode, PluginError> WorkflowNode::from_json(
+    const QJsonObject& json) {
     WorkflowNode node;
 
     if (!json.contains("node_id") || !json.contains("plugin_id")) {
-        return qtplugin::unexpected(PluginError{PluginErrorCode::InvalidConfiguration,
-                                               "Missing required fields in WorkflowNode JSON"});
+        return qtplugin::unexpected(
+            PluginError{PluginErrorCode::InvalidConfiguration,
+                        "Missing required fields in WorkflowNode JSON"});
     }
 
     node.node_id = json["node_id"].toString();
@@ -88,13 +90,15 @@ QJsonObject WorkflowConnection::to_json() const {
     return json;
 }
 
-qtplugin::expected<WorkflowConnection, PluginError> WorkflowConnection::from_json(const QJsonObject& json) {
+qtplugin::expected<WorkflowConnection, PluginError>
+WorkflowConnection::from_json(const QJsonObject& json) {
     WorkflowConnection connection;
 
     if (!json.contains("connection_id") || !json.contains("source_node_id") ||
         !json.contains("target_node_id")) {
-        return qtplugin::unexpected(PluginError{PluginErrorCode::InvalidConfiguration,
-                                               "Missing required fields in WorkflowConnection JSON"});
+        return qtplugin::unexpected(
+            PluginError{PluginErrorCode::InvalidConfiguration,
+                        "Missing required fields in WorkflowConnection JSON"});
     }
 
     connection.connection_id = json["connection_id"].toString();
@@ -133,18 +137,21 @@ QJsonObject PluginWorkflow::to_json() const {
     return json;
 }
 
-qtplugin::expected<PluginWorkflow, PluginError> PluginWorkflow::from_json(const QJsonObject& json) {
+qtplugin::expected<PluginWorkflow, PluginError> PluginWorkflow::from_json(
+    const QJsonObject& json) {
     PluginWorkflow workflow;
 
     if (!json.contains("workflow_id") || !json.contains("name")) {
-        return qtplugin::unexpected(PluginError{PluginErrorCode::InvalidConfiguration,
-                                               "Missing required fields in PluginWorkflow JSON"});
+        return qtplugin::unexpected(
+            PluginError{PluginErrorCode::InvalidConfiguration,
+                        "Missing required fields in PluginWorkflow JSON"});
     }
 
     workflow.workflow_id = json["workflow_id"].toString();
     workflow.name = json["name"].toString();
     workflow.description = json["description"].toString();
-    workflow.execution_mode = static_cast<WorkflowExecutionMode>(json["execution_mode"].toInt());
+    workflow.execution_mode =
+        static_cast<WorkflowExecutionMode>(json["execution_mode"].toInt());
     workflow.global_configuration = json["global_configuration"].toObject();
     workflow.metadata = json["metadata"].toObject();
 
@@ -164,7 +171,8 @@ qtplugin::expected<PluginWorkflow, PluginError> PluginWorkflow::from_json(const 
     if (json.contains("connections")) {
         const auto connections_array = json["connections"].toArray();
         for (const auto& value : connections_array) {
-            auto connection_result = WorkflowConnection::from_json(value.toObject());
+            auto connection_result =
+                WorkflowConnection::from_json(value.toObject());
             if (!connection_result) {
                 return qtplugin::unexpected(connection_result.error());
             }
@@ -188,24 +196,26 @@ qtplugin::expected<void, PluginError> PluginWorkflow::validate() const {
         if (!node_ids.insert(node.node_id).second) {
             return qtplugin::unexpected(PluginError{
                 PluginErrorCode::InvalidConfiguration,
-                ("Duplicate node_id found in workflow: " + node.node_id).toStdString()
-            });
+                ("Duplicate node_id found in workflow: " + node.node_id)
+                    .toStdString()});
         }
     }
 
     // Check that all connections reference existing nodes
     for (const auto& connection : connections) {
         if (node_ids.find(connection.source_node_id) == node_ids.end()) {
-            return qtplugin::unexpected(PluginError{
-                PluginErrorCode::InvalidConfiguration,
-                ("Connection source_node_id not found: " + connection.source_node_id).toStdString()
-            });
+            return qtplugin::unexpected(
+                PluginError{PluginErrorCode::InvalidConfiguration,
+                            ("Connection source_node_id not found: " +
+                             connection.source_node_id)
+                                .toStdString()});
         }
         if (node_ids.find(connection.target_node_id) == node_ids.end()) {
-            return qtplugin::unexpected(PluginError{
-                PluginErrorCode::InvalidConfiguration,
-                ("Connection target_node_id not found: " + connection.target_node_id).toStdString()
-            });
+            return qtplugin::unexpected(
+                PluginError{PluginErrorCode::InvalidConfiguration,
+                            ("Connection target_node_id not found: " +
+                             connection.target_node_id)
+                                .toStdString()});
         }
     }
 
@@ -252,7 +262,8 @@ AdvancedPluginOrchestrator::AdvancedPluginOrchestrator(QObject* parent)
 
 AdvancedPluginOrchestrator::~AdvancedPluginOrchestrator() = default;
 
-qtplugin::expected<void, PluginError> AdvancedPluginOrchestrator::register_workflow(const PluginWorkflow& workflow) {
+qtplugin::expected<void, PluginError>
+AdvancedPluginOrchestrator::register_workflow(const PluginWorkflow& workflow) {
     QMutexLocker locker(&m_mutex);
 
     auto validation_result = workflow.validate();
@@ -261,26 +272,29 @@ qtplugin::expected<void, PluginError> AdvancedPluginOrchestrator::register_workf
     }
 
     m_workflows[workflow.workflow_id] = workflow;
-    qCDebug(orchestratorV2Log) << "Registered workflow:" << workflow.workflow_id;
+    qCDebug(orchestratorV2Log)
+        << "Registered workflow:" << workflow.workflow_id;
 
     return {};
 }
 
-void AdvancedPluginOrchestrator::unregister_workflow(const QString& workflow_id) {
+void AdvancedPluginOrchestrator::unregister_workflow(
+    const QString& workflow_id) {
     QMutexLocker locker(&m_mutex);
     m_workflows.erase(workflow_id);
     qCDebug(orchestratorV2Log) << "Unregistered workflow:" << workflow_id;
 }
 
-qtplugin::expected<QString, PluginError> AdvancedPluginOrchestrator::execute_workflow(
-    const QString& workflow_id, const QJsonObject& input_data) {
-
+qtplugin::expected<QString, PluginError>
+AdvancedPluginOrchestrator::execute_workflow(const QString& workflow_id,
+                                             const QJsonObject& input_data) {
     QMutexLocker locker(&m_mutex);
 
     auto it = m_workflows.find(workflow_id);
     if (it == m_workflows.end()) {
-        return qtplugin::unexpected(PluginError{PluginErrorCode::PluginNotFound,
-                                               ("Workflow not found: " + workflow_id).toStdString()});
+        return qtplugin::unexpected(
+            PluginError{PluginErrorCode::PluginNotFound,
+                        ("Workflow not found: " + workflow_id).toStdString()});
     }
 
     [[maybe_unused]] const auto& workflow = it->second;
@@ -309,25 +323,27 @@ void AdvancedPluginOrchestrator::cancel_execution(const QString& execution_id) {
     if (it != m_executions.end()) {
         it->second.cancelled = true;
         emit workflow_execution_cancelled(execution_id);
-        qCDebug(orchestratorV2Log) << "Cancelled workflow execution:" << execution_id;
+        qCDebug(orchestratorV2Log)
+            << "Cancelled workflow execution:" << execution_id;
     }
 }
 
-qtplugin::expected<WorkflowExecutionContext, PluginError> AdvancedPluginOrchestrator::get_execution_status(
-    const QString& execution_id) {
-
+qtplugin::expected<WorkflowExecutionContext, PluginError>
+AdvancedPluginOrchestrator::get_execution_status(const QString& execution_id) {
     QMutexLocker locker(&m_mutex);
 
     auto it = m_executions.find(execution_id);
     if (it == m_executions.end()) {
-        return qtplugin::unexpected(PluginError{PluginErrorCode::PluginNotFound,
-                                               ("Execution not found: " + execution_id).toStdString()});
+        return qtplugin::unexpected(PluginError{
+            PluginErrorCode::PluginNotFound,
+            ("Execution not found: " + execution_id).toStdString()});
     }
 
     return it->second;
 }
 
-std::vector<QString> AdvancedPluginOrchestrator::get_registered_workflows() const {
+std::vector<QString> AdvancedPluginOrchestrator::get_registered_workflows()
+    const {
     QMutexLocker locker(&m_mutex);
 
     std::vector<QString> workflow_ids;
@@ -338,13 +354,15 @@ std::vector<QString> AdvancedPluginOrchestrator::get_registered_workflows() cons
     return workflow_ids;
 }
 
-qtplugin::expected<PluginWorkflow, PluginError> AdvancedPluginOrchestrator::get_workflow(const QString& workflow_id) {
+qtplugin::expected<PluginWorkflow, PluginError>
+AdvancedPluginOrchestrator::get_workflow(const QString& workflow_id) {
     QMutexLocker locker(&m_mutex);
 
     auto it = m_workflows.find(workflow_id);
     if (it == m_workflows.end()) {
-        return qtplugin::unexpected(PluginError{PluginErrorCode::PluginNotFound,
-                                               ("Workflow not found: " + workflow_id).toStdString()});
+        return qtplugin::unexpected(
+            PluginError{PluginErrorCode::PluginNotFound,
+                        ("Workflow not found: " + workflow_id).toStdString()});
     }
 
     return it->second;
@@ -363,15 +381,21 @@ void AdvancedPluginOrchestrator::handle_execution_timeout() {
 }
 
 // Stub implementations for remaining methods
-qtplugin::expected<PluginWorkflow, PluginError> AdvancedPluginOrchestrator::create_workflow_from_composition(
-    [[maybe_unused]] const qtplugin::composition::PluginComposition& composition) {
+qtplugin::expected<PluginWorkflow, PluginError>
+AdvancedPluginOrchestrator::create_workflow_from_composition(
+    [[maybe_unused]] const qtplugin::composition::PluginComposition&
+        composition) {
     // TODO: Implement conversion from composition to workflow
-    return qtplugin::unexpected(PluginError{PluginErrorCode::NotImplemented, "Not implemented yet"});
+    return qtplugin::unexpected(
+        PluginError{PluginErrorCode::NotImplemented, "Not implemented yet"});
 }
 
-qtplugin::expected<PluginWorkflow, PluginError> AdvancedPluginOrchestrator::optimize_workflow([[maybe_unused]] const QString& workflow_id) {
+qtplugin::expected<PluginWorkflow, PluginError>
+AdvancedPluginOrchestrator::optimize_workflow(
+    [[maybe_unused]] const QString& workflow_id) {
     // TODO: Implement workflow optimization
-    return qtplugin::unexpected(PluginError{PluginErrorCode::NotImplemented, "Not implemented yet"});
+    return qtplugin::unexpected(
+        PluginError{PluginErrorCode::NotImplemented, "Not implemented yet"});
 }
 
 // VisualWorkflowEditor stub implementation
@@ -388,9 +412,7 @@ void VisualWorkflowEditor::load_workflow(const PluginWorkflow& workflow) {
     update_visual_representation();
 }
 
-PluginWorkflow VisualWorkflowEditor::get_workflow() const {
-    return m_workflow;
-}
+PluginWorkflow VisualWorkflowEditor::get_workflow() const { return m_workflow; }
 
 void VisualWorkflowEditor::clear() {
     m_scene->clear();
@@ -414,22 +436,29 @@ QString VisualWorkflowEditor::generate_connection_id() {
 }
 
 // Stub implementations for remaining VisualWorkflowEditor methods
-QString VisualWorkflowEditor::add_plugin_node([[maybe_unused]] const QString& plugin_id, [[maybe_unused]] const QPointF& position) {
+QString VisualWorkflowEditor::add_plugin_node(
+    [[maybe_unused]] const QString& plugin_id,
+    [[maybe_unused]] const QPointF& position) {
     // TODO: Implement node addition
     return generate_node_id();
 }
 
-void VisualWorkflowEditor::remove_node([[maybe_unused]] const QString& node_id) {
+void VisualWorkflowEditor::remove_node(
+    [[maybe_unused]] const QString& node_id) {
     // TODO: Implement node removal
 }
 
-QString VisualWorkflowEditor::connect_nodes([[maybe_unused]] const QString& source_node, [[maybe_unused]] const QString& source_port,
-                                           [[maybe_unused]] const QString& target_node, [[maybe_unused]] const QString& target_port) {
+QString VisualWorkflowEditor::connect_nodes(
+    [[maybe_unused]] const QString& source_node,
+    [[maybe_unused]] const QString& source_port,
+    [[maybe_unused]] const QString& target_node,
+    [[maybe_unused]] const QString& target_port) {
     // TODO: Implement node connection
     return generate_connection_id();
 }
 
-void VisualWorkflowEditor::remove_connection([[maybe_unused]] const QString& connection_id) {
+void VisualWorkflowEditor::remove_connection(
+    [[maybe_unused]] const QString& connection_id) {
     // TODO: Implement connection removal
 }
 
@@ -453,6 +482,4 @@ void VisualWorkflowEditor::keyPressEvent(QKeyEvent* event) {
     QGraphicsView::keyPressEvent(event);
 }
 
-} // namespace qtplugin
-
-
+}  // namespace qtplugin

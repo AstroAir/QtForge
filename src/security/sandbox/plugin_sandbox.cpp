@@ -6,14 +6,14 @@
 
 #include "../../../include/qtplugin/security/sandbox/plugin_sandbox.hpp"
 #include <QCoreApplication>
+#include <QDebug>
 #include <QDir>
 #include <QFileInfo>
-#include <QStandardPaths>
-#include <QLoggingCategory>
-#include <QDebug>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QLoggingCategory>
 #include <QMutexLocker>
+#include <QStandardPaths>
 #include <QtGlobal>
 
 Q_LOGGING_CATEGORY(sandboxLog, "qtplugin.sandbox");
@@ -33,11 +33,13 @@ QJsonObject ResourceLimits::to_json() const {
     return json;
 }
 
-qtplugin::expected<ResourceLimits, PluginError> ResourceLimits::from_json(const QJsonObject& json) {
+qtplugin::expected<ResourceLimits, PluginError> ResourceLimits::from_json(
+    const QJsonObject& json) {
     ResourceLimits limits;
 
     if (json.contains("cpu_time_limit")) {
-        limits.cpu_time_limit = std::chrono::milliseconds(json["cpu_time_limit"].toInt());
+        limits.cpu_time_limit =
+            std::chrono::milliseconds(json["cpu_time_limit"].toInt());
     }
     if (json.contains("memory_limit_mb")) {
         limits.memory_limit_mb = json["memory_limit_mb"].toInt();
@@ -49,10 +51,12 @@ qtplugin::expected<ResourceLimits, PluginError> ResourceLimits::from_json(const 
         limits.max_file_handles = json["max_file_handles"].toInt();
     }
     if (json.contains("max_network_connections")) {
-        limits.max_network_connections = json["max_network_connections"].toInt();
+        limits.max_network_connections =
+            json["max_network_connections"].toInt();
     }
     if (json.contains("execution_timeout")) {
-        limits.execution_timeout = std::chrono::milliseconds(json["execution_timeout"].toInt());
+        limits.execution_timeout =
+            std::chrono::milliseconds(json["execution_timeout"].toInt());
     }
 
     return limits;
@@ -91,18 +95,24 @@ QJsonObject SecurityPermissions::to_json() const {
     return json;
 }
 
-qtplugin::expected<SecurityPermissions, PluginError> SecurityPermissions::from_json(const QJsonObject& json) {
+qtplugin::expected<SecurityPermissions, PluginError>
+SecurityPermissions::from_json(const QJsonObject& json) {
     SecurityPermissions permissions;
 
-    permissions.allow_file_system_read = json["allow_file_system_read"].toBool();
-    permissions.allow_file_system_write = json["allow_file_system_write"].toBool();
+    permissions.allow_file_system_read =
+        json["allow_file_system_read"].toBool();
+    permissions.allow_file_system_write =
+        json["allow_file_system_write"].toBool();
     permissions.allow_network_access = json["allow_network_access"].toBool();
-    permissions.allow_process_creation = json["allow_process_creation"].toBool();
+    permissions.allow_process_creation =
+        json["allow_process_creation"].toBool();
     permissions.allow_system_calls = json["allow_system_calls"].toBool();
     permissions.allow_registry_access = json["allow_registry_access"].toBool();
-    permissions.allow_environment_access = json["allow_environment_access"].toBool();
+    permissions.allow_environment_access =
+        json["allow_environment_access"].toBool();
 
-    if (json.contains("allowed_directories") && json["allowed_directories"].isArray()) {
+    if (json.contains("allowed_directories") &&
+        json["allowed_directories"].isArray()) {
         QJsonArray dirs_array = json["allowed_directories"].toArray();
         for (const QJsonValue& value : dirs_array) {
             permissions.allowed_directories.append(value.toString());
@@ -138,7 +148,8 @@ QJsonObject SecurityPolicy::to_json() const {
     return json;
 }
 
-qtplugin::expected<SecurityPolicy, PluginError> SecurityPolicy::from_json(const QJsonObject& json) {
+qtplugin::expected<SecurityPolicy, PluginError> SecurityPolicy::from_json(
+    const QJsonObject& json) {
     SecurityPolicy policy;
 
     if (json.contains("level")) {
@@ -146,14 +157,16 @@ qtplugin::expected<SecurityPolicy, PluginError> SecurityPolicy::from_json(const 
     }
 
     if (json.contains("limits")) {
-        auto limits_result = ResourceLimits::from_json(json["limits"].toObject());
+        auto limits_result =
+            ResourceLimits::from_json(json["limits"].toObject());
         if (limits_result) {
             policy.limits = limits_result.value();
         }
     }
 
     if (json.contains("permissions")) {
-        auto permissions_result = SecurityPermissions::from_json(json["permissions"].toObject());
+        auto permissions_result =
+            SecurityPermissions::from_json(json["permissions"].toObject());
         if (permissions_result) {
             policy.permissions = permissions_result.value();
         }
@@ -196,8 +209,7 @@ SecurityPolicy SecurityPolicy::create_unrestricted_policy() {
 // === PluginSandbox Implementation ===
 
 PluginSandbox::PluginSandbox(const SecurityPolicy& policy, QObject* parent)
-    : QObject(parent), m_policy(policy) {
-}
+    : QObject(parent), m_policy(policy) {}
 
 PluginSandbox::~PluginSandbox() = default;
 
@@ -206,7 +218,8 @@ void PluginSandbox::monitor_resources() {
     qCWarning(sandboxLog) << "Resource monitoring is not yet implemented!";
 }
 
-void PluginSandbox::handle_process_finished(int exit_code, QProcess::ExitStatus exit_status) {
+void PluginSandbox::handle_process_finished(int exit_code,
+                                            QProcess::ExitStatus exit_status) {
     Q_UNUSED(exit_code)
     Q_UNUSED(exit_status)
     // TODO: Implement process finished handling
@@ -217,4 +230,4 @@ void PluginSandbox::handle_process_error(QProcess::ProcessError error) {
     // TODO: Implement process error handling
 }
 
-} // namespace qtplugin
+}  // namespace qtplugin

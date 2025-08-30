@@ -323,5 +323,3 @@ QJsonObject PluginMetricsCollector::calculate_plugin_metrics(
 }
 
 }  // namespace qtplugin
-
-

@@ -5,10 +5,10 @@
  * @author QtForge Development Team
  */
 
+#include <pybind11/chrono.h>
+#include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include <pybind11/functional.h>
-#include <pybind11/chrono.h>
 
 #include <qtplugin/threading/plugin_thread_pool.hpp>
 
@@ -58,7 +58,7 @@ void bind_threading(py::module& m) {
         .def("error_message", &PluginTask::error_message)
         .def("execution_time", &PluginTask::execution_time)
         .def("__repr__", [](const PluginTask& task) {
-            return "<PluginTask id='" + task.task_id.toStdString() + 
+            return "<PluginTask id='" + task.task_id.toStdString() +
                    "' plugin='" + task.plugin_id.toStdString() + "'>";
         });
 
@@ -79,23 +79,25 @@ void bind_threading(py::module& m) {
         .def("shutdown", &IPluginThreadPool::shutdown)
         .def("is_shutdown", &IPluginThreadPool::is_shutdown)
         .def("__repr__", [](const IPluginThreadPool& pool) {
-            return "<IPluginThreadPool max_threads=" + 
+            return "<IPluginThreadPool max_threads=" +
                    std::to_string(pool.get_max_threads()) + ">";
         });
 
     // Plugin thread pool implementation
-    py::class_<PluginThreadPool, IPluginThreadPool, std::shared_ptr<PluginThreadPool>>(
-        m, "PluginThreadPool")
+    py::class_<PluginThreadPool, IPluginThreadPool,
+               std::shared_ptr<PluginThreadPool>>(m, "PluginThreadPool")
         .def(py::init<int>(), py::arg("max_threads") = 4)
-        .def_static("create", &PluginThreadPool::create, py::arg("max_threads") = 4)
+        .def_static("create", &PluginThreadPool::create,
+                    py::arg("max_threads") = 4)
         .def("__repr__", [](const PluginThreadPool& pool) {
-            return "<PluginThreadPool max_threads=" + 
-                   std::to_string(pool.get_max_threads()) + 
+            return "<PluginThreadPool max_threads=" +
+                   std::to_string(pool.get_max_threads()) +
                    " active=" + std::to_string(pool.get_active_threads()) + ">";
         });
 
     // Plugin thread pool manager
-    py::class_<PluginThreadPoolManager, std::shared_ptr<PluginThreadPoolManager>>(
+    py::class_<PluginThreadPoolManager,
+               std::shared_ptr<PluginThreadPoolManager>>(
         m, "PluginThreadPoolManager")
         .def(py::init<>())
         .def_static("create", &PluginThreadPoolManager::create)
@@ -109,7 +111,8 @@ void bind_threading(py::module& m) {
         .def("get_global_stats", &PluginThreadPoolManager::get_global_stats)
         .def("__repr__", [](const PluginThreadPoolManager& manager) {
             auto pools = manager.list_pools();
-            return "<PluginThreadPoolManager pools=" + std::to_string(pools.size()) + ">";
+            return "<PluginThreadPoolManager pools=" +
+                   std::to_string(pools.size()) + ">";
         });
 
     // Utility functions
@@ -118,8 +121,7 @@ void bind_threading(py::module& m) {
         [](int max_threads = 4) -> std::shared_ptr<PluginThreadPool> {
             return PluginThreadPool::create(max_threads);
         },
-        py::arg("max_threads") = 4,
-        "Create a new PluginThreadPool instance");
+        py::arg("max_threads") = 4, "Create a new PluginThreadPool instance");
 
     m.def(
         "create_thread_pool_manager",
@@ -130,11 +132,11 @@ void bind_threading(py::module& m) {
 
     m.def(
         "create_plugin_task",
-        [](const std::string& task_id, const std::string& plugin_id, 
+        [](const std::string& task_id, const std::string& plugin_id,
            const std::string& method) -> PluginTask {
             return PluginTask(QString::fromStdString(task_id),
-                            QString::fromStdString(plugin_id),
-                            QString::fromStdString(method));
+                              QString::fromStdString(plugin_id),
+                              QString::fromStdString(method));
         },
         py::arg("task_id"), py::arg("plugin_id"), py::arg("method"),
         "Create a new PluginTask instance");
@@ -143,37 +145,42 @@ void bind_threading(py::module& m) {
     m.def(
         "execute_async",
         [](std::shared_ptr<PluginThreadPool> pool, const std::string& plugin_id,
-           const std::string& method, const QJsonObject& params = QJsonObject{}) -> QString {
-            PluginTask task(QString::number(QDateTime::currentMSecsSinceEpoch()),
-                          QString::fromStdString(plugin_id),
-                          QString::fromStdString(method));
+           const std::string& method,
+           const QJsonObject& params = QJsonObject{}) -> QString {
+            PluginTask task(
+                QString::number(QDateTime::currentMSecsSinceEpoch()),
+                QString::fromStdString(plugin_id),
+                QString::fromStdString(method));
             task.parameters = params;
-            
+
             auto result = pool->submit_task(task);
             return result.value_or(QString{});
         },
-        py::arg("pool"), py::arg("plugin_id"), py::arg("method"), py::arg("parameters") = QJsonObject{},
+        py::arg("pool"), py::arg("plugin_id"), py::arg("method"),
+        py::arg("parameters") = QJsonObject{},
         "Execute a plugin method asynchronously");
 
     m.def(
         "execute_batch",
-        [](std::shared_ptr<PluginThreadPool> pool, 
-           const std::vector<std::tuple<std::string, std::string, QJsonObject>>& tasks) -> std::vector<QString> {
+        [](std::shared_ptr<PluginThreadPool> pool,
+           const std::vector<std::tuple<std::string, std::string, QJsonObject>>&
+               tasks) -> std::vector<QString> {
             std::vector<QString> task_ids;
-            
+
             for (const auto& [plugin_id, method, params] : tasks) {
-                PluginTask task(QString::number(QDateTime::currentMSecsSinceEpoch()) + 
-                              QString::number(task_ids.size()),
-                              QString::fromStdString(plugin_id),
-                              QString::fromStdString(method));
+                PluginTask task(
+                    QString::number(QDateTime::currentMSecsSinceEpoch()) +
+                        QString::number(task_ids.size()),
+                    QString::fromStdString(plugin_id),
+                    QString::fromStdString(method));
                 task.parameters = params;
-                
+
                 auto result = pool->submit_task(task);
                 if (result) {
                     task_ids.push_back(result.value());
                 }
             }
-            
+
             return task_ids;
         },
         py::arg("pool"), py::arg("tasks"),
@@ -181,10 +188,12 @@ void bind_threading(py::module& m) {
 
     m.def(
         "wait_for_all",
-        [](std::shared_ptr<PluginThreadPool> pool, const std::vector<QString>& task_ids,
+        [](std::shared_ptr<PluginThreadPool> pool,
+           const std::vector<QString>& task_ids,
            int timeout_ms = 30000) -> bool {
             for (const auto& task_id : task_ids) {
-                auto result = pool->wait_for_task(task_id, std::chrono::milliseconds(timeout_ms));
+                auto result = pool->wait_for_task(
+                    task_id, std::chrono::milliseconds(timeout_ms));
                 if (!result) {
                     return false;
                 }
@@ -196,21 +205,23 @@ void bind_threading(py::module& m) {
 
     m.def(
         "setup_threading_system",
-        [](int default_threads = 4, int io_threads = 2, int compute_threads = 4) 
-           -> std::shared_ptr<PluginThreadPoolManager> {
+        [](int default_threads = 4, int io_threads = 2, int compute_threads = 4)
+            -> std::shared_ptr<PluginThreadPoolManager> {
             auto manager = PluginThreadPoolManager::create();
-            
+
             // Create default pool
-            auto default_pool = manager->create_pool("default", default_threads);
+            auto default_pool =
+                manager->create_pool("default", default_threads);
             manager->set_default_pool("default");
-            
+
             // Create specialized pools
             manager->create_pool("io", io_threads);
             manager->create_pool("compute", compute_threads);
-            
+
             return manager;
         },
-        py::arg("default_threads") = 4, py::arg("io_threads") = 2, py::arg("compute_threads") = 4,
+        py::arg("default_threads") = 4, py::arg("io_threads") = 2,
+        py::arg("compute_threads") = 4,
         "Set up a complete threading system with specialized pools");
 }
 

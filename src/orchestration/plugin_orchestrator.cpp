@@ -241,7 +241,7 @@ PluginOrchestrator::~PluginOrchestrator() {
                 futures_to_wait.push_back(std::move(state->execution_future));
             }
         }
-    } // Release mutex before waiting
+    }  // Release mutex before waiting
 
     // Wait for executions to complete without holding the mutex
     for (auto& future : futures_to_wait) {
@@ -365,19 +365,23 @@ qtplugin::expected<QString, PluginError> PluginOrchestrator::execute_workflow(
         exec_state->execution_future =
             std::async(std::launch::async, [this, execution_id]() {
                 // Execute the workflow implementation directly
-                qtplugin::expected<QJsonObject, PluginError> result = make_error<QJsonObject>(PluginErrorCode::ExecutionFailed, "Execution not found");
+                qtplugin::expected<QJsonObject, PluginError> result =
+                    make_error<QJsonObject>(PluginErrorCode::ExecutionFailed,
+                                            "Execution not found");
 
                 // Get execution state with minimal lock time
                 {
                     std::shared_lock lock(m_executions_mutex);
                     auto exec_it = m_active_executions.find(execution_id);
                     if (exec_it != m_active_executions.end()) {
-                        // Execute directly with the original context - this is safe because
-                        // the context is only accessed by this thread during execution
-                        result = execute_workflow_impl(
-                            exec_it->second->workflow, *exec_it->second->context);
+                        // Execute directly with the original context - this is
+                        // safe because the context is only accessed by this
+                        // thread during execution
+                        result =
+                            execute_workflow_impl(exec_it->second->workflow,
+                                                  *exec_it->second->context);
                     }
-                } // Release lock immediately after getting the result
+                }  // Release lock immediately after getting the result
 
                 // Emit signals without holding any locks
                 if (result) {
@@ -449,7 +453,7 @@ qtplugin::expected<void, PluginError> PluginOrchestrator::cancel_workflow(
         }
 
         it->second->context->cancelled = true;
-    } // Release mutex before emitting signal
+    }  // Release mutex before emitting signal
 
     emit workflow_cancelled(execution_id);
 
@@ -684,5 +688,3 @@ void PluginOrchestrator::on_execution_timeout() {
 }
 
 }  // namespace qtplugin::orchestration
-
-

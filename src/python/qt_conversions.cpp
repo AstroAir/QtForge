@@ -6,16 +6,16 @@
  */
 
 #include "qt_conversions.hpp"
-#include <pybind11/stl.h>
 #include <pybind11/chrono.h>
-#include <QJsonObject>
+#include <pybind11/stl.h>
+#include <QDateTime>
 #include <QJsonArray>
 #include <QJsonDocument>
+#include <QJsonObject>
 #include <QJsonValue>
 #include <QString>
 #include <QStringList>
 #include <QVariant>
-#include <QDateTime>
 #include <qtplugin/utils/error_handling.hpp>
 
 namespace py = pybind11;
@@ -28,7 +28,10 @@ void register_qt_conversions(pybind11::module& m) {
         .def(py::init<>())
         .def(py::init<const char*>())
         .def("__str__", [](const QString& s) { return s.toStdString(); })
-        .def("__repr__", [](const QString& s) { return "QString('" + s.toStdString() + "')"; })
+        .def("__repr__",
+             [](const QString& s) {
+                 return "QString('" + s.toStdString() + "')";
+             })
         .def("isEmpty", &QString::isEmpty)
         .def("length", &QString::length)
         .def("toStdString", &QString::toStdString);
@@ -43,7 +46,11 @@ void register_qt_conversions(pybind11::module& m) {
         .def("__contains__", &QJsonObject::contains)
         .def("__len__", &QJsonObject::size)
         .def("__repr__", [](const QJsonObject& obj) {
-            return "QJsonObject(" + QJsonDocument(obj).toJson(QJsonDocument::Compact).toStdString() + ")";
+            return "QJsonObject(" +
+                   QJsonDocument(obj)
+                       .toJson(QJsonDocument::Compact)
+                       .toStdString() +
+                   ")";
         });
 
     // Register QJsonArray
@@ -53,7 +60,11 @@ void register_qt_conversions(pybind11::module& m) {
         .def("size", &QJsonArray::size)
         .def("__len__", &QJsonArray::size)
         .def("__repr__", [](const QJsonArray& arr) {
-            return "QJsonArray(" + QJsonDocument(arr).toJson(QJsonDocument::Compact).toStdString() + ")";
+            return "QJsonArray(" +
+                   QJsonDocument(arr)
+                       .toJson(QJsonDocument::Compact)
+                       .toStdString() +
+                   ")";
         });
 
     // Register PluginError for error handling
@@ -61,11 +72,15 @@ void register_qt_conversions(pybind11::module& m) {
         .def(py::init<qtplugin::PluginErrorCode, const std::string&>())
         .def_readonly("code", &qtplugin::PluginError::code)
         .def_readonly("message", &qtplugin::PluginError::message)
-        .def("__str__", [](const qtplugin::PluginError& err) {
-            return "PluginError(" + std::to_string(static_cast<int>(err.code)) + ", '" + err.message + "')";
-        })
+        .def("__str__",
+             [](const qtplugin::PluginError& err) {
+                 return "PluginError(" +
+                        std::to_string(static_cast<int>(err.code)) + ", '" +
+                        err.message + "')";
+             })
         .def("__repr__", [](const qtplugin::PluginError& err) {
-            return "PluginError(" + std::to_string(static_cast<int>(err.code)) + ", '" + err.message + "')";
+            return "PluginError(" + std::to_string(static_cast<int>(err.code)) +
+                   ", '" + err.message + "')";
         });
 
     // Register PluginErrorCode enum
@@ -74,9 +89,12 @@ void register_qt_conversions(pybind11::module& m) {
         .value("FileNotFound", qtplugin::PluginErrorCode::FileNotFound)
         .value("InvalidFormat", qtplugin::PluginErrorCode::InvalidFormat)
         .value("LoadingFailed", qtplugin::PluginErrorCode::LoadingFailed)
-        .value("InitializationFailed", qtplugin::PluginErrorCode::InitializationFailed)
-        .value("DependencyMissing", qtplugin::PluginErrorCode::DependencyMissing)
-        .value("SecurityViolation", qtplugin::PluginErrorCode::SecurityViolation)
+        .value("InitializationFailed",
+               qtplugin::PluginErrorCode::InitializationFailed)
+        .value("DependencyMissing",
+               qtplugin::PluginErrorCode::DependencyMissing)
+        .value("SecurityViolation",
+               qtplugin::PluginErrorCode::SecurityViolation)
         .value("InvalidState", qtplugin::PluginErrorCode::InvalidState)
         .value("TimeoutError", qtplugin::PluginErrorCode::TimeoutError)
         .value("UnknownError", qtplugin::PluginErrorCode::UnknownError)
@@ -141,7 +159,8 @@ QJsonObject dict_to_qjsonobject(const py::dict& dict) {
         py::object value = item.second;
 
         if (py::isinstance<py::str>(value)) {
-            result[QString::fromStdString(key)] = QString::fromStdString(py::str(value));
+            result[QString::fromStdString(key)] =
+                QString::fromStdString(py::str(value));
         } else if (py::isinstance<py::float_>(value)) {
             result[QString::fromStdString(key)] = py::float_(value);
         } else if (py::isinstance<py::int_>(value)) {
@@ -149,9 +168,11 @@ QJsonObject dict_to_qjsonobject(const py::dict& dict) {
         } else if (py::isinstance<py::bool_>(value)) {
             result[QString::fromStdString(key)] = py::bool_(value);
         } else if (py::isinstance<py::dict>(value)) {
-            result[QString::fromStdString(key)] = dict_to_qjsonobject(py::dict(value));
+            result[QString::fromStdString(key)] =
+                dict_to_qjsonobject(py::dict(value));
         } else if (py::isinstance<py::list>(value)) {
-            result[QString::fromStdString(key)] = list_to_qjsonarray(py::list(value));
+            result[QString::fromStdString(key)] =
+                list_to_qjsonarray(py::list(value));
         }
     }
     return result;

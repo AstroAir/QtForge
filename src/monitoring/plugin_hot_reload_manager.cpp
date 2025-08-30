@@ -191,5 +191,3 @@ std::string PluginHotReloadManager::find_plugin_by_path(
 }
 
 }  // namespace qtplugin
-
-

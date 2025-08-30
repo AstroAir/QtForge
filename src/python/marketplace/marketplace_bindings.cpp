@@ -5,10 +5,10 @@
  * @author QtForge Development Team
  */
 
+#include <pybind11/chrono.h>
+#include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include <pybind11/functional.h>
-#include <pybind11/chrono.h>
 
 #include <qtplugin/marketplace/plugin_marketplace.hpp>
 
@@ -49,7 +49,7 @@ void bind_marketplace(py::module& m) {
         .def("to_json", &MarketplacePlugin::to_json)
         .def_static("from_json", &MarketplacePlugin::from_json)
         .def("__repr__", [](const MarketplacePlugin& plugin) {
-            return "<MarketplacePlugin id='" + plugin.plugin_id.toStdString() + 
+            return "<MarketplacePlugin id='" + plugin.plugin_id.toStdString() +
                    "' name='" + plugin.name.toStdString() + "'>";
         });
 
@@ -69,7 +69,7 @@ void bind_marketplace(py::module& m) {
         .def("to_json", &PluginReview::to_json)
         .def_static("from_json", &PluginReview::from_json)
         .def("__repr__", [](const PluginReview& review) {
-            return "<PluginReview id='" + review.review_id.toStdString() + 
+            return "<PluginReview id='" + review.review_id.toStdString() +
                    "' rating=" + std::to_string(review.rating) + ">";
         });
 
@@ -90,7 +90,7 @@ void bind_marketplace(py::module& m) {
         .def_readwrite("offset", &SearchFilters::offset)
         .def("to_json", &SearchFilters::to_json)
         .def("__repr__", [](const SearchFilters& filters) {
-            return "<SearchFilters query='" + filters.query.toStdString() + 
+            return "<SearchFilters query='" + filters.query.toStdString() +
                    "' limit=" + std::to_string(filters.limit) + ">";
         });
 
@@ -99,8 +99,10 @@ void bind_marketplace(py::module& m) {
         .def(py::init<>())
         .def_readwrite("plugin_id", &InstallationProgress::plugin_id)
         .def_readwrite("operation", &InstallationProgress::operation)
-        .def_readwrite("progress_percent", &InstallationProgress::progress_percent)
-        .def_readwrite("bytes_downloaded", &InstallationProgress::bytes_downloaded)
+        .def_readwrite("progress_percent",
+                       &InstallationProgress::progress_percent)
+        .def_readwrite("bytes_downloaded",
+                       &InstallationProgress::bytes_downloaded)
         .def_readwrite("total_bytes", &InstallationProgress::total_bytes)
         .def_readwrite("status_message", &InstallationProgress::status_message)
         .def_readwrite("completed", &InstallationProgress::completed)
@@ -108,14 +110,18 @@ void bind_marketplace(py::module& m) {
         .def_readwrite("error_message", &InstallationProgress::error_message)
         .def("to_json", &InstallationProgress::to_json)
         .def("__repr__", [](const InstallationProgress& progress) {
-            return "<InstallationProgress plugin='" + progress.plugin_id.toStdString() + 
-                   "' progress=" + std::to_string(progress.progress_percent) + "%>";
+            return "<InstallationProgress plugin='" +
+                   progress.plugin_id.toStdString() +
+                   "' progress=" + std::to_string(progress.progress_percent) +
+                   "%>";
         });
 
     // Plugin marketplace
-    py::class_<PluginMarketplace, std::shared_ptr<PluginMarketplace>>(m, "PluginMarketplace")
+    py::class_<PluginMarketplace, std::shared_ptr<PluginMarketplace>>(
+        m, "PluginMarketplace")
         .def(py::init<const QString&, QObject*>(),
-             py::arg("marketplace_url") = "https://plugins.qtforge.org", py::arg("parent") = nullptr)
+             py::arg("marketplace_url") = "https://plugins.qtforge.org",
+             py::arg("parent") = nullptr)
         .def("initialize", &PluginMarketplace::initialize)
         .def("search_plugins", &PluginMarketplace::search_plugins)
         .def("get_plugin_details", &PluginMarketplace::get_plugin_details)
@@ -139,7 +145,8 @@ void bind_marketplace(py::module& m) {
     m.def(
         "create_marketplace",
         [](const std::string& url) -> std::shared_ptr<PluginMarketplace> {
-            return std::make_shared<PluginMarketplace>(QString::fromStdString(url));
+            return std::make_shared<PluginMarketplace>(
+                QString::fromStdString(url));
         },
         py::arg("marketplace_url") = "https://plugins.qtforge.org",
         "Create a new PluginMarketplace instance");
@@ -151,13 +158,13 @@ void bind_marketplace(py::module& m) {
             filters.query = QString::fromStdString(query);
             return filters;
         },
-        py::arg("query") = "",
-        "Create a new SearchFilters instance");
+        py::arg("query") = "", "Create a new SearchFilters instance");
 
     // Helper functions for common marketplace operations
     m.def(
         "search_free_plugins",
-        [](std::shared_ptr<PluginMarketplace> marketplace, const std::string& query) {
+        [](std::shared_ptr<PluginMarketplace> marketplace,
+           const std::string& query) {
             SearchFilters filters;
             filters.query = QString::fromStdString(query);
             filters.free_only = true;
@@ -169,7 +176,8 @@ void bind_marketplace(py::module& m) {
 
     m.def(
         "search_by_category",
-        [](std::shared_ptr<PluginMarketplace> marketplace, const std::string& category) {
+        [](std::shared_ptr<PluginMarketplace> marketplace,
+           const std::string& category) {
             SearchFilters filters;
             filters.categories = QStringList{QString::fromStdString(category)};
             filters.verified_only = true;
@@ -188,8 +196,7 @@ void bind_marketplace(py::module& m) {
             filters.min_rating = 4.0;
             return marketplace->search_plugins(filters);
         },
-        py::arg("marketplace"), py::arg("limit") = 20,
-        "Get top-rated plugins");
+        py::arg("marketplace"), py::arg("limit") = 20, "Get top-rated plugins");
 }
 
 }  // namespace qtforge_python

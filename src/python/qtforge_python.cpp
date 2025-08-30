@@ -60,20 +60,20 @@ PYBIND11_MODULE(qtforge, m) {
         m.def_submodule("communication", "Inter-plugin communication system");
     auto security_module =
         m.def_submodule("security", "Security and validation components");
-    auto managers_module =
-        m.def_submodule("managers", "Configuration, logging, and resource management");
-    auto orchestration_module =
-        m.def_submodule("orchestration", "Plugin orchestration and workflow management");
-    auto monitoring_module =
-        m.def_submodule("monitoring", "Plugin monitoring, hot reload, and metrics collection");
-    auto transactions_module =
-        m.def_submodule("transactions", "Plugin transaction management and atomic operations");
-    auto composition_module =
-        m.def_submodule("composition", "Plugin composition and aggregation patterns");
-    auto marketplace_module =
-        m.def_submodule("marketplace", "Plugin marketplace and distribution system");
-    auto threading_module =
-        m.def_submodule("threading", "Plugin threading and concurrency management");
+    auto managers_module = m.def_submodule(
+        "managers", "Configuration, logging, and resource management");
+    auto orchestration_module = m.def_submodule(
+        "orchestration", "Plugin orchestration and workflow management");
+    auto monitoring_module = m.def_submodule(
+        "monitoring", "Plugin monitoring, hot reload, and metrics collection");
+    auto transactions_module = m.def_submodule(
+        "transactions", "Plugin transaction management and atomic operations");
+    auto composition_module = m.def_submodule(
+        "composition", "Plugin composition and aggregation patterns");
+    auto marketplace_module = m.def_submodule(
+        "marketplace", "Plugin marketplace and distribution system");
+    auto threading_module = m.def_submodule(
+        "threading", "Plugin threading and concurrency management");
 
     // Bind all components
     qtforge_python::bind_core(core_module);
@@ -102,48 +102,71 @@ PYBIND11_MODULE(qtforge, m) {
     m.attr("create_error") = utils_module.attr("create_error");
 
     // Import communication functions
-    m.attr("create_message_bus") = communication_module.attr("create_message_bus");
+    m.attr("create_message_bus") =
+        communication_module.attr("create_message_bus");
 
     // Import security functions
     m.attr("SecurityManager") = security_module.attr("SecurityManager");
 
     // Import manager functions
-    m.attr("create_configuration_manager") = managers_module.attr("create_configuration_manager");
-    m.attr("create_logging_manager") = managers_module.attr("create_logging_manager");
-    m.attr("create_resource_manager") = managers_module.attr("create_resource_manager");
+    m.attr("create_configuration_manager") =
+        managers_module.attr("create_configuration_manager");
+    m.attr("create_logging_manager") =
+        managers_module.attr("create_logging_manager");
+    m.attr("create_resource_manager") =
+        managers_module.attr("create_resource_manager");
 
     // Import orchestration functions
-    m.attr("create_orchestrator") = orchestration_module.attr("create_orchestrator");
+    m.attr("create_orchestrator") =
+        orchestration_module.attr("create_orchestrator");
     m.attr("create_workflow") = orchestration_module.attr("create_workflow");
-    m.attr("create_workflow_step") = orchestration_module.attr("create_workflow_step");
+    m.attr("create_workflow_step") =
+        orchestration_module.attr("create_workflow_step");
 
     // Import monitoring functions
-    m.attr("create_hot_reload_manager") = monitoring_module.attr("create_hot_reload_manager");
-    m.attr("create_metrics_collector") = monitoring_module.attr("create_metrics_collector");
-    m.attr("setup_monitoring_system") = monitoring_module.attr("setup_monitoring_system");
+    m.attr("create_hot_reload_manager") =
+        monitoring_module.attr("create_hot_reload_manager");
+    m.attr("create_metrics_collector") =
+        monitoring_module.attr("create_metrics_collector");
+    m.attr("setup_monitoring_system") =
+        monitoring_module.attr("setup_monitoring_system");
 
     // Import transaction functions
-    m.attr("create_transaction_manager") = transactions_module.attr("create_transaction_manager");
-    m.attr("create_transaction_operation") = transactions_module.attr("create_transaction_operation");
-    m.attr("create_transaction_context") = transactions_module.attr("create_transaction_context");
-    m.attr("execute_atomic_operation") = transactions_module.attr("execute_atomic_operation");
+    m.attr("create_transaction_manager") =
+        transactions_module.attr("create_transaction_manager");
+    m.attr("create_transaction_operation") =
+        transactions_module.attr("create_transaction_operation");
+    m.attr("create_transaction_context") =
+        transactions_module.attr("create_transaction_context");
+    m.attr("execute_atomic_operation") =
+        transactions_module.attr("execute_atomic_operation");
 
     // Import composition functions
-    m.attr("create_composition_manager") = composition_module.attr("create_composition_manager");
-    m.attr("create_composition") = composition_module.attr("create_composition");
-    m.attr("create_composition_binding") = composition_module.attr("create_composition_binding");
-    m.attr("create_pipeline_composition") = composition_module.attr("create_pipeline_composition");
-    m.attr("create_facade_composition") = composition_module.attr("create_facade_composition");
+    m.attr("create_composition_manager") =
+        composition_module.attr("create_composition_manager");
+    m.attr("create_composition") =
+        composition_module.attr("create_composition");
+    m.attr("create_composition_binding") =
+        composition_module.attr("create_composition_binding");
+    m.attr("create_pipeline_composition") =
+        composition_module.attr("create_pipeline_composition");
+    m.attr("create_facade_composition") =
+        composition_module.attr("create_facade_composition");
 
     // Import marketplace functions
-    m.attr("create_marketplace") = marketplace_module.attr("create_marketplace");
-    m.attr("create_search_filters") = marketplace_module.attr("create_search_filters");
-    m.attr("search_free_plugins") = marketplace_module.attr("search_free_plugins");
-    m.attr("get_top_rated_plugins") = marketplace_module.attr("get_top_rated_plugins");
+    m.attr("create_marketplace") =
+        marketplace_module.attr("create_marketplace");
+    m.attr("create_search_filters") =
+        marketplace_module.attr("create_search_filters");
+    m.attr("search_free_plugins") =
+        marketplace_module.attr("search_free_plugins");
+    m.attr("get_top_rated_plugins") =
+        marketplace_module.attr("get_top_rated_plugins");
 
     // Import threading functions
     m.attr("create_thread_pool") = threading_module.attr("create_thread_pool");
-    m.attr("create_thread_pool_manager") = threading_module.attr("create_thread_pool_manager");
+    m.attr("create_thread_pool_manager") =
+        threading_module.attr("create_thread_pool_manager");
 
     // Module-level utility functions
     m.def(

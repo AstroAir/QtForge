@@ -5,10 +5,10 @@
  * @author QtForge Development Team
  */
 
+#include <pybind11/chrono.h>
+#include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include <pybind11/functional.h>
-#include <pybind11/chrono.h>
 
 #include <qtplugin/transactions/plugin_transaction_manager.hpp>
 
@@ -62,27 +62,34 @@ void bind_transactions(py::module& m) {
         .def_readwrite("rollback_data", &TransactionOperation::rollback_data)
         .def_readwrite("priority", &TransactionOperation::priority)
         .def("__repr__", [](const TransactionOperation& op) {
-            return "<TransactionOperation id='" + op.operation_id.toStdString() + 
-                   "' plugin='" + op.plugin_id.toStdString() + "'>";
+            return "<TransactionOperation id='" +
+                   op.operation_id.toStdString() + "' plugin='" +
+                   op.plugin_id.toStdString() + "'>";
         });
 
     // Transaction participant interface
-    py::class_<ITransactionParticipant, std::shared_ptr<ITransactionParticipant>>(
+    py::class_<ITransactionParticipant,
+               std::shared_ptr<ITransactionParticipant>>(
         m, "ITransactionParticipant")
         .def("prepare", &ITransactionParticipant::prepare)
         .def("commit", &ITransactionParticipant::commit)
         .def("abort", &ITransactionParticipant::abort)
-        .def("supports_transactions", &ITransactionParticipant::supports_transactions)
-        .def("supported_isolation_level", &ITransactionParticipant::supported_isolation_level)
+        .def("supports_transactions",
+             &ITransactionParticipant::supports_transactions)
+        .def("supported_isolation_level",
+             &ITransactionParticipant::supported_isolation_level)
         .def("__repr__", [](const ITransactionParticipant& participant) {
-            return "<ITransactionParticipant supports=" + 
-                   std::string(participant.supports_transactions() ? "true" : "false") + ">";
+            return "<ITransactionParticipant supports=" +
+                   std::string(participant.supports_transactions() ? "true"
+                                                                   : "false") +
+                   ">";
         });
 
     // Transaction context
     py::class_<TransactionContext>(m, "TransactionContext")
         .def(py::init<const QString&, IsolationLevel>(),
-             py::arg("transaction_id"), py::arg("isolation") = IsolationLevel::ReadCommitted)
+             py::arg("transaction_id"),
+             py::arg("isolation") = IsolationLevel::ReadCommitted)
         .def("transaction_id", &TransactionContext::transaction_id)
         .def("state", &TransactionContext::state)
         .def("isolation_level", &TransactionContext::isolation_level)
@@ -93,30 +100,41 @@ void bind_transactions(py::module& m) {
         .def("set_timeout", &TransactionContext::set_timeout)
         .def("get_timeout", &TransactionContext::get_timeout)
         .def("__repr__", [](const TransactionContext& ctx) {
-            return "<TransactionContext id='" + ctx.transaction_id().toStdString() + 
-                   "' state=" + std::to_string(static_cast<int>(ctx.state())) + ">";
+            return "<TransactionContext id='" +
+                   ctx.transaction_id().toStdString() +
+                   "' state=" + std::to_string(static_cast<int>(ctx.state())) +
+                   ">";
         });
 
     // Plugin transaction manager
-    py::class_<PluginTransactionManager, std::shared_ptr<PluginTransactionManager>>(
+    py::class_<PluginTransactionManager,
+               std::shared_ptr<PluginTransactionManager>>(
         m, "PluginTransactionManager")
         .def(py::init<>())
         .def_static("create", &PluginTransactionManager::create)
         .def("begin_transaction", &PluginTransactionManager::begin_transaction)
-        .def("commit_transaction", &PluginTransactionManager::commit_transaction)
+        .def("commit_transaction",
+             &PluginTransactionManager::commit_transaction)
         .def("abort_transaction", &PluginTransactionManager::abort_transaction)
         .def("add_operation", &PluginTransactionManager::add_operation)
-        .def("register_participant", &PluginTransactionManager::register_participant)
-        .def("unregister_participant", &PluginTransactionManager::unregister_participant)
+        .def("register_participant",
+             &PluginTransactionManager::register_participant)
+        .def("unregister_participant",
+             &PluginTransactionManager::unregister_participant)
         .def("get_transaction", &PluginTransactionManager::get_transaction)
         .def("has_transaction", &PluginTransactionManager::has_transaction)
-        .def("get_active_transactions", &PluginTransactionManager::get_active_transactions)
-        .def("set_default_timeout", &PluginTransactionManager::set_default_timeout)
-        .def("get_default_timeout", &PluginTransactionManager::get_default_timeout)
-        .def("clear_completed_transactions", &PluginTransactionManager::clear_completed_transactions)
+        .def("get_active_transactions",
+             &PluginTransactionManager::get_active_transactions)
+        .def("set_default_timeout",
+             &PluginTransactionManager::set_default_timeout)
+        .def("get_default_timeout",
+             &PluginTransactionManager::get_default_timeout)
+        .def("clear_completed_transactions",
+             &PluginTransactionManager::clear_completed_transactions)
         .def("__repr__", [](const PluginTransactionManager& manager) {
             auto active = manager.get_active_transactions();
-            return "<PluginTransactionManager active=" + std::to_string(active.size()) + ">";
+            return "<PluginTransactionManager active=" +
+                   std::to_string(active.size()) + ">";
         });
 
     // Utility functions
@@ -129,20 +147,25 @@ void bind_transactions(py::module& m) {
 
     m.def(
         "create_transaction_operation",
-        [](const std::string& op_id, const std::string& plugin_id, OperationType type) -> TransactionOperation {
-            return TransactionOperation(QString::fromStdString(op_id), 
-                                      QString::fromStdString(plugin_id), 
-                                      type);
+        [](const std::string& op_id, const std::string& plugin_id,
+           OperationType type) -> TransactionOperation {
+            return TransactionOperation(QString::fromStdString(op_id),
+                                        QString::fromStdString(plugin_id),
+                                        type);
         },
         py::arg("operation_id"), py::arg("plugin_id"), py::arg("type"),
         "Create a new TransactionOperation instance");
 
     m.def(
         "create_transaction_context",
-        [](const std::string& transaction_id, IsolationLevel isolation = IsolationLevel::ReadCommitted) -> TransactionContext {
-            return TransactionContext(QString::fromStdString(transaction_id), isolation);
+        [](const std::string& transaction_id,
+           IsolationLevel isolation =
+               IsolationLevel::ReadCommitted) -> TransactionContext {
+            return TransactionContext(QString::fromStdString(transaction_id),
+                                      isolation);
         },
-        py::arg("transaction_id"), py::arg("isolation") = IsolationLevel::ReadCommitted,
+        py::arg("transaction_id"),
+        py::arg("isolation") = IsolationLevel::ReadCommitted,
         "Create a new TransactionContext instance");
 
     // Helper functions for common transaction patterns
@@ -157,9 +180,9 @@ void bind_transactions(py::module& m) {
                 if (!tx_result) {
                     return false;
                 }
-                
+
                 QString tx_id = tx_result.value();
-                
+
                 // Add all operations
                 for (const auto& op : operations) {
                     auto add_result = manager->add_operation(tx_id, op);
@@ -168,16 +191,17 @@ void bind_transactions(py::module& m) {
                         return false;
                     }
                 }
-                
+
                 // Commit transaction
                 auto commit_result = manager->commit_transaction(tx_id);
                 return commit_result.has_value();
-                
+
             } catch (...) {
                 return false;
             }
         },
-        py::arg("manager"), py::arg("operations"), py::arg("isolation") = IsolationLevel::ReadCommitted,
+        py::arg("manager"), py::arg("operations"),
+        py::arg("isolation") = IsolationLevel::ReadCommitted,
         "Execute multiple operations atomically within a single transaction");
 }
 

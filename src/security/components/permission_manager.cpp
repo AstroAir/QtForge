@@ -265,5 +265,3 @@ SecurityValidationResult PermissionManager::create_permission_result(
 }
 
 }  // namespace qtplugin
-
-

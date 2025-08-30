@@ -279,5 +279,3 @@ void ConfigurationMerger::initialize_default_hierarchy() {
 }
 
 }  // namespace qtplugin
-
-

@@ -344,5 +344,3 @@ void SecurityPolicyEngine::initialize_default_rules() {
 }
 
 }  // namespace qtplugin
-
-

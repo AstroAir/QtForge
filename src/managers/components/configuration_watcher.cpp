@@ -331,5 +331,3 @@ ConfigurationWatcher::get_file_modification_time(
 }
 
 }  // namespace qtplugin
-
-

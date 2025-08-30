@@ -1,16 +1,16 @@
 #include "qtplugin/communication/request_response_system.hpp"
 #include <QLoggingCategory>
-#include <QTimer>
-#include <QUuid>
-#include <QThread>
 #include <QMutex>
 #include <QMutexLocker>
+#include <QThread>
+#include <QTimer>
+#include <QUuid>
 #include <QWaitCondition>
 #include <chrono>
+#include <future>
+#include <queue>
 #include <unordered_map>
 #include <unordered_set>
-#include <queue>
-#include <future>
 
 Q_LOGGING_CATEGORY(rrsLog, "qtplugin.request_response")
 
@@ -23,7 +23,9 @@ struct PendingRequest {
     std::chrono::steady_clock::time_point created_at;
 
     PendingRequest(const RequestInfo& req)
-        : request(req), timeout_timer(nullptr), created_at(std::chrono::steady_clock::now()) {}
+        : request(req),
+          timeout_timer(nullptr),
+          created_at(std::chrono::steady_clock::now()) {}
 };
 
 class RequestResponseSystem::Private {
@@ -36,7 +38,8 @@ public:
 
     // Request tracking
     mutable QMutex requests_mutex;
-    std::unordered_map<QString, std::unique_ptr<PendingRequest>> pending_requests;
+    std::unordered_map<QString, std::unique_ptr<PendingRequest>>
+        pending_requests;
     std::queue<QString> request_queue;
 
     // Statistics
@@ -51,15 +54,14 @@ public:
 
     Private(QObject* parent) : processing_timer(new QTimer(parent)) {
         processing_timer->setSingleShot(false);
-        processing_timer->setInterval(100); // Process every 100ms
+        processing_timer->setInterval(100);  // Process every 100ms
     }
 };
 
 RequestResponseSystem::RequestResponseSystem(QObject* parent)
     : QObject(parent), d(std::make_unique<Private>(this)) {
-
-    connect(d->processing_timer, &QTimer::timeout,
-            this, &RequestResponseSystem::process_pending_requests);
+    connect(d->processing_timer, &QTimer::timeout, this,
+            &RequestResponseSystem::process_pending_requests);
     d->processing_timer->start();
 
     qCDebug(rrsLog) << "RequestResponseSystem created with processing timer";
@@ -77,8 +79,9 @@ RequestResponseSystem::~RequestResponseSystem() {
             pending->timeout_timer->stop();
             pending->timeout_timer->deleteLater();
         }
-        pending->promise.set_value(make_error<ResponseInfo>(
-            PluginErrorCode::SystemError, "RequestResponseSystem shutting down"));
+        pending->promise.set_value(
+            make_error<ResponseInfo>(PluginErrorCode::SystemError,
+                                     "RequestResponseSystem shutting down"));
     }
     d->pending_requests.clear();
 
@@ -88,8 +91,10 @@ RequestResponseSystem::~RequestResponseSystem() {
 qtplugin::expected<ResponseInfo, PluginError>
 RequestResponseSystem::send_request(const RequestInfo& request) {
     // Generate unique request ID if not provided
-    QString request_id = request.request_id.isEmpty() ?
-        QUuid::createUuid().toString(QUuid::WithoutBraces) : request.request_id;
+    QString request_id =
+        request.request_id.isEmpty()
+            ? QUuid::createUuid().toString(QUuid::WithoutBraces)
+            : request.request_id;
 
     // Find service handler
     QMutexLocker services_lock(&d->services_mutex);
@@ -109,14 +114,16 @@ RequestResponseSystem::send_request(const RequestInfo& request) {
             d->statistics.total_requests_sent++;
             d->statistics.total_responses_received++;
             d->statistics.requests_by_method[request.method]++;
-            d->statistics.responses_by_status[static_cast<int>(response.status)]++;
+            d->statistics
+                .responses_by_status[static_cast<int>(response.status)]++;
 
             return response;
         } catch (const std::exception& e) {
             ResponseInfo error_response;
             error_response.request_id = request_id;
             error_response.status = ResponseStatus::InternalError;
-            error_response.status_message = QString("Handler exception: %1").arg(e.what());
+            error_response.status_message =
+                QString("Handler exception: %1").arg(e.what());
             return error_response;
         }
     }
@@ -125,8 +132,9 @@ RequestResponseSystem::send_request(const RequestInfo& request) {
     ResponseInfo not_found_response;
     not_found_response.request_id = request_id;
     not_found_response.status = ResponseStatus::NotFound;
-    not_found_response.status_message = QString("No handler for service %1::%2")
-        .arg(request.receiver_id, request.method);
+    not_found_response.status_message =
+        QString("No handler for service %1::%2")
+            .arg(request.receiver_id, request.method);
 
     QMutexLocker stats_lock(&d->stats_mutex);
     d->statistics.total_requests_sent++;
@@ -135,10 +143,8 @@ RequestResponseSystem::send_request(const RequestInfo& request) {
     return not_found_response;
 }
 
-
 qtplugin::expected<void, PluginError> RequestResponseSystem::register_service(
     const ServiceEndpoint& endpoint, RequestHandler handler) {
-
     if (endpoint.service_id.isEmpty() || endpoint.method.isEmpty()) {
         return make_error<void>(PluginErrorCode::InvalidConfiguration,
                                 "Service ID and method cannot be empty");
@@ -148,22 +154,24 @@ qtplugin::expected<void, PluginError> RequestResponseSystem::register_service(
     auto service_key = endpoint.provider_id + "::" + endpoint.method;
 
     if (d->sync_handlers.find(service_key) != d->sync_handlers.end()) {
-        return make_error<void>(PluginErrorCode::AlreadyExists,
-                                "Service already registered: " + service_key.toStdString());
+        return make_error<void>(
+            PluginErrorCode::AlreadyExists,
+            "Service already registered: " + service_key.toStdString());
     }
 
     d->registered_services[endpoint.service_id] = endpoint;
     d->sync_handlers[service_key] = std::move(handler);
 
     qCDebug(rrsLog) << "Registered sync service:" << service_key;
-    emit service_registered(endpoint.service_id, endpoint.provider_id, endpoint.method);
+    emit service_registered(endpoint.service_id, endpoint.provider_id,
+                            endpoint.method);
 
     return make_success();
 }
 
-qtplugin::expected<void, PluginError> RequestResponseSystem::register_async_service(
-    const ServiceEndpoint& endpoint, AsyncRequestHandler handler) {
-
+qtplugin::expected<void, PluginError>
+RequestResponseSystem::register_async_service(const ServiceEndpoint& endpoint,
+                                              AsyncRequestHandler handler) {
     if (endpoint.service_id.isEmpty() || endpoint.method.isEmpty()) {
         return make_error<void>(PluginErrorCode::InvalidConfiguration,
                                 "Service ID and method cannot be empty");
@@ -173,15 +181,17 @@ qtplugin::expected<void, PluginError> RequestResponseSystem::register_async_serv
     auto service_key = endpoint.provider_id + "::" + endpoint.method;
 
     if (d->async_handlers.find(service_key) != d->async_handlers.end()) {
-        return make_error<void>(PluginErrorCode::AlreadyExists,
-                                "Async service already registered: " + service_key.toStdString());
+        return make_error<void>(
+            PluginErrorCode::AlreadyExists,
+            "Async service already registered: " + service_key.toStdString());
     }
 
     d->registered_services[endpoint.service_id] = endpoint;
     d->async_handlers[service_key] = std::move(handler);
 
     qCDebug(rrsLog) << "Registered async service:" << service_key;
-    emit service_registered(endpoint.service_id, endpoint.provider_id, endpoint.method);
+    emit service_registered(endpoint.service_id, endpoint.provider_id,
+                            endpoint.method);
 
     return make_success();
 }
@@ -189,8 +199,10 @@ qtplugin::expected<void, PluginError> RequestResponseSystem::register_async_serv
 std::future<qtplugin::expected<ResponseInfo, PluginError>>
 RequestResponseSystem::send_request_async(const RequestInfo& request) {
     // Generate unique request ID if not provided
-    QString request_id = request.request_id.isEmpty() ?
-        QUuid::createUuid().toString(QUuid::WithoutBraces) : request.request_id;
+    QString request_id =
+        request.request_id.isEmpty()
+            ? QUuid::createUuid().toString(QUuid::WithoutBraces)
+            : request.request_id;
 
     // Create pending request
     auto pending = std::make_unique<PendingRequest>(request);
@@ -201,9 +213,8 @@ RequestResponseSystem::send_request_async(const RequestInfo& request) {
     pending->timeout_timer->setSingleShot(true);
     pending->timeout_timer->setInterval(request.timeout.count());
 
-    connect(pending->timeout_timer, &QTimer::timeout, [request_id, this]() {
-        this->handle_request_timeout(request_id);
-    });
+    connect(pending->timeout_timer, &QTimer::timeout,
+            [request_id, this]() { this->handle_request_timeout(request_id); });
 
     // Store pending request
     {
@@ -287,7 +298,7 @@ void RequestResponseSystem::process_pending_requests() {
 
         auto pending_it = d->pending_requests.find(request_id);
         if (pending_it == d->pending_requests.end()) {
-            continue; // Request was already processed or timed out
+            continue;  // Request was already processed or timed out
         }
 
         auto& pending = pending_it->second;
@@ -307,7 +318,9 @@ void RequestResponseSystem::process_pending_requests() {
                 auto response_future = async_it->second(request);
 
                 // Handle response in a separate thread to avoid blocking
-                std::thread([this, request_id, response_future = std::move(response_future)]() mutable {
+                std::thread([this, request_id,
+                             response_future =
+                                 std::move(response_future)]() mutable {
                     try {
                         auto response = response_future.get();
                         response.request_id = request_id;
@@ -325,7 +338,8 @@ void RequestResponseSystem::process_pending_requests() {
                             // Update statistics
                             QMutexLocker stats_lock(&d->stats_mutex);
                             d->statistics.total_responses_received++;
-                            d->statistics.responses_by_status[static_cast<int>(response.status)]++;
+                            d->statistics.responses_by_status[static_cast<int>(
+                                response.status)]++;
                         }
                     } catch (const std::exception& e) {
                         QMutexLocker req_lock(&d->requests_mutex);
@@ -333,8 +347,11 @@ void RequestResponseSystem::process_pending_requests() {
                         if (it != d->pending_requests.end()) {
                             ResponseInfo error_response;
                             error_response.request_id = request_id;
-                            error_response.status = ResponseStatus::InternalError;
-                            error_response.status_message = QString("Async handler exception: %1").arg(e.what());
+                            error_response.status =
+                                ResponseStatus::InternalError;
+                            error_response.status_message =
+                                QString("Async handler exception: %1")
+                                    .arg(e.what());
 
                             it->second->promise.set_value(error_response);
                             if (it->second->timeout_timer) {
@@ -354,7 +371,8 @@ void RequestResponseSystem::process_pending_requests() {
                 ResponseInfo error_response;
                 error_response.request_id = request_id;
                 error_response.status = ResponseStatus::InternalError;
-                error_response.status_message = QString("Failed to start async handler: %1").arg(e.what());
+                error_response.status_message =
+                    QString("Failed to start async handler: %1").arg(e.what());
 
                 pending->promise.set_value(error_response);
                 if (pending->timeout_timer) {
@@ -373,8 +391,9 @@ void RequestResponseSystem::process_pending_requests() {
             ResponseInfo not_found_response;
             not_found_response.request_id = request_id;
             not_found_response.status = ResponseStatus::NotFound;
-            not_found_response.status_message = QString("No async handler for service %1::%2")
-                .arg(request.receiver_id, request.method);
+            not_found_response.status_message =
+                QString("No async handler for service %1::%2")
+                    .arg(request.receiver_id, request.method);
 
             pending->promise.set_value(not_found_response);
             if (pending->timeout_timer) {
@@ -399,7 +418,8 @@ void RequestResponseSystem::reset_statistics() {
     d->statistics = RequestResponseStatistics{};
 }
 
-void RequestResponseSystem::set_default_timeout(std::chrono::milliseconds timeout) {
+void RequestResponseSystem::set_default_timeout(
+    std::chrono::milliseconds timeout) {
     d->default_timeout = timeout;
 }
 
@@ -421,9 +441,11 @@ std::vector<ServiceEndpoint> RequestResponseSystem::get_registered_services(
     return result;
 }
 
-bool RequestResponseSystem::is_service_registered(const QString& service_id) const {
+bool RequestResponseSystem::is_service_registered(
+    const QString& service_id) const {
     QMutexLocker lock(&d->services_mutex);
-    return d->registered_services.find(service_id) != d->registered_services.end();
+    return d->registered_services.find(service_id) !=
+           d->registered_services.end();
 }
 
 qtplugin::expected<void, PluginError> RequestResponseSystem::unregister_service(
@@ -432,8 +454,9 @@ qtplugin::expected<void, PluginError> RequestResponseSystem::unregister_service(
 
     auto service_it = d->registered_services.find(service_id);
     if (service_it == d->registered_services.end()) {
-        return make_error<void>(PluginErrorCode::NotFound,
-                                "Service not found: " + service_id.toStdString());
+        return make_error<void>(
+            PluginErrorCode::NotFound,
+            "Service not found: " + service_id.toStdString());
     }
 
     const auto& endpoint = service_it->second;
@@ -450,5 +473,4 @@ qtplugin::expected<void, PluginError> RequestResponseSystem::unregister_service(
     return make_success();
 }
 
-} // namespace qtplugin
-
+}  // namespace qtplugin

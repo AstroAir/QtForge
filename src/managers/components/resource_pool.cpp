@@ -5,12 +5,12 @@
  */
 
 #include "../../../include/qtplugin/managers/components/resource_pool.hpp"
-#include "../../../include/qtplugin/managers/resource_manager_impl.hpp"
-#include "../../../include/qtplugin/managers/resource_pools.hpp"
 #include <QDebug>
 #include <QLoggingCategory>
 #include <QUuid>
 #include <algorithm>
+#include "../../../include/qtplugin/managers/resource_manager_impl.hpp"
+#include "../../../include/qtplugin/managers/resource_pools.hpp"
 
 Q_LOGGING_CATEGORY(resourcePoolLog, "qtplugin.resource.pool")
 
