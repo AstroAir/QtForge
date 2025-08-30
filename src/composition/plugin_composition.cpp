@@ -599,4 +599,4 @@ void CompositePlugin::on_component_plugin_state_changed(const QString& plugin_id
 
 }  // namespace qtplugin::composition
 
-#include "plugin_composition.moc"
+

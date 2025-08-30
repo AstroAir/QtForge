@@ -70,7 +70,7 @@ target_link_libraries(ui_plugin_core_lib
         Qt6::Core
         Qt6::Widgets
         Qt6::Gui
-        QtPluginCore
+        QtForgeCore
         ui_plugin_widgets
         ui_plugin_dialogs
 )
@@ -113,7 +113,7 @@ target_link_libraries(UIPlugin
     PRIVATE
         Qt6::Core
         Qt6::Widgets
-        QtPluginCore
+        QtForgeCore
         ui_plugin_widgets
         ui_plugin_dialogs
         ui_plugin_core_lib
@@ -129,7 +129,7 @@ target_link_libraries(ui_plugin_example
         Qt6::Core
         Qt6::Widgets
         Qt6::Gui
-        QtPluginCore
+        QtForgeCore
         ui_plugin_widgets
         ui_plugin_dialogs
         ui_plugin_core_lib
@@ -181,13 +181,13 @@ target_link_libraries(UIPluginTest
     PRIVATE
         Qt6::Core
         Qt6::Widgets
-        QtPluginCore
+        QtForgeCore
 )
 
 target_link_libraries(UIPluginTestCLI
     PRIVATE
         Qt6::Core
-        QtPluginCore
+        QtForgeCore
 )
 
 target_include_directories(UIPluginTest

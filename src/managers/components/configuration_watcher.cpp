@@ -332,4 +332,4 @@ ConfigurationWatcher::get_file_modification_time(
 
 }  // namespace qtplugin
 
-#include "configuration_watcher.moc"
+

@@ -47,6 +47,7 @@ int main(int argc, char* argv[]) {
 
     for (const auto& search_path : search_paths) {
         auto candidates = {search_path / "basic_plugin.qtplugin",
+                           search_path / "ui_plugin.qtplugin",
                            search_path / "libbasic_plugin.so",
                            search_path / "basic_plugin.dll",
                            search_path / "libbasic_plugin.dylib"};

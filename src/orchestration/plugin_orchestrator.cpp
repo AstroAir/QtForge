@@ -685,4 +685,4 @@ void PluginOrchestrator::on_execution_timeout() {
 
 }  // namespace qtplugin::orchestration
 
-#include "plugin_orchestrator.moc"
+

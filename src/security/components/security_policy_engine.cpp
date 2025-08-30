@@ -345,4 +345,4 @@ void SecurityPolicyEngine::initialize_default_rules() {
 
 }  // namespace qtplugin
 
-#include "security_policy_engine.moc"
+

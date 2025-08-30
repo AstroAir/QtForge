@@ -68,17 +68,20 @@ int main(int argc, char* argv[]) {
     qInfo() << "Plugin ID:" << QString::fromStdString(plugin->id());
     qInfo() << "Plugin version:" << plugin->version().to_string().c_str();
 
-    // Initialize the plugin
+    // Check plugin initialization status
     print_separator("🔧 PLUGIN INITIALIZATION");
 
-    auto init_result = plugin->initialize();
-    if (!init_result) {
-        qCritical() << "Failed to initialize service plugin:"
-                    << QString::fromStdString(init_result.error().message);
-        return 1;
+    if (plugin->is_initialized()) {
+        qInfo() << "✅ Service plugin already initialized";
+    } else {
+        auto init_result = plugin->initialize();
+        if (!init_result) {
+            qCritical() << "Failed to initialize service plugin:"
+                        << QString::fromStdString(init_result.error().message);
+            return 1;
+        }
+        qInfo() << "✅ Service plugin initialized successfully";
     }
-
-    qInfo() << "✅ Service plugin initialized successfully";
 
     // Test basic status
     auto status_result = plugin->execute_command("status");

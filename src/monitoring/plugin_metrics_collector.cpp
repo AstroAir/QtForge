@@ -324,4 +324,4 @@ QJsonObject PluginMetricsCollector::calculate_plugin_metrics(
 
 }  // namespace qtplugin
 
-#include "plugin_metrics_collector.moc"
+

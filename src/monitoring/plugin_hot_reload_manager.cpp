@@ -192,4 +192,4 @@ std::string PluginHotReloadManager::find_plugin_by_path(
 
 }  // namespace qtplugin
 
-#include "plugin_hot_reload_manager.moc"
+

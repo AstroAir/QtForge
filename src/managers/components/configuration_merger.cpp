@@ -280,4 +280,4 @@ void ConfigurationMerger::initialize_default_hierarchy() {
 
 }  // namespace qtplugin
 
-#include "configuration_merger.moc"
+

@@ -423,4 +423,4 @@ qtplugin::expected<std::vector<MarketplacePlugin>, PluginError> MarketplaceManag
 
 } // namespace qtplugin
 
-#include "plugin_marketplace.moc"
+

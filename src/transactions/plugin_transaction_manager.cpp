@@ -460,4 +460,4 @@ void PluginTransactionManager::on_transaction_timeout() {
 
 }  // namespace qtplugin::transactions
 
-#include "plugin_transaction_manager.moc"
+

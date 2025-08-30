@@ -266,4 +266,4 @@ SecurityValidationResult PermissionManager::create_permission_result(
 
 }  // namespace qtplugin
 
-#include "permission_manager.moc"
+

@@ -455,4 +455,4 @@ void VisualWorkflowEditor::keyPressEvent(QKeyEvent* event) {
 
 } // namespace qtplugin
 
-#include "plugin_orchestrator_v2.moc"
+

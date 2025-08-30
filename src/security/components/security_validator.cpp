@@ -290,4 +290,4 @@ SecurityValidationResult SecurityValidator::create_validation_result(
 
 }  // namespace qtplugin
 
-#include "security_validator.moc"
+
