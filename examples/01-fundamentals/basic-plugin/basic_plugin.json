@@ -1,0 +1,50 @@
+{
+    "IID": "qtplugin.IPlugin/3.0",
+    "MetaData": {
+        "name": "BasicPlugin",
+        "description": "Core QtForge plugin demonstrating essential IPlugin interface",
+        "version": "2.0.0",
+        "author": "QtForge Examples",
+        "id": "com.qtforge.examples.basic",
+        "category": "Example",
+        "license": "MIT",
+        "homepage": "https://github.com/qtforge/examples",
+        "capabilities": ["Configuration", "Commands", "Lifecycle"],
+        "commands": ["status", "echo", "config", "timer"],
+        "dependencies": {
+            "required": [],
+            "optional": []
+        },
+        "configuration": {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "timer_interval": {
+                        "type": "integer",
+                        "minimum": 1000,
+                        "maximum": 60000,
+                        "default": 5000,
+                        "description": "Timer interval in milliseconds"
+                    },
+                    "timer_enabled": {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Enable/disable timer"
+                    },
+                    "logging_enabled": {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "Enable/disable logging"
+                    },
+                    "custom_message": {
+                        "type": "string",
+                        "maxLength": 200,
+                        "default": "Hello from BasicPlugin!",
+                        "description": "Custom message for timer events"
+                    }
+                },
+                "additionalProperties": false
+            }
+        }
+    }
+}

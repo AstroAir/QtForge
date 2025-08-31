@@ -1,74 +1,187 @@
-# QtPlugin Examples
+# QtForge Examples
 
-This directory contains comprehensive example plugins and applications demonstrating the QtPlugin library's capabilities.
+**Comprehensive examples demonstrating QtForge plugin system capabilities with clear learning progression.**
 
-## 🚀 Examples Overview
+## 🎯 Quick Start Guide
 
-### 📦 Basic Plugin (`basic_plugin/`)
+**New to QtForge?** Start here:
+1. **[Hello World](01-fundamentals/hello-world/)** - Your first plugin (5 minutes)
+2. **[Basic Plugin](01-fundamentals/basic-plugin/)** - Core concepts (15 minutes)
+3. **[Message Bus](02-communication/message-bus/)** - Inter-plugin communication (20 minutes)
 
-A foundational example demonstrating core plugin interface implementation.
+**Building Applications?** Jump to:
+- **[Full Application](06-comprehensive/full-application/)** - Complete feature demonstration
+- **[Background Tasks](03-services/background-tasks/)** - Service-oriented architecture
 
-**Features:**
+## 📚 Learning Path
 
-- ✅ Complete plugin lifecycle (initialize, shutdown)
-- ✅ Command execution with parameter handling
-- ✅ JSON-based configuration management
-- ✅ Comprehensive metadata definition
-- ✅ Error handling with expected<T,E> pattern
+### 🌱 01-fundamentals/ - Essential Concepts
+Start your QtForge journey with these foundational examples.
+
+#### [hello-world/](01-fundamentals/hello-world/)
+**The simplest possible plugin** - Perfect for absolute beginners
+- ✅ Minimal IPlugin implementation (~70 lines)
+- ✅ Single `hello` command
+- ✅ Basic lifecycle and error handling
+
+#### [basic-plugin/](01-fundamentals/basic-plugin/)
+**Core IPlugin interface** - Foundation for all plugin development
+- ✅ Complete lifecycle management
+- ✅ Configuration with validation
+- ✅ Multiple commands (status, echo, config, timer)
 - ✅ Thread-safe operations
+- ✅ Background processing with QTimer
 
-**Commands Supported:**
+#### [configuration/](01-fundamentals/configuration/)
+**Configuration management patterns** - Essential for production plugins
+- ✅ JSON schema validation
+- ✅ Live configuration updates
+- ✅ Default and custom configurations
+- ✅ Configuration persistence
 
-- `hello` - Greeting with customizable name parameter
-- `status` - Plugin status and health information
-- `echo` - Echo input parameters for testing
-- `config` - Display current configuration
+### 🔄 02-communication/ - Inter-Plugin Communication
+Master the art of plugin communication and coordination.
 
-### 🔧 Service Plugin (`service_plugin/`)
+#### [message-bus/](02-communication/message-bus/)
+**MessageBus communication patterns** - Core communication system
+- ✅ Publishing and subscribing to messages
+- ✅ Type-safe message handling
+- ✅ Message priority and delivery modes
+- ✅ Performance optimization
 
-Advanced service-oriented plugin with background processing capabilities.
+#### [request-response/](02-communication/request-response/)
+**Synchronous communication** - Service-oriented patterns
+- ✅ Request-response with timeouts
+- ✅ Asynchronous request handling
+- ✅ Error propagation and handling
+- ✅ Request correlation and tracking
 
-**Features:**
+#### [event-driven/](02-communication/event-driven/)
+**Event broadcasting and filtering** - Event-driven architecture
+- ✅ Event publishing to multiple subscribers
+- ✅ Message filtering and routing
+- ✅ Event aggregation and batching
+- ✅ Performance monitoring
 
+### ⚙️ 03-services/ - Background Processing
+Build robust service-oriented applications with QtForge.
+
+#### [background-tasks/](03-services/background-tasks/)
+**Threading and task management** - Service architecture patterns
+- ✅ Worker threads and task queues
+- ✅ Thread-safe operations
 - ✅ Service registration and discovery
-- ✅ Background task execution with threading
-- ✅ Inter-plugin communication via message bus
+- ✅ Background processing patterns
 - ✅ Resource management and monitoring
-- ✅ Hot-reload support with state preservation
-- ✅ Performance metrics and monitoring
 
-### 📊 Data Processor Plugin (`data_processor/`)
+#### [service-discovery/](03-services/service-discovery/)
+**Service registration and discovery** - Microservice patterns
+- ✅ Automatic service registration
+- ✅ Service metadata and endpoints
+- ✅ Heartbeat and health monitoring
+- ✅ Service lifecycle management
 
-High-performance data processing with pipeline integration.
+#### [workflow-orchestration/](03-services/workflow-orchestration/)
+**Complex workflow management** - Enterprise integration
+- ✅ Workflow step execution
+- ✅ Plugin orchestration
+- ✅ Transaction management
+- ✅ Error handling and rollback
 
-**Features:**
+### 🔒 04-specialized/ - Domain-Specific Features
+Advanced features for specialized use cases.
 
-- ✅ Stream-based data transformation
-- ✅ Pipeline processing with filters
-- ✅ Batch and real-time processing modes
-- ✅ Memory-efficient large data handling
-- ✅ Custom data format support
+#### [security/](04-specialized/security/)
+**Security validation and permissions** - Production security
+- ✅ Plugin validation and verification
+- ✅ Signature verification and trust chains
+- ✅ Permission management and policies
+- ✅ Security audit logging
+- ✅ Real-time security monitoring
+
+#### [monitoring/](04-specialized/monitoring/)
+**Hot reload and metrics collection** - Production monitoring
+- ✅ Hot reload with file system monitoring
+- ✅ Performance metrics and analysis
+- ✅ Resource usage tracking
+- ✅ Alert system with configurable thresholds
+- ✅ Real-time monitoring dashboards
+
+#### [network/](04-specialized/network/)
+**Network protocols and APIs** - Network programming
+- ✅ HTTP client and server capabilities
+- ✅ WebSocket communication
+- ✅ REST API implementation
+- ✅ SSL/TLS security
+- ✅ Network diagnostics and monitoring
+
+#### [ui-integration/](04-specialized/ui-integration/)
+**Qt Widgets integration** - GUI development
+- ✅ Qt Widgets and dialog management
+- ✅ Theme support and customization
+- ✅ UI component integration
+- ✅ Event handling and user interaction
+
+### 🔗 05-integration/ - Cross-Language & External
+Integrate QtForge with external systems and languages.
+
+#### [python-bindings/](05-integration/python-bindings/)
+**Python integration patterns** - Cross-language development
+- ✅ Python bindings and script execution
+- ✅ Error handling across languages
+- ✅ Performance optimization patterns
+- ✅ Advanced usage patterns
+
+#### [version-management/](05-integration/version-management/)
+**Plugin versioning and compatibility** - Version control
+- ✅ Version handling and comparison
+- ✅ Compatibility checking
+- ✅ Migration strategies
+- ✅ Dependency management
+
+#### [marketplace/](05-integration/marketplace/)
+**Plugin discovery and installation** - Plugin ecosystem
+- ✅ Plugin discovery and search
+- ✅ Installation and updates
+- ✅ Marketplace integration
+- ✅ Plugin distribution
+
+### 🚀 06-comprehensive/ - Complete Applications
+Real-world applications demonstrating all features.
+
+#### [full-application/](06-comprehensive/full-application/)
+**Complete feature demonstration** - Production-ready example
+- ✅ **ALL QtForge features** integrated
+- ✅ Enterprise-grade implementation
+- ✅ Comprehensive testing suite
+- ✅ Performance benchmarks
+- ✅ Cross-platform support
+
+#### [performance-optimized/](06-comprehensive/performance-optimized/)
+**High-performance patterns** - Performance engineering
 - ✅ Performance optimization techniques
+- ✅ Benchmarking and profiling
+- ✅ Memory and CPU optimization
+- ✅ Scalability patterns
 
 ## 🛠️ Building Examples
 
 ### Prerequisites
 
-- QtPlugin library v3.0.0+ installed
-- Qt6 with Core, Network, Widgets, Test modules
-- CMake 3.21 or later
-- C++20 compatible compiler
+- **QtForge** library v3.0.0+ installed
+- **Qt6** with Core, Network, Widgets, Test modules
+- **CMake** 3.21 or later
+- **C++20** compatible compiler (GCC 10+, Clang 12+, MSVC 2019+)
 
 ### Build All Examples
 
 ```bash
-# Clone and setup
-git clone <repository-url>
-cd qt-plugin-sample/lib/examples
+# Navigate to examples directory
+cd examples
 
 # Configure and build
 mkdir build && cd build
-cmake .. -DQTPLUGIN_BUILD_EXAMPLES=ON -DCMAKE_BUILD_TYPE=Release
+cmake .. -DQTFORGE_BUILD_EXAMPLES=ON -DCMAKE_BUILD_TYPE=Release
 cmake --build . --parallel
 
 # Run tests
@@ -78,67 +191,143 @@ ctest --output-on-failure
 ### Build Individual Example
 
 ```bash
-cd basic_plugin
+# Example: Build hello world plugin
+cd 01-fundamentals/hello-world
 mkdir build && cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
 cmake --build .
 
 # Test the plugin
-./test_basic_plugin
+./HelloWorldPluginTest
 ```
 
 ## 🚀 Running Examples
 
-### Basic Plugin Test
+### 🌱 Start with Fundamentals
 
 ```bash
-cd build/basic_plugin
-./basic_plugin_test
+# 1. Hello World - Your first plugin
+cd 01-fundamentals/hello-world/build
+./HelloWorldPluginTest
 
-# Expected output:
-# QtPlugin library initialized, version 3.0.0
-# Plugin loaded successfully: com.example.basic_plugin
-# Command 'hello' executed: {"message": "Hello, World!"}
-# Plugin shutdown completed
+# 2. Basic Plugin - Core concepts
+cd ../../basic-plugin/build
+./BasicPluginTest
+
+# 3. Configuration - Advanced config
+cd ../../configuration/build
+./ConfigurationTest
 ```
 
-### Interactive Plugin Manager Demo
+### 🔄 Explore Communication
 
 ```bash
-cd build
-./plugin_manager_demo --plugin-dir examples/plugins --interactive
+# Message Bus patterns
+cd 02-communication/message-bus/build
+./MessageBusExample
 
-# Available commands:
-# load <plugin_path>     - Load a plugin
-# unload <plugin_id>     - Unload a plugin
-# list                   - List loaded plugins
-# execute <id> <cmd>     - Execute plugin command
-# config <id> <json>     - Configure plugin
-# quit                   - Exit application
+# Request-Response patterns
+cd ../../request-response/build
+./RequestResponseExample
+
+# Event-driven architecture
+cd ../../event-driven/build
+./EventDrivenExample
+```
+
+### 🚀 Complete Application
+
+```bash
+# Full feature demonstration
+cd 06-comprehensive/full-application
+./build.sh --run
+
+# Expected output:
+# 🚀 QtForge Comprehensive Demo v3.0.0
+# =====================================
+# [INIT] Initializing QtForge library...
+# [CORE] Plugin manager initialized
+# [SECURITY] Security level set to HIGH
+# [COMMUNICATION] Message bus started
+# [MONITORING] Metrics collection enabled
+# [ORCHESTRATION] Workflow engine ready
+# [TRANSACTIONS] Transaction manager active
+# [MARKETPLACE] Plugin discovery enabled
+# [THREADING] Thread pool (8 threads) ready
+# [PYTHON] Python bridge initialized
+#
+# [LOADING] Loading plugins...
+# ✅ DataProcessor v1.2.0 (data_processor.qtplugin)
+# ✅ NetworkService v2.1.0 (network_service.qtplugin)
+# ✅ UIComponent v1.0.0 (ui_component.qtplugin)
+# ✅ SecurityScanner v1.5.0 (security_scanner.qtplugin)
+# ✅ PythonScript v1.0.0 (python_script.py)
+#
+# [WORKFLOW] Executing comprehensive workflow...
+# Step 1: Data validation ✅
+# Step 2: Security scan ✅
+# Step 3: Data processing ✅
+# Step 4: Network transmission ✅
+# Step 5: UI update ✅
+#
+# [SUCCESS] All features demonstrated successfully!
 ```
 
 ## 📖 Learning Path
 
-### 🎯 Beginner Level
+### 🎯 Recommended Learning Sequence
 
-1. **Basic Plugin** - Learn fundamental concepts and interface implementation
-2. **Configuration** - Understand JSON-based configuration management
-3. **Commands** - Implement command execution with parameters
-4. **Error Handling** - Master expected<T,E> error handling pattern
+**New to QtForge?** Follow this progression:
 
-### 🚀 Intermediate Level
+1. **[Hello World](01-fundamentals/hello-world/)** - Understand basic plugin structure (15 min)
+2. **[Basic Plugin](01-fundamentals/basic-plugin/)** - Master core IPlugin interface (30 min)
+3. **[Configuration](01-fundamentals/configuration/)** - Learn configuration management (20 min)
+4. **[Message Bus](02-communication/message-bus/)** - Inter-plugin communication (30 min)
+5. **[Background Tasks](03-services/background-tasks/)** - Service architecture (45 min)
+6. **[Full Application](06-comprehensive/full-application/)** - See everything together (60 min)
 
-5. **Service Plugin** - Explore background services and threading
-6. **Communication** - Implement inter-plugin messaging
-7. **Resource Management** - Handle resources and lifecycle properly
-8. **Testing** - Write comprehensive unit and integration tests
+### 🎯 By Use Case
 
-### 🏆 Advanced Level
+**Building a Simple Plugin?**
+→ Start with [Hello World](01-fundamentals/hello-world/) → [Basic Plugin](01-fundamentals/basic-plugin/)
 
-9. **Data Processor** - Optimize for high-performance data processing
-10. **Network Plugin** - Implement network protocols and communication
-11. **UI Integration** - Create rich user interfaces
-12. **Custom Application** - Build complete plugin-based applications
+**Need Inter-Plugin Communication?**
+→ [Message Bus](02-communication/message-bus/) → [Request-Response](02-communication/request-response/)
+
+**Building a Service?**
+→ [Background Tasks](03-services/background-tasks/) → [Service Discovery](03-services/service-discovery/)
+
+**Security Requirements?**
+→ [Security Plugin](04-specialized/security/) → [Permission Management](04-specialized/security/)
+
+**Network Integration?**
+→ [Network Plugin](04-specialized/network/) → [REST API](04-specialized/network/)
+
+**GUI Application?**
+→ [UI Integration](04-specialized/ui-integration/) → [Qt Widgets](04-specialized/ui-integration/)
+
+**Python Integration?**
+→ [Python Bindings](05-integration/python-bindings/) → [Cross-Language](05-integration/python-bindings/)
+
+**Production Deployment?**
+→ [Monitoring](04-specialized/monitoring/) → [Performance Optimized](06-comprehensive/performance-optimized/)
+
+### 🎯 By Experience Level
+
+**🌱 Beginner (New to QtForge)**
+- [Hello World](01-fundamentals/hello-world/) - First plugin
+- [Basic Plugin](01-fundamentals/basic-plugin/) - Core concepts
+- [Configuration](01-fundamentals/configuration/) - Config management
+
+**🔄 Intermediate (Know the basics)**
+- [Message Bus](02-communication/message-bus/) - Communication
+- [Background Tasks](03-services/background-tasks/) - Services
+- [Security](04-specialized/security/) - Security patterns
+
+**🚀 Advanced (Building applications)**
+- [Workflow Orchestration](03-services/workflow-orchestration/) - Complex workflows
+- [Performance Optimized](06-comprehensive/performance-optimized/) - Optimization
+- [Full Application](06-comprehensive/full-application/) - Complete system
 
 ## 🔧 Common Patterns
 
@@ -198,7 +387,7 @@ qtplugin::expected<void, qtplugin::PluginError> MyPlugin::configure(const QJsonO
             "Missing required field: server_url"
         });
     }
-    
+
     // Type validation
     if (!config["server_url"].isString()) {
         return qtplugin::make_unexpected(qtplugin::PluginError{
@@ -206,12 +395,12 @@ qtplugin::expected<void, qtplugin::PluginError> MyPlugin::configure(const QJsonO
             "server_url must be a string"
         });
     }
-    
+
     // Apply configuration
     m_serverUrl = config["server_url"].toString();
     m_timeout = config.value("timeout").toInt(5000);
     m_retries = config.value("retries").toInt(3);
-    
+
     m_configuration = config;
     return {};
 }
@@ -261,61 +450,21 @@ void MyPlugin::initialize() {
 11. **Test Error Paths** - Ensure proper error handling
 12. **Performance Testing** - Validate performance requirements
 
-### 📖 Documentation
-
-13. **Document APIs Clearly** - Comprehensive API documentation
-14. **Provide Usage Examples** - Real-world usage scenarios
-15. **Version Compatibility** - Clear version requirements and compatibility
-16. **Migration Guides** - Help users upgrade between versions
-
 ## 🔧 Troubleshooting
 
 ### Common Issues and Solutions
 
 #### 🚫 Plugin Loading Failures
-
-**Symptoms:**
-
-- Plugin fails to load
-- "Invalid plugin file format" errors
-- Missing symbol errors
-
-**Solutions:**
-
-- Ensure plugin file has correct permissions
-- Validate JSON metadata syntax with `jq`
-- Verify all required Qt modules are available
-- Check plugin interface implementation completeness
+- **Symptoms**: Plugin fails to load, "Invalid plugin file format" errors
+- **Solutions**: Check file permissions, validate JSON metadata, verify Qt modules
 
 #### ⚙️ Configuration Errors
-
-**Symptoms:**
-
-- Configuration validation failures
-- Type mismatch errors
-- Missing required fields
-
-**Solutions:**
-
-- Validate JSON configuration format and syntax
-- Check required vs optional fields in metadata
-- Verify data types match plugin expectations
-- Use configuration validation schemas
+- **Symptoms**: Configuration validation failures, type mismatches
+- **Solutions**: Validate JSON syntax, check required fields, verify data types
 
 #### 🏃 Runtime Errors
-
-**Symptoms:**
-
-- Plugin crashes during execution
-- Memory access violations
-- Thread safety issues
-
-**Solutions:**
-
-- Verify plugin initialization completed successfully
-- Check resource availability and limits
-- Monitor memory usage for leaks
-- Ensure thread safety in concurrent operations
+- **Symptoms**: Plugin crashes, memory violations, thread safety issues
+- **Solutions**: Verify initialization, check resources, monitor memory, ensure thread safety
 
 ### Debug Configuration
 
@@ -323,14 +472,14 @@ void MyPlugin::initialize() {
 // Enable debug logging in main application
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
-    
-    // Enable QtPlugin debug logging
-    QLoggingCategory::setFilterRules("qtplugin.*=true");
-    
+
+    // Enable QtForge debug logging
+    QLoggingCategory::setFilterRules("qtforge.*=true");
+
     // Set debug environment
-    qputenv("QTPLUGIN_DEBUG", "1");
-    qputenv("QTPLUGIN_LOG_LEVEL", "debug");
-    
+    qputenv("QTFORGE_DEBUG", "1");
+    qputenv("QTFORGE_LOG_LEVEL", "debug");
+
     // Your application code
     return app.exec();
 }
@@ -340,39 +489,30 @@ int main(int argc, char *argv[]) {
 
 ### Adding New Examples
 
-1. **Create Directory Structure**
+1. **Create Directory Structure** in appropriate category (01-fundamentals/, 02-communication/, etc.)
+2. **Implement Plugin** following existing patterns and conventions
+3. **Add Build Configuration** with CMakeLists.txt
+4. **Update Documentation** including this README
+5. **Submit Pull Request** with comprehensive testing
 
-   ```bash
-   mkdir examples/my_example
-   cd examples/my_example
-   ```
+### Guidelines
 
-2. **Implement Plugin**
-   - Follow existing patterns and conventions
-   - Include comprehensive error handling
-   - Add thorough documentation
-   - Implement unit tests
-
-3. **Add Build Configuration**
-
-   ```cmake
-   # CMakeLists.txt
-   cmake_minimum_required(VERSION 3.21)
-   project(MyExample)
-   
-   find_package(QtPlugin REQUIRED COMPONENTS Core)
-   # ... rest of configuration
-   ```
-
-4. **Update Documentation**
-   - Add example to this README
-   - Include usage instructions
-   - Document any special requirements
-
-5. **Submit Pull Request**
-   - Ensure all tests pass
-   - Include comprehensive commit message
+- Follow the established directory structure
+- Include comprehensive error handling
+- Add thorough documentation and examples
+- Implement unit tests for all functionality
+- Ensure cross-platform compatibility
 
 ## 📄 License
 
-All examples are provided under the same MIT license as the QtPlugin library.
+All examples are provided under the same MIT license as the QtForge library.
+
+---
+
+## 🚀 Migration from Old Structure
+
+**Upgrading from previous examples?** See [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md) for:
+- Path mapping from old to new structure
+- Automated migration tools
+- Breaking changes and solutions
+- Backward compatibility information

@@ -1,0 +1,419 @@
+{
+  "plugin": {
+    "id": "com.qtforge.comprehensive_plugin",
+    "name": "Comprehensive Demo Plugin",
+    "description": "A comprehensive plugin demonstrating all QtForge features including communication, security, monitoring, transactions, workflows, and more.",
+    "version": "3.0.0",
+    "author": "QtForge Development Team",
+    "license": "MIT",
+    "homepage": "https://github.com/qtforge/qtforge",
+    "repository": "https://github.com/qtforge/qtforge.git",
+    "keywords": [
+      "demo",
+      "comprehensive",
+      "communication",
+      "security",
+      "monitoring",
+      "networking",
+      "transactions",
+      "workflows",
+      "python"
+    ]
+  },
+  "requirements": {
+    "qtforge_version": ">=3.0.0",
+    "qt_version": ">=6.0.0",
+    "platform": ["windows", "linux", "macos"],
+    "architecture": ["x86_64", "arm64"]
+  },
+  "capabilities": [
+    "service",
+    "network",
+    "data_processor",
+    "scripting"
+  ],
+  "features": {
+    "communication": {
+      "enabled": true,
+      "description": "Inter-plugin communication via message bus and request-response",
+      "components": ["message_bus", "request_response_system"]
+    },
+    "security": {
+      "enabled": true,
+      "description": "Security validation and trust management",
+      "components": ["security_manager", "validation", "trust_management"]
+    },
+    "monitoring": {
+      "enabled": true,
+      "description": "Real-time monitoring and metrics collection",
+      "components": ["metrics_collector", "health_monitoring", "performance_tracking"]
+    },
+    "networking": {
+      "enabled": true,
+      "description": "Network operations and HTTP requests",
+      "components": ["network_manager", "http_client"]
+    },
+    "background_processing": {
+      "enabled": true,
+      "description": "Background task processing and threading",
+      "components": ["thread_pool", "task_queue", "background_worker"]
+    },
+    "transactions": {
+      "enabled": true,
+      "description": "ACID transaction support",
+      "components": ["transaction_manager", "rollback_support"]
+    },
+    "workflows": {
+      "enabled": true,
+      "description": "Workflow orchestration and step execution",
+      "components": ["workflow_engine", "step_processor"]
+    },
+    "python_integration": {
+      "enabled": false,
+      "description": "Python script execution and interoperability",
+      "components": ["python_bridge", "script_executor"]
+    }
+  },
+  "commands": {
+    "status": {
+      "description": "Get plugin status and health information",
+      "parameters": {},
+      "returns": {
+        "plugin_id": "string",
+        "plugin_name": "string",
+        "version": "string",
+        "state": "integer",
+        "service_status": "integer",
+        "uptime_seconds": "integer",
+        "features": "object",
+        "statistics": "object"
+      }
+    },
+    "echo": {
+      "description": "Echo input parameters for testing",
+      "parameters": {
+        "*": "any"
+      },
+      "returns": {
+        "echo": "object",
+        "timestamp": "string",
+        "plugin_id": "string"
+      }
+    },
+    "process_data": {
+      "description": "Process data with various algorithms",
+      "parameters": {
+        "data": {
+          "type": "any",
+          "required": true,
+          "description": "Data to process"
+        },
+        "algorithm": {
+          "type": "string",
+          "required": false,
+          "default": "default",
+          "enum": ["default", "reverse", "uppercase", "count"],
+          "description": "Processing algorithm to use"
+        }
+      },
+      "returns": {
+        "input": "any",
+        "algorithm": "string",
+        "output": "any",
+        "processed_at": "string"
+      }
+    },
+    "network_request": {
+      "description": "Make network requests",
+      "parameters": {
+        "url": {
+          "type": "string",
+          "required": true,
+          "description": "URL to request"
+        },
+        "method": {
+          "type": "string",
+          "required": false,
+          "default": "GET",
+          "enum": ["GET", "POST", "PUT", "DELETE"],
+          "description": "HTTP method"
+        },
+        "headers": {
+          "type": "object",
+          "required": false,
+          "description": "HTTP headers"
+        },
+        "data": {
+          "type": "object",
+          "required": false,
+          "description": "Request body data"
+        }
+      },
+      "returns": {
+        "url": "string",
+        "method": "string",
+        "status": "string",
+        "response": "object"
+      }
+    },
+    "metrics": {
+      "description": "Get performance metrics",
+      "parameters": {},
+      "returns": {
+        "timestamp": "string",
+        "uptime_seconds": "integer",
+        "commands_executed": "integer",
+        "messages_processed": "integer",
+        "service_requests_handled": "integer",
+        "errors_encountered": "integer",
+        "performance": "object"
+      }
+    },
+    "config": {
+      "description": "Get or set configuration",
+      "parameters": {
+        "action": {
+          "type": "string",
+          "required": false,
+          "default": "get",
+          "enum": ["get", "set"],
+          "description": "Configuration action"
+        },
+        "config": {
+          "type": "object",
+          "required": false,
+          "description": "Configuration to set (for set action)"
+        }
+      },
+      "returns": {
+        "action": "string",
+        "config": "object"
+      }
+    },
+    "security": {
+      "description": "Security operations",
+      "parameters": {
+        "operation": {
+          "type": "string",
+          "required": true,
+          "enum": ["validate", "trust", "untrust", "status"],
+          "description": "Security operation to perform"
+        },
+        "target": {
+          "type": "string",
+          "required": false,
+          "description": "Target for operation (plugin ID, file path, etc.)"
+        }
+      },
+      "returns": {
+        "operation": "string",
+        "result": "object"
+      }
+    },
+    "transaction": {
+      "description": "Transaction operations",
+      "parameters": {
+        "action": {
+          "type": "string",
+          "required": true,
+          "enum": ["begin", "commit", "rollback", "status"],
+          "description": "Transaction action"
+        },
+        "transaction_id": {
+          "type": "string",
+          "required": false,
+          "description": "Transaction ID (for commit/rollback)"
+        }
+      },
+      "returns": {
+        "action": "string",
+        "transaction_id": "string",
+        "status": "string"
+      }
+    },
+    "workflow": {
+      "description": "Workflow operations",
+      "parameters": {
+        "action": {
+          "type": "string",
+          "required": true,
+          "enum": ["create", "execute", "status", "list"],
+          "description": "Workflow action"
+        },
+        "workflow_id": {
+          "type": "string",
+          "required": false,
+          "description": "Workflow ID"
+        },
+        "steps": {
+          "type": "array",
+          "required": false,
+          "description": "Workflow steps (for create action)"
+        }
+      },
+      "returns": {
+        "action": "string",
+        "workflow_id": "string",
+        "result": "object"
+      }
+    },
+    "python": {
+      "description": "Python integration operations",
+      "parameters": {
+        "action": {
+          "type": "string",
+          "required": true,
+          "enum": ["execute", "load_module", "call_function"],
+          "description": "Python action"
+        },
+        "script": {
+          "type": "string",
+          "required": false,
+          "description": "Python script to execute"
+        },
+        "module": {
+          "type": "string",
+          "required": false,
+          "description": "Python module to load"
+        },
+        "function": {
+          "type": "string",
+          "required": false,
+          "description": "Function to call"
+        },
+        "args": {
+          "type": "array",
+          "required": false,
+          "description": "Function arguments"
+        }
+      },
+      "returns": {
+        "action": "string",
+        "result": "any"
+      }
+    }
+  },
+  "services": {
+    "data_processing": {
+      "description": "Data processing service",
+      "methods": ["process", "transform", "validate"]
+    },
+    "monitoring": {
+      "description": "Monitoring and metrics service",
+      "methods": ["collect_metrics", "health_check", "performance_report"]
+    },
+    "security": {
+      "description": "Security validation service",
+      "methods": ["validate_plugin", "check_permissions", "audit_log"]
+    },
+    "networking": {
+      "description": "Network operations service",
+      "methods": ["http_request", "websocket_connect", "file_download"]
+    }
+  },
+  "configuration": {
+    "communication_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable inter-plugin communication"
+    },
+    "monitoring_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable monitoring and metrics collection"
+    },
+    "security_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable security validation"
+    },
+    "networking_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable network operations"
+    },
+    "background_processing_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable background task processing"
+    },
+    "python_integration_enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable Python script integration"
+    },
+    "metrics_interval": {
+      "type": "integer",
+      "default": 5000,
+      "min": 1000,
+      "max": 60000,
+      "description": "Metrics collection interval in milliseconds"
+    },
+    "health_check_interval": {
+      "type": "integer",
+      "default": 10000,
+      "min": 5000,
+      "max": 300000,
+      "description": "Health check interval in milliseconds"
+    },
+    "background_interval": {
+      "type": "integer",
+      "default": 1000,
+      "min": 100,
+      "max": 10000,
+      "description": "Background processing interval in milliseconds"
+    },
+    "max_performance_history": {
+      "type": "integer",
+      "default": 100,
+      "min": 10,
+      "max": 1000,
+      "description": "Maximum number of performance measurements to keep"
+    }
+  },
+  "events": {
+    "plugin.state_changed": {
+      "description": "Plugin state has changed",
+      "data": {
+        "old_state": "integer",
+        "new_state": "integer"
+      }
+    },
+    "service.started": {
+      "description": "Service has started",
+      "data": {}
+    },
+    "service.stopped": {
+      "description": "Service has stopped",
+      "data": {}
+    },
+    "command.executed": {
+      "description": "Command has been executed",
+      "data": {
+        "command": "string",
+        "params": "object",
+        "result": "object"
+      }
+    },
+    "metrics.updated": {
+      "description": "Metrics have been updated",
+      "data": {
+        "metrics": "object"
+      }
+    },
+    "health.check": {
+      "description": "Health check performed",
+      "data": {
+        "healthy": "boolean",
+        "details": "object"
+      }
+    },
+    "background.task": {
+      "description": "Background task processed",
+      "data": {
+        "task_id": "string",
+        "type": "string"
+      }
+    }
+  }
+}
