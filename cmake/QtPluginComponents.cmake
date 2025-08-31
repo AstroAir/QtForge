@@ -1,54 +1,86 @@
-# QtPluginComponents.cmake
-# CMake module for QtPlugin component architecture
-# Provides utilities for working with QtPlugin components
+# QtForgeComponents.cmake
+# CMake module for QtForge component architecture
+# Provides utilities for working with QtForge components
 
 # Component information
-set(QTPLUGIN_CORE_COMPONENTS
+set(QTFORGE_CORE_COMPONENTS
     PluginRegistry
     PluginDependencyResolver
 )
 
-set(QTPLUGIN_MONITORING_COMPONENTS
+set(QTFORGE_MONITORING_COMPONENTS
     PluginHotReloadManager
     PluginMetricsCollector
 )
 
-set(QTPLUGIN_SECURITY_COMPONENTS
+set(QTFORGE_SECURITY_COMPONENTS
     SecurityValidator
     SignatureVerifier
     PermissionManager
     SecurityPolicyEngine
 )
 
-set(QTPLUGIN_CONFIGURATION_COMPONENTS
+set(QTFORGE_CONFIGURATION_COMPONENTS
     ConfigurationStorage
     ConfigurationValidator
     ConfigurationMerger
     ConfigurationWatcher
 )
 
-set(QTPLUGIN_RESOURCE_COMPONENTS
+set(QTFORGE_RESOURCE_COMPONENTS
     ResourcePool
     ResourceAllocator
     ResourceMonitor
 )
 
-set(QTPLUGIN_ALL_COMPONENTS
-    ${QTPLUGIN_CORE_COMPONENTS}
-    ${QTPLUGIN_MONITORING_COMPONENTS}
-    ${QTPLUGIN_SECURITY_COMPONENTS}
-    ${QTPLUGIN_CONFIGURATION_COMPONENTS}
-    ${QTPLUGIN_RESOURCE_COMPONENTS}
+set(QTFORGE_ALL_COMPONENTS
+    ${QTFORGE_CORE_COMPONENTS}
+    ${QTFORGE_MONITORING_COMPONENTS}
+    ${QTFORGE_SECURITY_COMPONENTS}
+    ${QTFORGE_CONFIGURATION_COMPONENTS}
+    ${QTFORGE_RESOURCE_COMPONENTS}
 )
 
+# Backward compatibility with deprecation warnings
+if(NOT DEFINED QTPLUGIN_CORE_COMPONENTS)
+    set(QTPLUGIN_CORE_COMPONENTS ${QTFORGE_CORE_COMPONENTS})
+    message(DEPRECATION "QTPLUGIN_CORE_COMPONENTS is deprecated, use QTFORGE_CORE_COMPONENTS instead")
+endif()
+if(NOT DEFINED QTPLUGIN_MONITORING_COMPONENTS)
+    set(QTPLUGIN_MONITORING_COMPONENTS ${QTFORGE_MONITORING_COMPONENTS})
+    message(DEPRECATION "QTPLUGIN_MONITORING_COMPONENTS is deprecated, use QTFORGE_MONITORING_COMPONENTS instead")
+endif()
+if(NOT DEFINED QTPLUGIN_SECURITY_COMPONENTS)
+    set(QTPLUGIN_SECURITY_COMPONENTS ${QTFORGE_SECURITY_COMPONENTS})
+    message(DEPRECATION "QTPLUGIN_SECURITY_COMPONENTS is deprecated, use QTFORGE_SECURITY_COMPONENTS instead")
+endif()
+if(NOT DEFINED QTPLUGIN_CONFIGURATION_COMPONENTS)
+    set(QTPLUGIN_CONFIGURATION_COMPONENTS ${QTFORGE_CONFIGURATION_COMPONENTS})
+    message(DEPRECATION "QTPLUGIN_CONFIGURATION_COMPONENTS is deprecated, use QTFORGE_CONFIGURATION_COMPONENTS instead")
+endif()
+if(NOT DEFINED QTPLUGIN_RESOURCE_COMPONENTS)
+    set(QTPLUGIN_RESOURCE_COMPONENTS ${QTFORGE_RESOURCE_COMPONENTS})
+    message(DEPRECATION "QTPLUGIN_RESOURCE_COMPONENTS is deprecated, use QTFORGE_RESOURCE_COMPONENTS instead")
+endif()
+if(NOT DEFINED QTPLUGIN_ALL_COMPONENTS)
+    set(QTPLUGIN_ALL_COMPONENTS ${QTFORGE_ALL_COMPONENTS})
+    message(DEPRECATION "QTPLUGIN_ALL_COMPONENTS is deprecated, use QTFORGE_ALL_COMPONENTS instead")
+endif()
+
 # Function to check if a component is available
-function(qtplugin_check_component component_name result_var)
-    list(FIND QTPLUGIN_ALL_COMPONENTS ${component_name} component_index)
+function(qtforge_check_component component_name result_var)
+    list(FIND QTFORGE_ALL_COMPONENTS ${component_name} component_index)
     if(component_index GREATER_EQUAL 0)
         set(${result_var} TRUE PARENT_SCOPE)
     else()
         set(${result_var} FALSE PARENT_SCOPE)
     endif()
+endfunction()
+
+# Backward compatibility function
+function(qtplugin_check_component component_name result_var)
+    message(DEPRECATION "qtplugin_check_component is deprecated, use qtforge_check_component instead")
+    qtforge_check_component(${component_name} ${result_var})
 endfunction()
 
 # Function to get components by category
@@ -77,27 +109,27 @@ function(qtplugin_print_component_info)
     foreach(component ${QTPLUGIN_CORE_COMPONENTS})
         message(STATUS "    - ${component}")
     endforeach()
-    
+
     message(STATUS "  Monitoring Components (${list_length(QTPLUGIN_MONITORING_COMPONENTS)}):")
     foreach(component ${QTPLUGIN_MONITORING_COMPONENTS})
         message(STATUS "    - ${component}")
     endforeach()
-    
+
     message(STATUS "  Security Components (${list_length(QTPLUGIN_SECURITY_COMPONENTS)}):")
     foreach(component ${QTPLUGIN_SECURITY_COMPONENTS})
         message(STATUS "    - ${component}")
     endforeach()
-    
+
     message(STATUS "  Configuration Components (${list_length(QTPLUGIN_CONFIGURATION_COMPONENTS)}):")
     foreach(component ${QTPLUGIN_CONFIGURATION_COMPONENTS})
         message(STATUS "    - ${component}")
     endforeach()
-    
+
     message(STATUS "  Resource Components (${list_length(QTPLUGIN_RESOURCE_COMPONENTS)}):")
     foreach(component ${QTPLUGIN_RESOURCE_COMPONENTS})
         message(STATUS "    - ${component}")
     endforeach()
-    
+
     list(LENGTH QTPLUGIN_ALL_COMPONENTS total_components)
     message(STATUS "  Total Components: ${total_components}")
 endfunction()
@@ -116,7 +148,7 @@ macro(qtplugin_include_components)
     set(oneValueArgs "")
     set(multiValueArgs COMPONENTS CATEGORIES)
     cmake_parse_arguments(QTPLUGIN_INCLUDE "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-    
+
     # Include components by name
     if(QTPLUGIN_INCLUDE_COMPONENTS)
         foreach(component ${QTPLUGIN_INCLUDE_COMPONENTS})
@@ -130,7 +162,7 @@ macro(qtplugin_include_components)
             endif()
         endforeach()
     endif()
-    
+
     # Include components by category
     if(QTPLUGIN_INCLUDE_CATEGORIES)
         foreach(category ${QTPLUGIN_INCLUDE_CATEGORIES})

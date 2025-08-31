@@ -1,6 +1,6 @@
 #!/bin/bash
-# QtPlugin Unix/Linux/macOS Build Script
-# Automates building and packaging for Unix-like systems
+# QtForge Unix/Linux/macOS/MSYS2 Build Script
+# Automates building and packaging for Unix-like systems and MSYS2
 
 set -e  # Exit on any error
 
@@ -70,7 +70,29 @@ EOF
 
 # Function to detect system
 detect_system() {
-    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    # Check for MSYS2 environment first
+    if [[ -n "$MSYSTEM" ]]; then
+        SYSTEM="msys2"
+        MSYS2_SUBSYSTEM="$MSYSTEM"
+        PACKAGE_GENERATORS="ZIP;NSIS"
+        print_status "Detected MSYS2 environment: $MSYSTEM"
+
+        # Set toolchain based on MSYS2 subsystem
+        case "$MSYSTEM" in
+            MINGW64)
+                CMAKE_TOOLCHAIN="cmake/toolchains/msys2-mingw64.cmake"
+                ;;
+            UCRT64)
+                CMAKE_TOOLCHAIN="cmake/toolchains/msys2-ucrt64.cmake"
+                ;;
+            CLANG64|CLANG32)
+                print_warning "MSYS2 Clang environment detected. Using default configuration."
+                ;;
+            MSYS)
+                print_warning "MSYS2 MSYS environment detected. Consider using MINGW64 or UCRT64 for better compatibility."
+                ;;
+        esac
+    elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
         SYSTEM="linux"
         PACKAGE_GENERATORS="DEB;RPM;TGZ"
     elif [[ "$OSTYPE" == "darwin"* ]]; then
@@ -83,7 +105,7 @@ detect_system() {
         SYSTEM="unix"
         PACKAGE_GENERATORS="TGZ"
     fi
-    
+
     print_status "Detected system: $SYSTEM"
 }
 
@@ -91,7 +113,7 @@ detect_system() {
 detect_qt() {
     QT_FOUND=0
     QT_DIR=""
-    
+
     # Check environment variables
     if [[ -n "$Qt6_DIR" && -d "$Qt6_DIR" ]]; then
         QT_FOUND=1
@@ -99,13 +121,13 @@ detect_qt() {
         print_status "Found Qt6 from Qt6_DIR: $QT_DIR"
         return
     fi
-    
+
     if [[ -n "$QT_DIR" && -d "$QT_DIR" ]]; then
         QT_FOUND=1
         print_status "Found Qt6 from QT_DIR: $QT_DIR"
         return
     fi
-    
+
     # Check common paths based on system
     if [[ "$SYSTEM" == "macos" ]]; then
         QT_PATHS=(
@@ -116,6 +138,23 @@ detect_qt() {
             "/Applications/Qt/6.6.0/macos"
             "/Applications/Qt/6.5.0/macos"
         )
+    elif [[ "$SYSTEM" == "msys2" ]]; then
+        # MSYS2 Qt paths
+        if [[ -n "$MSYSTEM_PREFIX" ]]; then
+            QT_PATHS=(
+                "$MSYSTEM_PREFIX/lib/cmake/Qt6"
+                "$MSYSTEM_PREFIX"
+            )
+        else
+            QT_PATHS=(
+                "/mingw64/lib/cmake/Qt6"
+                "/ucrt64/lib/cmake/Qt6"
+                "/clang64/lib/cmake/Qt6"
+                "/mingw64"
+                "/ucrt64"
+                "/clang64"
+            )
+        fi
     else
         QT_PATHS=(
             "/usr/lib/qt6"
@@ -125,7 +164,7 @@ detect_qt() {
             "/usr/lib/x86_64-linux-gnu/qt6"
         )
     fi
-    
+
     for path in "${QT_PATHS[@]}"; do
         if [[ -d "$path" ]]; then
             QT_FOUND=1
@@ -134,7 +173,7 @@ detect_qt() {
             return
         fi
     done
-    
+
     # Try pkg-config
     if command -v pkg-config >/dev/null 2>&1; then
         if pkg-config --exists Qt6Core; then
@@ -143,7 +182,7 @@ detect_qt() {
             return
         fi
     fi
-    
+
     print_warning "Qt6 not found in standard locations, relying on system PATH"
 }
 
@@ -154,10 +193,10 @@ detect_build_tools() {
         print_error "CMake not found. Please install CMake 3.21 or later."
         exit 1
     fi
-    
+
     CMAKE_VERSION=$(cmake --version | head -n1 | cut -d' ' -f3)
     print_status "Found CMake version: $CMAKE_VERSION"
-    
+
     # Check for Ninja (preferred) or Make
     if command -v ninja >/dev/null 2>&1; then
         CMAKE_GENERATOR="-G Ninja"
@@ -234,78 +273,97 @@ main() {
     echo "Create Package: $CREATE_PACKAGE"
     echo "========================================"
     echo
-    
+
     # Detect system and tools
     detect_system
     detect_build_tools
     detect_qt
-    
+
     # Clean build directory if requested
     if [[ "$CLEAN_BUILD" == "ON" ]]; then
         print_status "Cleaning build directory..."
         rm -rf "$BUILD_DIR"
     fi
-    
+
     # Create directories
     mkdir -p "$BUILD_DIR"
     mkdir -p "$INSTALL_DIR"
-    
+
     # Configure CMake arguments
     CMAKE_ARGS=(
         -S "$SOURCE_DIR"
         -B "$BUILD_DIR"
         -DCMAKE_BUILD_TYPE="$BUILD_TYPE"
         -DCMAKE_INSTALL_PREFIX="$INSTALL_DIR"
-        -DQTPLUGIN_BUILD_TESTS="$BUILD_TESTS"
-        -DQTPLUGIN_BUILD_EXAMPLES="$BUILD_EXAMPLES"
-        -DQTPLUGIN_BUILD_NETWORK="$BUILD_NETWORK"
-        -DQTPLUGIN_BUILD_UI="$BUILD_UI"
+        -DQTFORGE_BUILD_TESTS="$BUILD_TESTS"
+        -DQTFORGE_BUILD_EXAMPLES="$BUILD_EXAMPLES"
+        -DQTFORGE_BUILD_NETWORK="$BUILD_NETWORK"
+        -DQTFORGE_BUILD_UI="$BUILD_UI"
         -DCPACK_GENERATOR="$PACKAGE_GENERATORS"
     )
-    
+
     # Add generator if available
     if [[ -n "$CMAKE_GENERATOR" ]]; then
         CMAKE_ARGS+=($CMAKE_GENERATOR)
     fi
-    
+
     # Add Qt path if found
     if [[ $QT_FOUND -eq 1 && -n "$QT_DIR" ]]; then
         CMAKE_ARGS+=(-DQt6_DIR="$QT_DIR/lib/cmake/Qt6")
     fi
-    
+
+    # Add toolchain file if specified
+    if [[ -n "$CMAKE_TOOLCHAIN" && -f "$SOURCE_DIR/$CMAKE_TOOLCHAIN" ]]; then
+        CMAKE_ARGS+=(-DCMAKE_TOOLCHAIN_FILE="$CMAKE_TOOLCHAIN")
+        print_status "Using toolchain: $CMAKE_TOOLCHAIN"
+    fi
+
+    # MSYS2 specific options
+    if [[ "$SYSTEM" == "msys2" ]]; then
+        CMAKE_ARGS+=(-DQTFORGE_IS_MSYS2=ON)
+        CMAKE_ARGS+=(-DQTFORGE_MSYS2_SUBSYSTEM="$MSYS2_SUBSYSTEM")
+
+        # Add MSYS2 prefix path
+        if [[ -n "$MSYSTEM_PREFIX" ]]; then
+            CMAKE_ARGS+=(-DCMAKE_PREFIX_PATH="$MSYSTEM_PREFIX")
+        fi
+
+        print_status "MSYS2 configuration: $MSYS2_SUBSYSTEM"
+    fi
+
     # macOS specific options
     if [[ "$SYSTEM" == "macos" ]]; then
         CMAKE_ARGS+=(-DCMAKE_OSX_DEPLOYMENT_TARGET=10.15)
     fi
-    
+
     # Configure
     print_status "Configuring build..."
     cmake "${CMAKE_ARGS[@]}"
-    
+
     # Build
     print_status "Building project..."
     cmake --build "$BUILD_DIR" --config "$BUILD_TYPE" --parallel "$PARALLEL_JOBS"
-    
+
     # Run tests if requested
     if [[ "$BUILD_TESTS" == "ON" ]]; then
         print_status "Running tests..."
         ctest --test-dir "$BUILD_DIR" --output-on-failure --parallel "$PARALLEL_JOBS"
     fi
-    
+
     # Install
     print_status "Installing project..."
     cmake --install "$BUILD_DIR" --config "$BUILD_TYPE"
-    
+
     # Create packages if requested
     if [[ "$CREATE_PACKAGE" == "ON" ]]; then
         print_status "Creating packages..."
         cd "$BUILD_DIR"
         cpack --config CPackConfig.cmake
-        
+
         print_status "Packages created in: $BUILD_DIR/packages"
         ls -la "$BUILD_DIR"/packages/ || true
     fi
-    
+
     print_success "Build completed successfully!"
 }
 

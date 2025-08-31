@@ -1,14 +1,54 @@
 @echo off
-REM QtPlugin Windows Build Script
-REM Automates building and packaging for Windows
+REM QtForge Windows Build Script
+REM Automates building and packaging for Windows with comprehensive error handling
 
 setlocal enabledelayedexpansion
 
-REM Default configuration
+REM Enable error handling
+set "SCRIPT_ERROR=0"
+set "SCRIPT_DIR=%~dp0"
+set "PROJECT_ROOT=%SCRIPT_DIR%\.."
+
+REM Function to handle errors
+:handle_error
+echo ERROR: %~1
+set "SCRIPT_ERROR=1"
+goto :eof
+
+REM Function to validate directory exists
+:validate_directory
+if not exist "%~1" (
+    call :handle_error "Directory does not exist: %~1"
+    exit /b 1
+)
+goto :eof
+
+REM Function to validate file exists
+:validate_file
+if not exist "%~1" (
+    call :handle_error "File does not exist: %~1"
+    exit /b 1
+)
+goto :eof
+
+REM Function to check command availability
+:check_command
+where "%~1" >nul 2>&1
+if errorlevel 1 (
+    call :handle_error "Required command not found: %~1"
+    exit /b 1
+)
+goto :eof
+
+REM Default configuration with validation
 set BUILD_TYPE=Release
 set BUILD_DIR=%~dp0..\build
 set INSTALL_DIR=%~dp0..\install
 set SOURCE_DIR=%~dp0..
+
+REM Validate project structure
+call :validate_directory "%SOURCE_DIR%"
+call :validate_file "%SOURCE_DIR%\CMakeLists.txt"
 set PARALLEL_JOBS=%NUMBER_OF_PROCESSORS%
 set BUILD_TESTS=OFF
 set BUILD_EXAMPLES=ON
@@ -91,10 +131,10 @@ cmake -S "%SOURCE_DIR%" -B "%BUILD_DIR%" ^
     %CMAKE_GENERATOR% ^
     -DCMAKE_BUILD_TYPE=%BUILD_TYPE% ^
     -DCMAKE_INSTALL_PREFIX="%INSTALL_DIR%" ^
-    -DQTPLUGIN_BUILD_TESTS=%BUILD_TESTS% ^
-    -DQTPLUGIN_BUILD_EXAMPLES=%BUILD_EXAMPLES% ^
-    -DQTPLUGIN_BUILD_NETWORK=%BUILD_NETWORK% ^
-    -DQTPLUGIN_BUILD_UI=%BUILD_UI% ^
+    -DQTFORGE_BUILD_TESTS=%BUILD_TESTS% ^
+    -DQTFORGE_BUILD_EXAMPLES=%BUILD_EXAMPLES% ^
+    -DQTFORGE_BUILD_NETWORK=%BUILD_NETWORK% ^
+    -DQTFORGE_BUILD_UI=%BUILD_UI% ^
     -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL ^
     -DCPACK_GENERATOR="NSIS;ZIP;WIX" ^
     %QT_CMAKE_ARG%
@@ -119,7 +159,7 @@ if /i "%BUILD_TESTS%"=="ON" (
     echo.
     echo Running tests...
     ctest --test-dir "%BUILD_DIR%" --output-on-failure --parallel %PARALLEL_JOBS%
-    
+
     if errorlevel 1 (
         echo Tests failed!
         exit /b 1
@@ -142,12 +182,12 @@ if /i "%CREATE_PACKAGE%"=="ON" (
     echo Creating packages...
     cd /d "%BUILD_DIR%"
     cpack --config CPackConfig.cmake
-    
+
     if errorlevel 1 (
         echo Packaging failed!
         exit /b 1
     )
-    
+
     echo.
     echo Packages created in: %BUILD_DIR%\packages
     dir "%BUILD_DIR%\packages" /b

@@ -12,24 +12,102 @@ env:
   CMAKE_VERSION: '3.27.7'
 
 jobs:
+  # Check what files changed to determine which jobs to run
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      core: ${{ steps.changes.outputs.core }}
+      cmake: ${{ steps.changes.outputs.cmake }}
+      scripts: ${{ steps.changes.outputs.scripts }}
+      docs: ${{ steps.changes.outputs.docs }}
+      examples: ${{ steps.changes.outputs.examples }}
+      packaging: ${{ steps.changes.outputs.packaging }}
+      ci: ${{ steps.changes.outputs.ci }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for changes
+        uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          filters: |
+            core:
+              - 'src/**'
+              - 'include/**'
+              - 'CMakeLists.txt'
+              - 'cmake/modules/**'
+            cmake:
+              - 'cmake/**'
+              - 'CMakeLists.txt'
+              - 'CMakePresets.json'
+            scripts:
+              - 'scripts/**'
+            docs:
+              - 'docs/**'
+              - '*.md'
+              - 'mkdocs.yml'
+            examples:
+              - 'examples/**'
+            packaging:
+              - 'packaging/**'
+            ci:
+              - '.github/workflows/**'
+
   # Continuous Integration - Build and Test
   build-and-test:
-    name: Build & Test (${{ matrix.os }})
+    name: Build & Test (${{ matrix.os }}-${{ matrix.build_type }})
+    needs: changes
+    if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.cmake == 'true' || needs.changes.outputs.scripts == 'true' || needs.changes.outputs.ci == 'true' }}
     strategy:
       fail-fast: false
+      max-parallel: 6
       matrix:
         include:
+          # Linux builds
           - os: ubuntu-latest
             qt_arch: gcc_64
             cmake_preset: linux-release
+            build_type: Release
+            compiler: gcc
+            parallel_jobs: 4
+          - os: ubuntu-latest
+            qt_arch: gcc_64
+            cmake_preset: linux-debug
+            build_type: Debug
+            compiler: gcc
+            parallel_jobs: 2
+          # Windows builds
           - os: windows-latest
             qt_arch: win64_msvc2022_64
             cmake_preset: windows-release
+            build_type: Release
+            compiler: msvc
+            parallel_jobs: 4
+          - os: windows-latest
+            qt_arch: win64_msvc2022_64
+            cmake_preset: windows-debug
+            build_type: Debug
+            compiler: msvc
+            parallel_jobs: 2
+          # macOS builds
           - os: macos-latest
             qt_arch: clang_64
             cmake_preset: macos-release
+            build_type: Release
+            compiler: clang
+            parallel_jobs: 4
+          - os: macos-latest
+            qt_arch: clang_64
+            cmake_preset: macos-debug
+            build_type: Debug
+            compiler: clang
+            parallel_jobs: 2
 
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
 
     steps:
       - name: Checkout code
@@ -39,17 +117,21 @@ jobs:
 
       - name: Cache Qt
         id: cache-qt
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ../Qt
-          key: ${{ runner.os }}-QtCache-${{ env.QT_VERSION }}-${{ matrix.qt_arch }}
+          key: ${{ runner.os }}-QtCache-${{ env.QT_VERSION }}-${{ matrix.qt_arch }}-${{ hashFiles('**/CMakeLists.txt', 'cmake/**/*.cmake') }}
+          restore-keys: |
+            ${{ runner.os }}-QtCache-${{ env.QT_VERSION }}-${{ matrix.qt_arch }}-
+            ${{ runner.os }}-QtCache-${{ env.QT_VERSION }}-
+            ${{ runner.os }}-QtCache-
 
       - name: Install Qt
         uses: jurplel/install-qt-action@v3
         with:
           version: ${{ env.QT_VERSION }}
           arch: ${{ matrix.qt_arch }}
-          cached: ${{ steps.cache-qt.outputs.cache-hit }}
+          cache: ${{ steps.cache-qt.outputs.cache-hit }}
           setup-python: false
 
       - name: Setup CMake
@@ -61,19 +143,70 @@ jobs:
         if: runner.os != 'Windows'
         uses: seanmiddleditch/gha-setup-ninja@master
 
+      - name: Cache CMake build
+        uses: actions/cache@v4
+        with:
+          path: |
+            build
+            ~/.cache/cmake
+            ~/AppData/Local/cmake
+          key: ${{ runner.os }}-cmake-${{ matrix.cmake_preset }}-${{ hashFiles('**/CMakeLists.txt', 'cmake/**/*.cmake', 'src/**/*.cpp', 'src/**/*.hpp') }}
+          restore-keys: |
+            ${{ runner.os }}-cmake-${{ matrix.cmake_preset }}-
+            ${{ runner.os }}-cmake-
+
+      - name: Cache vcpkg dependencies
+        if: runner.os == 'Windows'
+        uses: actions/cache@v4
+        with:
+          path: |
+            C:\vcpkg\installed
+            C:\vcpkg\buildtrees
+          key: ${{ runner.os }}-vcpkg-${{ hashFiles('**/vcpkg.json', '**/CMakeLists.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-vcpkg-
+
+      - name: Cache system packages (Linux)
+        if: runner.os == 'Linux'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/apt
+            /var/cache/apt
+          key: ${{ runner.os }}-apt-${{ hashFiles('.github/workflows/ci.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-apt-
+
+      - name: Cache Homebrew (macOS)
+        if: runner.os == 'macOS'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Caches/Homebrew
+            /usr/local/Homebrew
+          key: ${{ runner.os }}-homebrew-${{ hashFiles('.github/workflows/ci.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-homebrew-
+
       - name: Configure CMake
         run: |
           cmake -S . -B build \
-            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
             -DQTFORGE_BUILD_TESTS=ON \
             -DQTFORGE_BUILD_EXAMPLES=ON \
             -DQTFORGE_BUILD_NETWORK=ON \
             -DQTFORGE_BUILD_UI=ON \
             -DQTFORGE_ENABLE_WARNINGS=ON \
+            -DQTFORGE_ENABLE_LTO=${{ matrix.build_type == 'Release' && 'ON' || 'OFF' }} \
             ${{ runner.os == 'Linux' && '-G Ninja' || '' }}
 
       - name: Build
-        run: cmake --build build --config Release --parallel
+        run: cmake --build build --config ${{ matrix.build_type }} --parallel ${{ matrix.parallel_jobs }}
+
+      - name: Build timing info
+        run: |
+          echo "Build completed for ${{ matrix.os }}-${{ matrix.build_type }}"
+          echo "Parallel jobs used: ${{ matrix.parallel_jobs }}"
 
       - name: Test
         run: ctest --test-dir build --output-on-failure --parallel
@@ -82,13 +215,27 @@ jobs:
         run: cmake --install build --prefix install
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: qtplugin-${{ matrix.os }}-build
+          name: qtforge-${{ matrix.os }}-${{ github.run_number }}-build
           path: |
             install/
             build/compile_commands.json
-          retention-days: 7
+          retention-days: 3
+          compression-level: 6
+          if-no-files-found: warn
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: qtforge-${{ matrix.os }}-${{ github.run_number }}-test-results
+          path: |
+            build/Testing/
+            build/test-results.xml
+          retention-days: 14
+          compression-level: 9
+          if-no-files-found: ignore
 
   # Package Creation - Only on tags or main branch
   create-packages:
