@@ -6,18 +6,18 @@
 
 #pragma once
 
+#include <QCheckBox>
+#include <QComboBox>
 #include <QDialog>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
 #include <QGridLayout>
-#include <QTabWidget>
+#include <QHBoxLayout>
+#include <QJsonObject>
 #include <QLabel>
 #include <QLineEdit>
-#include <QComboBox>
-#include <QCheckBox>
-#include <QSpinBox>
 #include <QPushButton>
-#include <QJsonObject>
+#include <QSpinBox>
+#include <QTabWidget>
+#include <QVBoxLayout>
 
 /**
  * @brief Settings dialog for plugin configuration

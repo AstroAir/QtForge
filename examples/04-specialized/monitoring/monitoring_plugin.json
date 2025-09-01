@@ -1,217 +1,214 @@
 {
-    "name": "MonitoringPlugin",
-    "version": "3.0.0",
-    "description": "Comprehensive monitoring plugin demonstrating QtForge monitoring features",
-    "author": "QtForge Team",
-    "license": "MIT",
-    "website": "https://github.com/QtForge/QtPlugin",
-    "category": "Monitoring",
-    "tags": ["monitoring", "hot-reload", "metrics", "performance", "example"],
-    
-    "plugin_interface": "qtplugin.IPlugin",
-    "plugin_type": "monitoring",
-    
-    "capabilities": [
-        "Monitoring",
-        "HotReload",
-        "Configuration",
-        "Logging",
-        "Threading"
+  "name": "MonitoringPlugin",
+  "version": "3.0.0",
+  "description": "Comprehensive monitoring plugin demonstrating QtForge monitoring features",
+  "author": "QtForge Team",
+  "license": "MIT",
+  "website": "https://github.com/QtForge/QtPlugin",
+  "category": "Monitoring",
+  "tags": ["monitoring", "hot-reload", "metrics", "performance", "example"],
+
+  "plugin_interface": "qtplugin.IPlugin",
+  "plugin_type": "monitoring",
+
+  "capabilities": [
+    "Monitoring",
+    "HotReload",
+    "Configuration",
+    "Logging",
+    "Threading"
+  ],
+
+  "priority": "High",
+  "thread_safe": true,
+  "thread_model": "multi-threaded",
+
+  "dependencies": {
+    "required": [
+      "qtplugin.PluginHotReloadManager",
+      "qtplugin.PluginMetricsCollector"
     ],
-    
-    "priority": "High",
-    "thread_safe": true,
-    "thread_model": "multi-threaded",
-    
-    "dependencies": {
-        "required": [
-            "qtplugin.PluginHotReloadManager",
-            "qtplugin.PluginMetricsCollector"
-        ],
-        "optional": [
-            "qtplugin.MessageBus",
-            "qtplugin.ConfigurationManager"
-        ]
-    },
-    
-    "commands": [
-        {
-            "name": "hot_reload",
-            "description": "Manage hot reload functionality for plugins",
-            "parameters": {
-                "action": {
-                    "type": "string",
-                    "required": false,
-                    "default": "status",
-                    "enum": ["enable", "disable", "status"],
-                    "description": "Hot reload action to perform"
-                },
-                "plugin_id": {
-                    "type": "string",
-                    "required": false,
-                    "description": "Plugin identifier (required for enable/disable actions)"
-                },
-                "file_path": {
-                    "type": "string",
-                    "required": false,
-                    "description": "Path to plugin file (required for enable action)"
-                }
-            }
+    "optional": ["qtplugin.MessageBus", "qtplugin.ConfigurationManager"]
+  },
+
+  "commands": [
+    {
+      "name": "hot_reload",
+      "description": "Manage hot reload functionality for plugins",
+      "parameters": {
+        "action": {
+          "type": "string",
+          "required": false,
+          "default": "status",
+          "enum": ["enable", "disable", "status"],
+          "description": "Hot reload action to perform"
         },
-        {
-            "name": "metrics",
-            "description": "Collect and retrieve plugin metrics",
-            "parameters": {
-                "plugin_id": {
-                    "type": "string",
-                    "required": false,
-                    "description": "Specific plugin to get metrics for (empty for all plugins)"
-                }
-            }
+        "plugin_id": {
+          "type": "string",
+          "required": false,
+          "description": "Plugin identifier (required for enable/disable actions)"
         },
-        {
-            "name": "dashboard",
-            "description": "Get comprehensive monitoring dashboard",
-            "parameters": {}
-        },
-        {
-            "name": "alerts",
-            "description": "Manage monitoring alerts",
-            "parameters": {
-                "action": {
-                    "type": "string",
-                    "required": false,
-                    "default": "get",
-                    "enum": ["get", "setup", "clear"],
-                    "description": "Alert action to perform"
-                },
-                "config": {
-                    "type": "object",
-                    "required": false,
-                    "description": "Alert configuration (required for setup action)"
-                }
-            }
-        },
-        {
-            "name": "status",
-            "description": "Get comprehensive monitoring status",
-            "parameters": {}
-        },
-        {
-            "name": "history",
-            "description": "Get historical metrics data",
-            "parameters": {
-                "time_range": {
-                    "type": "object",
-                    "required": false,
-                    "description": "Time range for metrics (start/end timestamps)"
-                },
-                "plugin_id": {
-                    "type": "string",
-                    "required": false,
-                    "description": "Filter by specific plugin"
-                }
-            }
+        "file_path": {
+          "type": "string",
+          "required": false,
+          "description": "Path to plugin file (required for enable action)"
         }
-    ],
-    
-    "configuration": {
-        "hot_reload_enabled": {
-            "type": "boolean",
-            "default": true,
-            "description": "Enable hot reload functionality"
-        },
-        "metrics_collection_enabled": {
-            "type": "boolean",
-            "default": true,
-            "description": "Enable metrics collection"
-        },
-        "alerts_enabled": {
-            "type": "boolean",
-            "default": true,
-            "description": "Enable monitoring alerts"
-        },
-        "monitoring_interval": {
-            "type": "integer",
-            "default": 5000,
-            "min": 1000,
-            "max": 60000,
-            "description": "Interval for monitoring checks (ms)"
-        },
-        "metrics_collection_interval": {
-            "type": "integer",
-            "default": 10000,
-            "min": 1000,
-            "max": 300000,
-            "description": "Interval for metrics collection (ms)"
-        },
-        "alert_check_interval": {
-            "type": "integer",
-            "default": 15000,
-            "min": 1000,
-            "max": 300000,
-            "description": "Interval for alert checking (ms)"
-        },
-        "metrics_history_size": {
-            "type": "integer",
-            "default": 1000,
-            "min": 100,
-            "max": 10000,
-            "description": "Maximum number of historical metrics to keep"
-        },
-        "watched_directories": {
-            "type": "array",
-            "default": ["plugins"],
-            "description": "Directories to watch for file changes"
-        },
-        "metric_types": {
-            "type": "array",
-            "default": ["cpu_usage", "memory_usage", "plugin_count", "error_rate"],
-            "description": "Types of metrics to collect"
-        },
-        "alert_thresholds": {
-            "type": "object",
-            "default": {
-                "cpu_usage_max": 80.0,
-                "memory_usage_max": 1024.0,
-                "error_rate_max": 5.0,
-                "plugin_load_time_max": 5000
-            },
-            "description": "Alert threshold configuration"
-        },
-        "dashboard_refresh_rate": {
-            "type": "integer",
-            "default": 2000,
-            "min": 500,
-            "max": 30000,
-            "description": "Dashboard refresh rate (ms)"
-        },
-        "enable_file_monitoring": {
-            "type": "boolean",
-            "default": true,
-            "description": "Enable file system monitoring"
-        },
-        "enable_performance_tracking": {
-            "type": "boolean",
-            "default": true,
-            "description": "Enable performance tracking"
+      }
+    },
+    {
+      "name": "metrics",
+      "description": "Collect and retrieve plugin metrics",
+      "parameters": {
+        "plugin_id": {
+          "type": "string",
+          "required": false,
+          "description": "Specific plugin to get metrics for (empty for all plugins)"
         }
+      }
     },
-    
-    "monitoring": {
-        "hot_reload_support": true,
-        "metrics_collection": true,
-        "performance_tracking": true,
-        "resource_monitoring": true,
-        "alert_system": true,
-        "dashboard_support": true,
-        "historical_data": true
+    {
+      "name": "dashboard",
+      "description": "Get comprehensive monitoring dashboard",
+      "parameters": {}
     },
-    
-    "build_info": {
-        "qt_version": "6.0+",
-        "cmake_minimum": "3.21",
-        "cpp_standard": "20",
-        "compiler_features": ["concepts", "ranges", "filesystem"]
+    {
+      "name": "alerts",
+      "description": "Manage monitoring alerts",
+      "parameters": {
+        "action": {
+          "type": "string",
+          "required": false,
+          "default": "get",
+          "enum": ["get", "setup", "clear"],
+          "description": "Alert action to perform"
+        },
+        "config": {
+          "type": "object",
+          "required": false,
+          "description": "Alert configuration (required for setup action)"
+        }
+      }
+    },
+    {
+      "name": "status",
+      "description": "Get comprehensive monitoring status",
+      "parameters": {}
+    },
+    {
+      "name": "history",
+      "description": "Get historical metrics data",
+      "parameters": {
+        "time_range": {
+          "type": "object",
+          "required": false,
+          "description": "Time range for metrics (start/end timestamps)"
+        },
+        "plugin_id": {
+          "type": "string",
+          "required": false,
+          "description": "Filter by specific plugin"
+        }
+      }
     }
+  ],
+
+  "configuration": {
+    "hot_reload_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable hot reload functionality"
+    },
+    "metrics_collection_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable metrics collection"
+    },
+    "alerts_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable monitoring alerts"
+    },
+    "monitoring_interval": {
+      "type": "integer",
+      "default": 5000,
+      "min": 1000,
+      "max": 60000,
+      "description": "Interval for monitoring checks (ms)"
+    },
+    "metrics_collection_interval": {
+      "type": "integer",
+      "default": 10000,
+      "min": 1000,
+      "max": 300000,
+      "description": "Interval for metrics collection (ms)"
+    },
+    "alert_check_interval": {
+      "type": "integer",
+      "default": 15000,
+      "min": 1000,
+      "max": 300000,
+      "description": "Interval for alert checking (ms)"
+    },
+    "metrics_history_size": {
+      "type": "integer",
+      "default": 1000,
+      "min": 100,
+      "max": 10000,
+      "description": "Maximum number of historical metrics to keep"
+    },
+    "watched_directories": {
+      "type": "array",
+      "default": ["plugins"],
+      "description": "Directories to watch for file changes"
+    },
+    "metric_types": {
+      "type": "array",
+      "default": ["cpu_usage", "memory_usage", "plugin_count", "error_rate"],
+      "description": "Types of metrics to collect"
+    },
+    "alert_thresholds": {
+      "type": "object",
+      "default": {
+        "cpu_usage_max": 80.0,
+        "memory_usage_max": 1024.0,
+        "error_rate_max": 5.0,
+        "plugin_load_time_max": 5000
+      },
+      "description": "Alert threshold configuration"
+    },
+    "dashboard_refresh_rate": {
+      "type": "integer",
+      "default": 2000,
+      "min": 500,
+      "max": 30000,
+      "description": "Dashboard refresh rate (ms)"
+    },
+    "enable_file_monitoring": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable file system monitoring"
+    },
+    "enable_performance_tracking": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable performance tracking"
+    }
+  },
+
+  "monitoring": {
+    "hot_reload_support": true,
+    "metrics_collection": true,
+    "performance_tracking": true,
+    "resource_monitoring": true,
+    "alert_system": true,
+    "dashboard_support": true,
+    "historical_data": true
+  },
+
+  "build_info": {
+    "qt_version": "6.0+",
+    "cmake_minimum": "3.21",
+    "cpp_standard": "20",
+    "compiler_features": ["concepts", "ranges", "filesystem"]
+  }
 }

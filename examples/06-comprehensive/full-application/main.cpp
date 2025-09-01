@@ -7,20 +7,20 @@
  */
 
 #include <QApplication>
+#include <QCommandLineParser>
 #include <QDebug>
-#include <QTimer>
+#include <QDir>
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <QDir>
-#include <QCommandLineParser>
 #include <QLoggingCategory>
+#include <QTimer>
 
 // QtForge Core Components
-#include <qtplugin/qtplugin.hpp>
+#include <qtplugin/core/plugin_dependency_resolver.hpp>
+#include <qtplugin/core/plugin_loader.hpp>
 #include <qtplugin/core/plugin_manager.hpp>
 #include <qtplugin/core/plugin_registry.hpp>
-#include <qtplugin/core/plugin_loader.hpp>
-#include <qtplugin/core/plugin_dependency_resolver.hpp>
+#include <qtplugin/qtplugin.hpp>
 
 // Communication System
 #include <qtplugin/communication/message_bus.hpp>
@@ -59,9 +59,9 @@
 #include <qtplugin/python/python_bridge.hpp>
 #endif
 
+#include <chrono>
 #include <iostream>
 #include <memory>
-#include <chrono>
 
 Q_LOGGING_CATEGORY(demo, "qtforge.demo")
 
@@ -163,14 +163,13 @@ private:
 };
 
 ComprehensiveDemo::ComprehensiveDemo(QObject* parent)
-    : QObject(parent)
-    , m_metricsTimer(new QTimer(this))
-{
+    : QObject(parent), m_metricsTimer(new QTimer(this)) {
     m_startTime = std::chrono::steady_clock::now();
 
     // Setup metrics timer
-    connect(m_metricsTimer, &QTimer::timeout, this, &ComprehensiveDemo::onMetricsUpdate);
-    m_metricsTimer->setInterval(5000); // 5 seconds
+    connect(m_metricsTimer, &QTimer::timeout, this,
+            &ComprehensiveDemo::onMetricsUpdate);
+    m_metricsTimer->setInterval(5000);  // 5 seconds
 }
 
 ComprehensiveDemo::~ComprehensiveDemo() = default;
@@ -199,7 +198,8 @@ bool ComprehensiveDemo::initialize(const QCommandLineParser& parser) {
     QFile configFile("config/application.json");
     if (configFile.open(QIODevice::ReadOnly)) {
         QJsonParseError error;
-        QJsonDocument doc = QJsonDocument::fromJson(configFile.readAll(), &error);
+        QJsonDocument doc =
+            QJsonDocument::fromJson(configFile.readAll(), &error);
         if (error.error == QJsonParseError::NoError) {
             m_config = doc.object();
         }
@@ -256,8 +256,8 @@ void ComprehensiveDemo::initializeCore() {
     m_pluginManager->set_plugin_directory(m_pluginDirectory);
 
     // Connect signals
-    connect(m_pluginManager.get(), &qtplugin::PluginManager::pluginLoaded,
-            this, &ComprehensiveDemo::onPluginLoaded);
+    connect(m_pluginManager.get(), &qtplugin::PluginManager::pluginLoaded, this,
+            &ComprehensiveDemo::onPluginLoaded);
     connect(m_pluginManager.get(), &qtplugin::PluginManager::pluginUnloaded,
             this, &ComprehensiveDemo::onPluginUnloaded);
 
@@ -265,7 +265,8 @@ void ComprehensiveDemo::initializeCore() {
 }
 
 void ComprehensiveDemo::initializeCommunication() {
-    qCInfo(demo) << "[COMMUNICATION] Initializing message bus and request-response system...";
+    qCInfo(demo) << "[COMMUNICATION] Initializing message bus and "
+                    "request-response system...";
 
     // Initialize message bus
     m_messageBus = std::make_unique<qtplugin::MessageBus>();
@@ -274,9 +275,10 @@ void ComprehensiveDemo::initializeCommunication() {
     m_requestResponse = std::make_unique<qtplugin::RequestResponseSystem>();
 
     // Subscribe to system messages
-    m_messageBus->subscribe("system.*", [this](const QString& topic, const QJsonObject& message) {
-        onMessageReceived(topic, message);
-    });
+    m_messageBus->subscribe(
+        "system.*", [this](const QString& topic, const QJsonObject& message) {
+            onMessageReceived(topic, message);
+        });
 
     qCInfo(demo) << "✅ Communication system ready";
 }
@@ -291,7 +293,8 @@ void ComprehensiveDemo::initializeSecurity() {
     m_securityManager->add_trusted_plugin("com.example");
     m_securityManager->add_trusted_plugin("org.qtforge");
 
-    qCInfo(demo) << "✅ Security system ready with level:" << static_cast<int>(m_securityLevel);
+    qCInfo(demo) << "✅ Security system ready with level:"
+                 << static_cast<int>(m_securityLevel);
 }
 
 void ComprehensiveDemo::initializeMonitoring() {
@@ -312,8 +315,9 @@ void ComprehensiveDemo::initializeOrchestration() {
 
     m_orchestrator = std::make_unique<qtplugin::PluginOrchestrator>();
 
-    connect(m_orchestrator.get(), &qtplugin::PluginOrchestrator::workflowCompleted,
-            this, &ComprehensiveDemo::onWorkflowCompleted);
+    connect(m_orchestrator.get(),
+            &qtplugin::PluginOrchestrator::workflowCompleted, this,
+            &ComprehensiveDemo::onWorkflowCompleted);
 
     qCInfo(demo) << "✅ Orchestration system ready";
 }
@@ -322,7 +326,8 @@ void ComprehensiveDemo::initializeTransactions() {
     qCInfo(demo) << "[TRANSACTIONS] Initializing transaction manager...";
 
     m_transactionManager = std::make_unique<qtplugin::TransactionManager>();
-    m_transactionManager->set_isolation_level(qtplugin::IsolationLevel::ReadCommitted);
+    m_transactionManager->set_isolation_level(
+        qtplugin::IsolationLevel::ReadCommitted);
 
     qCInfo(demo) << "✅ Transaction system ready";
 }
@@ -355,7 +360,8 @@ void ComprehensiveDemo::initializePython() {
     if (result.has_value()) {
         qCInfo(demo) << "✅ Python bridge ready";
     } else {
-        qCWarning(demo) << "⚠️ Python bridge initialization failed:" << result.error().message.c_str();
+        qCWarning(demo) << "⚠️ Python bridge initialization failed:"
+                        << result.error().message.c_str();
     }
 #endif
 }
@@ -365,7 +371,8 @@ void ComprehensiveDemo::loadPlugins() {
 
     QDir pluginDir(m_pluginDirectory);
     if (!pluginDir.exists()) {
-        qCWarning(demo) << "Plugin directory does not exist, creating sample plugins...";
+        qCWarning(demo)
+            << "Plugin directory does not exist, creating sample plugins...";
         // Create sample plugins would go here
         return;
     }
@@ -373,9 +380,11 @@ void ComprehensiveDemo::loadPlugins() {
     auto result = m_pluginManager->load_plugin_directory(m_pluginDirectory);
     if (result.has_value()) {
         m_loadedPlugins = result.value().size();
-        qCInfo(demo) << "✅ Loaded" << m_loadedPlugins << "plugins successfully";
+        qCInfo(demo) << "✅ Loaded" << m_loadedPlugins
+                     << "plugins successfully";
     } else {
-        qCWarning(demo) << "Failed to load plugins:" << result.error().message.c_str();
+        qCWarning(demo) << "Failed to load plugins:"
+                        << result.error().message.c_str();
     }
 }
 
@@ -398,7 +407,8 @@ void ComprehensiveDemo::runCommunicationDemo() {
     // Publish test message
     QJsonObject testMessage;
     testMessage["type"] = "test";
-    testMessage["timestamp"] = QDateTime::currentDateTime().toString(Qt::ISODate);
+    testMessage["timestamp"] =
+        QDateTime::currentDateTime().toString(Qt::ISODate);
     testMessage["data"] = "Hello from comprehensive demo!";
 
     m_messageBus->publish("demo.test", testMessage);
@@ -411,7 +421,8 @@ void ComprehensiveDemo::runSecurityDemo() {
     qCInfo(demo) << "\n--- Security Demo ---";
 
     // Validate a hypothetical plugin
-    auto validation = m_securityManager->validate_plugin("./plugins/sample.qtplugin");
+    auto validation =
+        m_securityManager->validate_plugin("./plugins/sample.qtplugin");
     qCInfo(demo) << "✅ Security validation completed";
 }
 
@@ -419,7 +430,8 @@ void ComprehensiveDemo::runWorkflowDemo() {
     qCInfo(demo) << "\n--- Workflow Demo ---";
 
     // Create sample workflow
-    auto workflow = m_orchestrator->create_workflow("demo_workflow", "Demonstration Workflow");
+    auto workflow = m_orchestrator->create_workflow("demo_workflow",
+                                                    "Demonstration Workflow");
     workflow->add_step("step1", "data_validator", "validate");
     workflow->add_step("step2", "data_processor", "process");
     workflow->add_step("step3", "data_transmitter", "transmit");
@@ -439,7 +451,8 @@ void ComprehensiveDemo::runPythonDemo() {
     qCInfo(demo) << "\n--- Python Demo ---";
 
     if (m_pythonBridge) {
-        auto result = m_pythonBridge->execute_script("print('Hello from Python!')");
+        auto result =
+            m_pythonBridge->execute_script("print('Hello from Python!')");
         if (result.has_value()) {
             qCInfo(demo) << "✅ Python script executed successfully";
         }
@@ -455,12 +468,14 @@ void ComprehensiveDemo::onPluginUnloaded(const QString& pluginId) {
     qCInfo(demo) << "Plugin unloaded:" << pluginId;
 }
 
-void ComprehensiveDemo::onMessageReceived(const QString& topic, const QJsonObject& message) {
+void ComprehensiveDemo::onMessageReceived(const QString& topic,
+                                          const QJsonObject& message) {
     m_processedMessages++;
     qCDebug(demo) << "Message received on" << topic << ":" << message;
 }
 
-void ComprehensiveDemo::onWorkflowCompleted(const QString& workflowId, bool success) {
+void ComprehensiveDemo::onWorkflowCompleted(const QString& workflowId,
+                                            bool success) {
     if (success) {
         m_completedTransactions++;
         qCInfo(demo) << "Workflow completed successfully:" << workflowId;
@@ -472,28 +487,35 @@ void ComprehensiveDemo::onWorkflowCompleted(const QString& workflowId, bool succ
 void ComprehensiveDemo::onMetricsUpdate() {
     // Update metrics periodically
     auto now = std::chrono::steady_clock::now();
-    auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(now - m_startTime).count();
+    auto elapsed =
+        std::chrono::duration_cast<std::chrono::seconds>(now - m_startTime)
+            .count();
 
-    qCDebug(demo) << "Metrics update - Uptime:" << elapsed << "s, Messages:" << m_processedMessages;
+    qCDebug(demo) << "Metrics update - Uptime:" << elapsed
+                  << "s, Messages:" << m_processedMessages;
 }
 
 void ComprehensiveDemo::printSystemStatus() {
     qCInfo(demo) << "\n=== System Status ===";
     qCInfo(demo) << "Loaded plugins:" << m_loadedPlugins;
     qCInfo(demo) << "Security level:" << static_cast<int>(m_securityLevel);
-    qCInfo(demo) << "Python support:" << (m_enablePython ? "Enabled" : "Disabled");
+    qCInfo(demo) << "Python support:"
+                 << (m_enablePython ? "Enabled" : "Disabled");
     qCInfo(demo) << "UI support:" << (m_enableUI ? "Enabled" : "Disabled");
 }
 
 void ComprehensiveDemo::printPerformanceMetrics() {
     auto now = std::chrono::steady_clock::now();
-    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - m_startTime).count();
+    auto elapsed =
+        std::chrono::duration_cast<std::chrono::milliseconds>(now - m_startTime)
+            .count();
 
     qCInfo(demo) << "\n=== Performance Metrics ===";
     qCInfo(demo) << "Total runtime:" << elapsed << "ms";
     qCInfo(demo) << "Messages processed:" << m_processedMessages;
     qCInfo(demo) << "Transactions completed:" << m_completedTransactions;
-    qCInfo(demo) << "Average message rate:" << (m_processedMessages * 1000.0 / elapsed) << "msg/s";
+    qCInfo(demo) << "Average message rate:"
+                 << (m_processedMessages * 1000.0 / elapsed) << "msg/s";
 }
 
 void ComprehensiveDemo::run() {
@@ -515,21 +537,28 @@ void ComprehensiveDemo::run() {
     qCInfo(demo) << "\n🎉 [SUCCESS] All features demonstrated successfully!";
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
     QApplication app(argc, argv);
     app.setApplicationName("QtForge Comprehensive Demo");
     app.setApplicationVersion("3.0.0");
 
     // Setup command line parser
     QCommandLineParser parser;
-    parser.setApplicationDescription("Comprehensive demonstration of all QtForge features");
+    parser.setApplicationDescription(
+        "Comprehensive demonstration of all QtForge features");
     parser.addHelpOption();
     parser.addVersionOption();
 
-    parser.addOption({{"d", "plugin-dir"}, "Plugin directory path", "directory", "./plugins"});
+    parser.addOption({{"d", "plugin-dir"},
+                      "Plugin directory path",
+                      "directory",
+                      "./plugins"});
     parser.addOption({{"p", "enable-python"}, "Enable Python bridge support"});
     parser.addOption({{"u", "enable-ui"}, "Enable UI components"});
-    parser.addOption({{"s", "security-level"}, "Security level (low|medium|high)", "level", "medium"});
+    parser.addOption({{"s", "security-level"},
+                      "Security level (low|medium|high)",
+                      "level",
+                      "medium"});
 
     parser.process(app);
 

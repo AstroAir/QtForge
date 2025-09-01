@@ -8,13 +8,11 @@
 
 namespace qtplugin::examples {
 
-PerformanceMetricsMessage::PerformanceMetricsMessage(const std::string& sender, 
-                                                   const MetricsMap& metrics)
-    : m_sender(sender)
-    , m_metrics(metrics)
-    , m_timestamp(std::chrono::system_clock::now())
-{
-}
+PerformanceMetricsMessage::PerformanceMetricsMessage(const std::string& sender,
+                                                     const MetricsMap& metrics)
+    : m_sender(sender),
+      m_metrics(metrics),
+      m_timestamp(std::chrono::system_clock::now()) {}
 
 double PerformanceMetricsMessage::get_metric(const std::string& name) const {
     auto it = m_metrics.find(name);
@@ -25,4 +23,4 @@ bool PerformanceMetricsMessage::has_metric(const std::string& name) const {
     return m_metrics.find(name) != m_metrics.end();
 }
 
-} // namespace qtplugin::examples
+}  // namespace qtplugin::examples

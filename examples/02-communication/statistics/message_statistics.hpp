@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <string>
-#include <unordered_map>
 #include <atomic>
 #include <chrono>
+#include <string>
+#include <unordered_map>
 
 namespace qtplugin::examples {
 
@@ -23,7 +23,8 @@ public:
     // Statistics tracking
     void record_message_sent(const std::string& type);
     void record_message_received(const std::string& type);
-    void record_processing_time(const std::string& type, std::chrono::milliseconds duration);
+    void record_processing_time(const std::string& type,
+                                std::chrono::milliseconds duration);
 
     // Statistics retrieval
     uint64_t get_sent_count(const std::string& type) const;
@@ -43,4 +44,4 @@ private:
     std::unordered_map<std::string, std::atomic<uint64_t>> m_processing_count;
 };
 
-} // namespace qtplugin::examples
+}  // namespace qtplugin::examples

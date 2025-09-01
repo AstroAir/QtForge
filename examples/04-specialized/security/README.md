@@ -64,14 +64,15 @@ Validate a plugin file using the security manager:
 ```
 
 **Response:**
+
 ```json
 {
-    "success": true,
-    "validated_level": 2,
-    "errors": [],
-    "warnings": ["Plugin not in standard directory"],
-    "file_path": "/path/to/plugin.dll",
-    "timestamp": "2024-01-15T10:30:00Z"
+  "success": true,
+  "validated_level": 2,
+  "errors": [],
+  "warnings": ["Plugin not in standard directory"],
+  "file_path": "/path/to/plugin.dll",
+  "timestamp": "2024-01-15T10:30:00Z"
 }
 ```
 
@@ -91,6 +92,7 @@ Check permissions for specific operations:
 ```
 
 **Response:**
+
 ```json
 {
     "operation": "file_read",
@@ -143,6 +145,7 @@ Get comprehensive security status:
 ```
 
 **Response includes:**
+
 - Current security level and configuration
 - Component initialization status
 - Security metrics and violation counts
@@ -178,19 +181,19 @@ Run security functionality tests:
 
 ```json
 {
-    "security_level": 1,
-    "audit_enabled": true,
-    "strict_validation": false,
-    "security_check_interval": 30000,
-    "max_audit_log_size": 1000,
-    "allowed_operations": ["validate", "check_permission", "audit"],
-    "trust_store_path": "trust_store.json",
-    "signature_algorithms": ["SHA256", "RSA"],
-    "permission_policies": {
-        "default_deny": false,
-        "require_signature": true,
-        "allow_self_signed": false
-    }
+  "security_level": 1,
+  "audit_enabled": true,
+  "strict_validation": false,
+  "security_check_interval": 30000,
+  "max_audit_log_size": 1000,
+  "allowed_operations": ["validate", "check_permission", "audit"],
+  "trust_store_path": "trust_store.json",
+  "signature_algorithms": ["SHA256", "RSA"],
+  "permission_policies": {
+    "default_deny": false,
+    "require_signature": true,
+    "allow_self_signed": false
+  }
 }
 ```
 

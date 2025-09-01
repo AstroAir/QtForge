@@ -34,11 +34,7 @@
     "enabled": true,
     "level": "medium",
     "signature_verification": true,
-    "trusted_publishers": [
-      "com.qtforge",
-      "org.qtforge",
-      "com.example"
-    ],
+    "trusted_publishers": ["com.qtforge", "org.qtforge", "com.example"],
     "sandbox_enabled": true,
     "permission_model": "whitelist",
     "audit_logging": true,
@@ -129,13 +125,8 @@
     "enabled": false,
     "interpreter_path": "",
     "virtual_env_path": "",
-    "module_search_paths": [
-      "./python",
-      "./python/modules"
-    ],
-    "startup_scripts": [
-      "python/init.py"
-    ],
+    "module_search_paths": ["./python", "./python/modules"],
+    "startup_scripts": ["python/init.py"],
     "max_execution_time_ms": 30000,
     "memory_limit_mb": 512
   },

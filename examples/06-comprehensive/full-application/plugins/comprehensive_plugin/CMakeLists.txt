@@ -7,10 +7,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Find required packages
 find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network)
-find_package(QtForge REQUIRED COMPONENTS 
-    Core 
-    Security 
-    Communication 
+find_package(QtForge REQUIRED COMPONENTS
+    Core
+    Security
+    Communication
     Monitoring
     Orchestration
     Transactions

@@ -1,40 +1,40 @@
 /**
  * @file network_plugin.cpp
- * @brief Implementation of network plugin demonstrating QtForge network features
+ * @brief Implementation of network plugin demonstrating QtForge network
+ * features
  * @version 3.0.0
  */
 
 #include "network_plugin.hpp"
-#include <QObject>
+#include <QDateTime>
 #include <QDebug>
+#include <QHostInfo>
+#include <QHttpServerRequest>
+#include <QHttpServerResponse>
 #include <QJsonArray>
 #include <QJsonDocument>
-#include <QNetworkRequest>
-#include <QNetworkReply>
 #include <QNetworkAccessManager>
+#include <QNetworkReply>
+#include <QNetworkRequest>
+#include <QObject>
+#include <QSslConfiguration>
+#include <QStringLiteral>
+#include <QTcpServer>
+#include <QTcpSocket>
 #include <QTimer>
 #include <QWebSocket>
 #include <QWebSocketServer>
-#include <QHttpServerRequest>
-#include <QHttpServerResponse>
-#include <QSslConfiguration>
-#include <QHostInfo>
-#include <QTcpSocket>
-#include <QTcpServer>
-#include <QDateTime>
-#include <QStringLiteral>
 #include <chrono>
-#include <thread>
 #include <string_view>
+#include <thread>
 
 NetworkPlugin::NetworkPlugin(QObject* parent)
     : QObject(parent),
       m_network_manager(std::make_unique<QNetworkAccessManager>(this)),
       m_network_timer(std::make_unique<QTimer>(this)) {
-
     // Connect network manager signals
-    connect(m_network_manager.get(), &QNetworkAccessManager::finished,
-            this, &NetworkPlugin::on_http_request_finished);
+    connect(m_network_manager.get(), &QNetworkAccessManager::finished, this,
+            &NetworkPlugin::on_http_request_finished);
 
     // Connect network timer
     connect(m_network_timer.get(), &QTimer::timeout, this,
@@ -42,7 +42,8 @@ NetworkPlugin::NetworkPlugin(QObject* parent)
 
     // Initialize dependencies
     m_required_dependencies = {"qtplugin.NetworkManager"};
-    m_optional_dependencies = {"qtplugin.MessageBus", "qtplugin.ConfigurationManager"};
+    m_optional_dependencies = {"qtplugin.MessageBus",
+                               "qtplugin.ConfigurationManager"};
 
     log_info("NetworkPlugin constructed");
 }
@@ -108,7 +109,8 @@ qtplugin::expected<void, qtplugin::PluginError> NetworkPlugin::initialize() {
         return qtplugin::make_success();
     } catch (const std::exception& e) {
         m_state = qtplugin::PluginState::Error;
-        std::string error_msg = "Initialization failed: " + std::string(e.what());
+        std::string error_msg =
+            "Initialization failed: " + std::string(e.what());
         log_error(error_msg);
         return qtplugin::make_error<void>(
             qtplugin::PluginErrorCode::InitializationFailed, error_msg);
@@ -134,7 +136,8 @@ void NetworkPlugin::shutdown() noexcept {
         }
 
         // Disconnect WebSocket client
-        if (m_websocket_client && m_websocket_client->state() == QAbstractSocket::ConnectedState) {
+        if (m_websocket_client &&
+            m_websocket_client->state() == QAbstractSocket::ConnectedState) {
             m_websocket_client->close();
         }
 
@@ -171,20 +174,24 @@ qtplugin::PluginMetadata NetworkPlugin::metadata() const {
     qtplugin::PluginMetadata meta;
     meta.name = "NetworkPlugin";
     meta.version = qtplugin::Version{3, 0, 0};
-    meta.description = "Comprehensive network plugin demonstrating QtForge network features";
+    meta.description =
+        "Comprehensive network plugin demonstrating QtForge network features";
     meta.author = "QtForge Team";
     meta.license = "MIT";
-    // meta.website = "https://github.com/QtForge/QtPlugin"; // Field not available in current version
+    // meta.website = "https://github.com/QtForge/QtPlugin"; // Field not
+    // available in current version
     meta.category = "Network";
     meta.tags = {"network", "http", "websocket", "rest-api", "ssl", "example"};
 
     // Network-specific metadata
     QJsonObject custom_data;
     custom_data[QStringLiteral("http_server_enabled")] = m_http_server_enabled;
-    custom_data[QStringLiteral("websocket_server_enabled")] = m_websocket_server_enabled;
+    custom_data[QStringLiteral("websocket_server_enabled")] =
+        m_websocket_server_enabled;
     custom_data[QStringLiteral("ssl_enabled")] = m_ssl_enabled;
     custom_data[QStringLiteral("http_server_port")] = m_http_server_port;
-    custom_data[QStringLiteral("websocket_server_port")] = m_websocket_server_port;
+    custom_data[QStringLiteral("websocket_server_port")] =
+        m_websocket_server_port;
     QJsonArray protocols;
     protocols.append(QStringLiteral("HTTP"));
     protocols.append(QStringLiteral("HTTPS"));
@@ -208,9 +215,7 @@ qtplugin::PluginPriority NetworkPlugin::priority() const noexcept {
     return qtplugin::PluginPriority::Normal;
 }
 
-bool NetworkPlugin::is_thread_safe() const noexcept {
-    return true;
-}
+bool NetworkPlugin::is_thread_safe() const noexcept { return true; }
 
 std::string_view NetworkPlugin::thread_model() const noexcept {
     return "multi-threaded";
@@ -225,7 +230,8 @@ std::optional<QJsonObject> NetworkPlugin::default_configuration() const {
     config[QStringLiteral("websocket_server_port")] = 8081;
     config[QStringLiteral("request_timeout")] = 30000;
     config[QStringLiteral("max_connections")] = 100;
-    config[QStringLiteral("user_agent")] = QStringLiteral("QtForge-NetworkPlugin/3.0.0");
+    config[QStringLiteral("user_agent")] =
+        QStringLiteral("QtForge-NetworkPlugin/3.0.0");
     config[QStringLiteral("network_monitoring_interval")] = 10000;
     config[QStringLiteral("enable_cors")] = true;
     QJsonArray corsOrigins;
@@ -257,11 +263,13 @@ qtplugin::expected<void, qtplugin::PluginError> NetworkPlugin::configure(
 
     // Apply configuration changes
     if (config.contains(QStringLiteral("http_server_enabled"))) {
-        m_http_server_enabled = config[QStringLiteral("http_server_enabled")].toBool();
+        m_http_server_enabled =
+            config[QStringLiteral("http_server_enabled")].toBool();
     }
 
     if (config.contains(QStringLiteral("websocket_server_enabled"))) {
-        m_websocket_server_enabled = config[QStringLiteral("websocket_server_enabled")].toBool();
+        m_websocket_server_enabled =
+            config[QStringLiteral("websocket_server_enabled")].toBool();
     }
 
     if (config.contains(QStringLiteral("ssl_enabled"))) {
@@ -273,7 +281,8 @@ qtplugin::expected<void, qtplugin::PluginError> NetworkPlugin::configure(
     }
 
     if (config.contains(QStringLiteral("websocket_server_port"))) {
-        m_websocket_server_port = config[QStringLiteral("websocket_server_port")].toInt();
+        m_websocket_server_port =
+            config[QStringLiteral("websocket_server_port")].toInt();
     }
 
     if (config.contains(QStringLiteral("request_timeout"))) {
@@ -290,9 +299,12 @@ qtplugin::expected<void, qtplugin::PluginError> NetworkPlugin::configure(
 
     // Restart servers if configuration changed
     bool server_config_changed =
-        old_config.value(QStringLiteral("http_server_port")) != config.value(QStringLiteral("http_server_port")) ||
-        old_config.value(QStringLiteral("websocket_server_port")) != config.value(QStringLiteral("websocket_server_port")) ||
-        old_config.value(QStringLiteral("ssl_enabled")) != config.value(QStringLiteral("ssl_enabled"));
+        old_config.value(QStringLiteral("http_server_port")) !=
+            config.value(QStringLiteral("http_server_port")) ||
+        old_config.value(QStringLiteral("websocket_server_port")) !=
+            config.value(QStringLiteral("websocket_server_port")) ||
+        old_config.value(QStringLiteral("ssl_enabled")) !=
+            config.value(QStringLiteral("ssl_enabled"));
 
     if (server_config_changed && is_initialized()) {
         if (m_http_server_enabled && m_http_server) {
@@ -316,7 +328,8 @@ QJsonObject NetworkPlugin::current_configuration() const {
 
 bool NetworkPlugin::validate_configuration(const QJsonObject& config) const {
     // Validate port numbers
-    QStringList port_keys = {QStringLiteral("http_server_port"), QStringLiteral("websocket_server_port")};
+    QStringList port_keys = {QStringLiteral("http_server_port"),
+                             QStringLiteral("websocket_server_port")};
     for (const QString& port_key : port_keys) {
         if (config.contains(port_key)) {
             if (!config[port_key].isDouble()) {
@@ -335,7 +348,7 @@ bool NetworkPlugin::validate_configuration(const QJsonObject& config) const {
             return false;
         }
         int timeout = config[QStringLiteral("request_timeout")].toInt();
-        if (timeout < 1000 || timeout > 300000) { // 1 second to 5 minutes
+        if (timeout < 1000 || timeout > 300000) {  // 1 second to 5 minutes
             return false;
         }
     }
@@ -352,7 +365,9 @@ bool NetworkPlugin::validate_configuration(const QJsonObject& config) const {
     }
 
     // Validate boolean flags
-    QStringList flags = {QStringLiteral("http_server_enabled"), QStringLiteral("websocket_server_enabled"), QStringLiteral("ssl_enabled")};
+    QStringList flags = {QStringLiteral("http_server_enabled"),
+                         QStringLiteral("websocket_server_enabled"),
+                         QStringLiteral("ssl_enabled")};
     for (const QString& flag : flags) {
         if (config.contains(flag)) {
             if (!config[flag].isBool()) {
@@ -364,9 +379,9 @@ bool NetworkPlugin::validate_configuration(const QJsonObject& config) const {
     return true;
 }
 
-qtplugin::expected<QJsonObject, qtplugin::PluginError> NetworkPlugin::execute_command(
-    std::string_view command, const QJsonObject& params) {
-
+qtplugin::expected<QJsonObject, qtplugin::PluginError>
+NetworkPlugin::execute_command(std::string_view command,
+                               const QJsonObject& params) {
     if (command == "http") {
         return handle_http_command(params);
     } else if (command == "server") {
@@ -387,7 +402,8 @@ qtplugin::expected<QJsonObject, qtplugin::PluginError> NetworkPlugin::execute_co
 }
 
 std::vector<std::string> NetworkPlugin::available_commands() const {
-    return {"http", "server", "websocket", "diagnostics", "status", "connectivity"};
+    return {"http",        "server", "websocket",
+            "diagnostics", "status", "connectivity"};
 }
 
 // === Lifecycle Management ===
@@ -411,7 +427,8 @@ qtplugin::expected<void, qtplugin::PluginError> NetworkPlugin::pause() {
 
         return qtplugin::make_success();
     } catch (const std::exception& e) {
-        std::string error_msg = "Failed to pause plugin: " + std::string(e.what());
+        std::string error_msg =
+            "Failed to pause plugin: " + std::string(e.what());
         log_error(error_msg);
         return qtplugin::make_error<void>(
             qtplugin::PluginErrorCode::ExecutionFailed, error_msg);
@@ -435,7 +452,8 @@ qtplugin::expected<void, qtplugin::PluginError> NetworkPlugin::resume() {
 
         return qtplugin::make_success();
     } catch (const std::exception& e) {
-        std::string error_msg = "Failed to resume plugin: " + std::string(e.what());
+        std::string error_msg =
+            "Failed to resume plugin: " + std::string(e.what());
         log_error(error_msg);
         return qtplugin::make_error<void>(
             qtplugin::PluginErrorCode::ExecutionFailed, error_msg);
@@ -488,20 +506,31 @@ QJsonObject NetworkPlugin::performance_metrics() const {
             : 0.0;
 
     QJsonObject metrics;
-    metrics[QStringLiteral("uptime_ms")] = static_cast<qint64>(current_uptime.count());
-    metrics[QStringLiteral("requests_sent")] = static_cast<qint64>(m_requests_sent.load());
-    metrics[QStringLiteral("requests_completed")] = static_cast<qint64>(m_requests_completed.load());
-    metrics[QStringLiteral("requests_failed")] = static_cast<qint64>(m_requests_failed.load());
+    metrics[QStringLiteral("uptime_ms")] =
+        static_cast<qint64>(current_uptime.count());
+    metrics[QStringLiteral("requests_sent")] =
+        static_cast<qint64>(m_requests_sent.load());
+    metrics[QStringLiteral("requests_completed")] =
+        static_cast<qint64>(m_requests_completed.load());
+    metrics[QStringLiteral("requests_failed")] =
+        static_cast<qint64>(m_requests_failed.load());
     metrics[QStringLiteral("requests_per_second")] = requests_per_second;
-    metrics[QStringLiteral("websocket_messages_sent")] = static_cast<qint64>(m_websocket_messages_sent.load());
-    metrics[QStringLiteral("websocket_messages_received")] = static_cast<qint64>(m_websocket_messages_received.load());
-    metrics[QStringLiteral("websocket_connections")] = static_cast<qint64>(m_websocket_connections.load());
-    metrics[QStringLiteral("server_requests_handled")] = static_cast<qint64>(m_server_requests_handled.load());
-    metrics[QStringLiteral("server_errors")] = static_cast<qint64>(m_server_errors.load());
-    metrics[QStringLiteral("active_connections")] = static_cast<qint64>(m_active_connections.load());
+    metrics[QStringLiteral("websocket_messages_sent")] =
+        static_cast<qint64>(m_websocket_messages_sent.load());
+    metrics[QStringLiteral("websocket_messages_received")] =
+        static_cast<qint64>(m_websocket_messages_received.load());
+    metrics[QStringLiteral("websocket_connections")] =
+        static_cast<qint64>(m_websocket_connections.load());
+    metrics[QStringLiteral("server_requests_handled")] =
+        static_cast<qint64>(m_server_requests_handled.load());
+    metrics[QStringLiteral("server_errors")] =
+        static_cast<qint64>(m_server_errors.load());
+    metrics[QStringLiteral("active_connections")] =
+        static_cast<qint64>(m_active_connections.load());
     metrics[QStringLiteral("state")] = static_cast<int>(m_state.load());
     metrics[QStringLiteral("http_server_enabled")] = m_http_server_enabled;
-    metrics[QStringLiteral("websocket_server_enabled")] = m_websocket_server_enabled;
+    metrics[QStringLiteral("websocket_server_enabled")] =
+        m_websocket_server_enabled;
     metrics[QStringLiteral("ssl_enabled")] = m_ssl_enabled;
     return metrics;
 }
@@ -511,19 +540,26 @@ QJsonObject NetworkPlugin::resource_usage() const {
 
     // Estimate resource usage
     auto memory_estimate = 1024 + (m_pending_requests.size() * 50) +
-                          (m_websocket_clients.size() * 100);
-    auto cpu_estimate = (m_network_timer && m_network_timer->isActive()) ? 1.5 : 0.1;
+                           (m_websocket_clients.size() * 100);
+    auto cpu_estimate =
+        (m_network_timer && m_network_timer->isActive()) ? 1.5 : 0.1;
 
     QJsonObject usage;
-    usage[QStringLiteral("estimated_memory_kb")] = static_cast<qint64>(memory_estimate);
+    usage[QStringLiteral("estimated_memory_kb")] =
+        static_cast<qint64>(memory_estimate);
     usage[QStringLiteral("estimated_cpu_percent")] = cpu_estimate;
     usage[QStringLiteral("thread_count")] = 1;
-    usage[QStringLiteral("network_timer_active")] = m_network_timer && m_network_timer->isActive();
-    usage[QStringLiteral("pending_requests")] = static_cast<int>(m_pending_requests.size());
-    usage[QStringLiteral("websocket_clients")] = static_cast<int>(m_websocket_clients.size());
+    usage[QStringLiteral("network_timer_active")] =
+        m_network_timer && m_network_timer->isActive();
+    usage[QStringLiteral("pending_requests")] =
+        static_cast<int>(m_pending_requests.size());
+    usage[QStringLiteral("websocket_clients")] =
+        static_cast<int>(m_websocket_clients.size());
     usage[QStringLiteral("http_server_running")] = m_http_server != nullptr;
-    usage[QStringLiteral("websocket_server_running")] = m_websocket_server && m_websocket_server->isListening();
-    usage[QStringLiteral("error_log_size")] = static_cast<qint64>(m_error_log.size());
+    usage[QStringLiteral("websocket_server_running")] =
+        m_websocket_server && m_websocket_server->isListening();
+    usage[QStringLiteral("error_log_size")] =
+        static_cast<qint64>(m_error_log.size());
     usage[QStringLiteral("dependencies_satisfied")] = dependencies_satisfied();
     return usage;
 }
@@ -537,10 +573,10 @@ void NetworkPlugin::clear_errors() {
 
 // === Network-Specific Methods ===
 
-qtplugin::expected<QJsonObject, qtplugin::PluginError> NetworkPlugin::make_http_request(
-    const QString& method, const QString& url,
-    const QJsonObject& headers, const QJsonObject& body) {
-
+qtplugin::expected<QJsonObject, qtplugin::PluginError>
+NetworkPlugin::make_http_request(const QString& method, const QString& url,
+                                 const QJsonObject& headers,
+                                 const QJsonObject& body) {
     if (!m_network_manager) {
         return qtplugin::make_error<QJsonObject>(
             qtplugin::PluginErrorCode::InitializationFailed,
@@ -552,11 +588,13 @@ qtplugin::expected<QJsonObject, qtplugin::PluginError> NetworkPlugin::make_http_
 
         // Set default headers
         request.setHeader(QNetworkRequest::UserAgentHeader, m_user_agent);
-        request.setHeader(QNetworkRequest::ContentTypeHeader, QStringLiteral("application/json"));
+        request.setHeader(QNetworkRequest::ContentTypeHeader,
+                          QStringLiteral("application/json"));
 
         // Set custom headers
         for (auto it = headers.begin(); it != headers.end(); ++it) {
-            request.setRawHeader(it.key().toUtf8(), it.value().toString().toUtf8());
+            request.setRawHeader(it.key().toUtf8(),
+                                 it.value().toString().toUtf8());
         }
 
         // Set timeout
@@ -598,7 +636,8 @@ qtplugin::expected<QJsonObject, qtplugin::PluginError> NetworkPlugin::make_http_
             QJsonObject request_data;
             request_data[QStringLiteral("method")] = method;
             request_data[QStringLiteral("url")] = url;
-            request_data[QStringLiteral("timestamp")] = QDateTime::currentDateTime().toString(Qt::ISODate);
+            request_data[QStringLiteral("timestamp")] =
+                QDateTime::currentDateTime().toString(Qt::ISODate);
             m_pending_requests[reply] = request_data;
         }
 
@@ -622,9 +661,8 @@ qtplugin::expected<QJsonObject, qtplugin::PluginError> NetworkPlugin::make_http_
     }
 }
 
-qtplugin::expected<void, qtplugin::PluginError> NetworkPlugin::start_http_server(
-    int port, const QJsonObject& routes) {
-
+qtplugin::expected<void, qtplugin::PluginError>
+NetworkPlugin::start_http_server(int port, const QJsonObject& routes) {
     try {
         if (!m_http_server) {
             m_http_server = std::make_unique<QHttpServer>(this);
@@ -639,13 +677,15 @@ qtplugin::expected<void, qtplugin::PluginError> NetworkPlugin::start_http_server
             QJsonObject route_config = it.value().toObject();
 
             // This would need to be implemented based on QHttpServer API
-            // m_http_server->route(path, [route_config](const QHttpServerRequest& request) {
+            // m_http_server->route(path, [route_config](const
+            // QHttpServerRequest& request) {
             //     // Handle route based on configuration
             // });
         }
 
         auto tcpServer = new QTcpServer();
-        if (!tcpServer->listen(QHostAddress::Any, port) || !m_http_server->bind(tcpServer)) {
+        if (!tcpServer->listen(QHostAddress::Any, port) ||
+            !m_http_server->bind(tcpServer)) {
             delete tcpServer;
             return qtplugin::make_error<void>(
                 qtplugin::PluginErrorCode::ExecutionFailed,
@@ -658,17 +698,20 @@ qtplugin::expected<void, qtplugin::PluginError> NetworkPlugin::start_http_server
         return qtplugin::make_success();
 
     } catch (const std::exception& e) {
-        std::string error_msg = "Failed to start HTTP server: " + std::string(e.what());
+        std::string error_msg =
+            "Failed to start HTTP server: " + std::string(e.what());
         log_error(error_msg);
         return qtplugin::make_error<void>(
             qtplugin::PluginErrorCode::ExecutionFailed, error_msg);
     }
 }
 
-qtplugin::expected<void, qtplugin::PluginError> NetworkPlugin::stop_http_server() {
+qtplugin::expected<void, qtplugin::PluginError>
+NetworkPlugin::stop_http_server() {
     try {
         if (m_http_server && !m_http_server->serverPorts().isEmpty()) {
-            // QHttpServer doesn't have a direct stop method, we need to destroy it
+            // QHttpServer doesn't have a direct stop method, we need to destroy
+            // it
             m_http_server.reset();
             log_info("HTTP server stopped");
         }
@@ -676,26 +719,30 @@ qtplugin::expected<void, qtplugin::PluginError> NetworkPlugin::stop_http_server(
         return qtplugin::make_success();
 
     } catch (const std::exception& e) {
-        std::string error_msg = "Failed to stop HTTP server: " + std::string(e.what());
+        std::string error_msg =
+            "Failed to stop HTTP server: " + std::string(e.what());
         log_error(error_msg);
         return qtplugin::make_error<void>(
             qtplugin::PluginErrorCode::ExecutionFailed, error_msg);
     }
 }
 
-qtplugin::expected<void, qtplugin::PluginError> NetworkPlugin::start_websocket_server(int port) {
+qtplugin::expected<void, qtplugin::PluginError>
+NetworkPlugin::start_websocket_server(int port) {
     try {
         if (!m_websocket_server) {
             m_websocket_server = std::make_unique<QWebSocketServer>(
                 QStringLiteral("QtForge NetworkPlugin WebSocket Server"),
-                m_ssl_enabled ? QWebSocketServer::SecureMode : QWebSocketServer::NonSecureMode,
+                m_ssl_enabled ? QWebSocketServer::SecureMode
+                              : QWebSocketServer::NonSecureMode,
                 this);
         }
 
         if (!m_websocket_server->listen(QHostAddress::Any, port)) {
             return qtplugin::make_error<void>(
                 qtplugin::PluginErrorCode::ExecutionFailed,
-                "Failed to start WebSocket server on port " + std::to_string(port));
+                "Failed to start WebSocket server on port " +
+                    std::to_string(port));
         }
 
         m_websocket_server_port = port;
@@ -704,27 +751,30 @@ qtplugin::expected<void, qtplugin::PluginError> NetworkPlugin::start_websocket_s
         return qtplugin::make_success();
 
     } catch (const std::exception& e) {
-        std::string error_msg = "Failed to start WebSocket server: " + std::string(e.what());
+        std::string error_msg =
+            "Failed to start WebSocket server: " + std::string(e.what());
         log_error(error_msg);
         return qtplugin::make_error<void>(
             qtplugin::PluginErrorCode::ExecutionFailed, error_msg);
     }
 }
 
-qtplugin::expected<void, qtplugin::PluginError> NetworkPlugin::connect_websocket(const QString& url) {
+qtplugin::expected<void, qtplugin::PluginError>
+NetworkPlugin::connect_websocket(const QString& url) {
     try {
         if (!m_websocket_client) {
-            m_websocket_client = std::make_unique<QWebSocket>(QString(), QWebSocketProtocol::VersionLatest, this);
+            m_websocket_client = std::make_unique<QWebSocket>(
+                QString(), QWebSocketProtocol::VersionLatest, this);
 
             // Connect signals
-            connect(m_websocket_client.get(), &QWebSocket::connected,
-                    this, &NetworkPlugin::on_websocket_connected);
-            connect(m_websocket_client.get(), &QWebSocket::disconnected,
-                    this, &NetworkPlugin::on_websocket_disconnected);
+            connect(m_websocket_client.get(), &QWebSocket::connected, this,
+                    &NetworkPlugin::on_websocket_connected);
+            connect(m_websocket_client.get(), &QWebSocket::disconnected, this,
+                    &NetworkPlugin::on_websocket_disconnected);
             connect(m_websocket_client.get(), &QWebSocket::textMessageReceived,
                     this, &NetworkPlugin::on_websocket_message_received);
-            connect(m_websocket_client.get(), &QWebSocket::errorOccurred,
-                    this, &NetworkPlugin::on_websocket_error);
+            connect(m_websocket_client.get(), &QWebSocket::errorOccurred, this,
+                    &NetworkPlugin::on_websocket_error);
         }
 
         m_websocket_client->open(QUrl(url));
@@ -733,24 +783,25 @@ qtplugin::expected<void, qtplugin::PluginError> NetworkPlugin::connect_websocket
         return qtplugin::make_success();
 
     } catch (const std::exception& e) {
-        std::string error_msg = "Failed to connect WebSocket: " + std::string(e.what());
+        std::string error_msg =
+            "Failed to connect WebSocket: " + std::string(e.what());
         log_error(error_msg);
         return qtplugin::make_error<void>(
             qtplugin::PluginErrorCode::ExecutionFailed, error_msg);
     }
 }
 
-qtplugin::expected<void, qtplugin::PluginError> NetworkPlugin::send_websocket_message(
-    const QJsonObject& message) {
-
-    if (!m_websocket_client || m_websocket_client->state() != QAbstractSocket::ConnectedState) {
-        return qtplugin::make_error<void>(
-            qtplugin::PluginErrorCode::StateError,
-            "WebSocket client not connected");
+qtplugin::expected<void, qtplugin::PluginError>
+NetworkPlugin::send_websocket_message(const QJsonObject& message) {
+    if (!m_websocket_client ||
+        m_websocket_client->state() != QAbstractSocket::ConnectedState) {
+        return qtplugin::make_error<void>(qtplugin::PluginErrorCode::StateError,
+                                          "WebSocket client not connected");
     }
 
     try {
-        QString message_text = QString::fromUtf8(QJsonDocument(message).toJson(QJsonDocument::Compact));
+        QString message_text = QString::fromUtf8(
+            QJsonDocument(message).toJson(QJsonDocument::Compact));
         qint64 bytes_sent = m_websocket_client->sendTextMessage(message_text);
 
         if (bytes_sent == -1) {
@@ -760,12 +811,14 @@ qtplugin::expected<void, qtplugin::PluginError> NetworkPlugin::send_websocket_me
         }
 
         m_websocket_messages_sent.fetch_add(1);
-        log_info("WebSocket message sent: " + std::to_string(bytes_sent) + " bytes");
+        log_info("WebSocket message sent: " + std::to_string(bytes_sent) +
+                 " bytes");
 
         return qtplugin::make_success();
 
     } catch (const std::exception& e) {
-        std::string error_msg = "Failed to send WebSocket message: " + std::string(e.what());
+        std::string error_msg =
+            "Failed to send WebSocket message: " + std::string(e.what());
         log_error(error_msg);
         return qtplugin::make_error<void>(
             qtplugin::PluginErrorCode::ExecutionFailed, error_msg);
@@ -775,37 +828,53 @@ qtplugin::expected<void, qtplugin::PluginError> NetworkPlugin::send_websocket_me
 QJsonObject NetworkPlugin::get_network_diagnostics() const {
     QJsonObject diagnostics;
 
-    diagnostics[QStringLiteral("timestamp")] = QDateTime::currentDateTime().toString(Qt::ISODate);
-    diagnostics[QStringLiteral("uptime_ms")] = static_cast<qint64>(uptime().count());
+    diagnostics[QStringLiteral("timestamp")] =
+        QDateTime::currentDateTime().toString(Qt::ISODate);
+    diagnostics[QStringLiteral("uptime_ms")] =
+        static_cast<qint64>(uptime().count());
 
     // Network statistics
     QJsonObject stats;
-    stats[QStringLiteral("requests_sent")] = static_cast<qint64>(m_requests_sent.load());
-    stats[QStringLiteral("requests_completed")] = static_cast<qint64>(m_requests_completed.load());
-    stats[QStringLiteral("requests_failed")] = static_cast<qint64>(m_requests_failed.load());
-    stats[QStringLiteral("websocket_messages_sent")] = static_cast<qint64>(m_websocket_messages_sent.load());
-    stats[QStringLiteral("websocket_messages_received")] = static_cast<qint64>(m_websocket_messages_received.load());
-    stats[QStringLiteral("websocket_connections")] = static_cast<qint64>(m_websocket_connections.load());
-    stats[QStringLiteral("server_requests_handled")] = static_cast<qint64>(m_server_requests_handled.load());
-    stats[QStringLiteral("server_errors")] = static_cast<qint64>(m_server_errors.load());
-    stats[QStringLiteral("active_connections")] = static_cast<qint64>(m_active_connections.load());
+    stats[QStringLiteral("requests_sent")] =
+        static_cast<qint64>(m_requests_sent.load());
+    stats[QStringLiteral("requests_completed")] =
+        static_cast<qint64>(m_requests_completed.load());
+    stats[QStringLiteral("requests_failed")] =
+        static_cast<qint64>(m_requests_failed.load());
+    stats[QStringLiteral("websocket_messages_sent")] =
+        static_cast<qint64>(m_websocket_messages_sent.load());
+    stats[QStringLiteral("websocket_messages_received")] =
+        static_cast<qint64>(m_websocket_messages_received.load());
+    stats[QStringLiteral("websocket_connections")] =
+        static_cast<qint64>(m_websocket_connections.load());
+    stats[QStringLiteral("server_requests_handled")] =
+        static_cast<qint64>(m_server_requests_handled.load());
+    stats[QStringLiteral("server_errors")] =
+        static_cast<qint64>(m_server_errors.load());
+    stats[QStringLiteral("active_connections")] =
+        static_cast<qint64>(m_active_connections.load());
     diagnostics[QStringLiteral("statistics")] = stats;
 
     // Server status
     QJsonObject servers;
-    servers[QStringLiteral("http_server_running")] = m_http_server && !m_http_server->serverPorts().isEmpty();
+    servers[QStringLiteral("http_server_running")] =
+        m_http_server && !m_http_server->serverPorts().isEmpty();
     servers[QStringLiteral("http_server_port")] = m_http_server_port;
-    servers[QStringLiteral("websocket_server_running")] = m_websocket_server && m_websocket_server->isListening();
+    servers[QStringLiteral("websocket_server_running")] =
+        m_websocket_server && m_websocket_server->isListening();
     servers[QStringLiteral("websocket_server_port")] = m_websocket_server_port;
     diagnostics[QStringLiteral("servers")] = servers;
 
     // Client status
     QJsonObject clients;
-    clients[QStringLiteral("websocket_client_connected")] = m_websocket_client &&
-                                           m_websocket_client->state() == QAbstractSocket::ConnectedState;
+    clients[QStringLiteral("websocket_client_connected")] =
+        m_websocket_client &&
+        m_websocket_client->state() == QAbstractSocket::ConnectedState;
     if (m_websocket_client) {
-        clients[QStringLiteral("websocket_client_url")] = m_websocket_client->requestUrl().toString();
-        clients[QStringLiteral("websocket_client_state")] = static_cast<int>(m_websocket_client->state());
+        clients[QStringLiteral("websocket_client_url")] =
+            m_websocket_client->requestUrl().toString();
+        clients[QStringLiteral("websocket_client_state")] =
+            static_cast<int>(m_websocket_client->state());
     }
     diagnostics[QStringLiteral("clients")] = clients;
 
@@ -824,23 +893,30 @@ QJsonObject NetworkPlugin::test_connectivity(const QString& host, int port) {
     QJsonObject result;
     result[QStringLiteral("host")] = host;
     result[QStringLiteral("port")] = port;
-    result[QStringLiteral("timestamp")] = QDateTime::currentDateTime().toString(Qt::ISODate);
+    result[QStringLiteral("timestamp")] =
+        QDateTime::currentDateTime().toString(Qt::ISODate);
 
     try {
         QTcpSocket socket;
         socket.connectToHost(host, port);
 
-        bool connected = socket.waitForConnected(5000); // 5 second timeout
+        bool connected = socket.waitForConnected(5000);  // 5 second timeout
 
         result[QStringLiteral("connected")] = connected;
-        result[QStringLiteral("response_time_ms")] = connected ?
-            QDateTime::currentMSecsSinceEpoch() -
-            QDateTime::fromString(result[QStringLiteral("timestamp")].toString(), Qt::ISODate).toMSecsSinceEpoch() : -1;
+        result[QStringLiteral("response_time_ms")] =
+            connected ? QDateTime::currentMSecsSinceEpoch() -
+                            QDateTime::fromString(
+                                result[QStringLiteral("timestamp")].toString(),
+                                Qt::ISODate)
+                                .toMSecsSinceEpoch()
+                      : -1;
 
         if (connected) {
-            result[QStringLiteral("local_address")] = socket.localAddress().toString();
+            result[QStringLiteral("local_address")] =
+                socket.localAddress().toString();
             result[QStringLiteral("local_port")] = socket.localPort();
-            result[QStringLiteral("peer_address")] = socket.peerAddress().toString();
+            result[QStringLiteral("peer_address")] =
+                socket.peerAddress().toString();
             result[QStringLiteral("peer_port")] = socket.peerPort();
             socket.disconnectFromHost();
         } else {
@@ -890,7 +966,8 @@ void NetworkPlugin::on_websocket_disconnected() {
 
 void NetworkPlugin::on_websocket_message_received(const QString& message) {
     m_websocket_messages_received.fetch_add(1);
-    log_info("WebSocket message received: " + std::to_string(message.length()) + " characters");
+    log_info("WebSocket message received: " + std::to_string(message.length()) +
+             " characters");
 }
 
 void NetworkPlugin::on_websocket_error(QAbstractSocket::SocketError error) {
@@ -904,14 +981,16 @@ void NetworkPlugin::on_http_server_new_request() {
 // === Command Handlers ===
 
 QJsonObject NetworkPlugin::handle_http_command(const QJsonObject& params) {
-    QString method = params.value(QStringLiteral("method")).toString(QStringLiteral("GET"));
+    QString method =
+        params.value(QStringLiteral("method")).toString(QStringLiteral("GET"));
     QString url = params.value(QStringLiteral("url")).toString();
     QJsonObject headers = params.value(QStringLiteral("headers")).toObject();
     QJsonObject body = params.value(QStringLiteral("body")).toObject();
 
     if (url.isEmpty()) {
         QJsonObject error;
-        error[QStringLiteral("error")] = QStringLiteral("Missing required parameter: url");
+        error[QStringLiteral("error")] =
+            QStringLiteral("Missing required parameter: url");
         error[QStringLiteral("success")] = false;
         return error;
     }
@@ -924,20 +1003,24 @@ QJsonObject NetworkPlugin::handle_http_command(const QJsonObject& params) {
         return response;
     } else {
         QJsonObject error;
-        error[QStringLiteral("error")] = QString::fromStdString(result.error().message);
+        error[QStringLiteral("error")] =
+            QString::fromStdString(result.error().message);
         error[QStringLiteral("success")] = false;
         error[QStringLiteral("method")] = method;
         error[QStringLiteral("url")] = url;
-        error[QStringLiteral("timestamp")] = QDateTime::currentDateTime().toString(Qt::ISODate);
+        error[QStringLiteral("timestamp")] =
+            QDateTime::currentDateTime().toString(Qt::ISODate);
         return error;
     }
 }
 
 QJsonObject NetworkPlugin::handle_server_command(const QJsonObject& params) {
-    QString action = params.value(QStringLiteral("action")).toString(QStringLiteral("status"));
+    QString action = params.value(QStringLiteral("action"))
+                         .toString(QStringLiteral("status"));
 
     if (action == QStringLiteral("start_http")) {
-        int port = params.value(QStringLiteral("port")).toInt(m_http_server_port);
+        int port =
+            params.value(QStringLiteral("port")).toInt(m_http_server_port);
         QJsonObject routes = params.value(QStringLiteral("routes")).toObject();
 
         auto result = start_http_server(port, routes);
@@ -946,8 +1029,10 @@ QJsonObject NetworkPlugin::handle_server_command(const QJsonObject& params) {
         response[QStringLiteral("action")] = QStringLiteral("start_http");
         response[QStringLiteral("port")] = port;
         response[QStringLiteral("success")] = result.has_value();
-        response[QStringLiteral("error")] = result ? QString() : QString::fromStdString(result.error().message);
-        response[QStringLiteral("timestamp")] = QDateTime::currentDateTime().toString(Qt::ISODate);
+        response[QStringLiteral("error")] =
+            result ? QString() : QString::fromStdString(result.error().message);
+        response[QStringLiteral("timestamp")] =
+            QDateTime::currentDateTime().toString(Qt::ISODate);
         return response;
     } else if (action == QStringLiteral("stop_http")) {
         auto result = stop_http_server();
@@ -955,11 +1040,14 @@ QJsonObject NetworkPlugin::handle_server_command(const QJsonObject& params) {
         QJsonObject response;
         response[QStringLiteral("action")] = QStringLiteral("stop_http");
         response[QStringLiteral("success")] = result.has_value();
-        response[QStringLiteral("error")] = result ? QString() : QString::fromStdString(result.error().message);
-        response[QStringLiteral("timestamp")] = QDateTime::currentDateTime().toString(Qt::ISODate);
+        response[QStringLiteral("error")] =
+            result ? QString() : QString::fromStdString(result.error().message);
+        response[QStringLiteral("timestamp")] =
+            QDateTime::currentDateTime().toString(Qt::ISODate);
         return response;
     } else if (action == QStringLiteral("start_websocket")) {
-        int port = params.value(QStringLiteral("port")).toInt(m_websocket_server_port);
+        int port =
+            params.value(QStringLiteral("port")).toInt(m_websocket_server_port);
 
         auto result = start_websocket_server(port);
 
@@ -967,36 +1055,46 @@ QJsonObject NetworkPlugin::handle_server_command(const QJsonObject& params) {
         response[QStringLiteral("action")] = QStringLiteral("start_websocket");
         response[QStringLiteral("port")] = port;
         response[QStringLiteral("success")] = result.has_value();
-        response[QStringLiteral("error")] = result ? QString() : QString::fromStdString(result.error().message);
-        response[QStringLiteral("timestamp")] = QDateTime::currentDateTime().toString(Qt::ISODate);
+        response[QStringLiteral("error")] =
+            result ? QString() : QString::fromStdString(result.error().message);
+        response[QStringLiteral("timestamp")] =
+            QDateTime::currentDateTime().toString(Qt::ISODate);
         return response;
     } else if (action == QStringLiteral("status")) {
         QJsonObject status;
         status[QStringLiteral("action")] = QStringLiteral("status");
-        status[QStringLiteral("http_server_running")] = m_http_server && !m_http_server->serverPorts().isEmpty();
+        status[QStringLiteral("http_server_running")] =
+            m_http_server && !m_http_server->serverPorts().isEmpty();
         status[QStringLiteral("http_server_port")] = m_http_server_port;
-        status[QStringLiteral("websocket_server_running")] = m_websocket_server && m_websocket_server->isListening();
-        status[QStringLiteral("websocket_server_port")] = m_websocket_server_port;
+        status[QStringLiteral("websocket_server_running")] =
+            m_websocket_server && m_websocket_server->isListening();
+        status[QStringLiteral("websocket_server_port")] =
+            m_websocket_server_port;
         status[QStringLiteral("success")] = true;
-        status[QStringLiteral("timestamp")] = QDateTime::currentDateTime().toString(Qt::ISODate);
+        status[QStringLiteral("timestamp")] =
+            QDateTime::currentDateTime().toString(Qt::ISODate);
         return status;
     } else {
         QJsonObject error;
-        error[QStringLiteral("error")] = QStringLiteral("Invalid action. Supported: start_http, stop_http, start_websocket, status");
+        error[QStringLiteral("error")] = QStringLiteral(
+            "Invalid action. Supported: start_http, stop_http, "
+            "start_websocket, status");
         error[QStringLiteral("success")] = false;
         return error;
     }
 }
 
 QJsonObject NetworkPlugin::handle_websocket_command(const QJsonObject& params) {
-    QString action = params.value(QStringLiteral("action")).toString(QStringLiteral("status"));
+    QString action = params.value(QStringLiteral("action"))
+                         .toString(QStringLiteral("status"));
 
     if (action == QStringLiteral("connect")) {
         QString url = params.value(QStringLiteral("url")).toString();
 
         if (url.isEmpty()) {
             QJsonObject error;
-            error[QStringLiteral("error")] = QStringLiteral("Missing required parameter: url");
+            error[QStringLiteral("error")] =
+                QStringLiteral("Missing required parameter: url");
             error[QStringLiteral("success")] = false;
             return error;
         }
@@ -1007,15 +1105,19 @@ QJsonObject NetworkPlugin::handle_websocket_command(const QJsonObject& params) {
         response[QStringLiteral("action")] = QStringLiteral("connect");
         response[QStringLiteral("url")] = url;
         response[QStringLiteral("success")] = result.has_value();
-        response[QStringLiteral("error")] = result ? QString() : QString::fromStdString(result.error().message);
-        response[QStringLiteral("timestamp")] = QDateTime::currentDateTime().toString(Qt::ISODate);
+        response[QStringLiteral("error")] =
+            result ? QString() : QString::fromStdString(result.error().message);
+        response[QStringLiteral("timestamp")] =
+            QDateTime::currentDateTime().toString(Qt::ISODate);
         return response;
     } else if (action == QStringLiteral("send")) {
-        QJsonObject message = params.value(QStringLiteral("message")).toObject();
+        QJsonObject message =
+            params.value(QStringLiteral("message")).toObject();
 
         if (message.isEmpty()) {
             QJsonObject error;
-            error[QStringLiteral("error")] = QStringLiteral("Missing required parameter: message");
+            error[QStringLiteral("error")] =
+                QStringLiteral("Missing required parameter: message");
             error[QStringLiteral("success")] = false;
             return error;
         }
@@ -1026,33 +1128,42 @@ QJsonObject NetworkPlugin::handle_websocket_command(const QJsonObject& params) {
         response[QStringLiteral("action")] = QStringLiteral("send");
         response[QStringLiteral("message")] = message;
         response[QStringLiteral("success")] = result.has_value();
-        response[QStringLiteral("error")] = result ? QString() : QString::fromStdString(result.error().message);
-        response[QStringLiteral("timestamp")] = QDateTime::currentDateTime().toString(Qt::ISODate);
+        response[QStringLiteral("error")] =
+            result ? QString() : QString::fromStdString(result.error().message);
+        response[QStringLiteral("timestamp")] =
+            QDateTime::currentDateTime().toString(Qt::ISODate);
         return response;
     } else if (action == QStringLiteral("status")) {
         QJsonObject status;
         status[QStringLiteral("action")] = QStringLiteral("status");
-        status[QStringLiteral("client_connected")] = m_websocket_client &&
-                                    m_websocket_client->state() == QAbstractSocket::ConnectedState;
+        status[QStringLiteral("client_connected")] =
+            m_websocket_client &&
+            m_websocket_client->state() == QAbstractSocket::ConnectedState;
         if (m_websocket_client) {
-            status[QStringLiteral("client_url")] = m_websocket_client->requestUrl().toString();
-            status[QStringLiteral("client_state")] = static_cast<int>(m_websocket_client->state());
+            status[QStringLiteral("client_url")] =
+                m_websocket_client->requestUrl().toString();
+            status[QStringLiteral("client_state")] =
+                static_cast<int>(m_websocket_client->state());
         }
-        status[QStringLiteral("server_running")] = m_websocket_server && m_websocket_server->isListening();
+        status[QStringLiteral("server_running")] =
+            m_websocket_server && m_websocket_server->isListening();
         status[QStringLiteral("server_port")] = m_websocket_server_port;
         status[QStringLiteral("success")] = true;
-        status[QStringLiteral("timestamp")] = QDateTime::currentDateTime().toString(Qt::ISODate);
+        status[QStringLiteral("timestamp")] =
+            QDateTime::currentDateTime().toString(Qt::ISODate);
 
         return status;
     } else {
         QJsonObject error;
-        error[QStringLiteral("error")] = QStringLiteral("Invalid action. Supported: connect, send, status");
+        error[QStringLiteral("error")] =
+            QStringLiteral("Invalid action. Supported: connect, send, status");
         error[QStringLiteral("success")] = false;
         return error;
     }
 }
 
-QJsonObject NetworkPlugin::handle_diagnostics_command(const QJsonObject& params) {
+QJsonObject NetworkPlugin::handle_diagnostics_command(
+    const QJsonObject& params) {
     Q_UNUSED(params)
 
     auto diagnostics = get_network_diagnostics();
@@ -1072,15 +1183,19 @@ QJsonObject NetworkPlugin::handle_status_command(const QJsonObject& params) {
     status[QStringLiteral("state")] = static_cast<int>(m_state.load());
     status[QStringLiteral("uptime_ms")] = static_cast<qint64>(uptime().count());
     status[QStringLiteral("http_server_enabled")] = m_http_server_enabled;
-    status[QStringLiteral("websocket_server_enabled")] = m_websocket_server_enabled;
+    status[QStringLiteral("websocket_server_enabled")] =
+        m_websocket_server_enabled;
     status[QStringLiteral("ssl_enabled")] = m_ssl_enabled;
 
     // Component status
     QJsonObject components;
-    components[QStringLiteral("network_manager")] = m_network_manager != nullptr;
+    components[QStringLiteral("network_manager")] =
+        m_network_manager != nullptr;
     components[QStringLiteral("http_server")] = m_http_server != nullptr;
-    components[QStringLiteral("websocket_server")] = m_websocket_server != nullptr;
-    components[QStringLiteral("websocket_client")] = m_websocket_client != nullptr;
+    components[QStringLiteral("websocket_server")] =
+        m_websocket_server != nullptr;
+    components[QStringLiteral("websocket_client")] =
+        m_websocket_client != nullptr;
     status[QStringLiteral("components")] = components;
 
     // Statistics
@@ -1089,19 +1204,22 @@ QJsonObject NetworkPlugin::handle_status_command(const QJsonObject& params) {
     // Resource usage
     status[QStringLiteral("resource_usage")] = resource_usage();
 
-    status[QStringLiteral("timestamp")] = QDateTime::currentDateTime().toString(Qt::ISODate);
+    status[QStringLiteral("timestamp")] =
+        QDateTime::currentDateTime().toString(Qt::ISODate);
     status[QStringLiteral("success")] = true;
 
     return status;
 }
 
-QJsonObject NetworkPlugin::handle_connectivity_command(const QJsonObject& params) {
+QJsonObject NetworkPlugin::handle_connectivity_command(
+    const QJsonObject& params) {
     QString host = params.value(QStringLiteral("host")).toString();
     int port = params.value(QStringLiteral("port")).toInt(80);
 
     if (host.isEmpty()) {
         QJsonObject error;
-        error[QStringLiteral("error")] = QStringLiteral("Missing required parameter: host");
+        error[QStringLiteral("error")] =
+            QStringLiteral("Missing required parameter: host");
         error[QStringLiteral("success")] = false;
         return error;
     }
@@ -1155,23 +1273,28 @@ void NetworkPlugin::setup_http_server_routes() {
         return;
     }
 
-    // Setup basic routes - this would need to be expanded based on QHttpServer API
-    // Example routes that could be implemented:
+    // Setup basic routes - this would need to be expanded based on QHttpServer
+    // API Example routes that could be implemented:
 
     // Health check endpoint
-    // m_http_server->route("/health", [this](const QHttpServerRequest& request) {
+    // m_http_server->route("/health", [this](const QHttpServerRequest& request)
+    // {
     //     QJsonObject health;
     //     health["status"] = "ok";
-    //     health["timestamp"] = QDateTime::currentDateTime().toString(Qt::ISODate);
+    //     health["timestamp"] =
+    //     QDateTime::currentDateTime().toString(Qt::ISODate);
     //     health["uptime_ms"] = static_cast<qint64>(uptime().count());
     //
-    //     return QHttpServerResponse(QJsonDocument(health).toJson(), "application/json");
+    //     return QHttpServerResponse(QJsonDocument(health).toJson(),
+    //     "application/json");
     // });
 
     // Status endpoint
-    // m_http_server->route("/status", [this](const QHttpServerRequest& request) {
+    // m_http_server->route("/status", [this](const QHttpServerRequest& request)
+    // {
     //     auto status = get_network_diagnostics();
-    //     return QHttpServerResponse(QJsonDocument(status).toJson(), "application/json");
+    //     return QHttpServerResponse(QJsonDocument(status).toJson(),
+    //     "application/json");
     // });
 
     log_info("HTTP server routes configured");
@@ -1186,8 +1309,12 @@ void NetworkPlugin::setup_ssl_configuration() {
     QSslConfiguration ssl_config = QSslConfiguration::defaultConfiguration();
 
     // Configure SSL settings based on configuration
-    QString cert_path = m_configuration.value(QStringLiteral("ssl_certificate_path")).toString();
-    QString key_path = m_configuration.value(QStringLiteral("ssl_private_key_path")).toString();
+    QString cert_path =
+        m_configuration.value(QStringLiteral("ssl_certificate_path"))
+            .toString();
+    QString key_path =
+        m_configuration.value(QStringLiteral("ssl_private_key_path"))
+            .toString();
 
     if (!cert_path.isEmpty() && !key_path.isEmpty()) {
         // Load certificate and private key
@@ -1203,7 +1330,9 @@ void NetworkPlugin::setup_ssl_configuration() {
 
 void NetworkPlugin::start_network_monitoring() {
     if (m_network_timer) {
-        int interval = m_configuration.value(QStringLiteral("network_monitoring_interval")).toInt(10000);
+        int interval =
+            m_configuration.value(QStringLiteral("network_monitoring_interval"))
+                .toInt(10000);
         m_network_timer->setInterval(interval);
         m_network_timer->start();
         log_info("Network monitoring started");
@@ -1221,20 +1350,25 @@ QJsonObject NetworkPlugin::create_response_object(QNetworkReply* reply) {
     QJsonObject response;
 
     if (!reply) {
-        response[QStringLiteral("error")] = QStringLiteral("Invalid reply object");
+        response[QStringLiteral("error")] =
+            QStringLiteral("Invalid reply object");
         return response;
     }
 
     // Basic response information
-    response[QStringLiteral("status_code")] = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-    response[QStringLiteral("status_text")] = reply->attribute(QNetworkRequest::HttpReasonPhraseAttribute).toString();
+    response[QStringLiteral("status_code")] =
+        reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+    response[QStringLiteral("status_text")] =
+        reply->attribute(QNetworkRequest::HttpReasonPhraseAttribute).toString();
     response[QStringLiteral("url")] = reply->url().toString();
-    response[QStringLiteral("timestamp")] = QDateTime::currentDateTime().toString(Qt::ISODate);
+    response[QStringLiteral("timestamp")] =
+        QDateTime::currentDateTime().toString(Qt::ISODate);
 
     // Headers
     QJsonObject headers;
     for (const auto& header : reply->rawHeaderPairs()) {
-        headers[QString::fromUtf8(header.first)] = QString::fromUtf8(header.second);
+        headers[QString::fromUtf8(header.first)] =
+            QString::fromUtf8(header.second);
     }
     response[QStringLiteral("headers")] = headers;
 
@@ -1252,7 +1386,8 @@ QJsonObject NetworkPlugin::create_response_object(QNetworkReply* reply) {
         } else if (json_doc.isArray()) {
             response[QStringLiteral("body")] = json_doc.array();
         }
-        response[QStringLiteral("content_type")] = QStringLiteral("application/json");
+        response[QStringLiteral("content_type")] =
+            QStringLiteral("application/json");
     } else {
         // Store as text
         response[QStringLiteral("body")] = QString::fromUtf8(data);
@@ -1262,7 +1397,8 @@ QJsonObject NetworkPlugin::create_response_object(QNetworkReply* reply) {
     // Error information
     if (reply->error() != QNetworkReply::NoError) {
         response[QStringLiteral("error")] = reply->errorString();
-        response[QStringLiteral("error_code")] = static_cast<int>(reply->error());
+        response[QStringLiteral("error_code")] =
+            static_cast<int>(reply->error());
     }
 
     return response;
@@ -1291,7 +1427,8 @@ qtplugin::PluginMetadata NetworkPlugin::get_static_metadata() {
     qtplugin::PluginMetadata meta;
     meta.name = "NetworkPlugin";
     meta.version = qtplugin::Version{3, 0, 0};
-    meta.description = "Comprehensive network plugin demonstrating QtForge network features";
+    meta.description =
+        "Comprehensive network plugin demonstrating QtForge network features";
     meta.author = "QtForge Team";
     meta.license = "MIT";
     meta.category = "Network";

@@ -3,17 +3,17 @@
  * @brief Comprehensive test suite for the comprehensive plugin
  */
 
-#include <QtTest/QtTest>
 #include <QCoreApplication>
-#include <QSignalSpy>
+#include <QEventLoop>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QSignalSpy>
 #include <QTimer>
-#include <QEventLoop>
+#include <QtTest/QtTest>
 
-#include "comprehensive_plugin.hpp"
 #include <qtplugin/core/plugin_manager.hpp>
 #include <qtplugin/utils/error_handling.hpp>
+#include "comprehensive_plugin.hpp"
 
 class TestComprehensivePlugin : public QObject {
     Q_OBJECT
@@ -95,10 +95,10 @@ private:
 
 void TestComprehensivePlugin::initTestCase() {
     qDebug() << "Starting comprehensive plugin test suite...";
-    
+
     // Initialize test environment
     m_pluginManager = std::make_unique<qtplugin::PluginManager>();
-    
+
     // Setup test configuration
     m_testConfig["communication_enabled"] = true;
     m_testConfig["monitoring_enabled"] = true;
@@ -128,15 +128,15 @@ void TestComprehensivePlugin::cleanup() {
 
 void TestComprehensivePlugin::testPluginInitialization() {
     QVERIFY(m_plugin != nullptr);
-    
+
     // Test initial state
     QCOMPARE(m_plugin->state(), qtplugin::PluginState::Unloaded);
-    
+
     // Test initialization
     auto result = m_plugin->initialize();
     QVERIFY(result.has_value());
     QCOMPARE(m_plugin->state(), qtplugin::PluginState::Initialized);
-    
+
     // Test double initialization (should be safe)
     result = m_plugin->initialize();
     QVERIFY(result.has_value());
@@ -144,17 +144,18 @@ void TestComprehensivePlugin::testPluginInitialization() {
 
 void TestComprehensivePlugin::testPluginMetadata() {
     auto metadata = m_plugin->metadata();
-    
+
     QVERIFY(!metadata.id.empty());
     QVERIFY(!metadata.name.empty());
     QVERIFY(!metadata.description.empty());
     QVERIFY(!metadata.author.empty());
-    
-    QCOMPARE(QString::fromStdString(metadata.id), "com.qtforge.comprehensive_plugin");
+
+    QCOMPARE(QString::fromStdString(metadata.id),
+             "com.qtforge.comprehensive_plugin");
     QCOMPARE(metadata.version.major, 3);
     QCOMPARE(metadata.version.minor, 0);
     QCOMPARE(metadata.version.patch, 0);
-    
+
     // Test capabilities
     auto caps = m_plugin->capabilities();
     QVERIFY(caps & qtplugin::PluginCapability::Service);
@@ -164,20 +165,20 @@ void TestComprehensivePlugin::testPluginMetadata() {
 void TestComprehensivePlugin::testPluginConfiguration() {
     // Initialize plugin first
     QVERIFY(m_plugin->initialize().has_value());
-    
+
     // Test configuration
     auto configResult = m_plugin->configure(m_testConfig);
     QVERIFY(configResult.has_value());
-    
+
     // Verify configuration was applied
     auto currentConfig = m_plugin->get_configuration();
     QCOMPARE(currentConfig["communication_enabled"].toBool(), true);
     QCOMPARE(currentConfig["monitoring_enabled"].toBool(), true);
-    
+
     // Test invalid configuration
     QJsonObject invalidConfig;
-    invalidConfig["metrics_interval"] = -1; // Invalid value
-    
+    invalidConfig["metrics_interval"] = -1;  // Invalid value
+
     auto invalidResult = m_plugin->configure(invalidConfig);
     QVERIFY(!invalidResult.has_value());
 }
@@ -187,7 +188,7 @@ void TestComprehensivePlugin::testPluginShutdown() {
     QVERIFY(m_plugin->initialize().has_value());
     QVERIFY(m_plugin->configure(m_testConfig).has_value());
     QVERIFY(m_plugin->start_service().has_value());
-    
+
     // Test shutdown
     m_plugin->shutdown();
     QCOMPARE(m_plugin->state(), qtplugin::PluginState::Unloaded);
@@ -197,13 +198,13 @@ void TestComprehensivePlugin::testPluginShutdown() {
 void TestComprehensivePlugin::testStatusCommand() {
     QVERIFY(m_plugin->initialize().has_value());
     QVERIFY(m_plugin->configure(m_testConfig).has_value());
-    
+
     auto result = m_plugin->execute_command("status", {});
     QVERIFY(result.has_value());
-    
+
     auto response = result.value();
     QVERIFY(response["success"].toBool());
-    
+
     auto data = response["data"].toObject();
     QVERIFY(data.contains("plugin_id"));
     QVERIFY(data.contains("plugin_name"));
@@ -215,18 +216,18 @@ void TestComprehensivePlugin::testStatusCommand() {
 
 void TestComprehensivePlugin::testEchoCommand() {
     QVERIFY(m_plugin->initialize().has_value());
-    
+
     QJsonObject params;
     params["message"] = "Hello, World!";
     params["number"] = 42;
     params["array"] = QJsonArray{1, 2, 3};
-    
+
     auto result = m_plugin->execute_command("echo", params);
     QVERIFY(result.has_value());
-    
+
     auto response = result.value();
     QVERIFY(response["success"].toBool());
-    
+
     auto data = response["data"].toObject();
     auto echo = data["echo"].toObject();
     QCOMPARE(echo["message"].toString(), "Hello, World!");
@@ -235,32 +236,32 @@ void TestComprehensivePlugin::testEchoCommand() {
 
 void TestComprehensivePlugin::testProcessDataCommand() {
     QVERIFY(m_plugin->initialize().has_value());
-    
+
     // Test string processing
     QJsonObject params;
     params["data"] = "hello";
     params["algorithm"] = "uppercase";
-    
+
     auto result = m_plugin->execute_command("process_data", params);
     QVERIFY(result.has_value());
-    
+
     auto response = result.value();
     QVERIFY(response["success"].toBool());
-    
+
     auto data = response["data"].toObject();
     QCOMPARE(data["output"].toString(), "HELLO");
-    
+
     // Test array processing
     params["data"] = QJsonArray{1, 2, 3, 4, 5};
     params["algorithm"] = "count";
-    
+
     result = m_plugin->execute_command("process_data", params);
     QVERIFY(result.has_value());
-    
+
     response = result.value();
     data = response["data"].toObject();
     QCOMPARE(data["output"].toInt(), 5);
-    
+
     // Test missing data parameter
     result = m_plugin->execute_command("process_data", {});
     QVERIFY(!result.has_value());
@@ -269,19 +270,19 @@ void TestComprehensivePlugin::testProcessDataCommand() {
 void TestComprehensivePlugin::testServiceLifecycle() {
     QVERIFY(m_plugin->initialize().has_value());
     QVERIFY(m_plugin->configure(m_testConfig).has_value());
-    
+
     // Test service start
     auto startResult = m_plugin->start_service();
     QVERIFY(startResult.has_value());
     QCOMPARE(m_plugin->service_status(), qtplugin::ServiceStatus::Running);
     QCOMPARE(m_plugin->state(), qtplugin::PluginState::Running);
-    
+
     // Test service info
     auto serviceInfo = m_plugin->service_info();
     QVERIFY(serviceInfo.contains("service_name"));
     QVERIFY(serviceInfo.contains("status"));
     QVERIFY(serviceInfo.contains("capabilities"));
-    
+
     // Test service stop
     auto stopResult = m_plugin->stop_service();
     QVERIFY(stopResult.has_value());
@@ -291,14 +292,15 @@ void TestComprehensivePlugin::testServiceLifecycle() {
 void TestComprehensivePlugin::testMessageBusIntegration() {
     QVERIFY(m_plugin->initialize().has_value());
     QVERIFY(m_plugin->configure(m_testConfig).has_value());
-    
+
     // Setup signal spy for message publishing
-    QSignalSpy messageSpy(m_plugin.get(), &ComprehensivePlugin::messagePublished);
-    
+    QSignalSpy messageSpy(m_plugin.get(),
+                          &ComprehensivePlugin::messagePublished);
+
     // Execute a command that should publish an event
     auto result = m_plugin->execute_command("status", {});
     QVERIFY(result.has_value());
-    
+
     // Wait for message to be published
     QVERIFY(messageSpy.wait(1000));
     QVERIFY(messageSpy.count() > 0);
@@ -307,18 +309,18 @@ void TestComprehensivePlugin::testMessageBusIntegration() {
 void TestComprehensivePlugin::testMetricsCollection() {
     QVERIFY(m_plugin->initialize().has_value());
     QVERIFY(m_plugin->configure(m_testConfig).has_value());
-    
+
     // Execute some commands to generate metrics
     m_plugin->execute_command("status", {});
     m_plugin->execute_command("echo", {{"test", "data"}});
-    
+
     // Get metrics
     auto result = m_plugin->execute_command("metrics", {});
     QVERIFY(result.has_value());
-    
+
     auto response = result.value();
     auto data = response["data"].toObject();
-    
+
     QVERIFY(data.contains("commands_executed"));
     QVERIFY(data.contains("uptime_seconds"));
     QVERIFY(data["commands_executed"].toInt() >= 2);
@@ -326,12 +328,12 @@ void TestComprehensivePlugin::testMetricsCollection() {
 
 void TestComprehensivePlugin::testInvalidCommands() {
     QVERIFY(m_plugin->initialize().has_value());
-    
+
     // Test invalid command
     auto result = m_plugin->execute_command("invalid_command", {});
     QVERIFY(!result.has_value());
     QVERIFY(result.error().code == qtplugin::PluginErrorCode::InvalidCommand);
-    
+
     // Test empty command
     result = m_plugin->execute_command("", {});
     QVERIFY(!result.has_value());
@@ -340,22 +342,22 @@ void TestComprehensivePlugin::testInvalidCommands() {
 void TestComprehensivePlugin::testCommandPerformance() {
     QVERIFY(m_plugin->initialize().has_value());
     QVERIFY(m_plugin->configure(m_testConfig).has_value());
-    
+
     // Measure command execution time
     const int iterations = 100;
     QElapsedTimer timer;
     timer.start();
-    
+
     for (int i = 0; i < iterations; ++i) {
         auto result = m_plugin->execute_command("echo", {{"iteration", i}});
         QVERIFY(result.has_value());
     }
-    
+
     qint64 elapsed = timer.elapsed();
     double avgTime = static_cast<double>(elapsed) / iterations;
-    
+
     qDebug() << "Average command execution time:" << avgTime << "ms";
-    
+
     // Performance should be reasonable (less than 10ms per command)
     QVERIFY(avgTime < 10.0);
 }
@@ -365,22 +367,25 @@ void TestComprehensivePlugin::testFullWorkflow() {
     QVERIFY(m_plugin->initialize().has_value());
     QVERIFY(m_plugin->configure(m_testConfig).has_value());
     QVERIFY(m_plugin->start_service().has_value());
-    
+
     // Execute various commands
     QVERIFY(m_plugin->execute_command("status", {}).has_value());
-    QVERIFY(m_plugin->execute_command("echo", {{"test", "workflow"}}).has_value());
-    QVERIFY(m_plugin->execute_command("process_data", {{"data", "test"}}).has_value());
+    QVERIFY(
+        m_plugin->execute_command("echo", {{"test", "workflow"}}).has_value());
+    QVERIFY(m_plugin->execute_command("process_data", {{"data", "test"}})
+                .has_value());
     QVERIFY(m_plugin->execute_command("metrics", {}).has_value());
-    
+
     // Stop service and shutdown
     QVERIFY(m_plugin->stop_service().has_value());
     m_plugin->shutdown();
-    
+
     QCOMPARE(m_plugin->state(), qtplugin::PluginState::Unloaded);
 }
 
 // Helper methods
-void TestComprehensivePlugin::waitForSignal(QObject* sender, const char* signal, int timeout) {
+void TestComprehensivePlugin::waitForSignal(QObject* sender, const char* signal,
+                                            int timeout) {
     QSignalSpy spy(sender, signal);
     QVERIFY(spy.wait(timeout));
 }
@@ -395,11 +400,13 @@ QJsonObject TestComprehensivePlugin::createTestData() {
     return data;
 }
 
-void TestComprehensivePlugin::verifyPluginState(qtplugin::PluginState expectedState) {
+void TestComprehensivePlugin::verifyPluginState(
+    qtplugin::PluginState expectedState) {
     QCOMPARE(m_plugin->state(), expectedState);
 }
 
-void TestComprehensivePlugin::verifyServiceStatus(qtplugin::ServiceStatus expectedStatus) {
+void TestComprehensivePlugin::verifyServiceStatus(
+    qtplugin::ServiceStatus expectedStatus) {
     QCOMPARE(m_plugin->service_status(), expectedStatus);
 }
 

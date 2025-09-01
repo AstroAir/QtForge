@@ -13,9 +13,9 @@
 
 #pragma once
 
+#include <QJsonObject>
 #include <QObject>
 #include <QString>
-#include <QJsonObject>
 
 #include "qtplugin/core/plugin_interface.hpp"
 #include "qtplugin/utils/error_handling.hpp"
@@ -23,8 +23,8 @@
 /**
  * @brief Minimal hello world plugin
  *
- * Demonstrates the absolute minimum required to create a working QtForge plugin.
- * Only implements essential IPlugin methods with simple functionality.
+ * Demonstrates the absolute minimum required to create a working QtForge
+ * plugin. Only implements essential IPlugin methods with simple functionality.
  */
 class HelloWorldPlugin : public QObject, public qtplugin::IPlugin {
     Q_OBJECT
@@ -85,8 +85,7 @@ public:
      * @return Command result or error
      */
     qtplugin::expected<QJsonObject, qtplugin::PluginError> execute_command(
-        std::string_view command,
-        const QJsonObject& params = {}) override;
+        std::string_view command, const QJsonObject& params = {}) override;
 
     /**
      * @brief Get list of available commands

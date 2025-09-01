@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "../messages/system_event_message.hpp"
 #include <string>
+#include "../messages/system_event_message.hpp"
 
 namespace qtplugin::examples {
 
@@ -50,4 +50,4 @@ private:
     std::string m_sender_pattern;
 };
 
-} // namespace qtplugin::examples
+}  // namespace qtplugin::examples

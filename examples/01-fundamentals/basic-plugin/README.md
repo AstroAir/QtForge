@@ -70,73 +70,83 @@ BasicPlugin: Timer event #2 - Hello from BasicPlugin!
 ## Available Commands
 
 ### `status`
+
 Get comprehensive plugin status information.
 
 **Response:**
+
 ```json
 {
-    "plugin": "BasicPlugin",
-    "state": 1,
-    "timer_count": 5,
-    "timer_active": true,
-    "timestamp": "2024-01-15T10:30:00Z"
+  "plugin": "BasicPlugin",
+  "state": 1,
+  "timer_count": 5,
+  "timer_active": true,
+  "timestamp": "2024-01-15T10:30:00Z"
 }
 ```
 
 ### `echo`
+
 Echo back provided parameters with timestamp.
 
 **Parameters:** Any JSON object
 **Response:**
+
 ```json
 {
-    "echo": {"message": "Hello", "number": 42},
-    "timestamp": "2024-01-15T10:30:00Z",
-    "plugin": "BasicPlugin"
+  "echo": { "message": "Hello", "number": 42 },
+  "timestamp": "2024-01-15T10:30:00Z",
+  "plugin": "BasicPlugin"
 }
 ```
 
 ### `config`
+
 Manage plugin configuration.
 
 **Get Configuration:**
+
 ```json
-{"action": "get"}
+{ "action": "get" }
 ```
 
 **Set Configuration:**
+
 ```json
 {
-    "action": "set",
-    "config": {
-        "timer_interval": 3000,
-        "custom_message": "New message!"
-    }
+  "action": "set",
+  "config": {
+    "timer_interval": 3000,
+    "custom_message": "New message!"
+  }
 }
 ```
 
 ### `timer`
+
 Control background timer operations.
 
 **Actions:**
+
 - `{"action": "start"}` - Start timer
-- `{"action": "stop"}` - Stop timer  
+- `{"action": "stop"}` - Stop timer
 - `{"action": "reset"}` - Reset counter
 
 ## Configuration Options
 
 ```json
 {
-    "timer_interval": 5000,        // Timer interval (1000-60000ms)
-    "timer_enabled": true,         // Enable/disable timer
-    "logging_enabled": true,       // Enable/disable logging
-    "custom_message": "Hello!"     // Custom timer message (max 200 chars)
+  "timer_interval": 5000, // Timer interval (1000-60000ms)
+  "timer_enabled": true, // Enable/disable timer
+  "logging_enabled": true, // Enable/disable logging
+  "custom_message": "Hello!" // Custom timer message (max 200 chars)
 }
 ```
 
 ## Key Concepts Demonstrated
 
 ### 1. Complete Plugin Interface
+
 ```cpp
 class BasicPlugin : public QObject, public qtplugin::IPlugin {
     Q_OBJECT
@@ -152,6 +162,7 @@ class BasicPlugin : public QObject, public qtplugin::IPlugin {
 ```
 
 ### 2. Configuration Validation
+
 ```cpp
 bool BasicPlugin::validate_configuration(const QJsonObject& config) const {
     if (config.contains("timer_interval")) {
@@ -165,6 +176,7 @@ bool BasicPlugin::validate_configuration(const QJsonObject& config) const {
 ```
 
 ### 3. Thread-Safe State Management
+
 ```cpp
 // Atomic state for thread-safe access
 std::atomic<qtplugin::PluginState> m_state{qtplugin::PluginState::Unloaded};
@@ -175,10 +187,11 @@ QJsonObject m_configuration;
 ```
 
 ### 4. Command Pattern Implementation
+
 ```cpp
 qtplugin::expected<QJsonObject, qtplugin::PluginError> execute_command(
     std::string_view command, const QJsonObject& params) {
-    
+
     if (command == "status") {
         return execute_status_command(params);
     } else if (command == "echo") {
@@ -189,6 +202,7 @@ qtplugin::expected<QJsonObject, qtplugin::PluginError> execute_command(
 ```
 
 ### 5. Background Processing
+
 ```cpp
 // Timer-based background processing
 std::unique_ptr<QTimer> m_timer;
@@ -203,16 +217,19 @@ void BasicPlugin::on_timer_timeout() {
 ## Architecture Patterns
 
 ### Error Handling Strategy
+
 - Uses `expected<T,E>` for all operations that can fail
 - Provides detailed error messages with context
 - Graceful degradation when operations fail
 
 ### State Management
+
 - Atomic state variables for thread safety
 - Mutex protection for complex data structures
 - Clear state transitions with validation
 
 ### Configuration Management
+
 - JSON-based configuration with schema validation
 - Live configuration updates without restart
 - Default configuration with sensible values

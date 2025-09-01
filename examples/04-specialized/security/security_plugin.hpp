@@ -12,23 +12,23 @@
 
 #pragma once
 
-#include <QObject>
-#include <QTimer>
 #include <QJsonObject>
 #include <QMutex>
+#include <QObject>
 #include <QReadWriteLock>
+#include <QTimer>
 #include <atomic>
 #include <memory>
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
+#include "qtplugin/communication/message_bus.hpp"
 #include "qtplugin/core/plugin_interface.hpp"
-#include "qtplugin/security/security_manager.hpp"
 #include "qtplugin/security/components/permission_manager.hpp"
+#include "qtplugin/security/components/security_policy_engine.hpp"
 #include "qtplugin/security/components/security_validator.hpp"
 #include "qtplugin/security/components/signature_verifier.hpp"
-#include "qtplugin/security/components/security_policy_engine.hpp"
-#include "qtplugin/communication/message_bus.hpp"
+#include "qtplugin/security/security_manager.hpp"
 #include "qtplugin/utils/error_handling.hpp"
 
 /**
@@ -72,7 +72,8 @@ public:
 
     // === Configuration Management ===
     std::optional<QJsonObject> default_configuration() const override;
-    qtplugin::expected<void, qtplugin::PluginError> configure(const QJsonObject& config) override;
+    qtplugin::expected<void, qtplugin::PluginError> configure(
+        const QJsonObject& config) override;
     QJsonObject current_configuration() const override;
     bool validate_configuration(const QJsonObject& config) const override;
 
@@ -106,8 +107,8 @@ public:
      * @return Validation result
      */
     qtplugin::SecurityValidationResult validate_plugin_file(
-        const QString& file_path,
-        qtplugin::SecurityLevel required_level = qtplugin::SecurityLevel::Standard);
+        const QString& file_path, qtplugin::SecurityLevel required_level =
+                                      qtplugin::SecurityLevel::Standard);
 
     /**
      * @brief Check permissions for a specific operation
@@ -115,7 +116,8 @@ public:
      * @param context Security context
      * @return Permission check result
      */
-    bool check_permission(const QString& operation, const QJsonObject& context = {});
+    bool check_permission(const QString& operation,
+                          const QJsonObject& context = {});
 
     /**
      * @brief Set security policy for the plugin
@@ -137,7 +139,8 @@ public:
      * @param event_type Type of security event
      * @param details Event details
      */
-    void audit_security_event(const QString& event_type, const QJsonObject& details);
+    void audit_security_event(const QString& event_type,
+                              const QJsonObject& details);
 
 private slots:
     void on_security_timer_timeout();
@@ -161,7 +164,7 @@ private:
     qtplugin::SecurityLevel m_security_level{qtplugin::SecurityLevel::Standard};
     bool m_audit_enabled{true};
     bool m_strict_validation{false};
-    int m_security_check_interval{30000}; // 30 seconds
+    int m_security_check_interval{30000};  // 30 seconds
 
     // === Monitoring ===
     std::unique_ptr<QTimer> m_security_timer;

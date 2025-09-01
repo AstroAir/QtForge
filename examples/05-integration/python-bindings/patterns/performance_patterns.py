@@ -57,10 +57,12 @@ class PerformancePatternsExample:
 
             end_time = time.time()
             total_time = end_time - start_time
-            avg_time = (total_time / iterations) * 1000  # Convert to milliseconds
+            avg_time = (total_time / iterations) * \
+                1000  # Convert to milliseconds
 
             self.performance_metrics[op_name] = avg_time
-            print(f"   {op_name}: {avg_time:.4f} ms/call ({iterations} iterations)")
+            print(
+                f"   {op_name}: {avg_time:.4f} ms/call ({iterations} iterations)")
 
     def demonstrate_batch_operations(self) -> None:
         """Demonstrate efficient batch operations."""
@@ -78,7 +80,8 @@ class PerformancePatternsExample:
             created_versions.append(version_str)
 
         batch_time = time.time() - start_time
-        print(f"     Created {len(created_versions)} versions in {batch_time:.4f} seconds")
+        print(
+            f"     Created {len(created_versions)} versions in {batch_time:.4f} seconds")
 
         # Batch error creation
         print(f"   Batch Error Creation:")
@@ -87,11 +90,13 @@ class PerformancePatternsExample:
         start_time = time.time()
         created_errors = []
         for code in error_codes:
-            error_msg = self.qtforge.create_error(code, f"Error message {code}")
+            error_msg = self.qtforge.create_error(
+                code, f"Error message {code}")
             created_errors.append(error_msg)
 
         batch_time = time.time() - start_time
-        print(f"     Created {len(created_errors)} errors in {batch_time:.4f} seconds")
+        print(
+            f"     Created {len(created_errors)} errors in {batch_time:.4f} seconds")
 
     def demonstrate_memory_efficiency(self) -> None:
         """Demonstrate memory-efficient patterns."""
@@ -146,7 +151,8 @@ class PerformancePatternsExample:
             def create_version_cached(self, qtforge_module: Any, major: int, minor: int, patch: int) -> str:
                 key = f"version_{major}_{minor}_{patch}"
                 if key not in self.cache:
-                    self.cache[key] = qtforge_module.create_version(major, minor, patch)
+                    self.cache[key] = qtforge_module.create_version(
+                        major, minor, patch)
                     self.misses += 1
                 else:
                     self.hits += 1
@@ -161,7 +167,8 @@ class PerformancePatternsExample:
             version_str = cache.create_version_cached(self.qtforge, 1, 2, 3)
 
         print(f"     Cache hits: {cache.hits}, misses: {cache.misses}")
-        print(f"     Hit ratio: {cache.hits / (cache.hits + cache.misses) * 100:.1f}%")
+        print(
+            f"     Hit ratio: {cache.hits / (cache.hits + cache.misses) * 100:.1f}%")
 
     def demonstrate_optimization_techniques(self) -> None:
         """Demonstrate various optimization techniques."""
@@ -169,7 +176,7 @@ class PerformancePatternsExample:
 
         # Technique 1: Pre-compile frequently used operations
         print("   Pre-compilation Technique:")
-        
+
         # Create a list of pre-compiled operations
         operations = [
             lambda: self.qtforge.get_version(),
@@ -187,12 +194,12 @@ class PerformancePatternsExample:
 
         # Technique 2: String formatting optimization
         print("   String Formatting Optimization:")
-        
+
         start_time = time.time()
         for i in range(1000):
             # Efficient string formatting
             error_msg = f"Error {i}: Operation failed"
-            
+
         efficient_time = time.time() - start_time
         print(f"     Efficient formatting: {efficient_time:.4f} seconds")
 
@@ -206,14 +213,14 @@ class PerformancePatternsExample:
 
         # Profile a sample operation
         profiler = cProfile.Profile()
-        
+
         profiler.enable()
-        
+
         # Sample operations to profile
         for i in range(50):
             version = self.qtforge.create_version(1, i % 10, 0)
             parsed = self.qtforge.parse_version(version)
-            
+
         profiler.disable()
 
         # Analyze results
@@ -221,10 +228,10 @@ class PerformancePatternsExample:
         ps = pstats.Stats(profiler, stream=s)
         ps.sort_stats('cumulative')
         ps.print_stats(10)  # Top 10 functions
-        
+
         profile_output = s.getvalue()
         lines = profile_output.split('\n')[:15]  # First 15 lines
-        
+
         print("   Profiling Results (top functions):")
         for line in lines:
             if line.strip():
@@ -260,13 +267,16 @@ class PerformancePatternsExample:
             # Show performance summary
             summary = self.get_performance_summary()
             print(f"\n📈 Performance Summary:")
-            print(f"   Total operations measured: {summary['total_operations']}")
+            print(
+                f"   Total operations measured: {summary['total_operations']}")
             if summary['average_time'] > 0:
                 print(f"   Average time: {summary['average_time']:.4f} ms")
             if summary['fastest_operation']:
-                print(f"   Fastest: {summary['fastest_operation'][0]} ({summary['fastest_operation'][1]:.4f} ms)")
+                print(
+                    f"   Fastest: {summary['fastest_operation'][0]} ({summary['fastest_operation'][1]:.4f} ms)")
             if summary['slowest_operation']:
-                print(f"   Slowest: {summary['slowest_operation'][0]} ({summary['slowest_operation'][1]:.4f} ms)")
+                print(
+                    f"   Slowest: {summary['slowest_operation'][0]} ({summary['slowest_operation'][1]:.4f} ms)")
 
             print(f"\n🎉 Performance patterns examples completed successfully!")
             return 0

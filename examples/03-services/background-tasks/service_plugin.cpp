@@ -595,10 +595,12 @@ QJsonObject ServicePlugin::resource_usage() const {
     QJsonObject result;
     result["estimated_memory_kb"] = static_cast<qint64>(memory_estimate);
     result["estimated_cpu_percent"] = cpu_estimate;
-    result["thread_count"] = m_worker_thread && m_worker_thread->isRunning() ? 2 : 1;
+    result["thread_count"] =
+        m_worker_thread && m_worker_thread->isRunning() ? 2 : 1;
     result["timer_count"] = 2;
-    result["active_timers"] = (m_processing_timer && m_processing_timer->isActive() ? 1 : 0) +
-                              (m_heartbeat_timer && m_heartbeat_timer->isActive() ? 1 : 0);
+    result["active_timers"] =
+        (m_processing_timer && m_processing_timer->isActive() ? 1 : 0) +
+        (m_heartbeat_timer && m_heartbeat_timer->isActive() ? 1 : 0);
     result["message_bus_connected"] = m_message_bus != nullptr;
 #ifdef QTFORGE_HAS_NETWORK
     result["service_discovery_connected"] = m_service_discovery != nullptr;

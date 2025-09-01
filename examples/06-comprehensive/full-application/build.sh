@@ -45,40 +45,40 @@ print_error() {
 
 check_dependencies() {
     print_header "Checking Dependencies"
-    
+
     # Check for required tools
     local missing_deps=()
-    
+
     if ! command -v cmake >/dev/null 2>&1; then
         missing_deps+=("cmake")
     fi
-    
+
     if ! command -v make >/dev/null 2>&1 && ! command -v ninja >/dev/null 2>&1; then
         missing_deps+=("make or ninja")
     fi
-    
+
     if ! command -v pkg-config >/dev/null 2>&1; then
         missing_deps+=("pkg-config")
     fi
-    
+
     # Check Qt6
     if ! pkg-config --exists Qt6Core; then
         missing_deps+=("Qt6")
     fi
-    
+
     if [ ${#missing_deps[@]} -ne 0 ]; then
         print_error "Missing dependencies: ${missing_deps[*]}"
         echo "Please install the missing dependencies and try again."
         exit 1
     fi
-    
+
     print_info "All dependencies found"
-    
+
     # Print versions
     echo "Tool versions:"
     echo "  CMake: $(cmake --version | head -n1)"
     echo "  Qt6: $(pkg-config --modversion Qt6Core)"
-    
+
     if command -v python3 >/dev/null 2>&1; then
         echo "  Python: $(python3 --version)"
     fi
@@ -86,11 +86,11 @@ check_dependencies() {
 
 configure_build() {
     print_header "Configuring Build"
-    
+
     # Create build directory
     mkdir -p "$BUILD_DIR"
     cd "$BUILD_DIR"
-    
+
     # Determine generator
     local generator=""
     if command -v ninja >/dev/null 2>&1; then
@@ -99,7 +99,7 @@ configure_build() {
     else
         print_info "Using Make generator"
     fi
-    
+
     # CMake configuration
     print_info "Running CMake configuration..."
     cmake .. $generator \
@@ -110,26 +110,26 @@ configure_build() {
         -DQTFORGE_PYTHON_SUPPORT="$QTFORGE_PYTHON_SUPPORT" \
         -DENABLE_COVERAGE="$ENABLE_COVERAGE" \
         -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-    
+
     print_info "Configuration completed successfully"
 }
 
 build_project() {
     print_header "Building Project"
-    
+
     print_info "Building with $PARALLEL_JOBS parallel jobs..."
     cmake --build . --parallel "$PARALLEL_JOBS"
-    
+
     print_info "Build completed successfully"
 }
 
 run_tests() {
     if [ "$BUILD_TESTS" = "ON" ]; then
         print_header "Running Tests"
-        
+
         print_info "Running test suite..."
         ctest --output-on-failure --parallel "$PARALLEL_JOBS"
-        
+
         print_info "All tests passed"
     else
         print_info "Tests disabled, skipping test execution"
@@ -139,7 +139,7 @@ run_tests() {
 generate_documentation() {
     if [ "$BUILD_DOCUMENTATION" = "ON" ]; then
         print_header "Generating Documentation"
-        
+
         if command -v doxygen >/dev/null 2>&1; then
             cmake --build . --target doc_comprehensive_example
             print_info "Documentation generated successfully"
@@ -154,10 +154,10 @@ generate_documentation() {
 install_project() {
     if [ "$1" = "--install" ]; then
         print_header "Installing Project"
-        
+
         print_info "Installing to $INSTALL_PREFIX..."
         cmake --install . --prefix "$INSTALL_PREFIX"
-        
+
         print_info "Installation completed successfully"
     fi
 }
@@ -165,10 +165,10 @@ install_project() {
 create_package() {
     if [ "$1" = "--package" ]; then
         print_header "Creating Package"
-        
+
         print_info "Creating distribution package..."
         cpack
-        
+
         print_info "Package created successfully"
     fi
 }
@@ -176,22 +176,22 @@ create_package() {
 run_demo() {
     if [ "$1" = "--run" ]; then
         print_header "Running Demo"
-        
+
         print_info "Starting comprehensive demo..."
-        
+
         # Ensure plugins directory exists
         mkdir -p plugins
-        
+
         # Run the demo
         ./comprehensive_demo --plugin-dir=plugins --enable-python="$QTFORGE_PYTHON_SUPPORT"
-        
+
         print_info "Demo completed"
     fi
 }
 
 print_summary() {
     print_header "Build Summary"
-    
+
     echo "Configuration:"
     echo "  Build Type: $BUILD_TYPE"
     echo "  Build Directory: $BUILD_DIR"
@@ -202,20 +202,20 @@ print_summary() {
     echo "  Python Support: $QTFORGE_PYTHON_SUPPORT"
     echo "  Coverage: $ENABLE_COVERAGE"
     echo ""
-    
+
     echo "Build artifacts:"
     if [ -f "comprehensive_demo" ]; then
         echo "  ✅ Main application: comprehensive_demo"
     fi
-    
+
     if [ -f "plugins/comprehensive_plugin.qtplugin" ]; then
         echo "  ✅ Comprehensive plugin: plugins/comprehensive_plugin.qtplugin"
     fi
-    
+
     if [ -f "test_comprehensive_plugin" ]; then
         echo "  ✅ Test executable: test_comprehensive_plugin"
     fi
-    
+
     echo ""
     echo "Usage:"
     echo "  Run demo:           ./comprehensive_demo"
@@ -223,7 +223,7 @@ print_summary() {
     echo "  Run tests:          ctest"
     echo "  Run Python demo:    python3 ../python/comprehensive_demo.py"
     echo ""
-    
+
     if [ "$QTFORGE_PYTHON_SUPPORT" = "ON" ]; then
         echo "Python integration:"
         echo "  Python demo:        python3 ../python/comprehensive_demo.py"
@@ -325,35 +325,35 @@ done
 # Main execution
 main() {
     print_header "QtForge Comprehensive Example Build"
-    
+
     # Clean build if requested
     if [ "$CLEAN_BUILD" = true ]; then
         print_info "Cleaning build directory..."
         rm -rf "$BUILD_DIR"
     fi
-    
+
     # Execute build steps
     check_dependencies
     configure_build
     build_project
     run_tests
     generate_documentation
-    
+
     # Optional steps
     if [ "$INSTALL_PROJECT" = true ]; then
         install_project --install
     fi
-    
+
     if [ "$CREATE_PACKAGE" = true ]; then
         create_package --package
     fi
-    
+
     if [ "$RUN_DEMO" = true ]; then
         run_demo --run
     fi
-    
+
     print_summary
-    
+
     print_info "Build script completed successfully!"
 }
 

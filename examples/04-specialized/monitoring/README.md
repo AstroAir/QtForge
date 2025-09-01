@@ -74,13 +74,14 @@ Manage hot reload functionality for plugins:
 ```
 
 **Response:**
+
 ```json
 {
-    "action": "enable",
-    "plugin_id": "my_plugin",
-    "file_path": "/path/to/plugin.dll",
-    "success": true,
-    "timestamp": "2024-01-15T10:30:00Z"
+  "action": "enable",
+  "plugin_id": "my_plugin",
+  "file_path": "/path/to/plugin.dll",
+  "success": true,
+  "timestamp": "2024-01-15T10:30:00Z"
 }
 ```
 
@@ -97,18 +98,19 @@ Collect and retrieve plugin metrics:
 ```
 
 **Response:**
+
 ```json
 {
-    "action": "get_plugin",
-    "plugin_id": "my_plugin",
-    "metrics": {
-        "cpu_usage": 15.5,
-        "memory_usage": 256.0,
-        "uptime_ms": 3600000,
-        "error_count": 0
-    },
-    "timestamp": "2024-01-15T10:30:00Z",
-    "success": true
+  "action": "get_plugin",
+  "plugin_id": "my_plugin",
+  "metrics": {
+    "cpu_usage": 15.5,
+    "memory_usage": 256.0,
+    "uptime_ms": 3600000,
+    "error_count": 0
+  },
+  "timestamp": "2024-01-15T10:30:00Z",
+  "success": true
 }
 ```
 
@@ -122,6 +124,7 @@ Get comprehensive monitoring dashboard:
 ```
 
 **Response includes:**
+
 - System overview with key metrics
 - Plugin status and health information
 - Performance summaries and trends
@@ -189,24 +192,24 @@ Get historical metrics data:
 
 ```json
 {
-    "hot_reload_enabled": true,
-    "metrics_collection_enabled": true,
-    "alerts_enabled": true,
-    "monitoring_interval": 5000,
-    "metrics_collection_interval": 10000,
-    "alert_check_interval": 15000,
-    "metrics_history_size": 1000,
-    "watched_directories": ["plugins"],
-    "metric_types": ["cpu_usage", "memory_usage", "plugin_count", "error_rate"],
-    "alert_thresholds": {
-        "cpu_usage_max": 80.0,
-        "memory_usage_max": 1024.0,
-        "error_rate_max": 5.0,
-        "plugin_load_time_max": 5000
-    },
-    "dashboard_refresh_rate": 2000,
-    "enable_file_monitoring": true,
-    "enable_performance_tracking": true
+  "hot_reload_enabled": true,
+  "metrics_collection_enabled": true,
+  "alerts_enabled": true,
+  "monitoring_interval": 5000,
+  "metrics_collection_interval": 10000,
+  "alert_check_interval": 15000,
+  "metrics_history_size": 1000,
+  "watched_directories": ["plugins"],
+  "metric_types": ["cpu_usage", "memory_usage", "plugin_count", "error_rate"],
+  "alert_thresholds": {
+    "cpu_usage_max": 80.0,
+    "memory_usage_max": 1024.0,
+    "error_rate_max": 5.0,
+    "plugin_load_time_max": 5000
+  },
+  "dashboard_refresh_rate": 2000,
+  "enable_file_monitoring": true,
+  "enable_performance_tracking": true
 }
 ```
 

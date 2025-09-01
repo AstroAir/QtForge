@@ -14,6 +14,7 @@ This guide provides detailed instructions on how to build, run, and understand t
 ### Build and Run
 
 #### Linux/macOS
+
 ```bash
 # Clone and navigate to the example
 cd examples/comprehensive_example
@@ -29,6 +30,7 @@ cd examples/comprehensive_example
 ```
 
 #### Windows
+
 ```cmd
 # Navigate to the example
 cd examples\comprehensive_example
@@ -47,33 +49,33 @@ build.bat --clean --run
 
 ### Common Build Options
 
-| Option | Description |
-|--------|-------------|
-| `--help` | Show help message |
-| `--clean` | Clean build directory before building |
-| `--debug` | Build in Debug mode |
-| `--release` | Build in Release mode (default) |
-| `--install` | Install after building |
-| `--package` | Create distribution package |
-| `--run` | Run demo after building |
+| Option      | Description                           |
+| ----------- | ------------------------------------- |
+| `--help`    | Show help message                     |
+| `--clean`   | Clean build directory before building |
+| `--debug`   | Build in Debug mode                   |
+| `--release` | Build in Release mode (default)       |
+| `--install` | Install after building                |
+| `--package` | Create distribution package           |
+| `--run`     | Run demo after building               |
 
 ### Feature Options
 
-| Option | Description |
-|--------|-------------|
-| `--with-python` | Enable Python bridge support |
-| `--with-docs` | Enable documentation generation |
-| `--with-coverage` | Enable code coverage |
-| `--no-tests` | Disable unit tests |
+| Option            | Description                     |
+| ----------------- | ------------------------------- |
+| `--with-python`   | Enable Python bridge support    |
+| `--with-docs`     | Enable documentation generation |
+| `--with-coverage` | Enable code coverage            |
+| `--no-tests`      | Disable unit tests              |
 
 ### Environment Variables
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `BUILD_TYPE` | Release | Build configuration |
-| `BUILD_DIR` | build | Build directory |
-| `INSTALL_PREFIX` | /usr/local | Installation prefix |
-| `PARALLEL_JOBS` | auto | Number of parallel build jobs |
+| Variable         | Default    | Description                   |
+| ---------------- | ---------- | ----------------------------- |
+| `BUILD_TYPE`     | Release    | Build configuration           |
+| `BUILD_DIR`      | build      | Build directory               |
+| `INSTALL_PREFIX` | /usr/local | Installation prefix           |
+| `PARALLEL_JOBS`  | auto       | Number of parallel build jobs |
 
 ## 🎯 Running the Demo
 
@@ -98,14 +100,14 @@ build.bat --clean --run
 
 ### Command Line Options
 
-| Option | Description |
-|--------|-------------|
-| `--plugin-dir=DIR` | Plugin directory path |
-| `--enable-python` | Enable Python bridge |
-| `--enable-ui` | Enable UI components |
+| Option                   | Description                      |
+| ------------------------ | -------------------------------- |
+| `--plugin-dir=DIR`       | Plugin directory path            |
+| `--enable-python`        | Enable Python bridge             |
+| `--enable-ui`            | Enable UI components             |
 | `--security-level=LEVEL` | Security level (low/medium/high) |
-| `--help` | Show help message |
-| `--version` | Show version information |
+| `--help`                 | Show help message                |
+| `--version`              | Show version information         |
 
 ### Expected Output
 
@@ -174,6 +176,7 @@ python3 ../python/comprehensive_demo.py --disable-security --disable-monitoring
 ### Python Demo Features
 
 The Python demo demonstrates:
+
 - Plugin management from Python
 - Inter-plugin communication
 - Security validation
@@ -220,6 +223,7 @@ xdg-open coverage/index.html  # Linux
 ## 📊 Features Demonstrated
 
 ### Core Plugin System
+
 - ✅ Plugin loading and management
 - ✅ Plugin lifecycle management
 - ✅ Plugin dependency resolution
@@ -227,34 +231,40 @@ xdg-open coverage/index.html  # Linux
 - ✅ Hot reload capabilities
 
 ### Communication System
+
 - ✅ Message bus for inter-plugin communication
 - ✅ Request-response system
 - ✅ Event publishing and subscription
 - ✅ Message filtering and routing
 
 ### Security Management
+
 - ✅ Plugin validation and verification
 - ✅ Security level enforcement
 - ✅ Trust management
 - ✅ Permission control
 
 ### Monitoring & Metrics
+
 - ✅ Real-time plugin monitoring
 - ✅ Performance metrics collection
 - ✅ System health monitoring
 - ✅ Hot reload management
 
 ### Orchestration & Workflows
+
 - ✅ Plugin orchestration
 - ✅ Workflow definition and execution
 - ✅ Step-by-step processing
 
 ### Transaction Management
+
 - ✅ ACID transaction support
 - ✅ Rollback capabilities
 - ✅ Transaction monitoring
 
 ### Additional Features
+
 - ✅ Plugin composition patterns
 - ✅ Marketplace integration
 - ✅ Threading and concurrency
@@ -313,6 +323,7 @@ The comprehensive plugin supports these configuration options:
 #### Build Failures
 
 **Qt6 not found:**
+
 ```bash
 # Install Qt6 development packages
 sudo apt-get install qt6-base-dev  # Ubuntu/Debian
@@ -320,6 +331,7 @@ brew install qt6  # macOS
 ```
 
 **CMake version too old:**
+
 ```bash
 # Install newer CMake
 pip install cmake  # Via pip
@@ -329,11 +341,13 @@ pip install cmake  # Via pip
 #### Runtime Issues
 
 **Plugin loading fails:**
+
 - Check plugin directory exists: `ls -la plugins/`
 - Verify plugin file permissions
 - Check QtForge library is properly installed
 
 **Python integration fails:**
+
 - Ensure Python support was built: `--with-python`
 - Check Python path: `export PYTHONPATH=$PYTHONPATH:$(pwd)`
 - Verify qtforge Python module is available
@@ -355,18 +369,21 @@ export QTFORGE_LOG_LEVEL=debug
 ## 📚 Learning Path
 
 ### Beginner
+
 1. Run the basic demo to see all features in action
 2. Examine the main.cpp to understand initialization
 3. Study the plugin interface implementation
 4. Explore the configuration system
 
 ### Intermediate
+
 5. Modify the plugin to add custom commands
 6. Implement inter-plugin communication
 7. Add custom monitoring metrics
 8. Create workflow definitions
 
 ### Advanced
+
 9. Implement custom security policies
 10. Add marketplace integration
 11. Create Python plugin extensions

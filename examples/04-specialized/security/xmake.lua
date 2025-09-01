@@ -18,41 +18,41 @@ add_requires("qt6core", {optional = true, configs = {shared = true}})
 target("security_plugin")
     set_kind("shared")
     set_basename("security_plugin")
-    
+
     -- Add Qt rules for proper Qt integration with MOC support
     add_rules("qt.shared")
-    
+
     -- Add source files
     add_files("security_plugin.cpp")
-    
+
     -- Add header files
     add_headerfiles("security_plugin.hpp")
-    
+
     -- Add metadata files
     add_installfiles("security_plugin.json", {prefixdir = "lib/qtplugin/examples"})
-    
+
     -- Add Qt packages for proper MOC support
     add_packages("qt6core")
-    
+
     -- Add Qt frameworks
     add_frameworks("QtCore")
-    
+
     -- Link with QtForge (assuming it's available in parent directory)
     add_deps("QtForgeCore", "QtForgeSecurity")
     add_includedirs("../../../include", {public = false})
-    
+
     -- Set output directory
     set_targetdir("$(buildir)/lib")
-    
+
     -- Set version
     set_version("3.0.0")
-    
+
     -- Set visibility
     set_symbols("hidden")
-    
+
     -- Export symbols for shared library
     add_defines("SECURITY_PLUGIN_EXPORTS")
-    
+
     -- Install plugin
     add_installfiles("$(targetdir)/$(targetname)$(extension)", {prefixdir = "lib"})
 target_end()
@@ -61,32 +61,32 @@ target_end()
 target("SecurityPluginTest")
     set_kind("binary")
     set_basename("security_plugin_test")
-    
+
     -- Add Qt rules
     add_rules("qt.console")
-    
+
     -- Add source files
     add_files("test_security_plugin.cpp")
-    
+
     -- Add Qt packages
     add_packages("qt6core")
-    
+
     -- Add Qt frameworks
     add_frameworks("QtCore")
-    
+
     -- Link with QtForge and security plugin
     add_deps("QtForgeCore", "QtForgeSecurity", "security_plugin")
     add_includedirs("../../../include", {public = false})
-    
+
     -- Set output directory
     set_targetdir("$(buildir)/bin/examples")
-    
+
     -- Set version
     set_version("3.0.0")
-    
+
     -- Install test
     add_installfiles("$(targetdir)/$(targetname)$(extension)", {prefixdir = "bin/examples"})
-    
+
     -- Copy plugin and metadata to test directory after build
     after_build(function (target)
         local plugin_target = target:dep("security_plugin")

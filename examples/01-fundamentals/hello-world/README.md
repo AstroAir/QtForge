@@ -42,12 +42,12 @@ if (result) {
     // Execute hello command
     auto response = plugin->execute_command("hello");
     // Output: {"message": "Hello, World!", "timestamp": "...", "plugin": "HelloWorldPlugin"}
-    
+
     // Execute with custom name
     QJsonObject params{{"name", "QtForge"}};
     auto custom_response = plugin->execute_command("hello", params);
     // Output: {"message": "Hello, QtForge!", "timestamp": "...", "plugin": "HelloWorldPlugin"}
-    
+
     plugin->shutdown();
 }
 ```
@@ -55,16 +55,19 @@ if (result) {
 ## Code Structure
 
 ### Header File (`hello_world_plugin.hpp`)
+
 - Plugin class declaration
 - Essential IPlugin interface methods
 - Minimal member variables
 
 ### Implementation (`hello_world_plugin.cpp`)
+
 - Simple initialization and shutdown
 - Single command implementation
 - Basic error handling
 
 ### Metadata (`hello_world_plugin.json`)
+
 - Plugin identification
 - Command listing
 - Basic configuration schema
@@ -72,17 +75,20 @@ if (result) {
 ## Available Commands
 
 ### `hello`
+
 Greets the user with an optional custom name.
 
 **Parameters:**
+
 - `name` (optional): Name to greet (default: "World")
 
 **Response:**
+
 ```json
 {
-    "message": "Hello, [name]!",
-    "timestamp": "2024-01-15T10:30:00Z",
-    "plugin": "HelloWorldPlugin"
+  "message": "Hello, [name]!",
+  "timestamp": "2024-01-15T10:30:00Z",
+  "plugin": "HelloWorldPlugin"
 }
 ```
 
@@ -97,6 +103,7 @@ After mastering this example, continue to:
 ## Key Concepts Demonstrated
 
 ### 1. Plugin Interface Implementation
+
 ```cpp
 class HelloWorldPlugin : public QObject, public qtplugin::IPlugin {
     Q_OBJECT
@@ -107,17 +114,18 @@ class HelloWorldPlugin : public QObject, public qtplugin::IPlugin {
 ```
 
 ### 2. Command Execution Pattern
+
 ```cpp
 qtplugin::expected<QJsonObject, qtplugin::PluginError> execute_command(
     std::string_view command, const QJsonObject& params) {
-    
+
     if (command == "hello") {
         QString name = params.value("name").toString("World");
         QJsonObject result;
         result["message"] = QString("Hello, %1!").arg(name);
         return result;
     }
-    
+
     return qtplugin::make_unexpected(qtplugin::PluginError{
         qtplugin::PluginErrorCode::CommandNotFound,
         "Unknown command"
@@ -126,6 +134,7 @@ qtplugin::expected<QJsonObject, qtplugin::PluginError> execute_command(
 ```
 
 ### 3. Error Handling
+
 ```cpp
 // Using expected<T,E> pattern for error handling
 if (m_state != qtplugin::PluginState::Loaded) {
@@ -153,6 +162,7 @@ A: Add them to the `execute_command` method and `available_commands` list.
 ## Next Steps
 
 Once you understand this example:
+
 - Try modifying the hello command
 - Add a new command (e.g., "goodbye")
 - Experiment with different parameter types

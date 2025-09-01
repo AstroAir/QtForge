@@ -26,12 +26,7 @@
     "platform": ["windows", "linux", "macos"],
     "architecture": ["x86_64", "arm64"]
   },
-  "capabilities": [
-    "service",
-    "network",
-    "data_processor",
-    "scripting"
-  ],
+  "capabilities": ["service", "network", "data_processor", "scripting"],
   "features": {
     "communication": {
       "enabled": true,
@@ -46,7 +41,11 @@
     "monitoring": {
       "enabled": true,
       "description": "Real-time monitoring and metrics collection",
-      "components": ["metrics_collector", "health_monitoring", "performance_tracking"]
+      "components": [
+        "metrics_collector",
+        "health_monitoring",
+        "performance_tracking"
+      ]
     },
     "networking": {
       "enabled": true,

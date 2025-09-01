@@ -7,9 +7,9 @@
 #pragma once
 
 #include <QDialog>
-#include <QVBoxLayout>
 #include <QLabel>
 #include <QPushButton>
+#include <QVBoxLayout>
 
 /**
  * @brief About dialog showing plugin information

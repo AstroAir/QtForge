@@ -4,18 +4,17 @@
  */
 
 #include "basic_plugin.hpp"
-#include <QDebug>
 #include <QDateTime>
+#include <QDebug>
 #include <QMutexLocker>
-#include <string_view>
 #include <string>
+#include <string_view>
 
 BasicPlugin::BasicPlugin(QObject* parent)
-    : QObject(parent)
-    , m_timer(std::make_unique<QTimer>(this)) {
-
+    : QObject(parent), m_timer(std::make_unique<QTimer>(this)) {
     // Connect timer signal
-    connect(m_timer.get(), &QTimer::timeout, this, &BasicPlugin::on_timer_timeout);
+    connect(m_timer.get(), &QTimer::timeout, this,
+            &BasicPlugin::on_timer_timeout);
 
     // Set default configuration
     auto default_config = default_configuration();
@@ -32,9 +31,7 @@ BasicPlugin::~BasicPlugin() {
 
 // === IPlugin Interface Implementation ===
 
-std::string_view BasicPlugin::name() const noexcept {
-    return "BasicPlugin";
-}
+std::string_view BasicPlugin::name() const noexcept { return "BasicPlugin"; }
 
 std::string_view BasicPlugin::description() const noexcept {
     return "Basic plugin demonstrating core IPlugin interface";
@@ -44,13 +41,9 @@ qtplugin::Version BasicPlugin::version() const noexcept {
     return qtplugin::Version{2, 0, 0};
 }
 
-std::string_view BasicPlugin::author() const noexcept {
-    return "QtForge Team";
-}
+std::string_view BasicPlugin::author() const noexcept { return "QtForge Team"; }
 
-std::string BasicPlugin::id() const noexcept {
-    return "qtplugin.BasicPlugin";
-}
+std::string BasicPlugin::id() const noexcept { return "qtplugin.BasicPlugin"; }
 
 qtplugin::PluginCapabilities BasicPlugin::capabilities() const noexcept {
     return qtplugin::PluginCapabilities{};
@@ -59,7 +52,7 @@ qtplugin::PluginCapabilities BasicPlugin::capabilities() const noexcept {
 qtplugin::expected<void, qtplugin::PluginError> BasicPlugin::initialize() {
     if (m_state == qtplugin::PluginState::Loaded) {
         return qtplugin::make_error<void>(qtplugin::PluginErrorCode::StateError,
-            "Plugin already initialized");
+                                          "Plugin already initialized");
     }
 
     qDebug() << "BasicPlugin: Initializing...";
@@ -67,10 +60,12 @@ qtplugin::expected<void, qtplugin::PluginError> BasicPlugin::initialize() {
     // Apply configuration
     QMutexLocker locker(&m_config_mutex);
     int interval = m_configuration.value("timer_interval").toInt(5000);
-    bool logging_enabled = m_configuration.value("logging_enabled").toBool(true);
+    bool logging_enabled =
+        m_configuration.value("logging_enabled").toBool(true);
 
     if (logging_enabled) {
-        qDebug() << "BasicPlugin: Logging enabled, timer interval:" << interval << "ms";
+        qDebug() << "BasicPlugin: Logging enabled, timer interval:" << interval
+                 << "ms";
     }
 
     // Start timer if enabled
@@ -98,9 +93,9 @@ void BasicPlugin::shutdown() noexcept {
 
 qtplugin::expected<void, qtplugin::PluginError> BasicPlugin::configure(
     const QJsonObject& config) {
-
     if (!validate_configuration(config)) {
-        return qtplugin::make_error<void>(qtplugin::PluginErrorCode::ConfigurationError,
+        return qtplugin::make_error<void>(
+            qtplugin::PluginErrorCode::ConfigurationError,
             "Invalid configuration provided");
     }
 
@@ -112,22 +107,24 @@ qtplugin::expected<void, qtplugin::PluginError> BasicPlugin::configure(
     }
 
     // Apply timer interval change if plugin is running
-    if (m_state == qtplugin::PluginState::Loaded && config.contains("timer_interval")) {
+    if (m_state == qtplugin::PluginState::Loaded &&
+        config.contains("timer_interval")) {
         int new_interval = config.value("timer_interval").toInt();
         m_timer->setInterval(new_interval);
-        qDebug() << "BasicPlugin: Timer interval updated to" << new_interval << "ms";
+        qDebug() << "BasicPlugin: Timer interval updated to" << new_interval
+                 << "ms";
     }
 
     qDebug() << "BasicPlugin: Configuration updated successfully";
     return {};
 }
 
-qtplugin::expected<QJsonObject, qtplugin::PluginError> BasicPlugin::execute_command(
-    std::string_view command, const QJsonObject& params) {
-
+qtplugin::expected<QJsonObject, qtplugin::PluginError>
+BasicPlugin::execute_command(std::string_view command,
+                             const QJsonObject& params) {
     if (m_state != qtplugin::PluginState::Loaded) {
-        return qtplugin::make_error<QJsonObject>(qtplugin::PluginErrorCode::InvalidState,
-            "Plugin not initialized");
+        return qtplugin::make_error<QJsonObject>(
+            qtplugin::PluginErrorCode::InvalidState, "Plugin not initialized");
     }
 
     try {
@@ -141,11 +138,13 @@ qtplugin::expected<QJsonObject, qtplugin::PluginError> BasicPlugin::execute_comm
             return execute_timer_command(params);
         }
 
-        return qtplugin::make_error<QJsonObject>(qtplugin::PluginErrorCode::CommandNotFound,
+        return qtplugin::make_error<QJsonObject>(
+            qtplugin::PluginErrorCode::CommandNotFound,
             std::string("Unknown command: ") + std::string(command));
 
     } catch (const std::exception& e) {
-        return qtplugin::make_error<QJsonObject>(qtplugin::PluginErrorCode::UnknownError,
+        return qtplugin::make_error<QJsonObject>(
+            qtplugin::PluginErrorCode::UnknownError,
             std::string("Command execution failed: ") + e.what());
     }
 }
@@ -192,7 +191,8 @@ void BasicPlugin::on_timer_timeout() {
     int count = ++m_timer_count;
 
     QMutexLocker locker(&m_config_mutex);
-    bool logging_enabled = m_configuration.value("logging_enabled").toBool(true);
+    bool logging_enabled =
+        m_configuration.value("logging_enabled").toBool(true);
     QString message = m_configuration.value("custom_message").toString();
 
     if (logging_enabled) {
@@ -205,7 +205,8 @@ bool BasicPlugin::validate_configuration(const QJsonObject& config) const {
     if (config.contains("timer_interval")) {
         int interval = config.value("timer_interval").toInt(-1);
         if (interval < 1000 || interval > 60000) {
-            qWarning() << "BasicPlugin: Invalid timer_interval, must be 1000-60000ms";
+            qWarning()
+                << "BasicPlugin: Invalid timer_interval, must be 1000-60000ms";
             return false;
         }
     }
@@ -214,7 +215,8 @@ bool BasicPlugin::validate_configuration(const QJsonObject& config) const {
     if (config.contains("custom_message")) {
         QString message = config.value("custom_message").toString();
         if (message.length() > 200) {
-            qWarning() << "BasicPlugin: custom_message too long, max 200 characters";
+            qWarning()
+                << "BasicPlugin: custom_message too long, max 200 characters";
             return false;
         }
     }

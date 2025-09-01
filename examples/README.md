@@ -5,27 +5,34 @@
 ## 🎯 Quick Start Guide
 
 **New to QtForge?** Start here:
+
 1. **[Hello World](01-fundamentals/hello-world/)** - Your first plugin (5 minutes)
 2. **[Basic Plugin](01-fundamentals/basic-plugin/)** - Core concepts (15 minutes)
 3. **[Message Bus](02-communication/message-bus/)** - Inter-plugin communication (20 minutes)
 
 **Building Applications?** Jump to:
+
 - **[Full Application](06-comprehensive/full-application/)** - Complete feature demonstration
 - **[Background Tasks](03-services/background-tasks/)** - Service-oriented architecture
 
 ## 📚 Learning Path
 
 ### 🌱 01-fundamentals/ - Essential Concepts
+
 Start your QtForge journey with these foundational examples.
 
 #### [hello-world/](01-fundamentals/hello-world/)
+
 **The simplest possible plugin** - Perfect for absolute beginners
+
 - ✅ Minimal IPlugin implementation (~70 lines)
 - ✅ Single `hello` command
 - ✅ Basic lifecycle and error handling
 
 #### [basic-plugin/](01-fundamentals/basic-plugin/)
+
 **Core IPlugin interface** - Foundation for all plugin development
+
 - ✅ Complete lifecycle management
 - ✅ Configuration with validation
 - ✅ Multiple commands (status, echo, config, timer)
@@ -33,41 +40,53 @@ Start your QtForge journey with these foundational examples.
 - ✅ Background processing with QTimer
 
 #### [configuration/](01-fundamentals/configuration/)
+
 **Configuration management patterns** - Essential for production plugins
+
 - ✅ JSON schema validation
 - ✅ Live configuration updates
 - ✅ Default and custom configurations
 - ✅ Configuration persistence
 
 ### 🔄 02-communication/ - Inter-Plugin Communication
+
 Master the art of plugin communication and coordination.
 
 #### [message-bus/](02-communication/message-bus/)
+
 **MessageBus communication patterns** - Core communication system
+
 - ✅ Publishing and subscribing to messages
 - ✅ Type-safe message handling
 - ✅ Message priority and delivery modes
 - ✅ Performance optimization
 
 #### [request-response/](02-communication/request-response/)
+
 **Synchronous communication** - Service-oriented patterns
+
 - ✅ Request-response with timeouts
 - ✅ Asynchronous request handling
 - ✅ Error propagation and handling
 - ✅ Request correlation and tracking
 
 #### [event-driven/](02-communication/event-driven/)
+
 **Event broadcasting and filtering** - Event-driven architecture
+
 - ✅ Event publishing to multiple subscribers
 - ✅ Message filtering and routing
 - ✅ Event aggregation and batching
 - ✅ Performance monitoring
 
 ### ⚙️ 03-services/ - Background Processing
+
 Build robust service-oriented applications with QtForge.
 
 #### [background-tasks/](03-services/background-tasks/)
+
 **Threading and task management** - Service architecture patterns
+
 - ✅ Worker threads and task queues
 - ✅ Thread-safe operations
 - ✅ Service registration and discovery
@@ -75,24 +94,31 @@ Build robust service-oriented applications with QtForge.
 - ✅ Resource management and monitoring
 
 #### [service-discovery/](03-services/service-discovery/)
+
 **Service registration and discovery** - Microservice patterns
+
 - ✅ Automatic service registration
 - ✅ Service metadata and endpoints
 - ✅ Heartbeat and health monitoring
 - ✅ Service lifecycle management
 
 #### [workflow-orchestration/](03-services/workflow-orchestration/)
+
 **Complex workflow management** - Enterprise integration
+
 - ✅ Workflow step execution
 - ✅ Plugin orchestration
 - ✅ Transaction management
 - ✅ Error handling and rollback
 
 ### 🔒 04-specialized/ - Domain-Specific Features
+
 Advanced features for specialized use cases.
 
 #### [security/](04-specialized/security/)
+
 **Security validation and permissions** - Production security
+
 - ✅ Plugin validation and verification
 - ✅ Signature verification and trust chains
 - ✅ Permission management and policies
@@ -100,7 +126,9 @@ Advanced features for specialized use cases.
 - ✅ Real-time security monitoring
 
 #### [monitoring/](04-specialized/monitoring/)
+
 **Hot reload and metrics collection** - Production monitoring
+
 - ✅ Hot reload with file system monitoring
 - ✅ Performance metrics and analysis
 - ✅ Resource usage tracking
@@ -108,7 +136,9 @@ Advanced features for specialized use cases.
 - ✅ Real-time monitoring dashboards
 
 #### [network/](04-specialized/network/)
+
 **Network protocols and APIs** - Network programming
+
 - ✅ HTTP client and server capabilities
 - ✅ WebSocket communication
 - ✅ REST API implementation
@@ -116,41 +146,53 @@ Advanced features for specialized use cases.
 - ✅ Network diagnostics and monitoring
 
 #### [ui-integration/](04-specialized/ui-integration/)
+
 **Qt Widgets integration** - GUI development
+
 - ✅ Qt Widgets and dialog management
 - ✅ Theme support and customization
 - ✅ UI component integration
 - ✅ Event handling and user interaction
 
 ### 🔗 05-integration/ - Cross-Language & External
+
 Integrate QtForge with external systems and languages.
 
 #### [python-bindings/](05-integration/python-bindings/)
+
 **Python integration patterns** - Cross-language development
+
 - ✅ Python bindings and script execution
 - ✅ Error handling across languages
 - ✅ Performance optimization patterns
 - ✅ Advanced usage patterns
 
 #### [version-management/](05-integration/version-management/)
+
 **Plugin versioning and compatibility** - Version control
+
 - ✅ Version handling and comparison
 - ✅ Compatibility checking
 - ✅ Migration strategies
 - ✅ Dependency management
 
 #### [marketplace/](05-integration/marketplace/)
+
 **Plugin discovery and installation** - Plugin ecosystem
+
 - ✅ Plugin discovery and search
 - ✅ Installation and updates
 - ✅ Marketplace integration
 - ✅ Plugin distribution
 
 ### 🚀 06-comprehensive/ - Complete Applications
+
 Real-world applications demonstrating all features.
 
 #### [full-application/](06-comprehensive/full-application/)
+
 **Complete feature demonstration** - Production-ready example
+
 - ✅ **ALL QtForge features** integrated
 - ✅ Enterprise-grade implementation
 - ✅ Comprehensive testing suite
@@ -158,7 +200,9 @@ Real-world applications demonstrating all features.
 - ✅ Cross-platform support
 
 #### [performance-optimized/](06-comprehensive/performance-optimized/)
+
 **High-performance patterns** - Performance engineering
+
 - ✅ Performance optimization techniques
 - ✅ Benchmarking and profiling
 - ✅ Memory and CPU optimization
@@ -315,16 +359,19 @@ cd 06-comprehensive/full-application
 ### 🎯 By Experience Level
 
 **🌱 Beginner (New to QtForge)**
+
 - [Hello World](01-fundamentals/hello-world/) - First plugin
 - [Basic Plugin](01-fundamentals/basic-plugin/) - Core concepts
 - [Configuration](01-fundamentals/configuration/) - Config management
 
 **🔄 Intermediate (Know the basics)**
+
 - [Message Bus](02-communication/message-bus/) - Communication
 - [Background Tasks](03-services/background-tasks/) - Services
 - [Security](04-specialized/security/) - Security patterns
 
 **🚀 Advanced (Building applications)**
+
 - [Workflow Orchestration](03-services/workflow-orchestration/) - Complex workflows
 - [Performance Optimized](06-comprehensive/performance-optimized/) - Optimization
 - [Full Application](06-comprehensive/full-application/) - Complete system
@@ -455,14 +502,17 @@ void MyPlugin::initialize() {
 ### Common Issues and Solutions
 
 #### 🚫 Plugin Loading Failures
+
 - **Symptoms**: Plugin fails to load, "Invalid plugin file format" errors
 - **Solutions**: Check file permissions, validate JSON metadata, verify Qt modules
 
 #### ⚙️ Configuration Errors
+
 - **Symptoms**: Configuration validation failures, type mismatches
 - **Solutions**: Validate JSON syntax, check required fields, verify data types
 
 #### 🏃 Runtime Errors
+
 - **Symptoms**: Plugin crashes, memory violations, thread safety issues
 - **Solutions**: Verify initialization, check resources, monitor memory, ensure thread safety
 
@@ -512,6 +562,7 @@ All examples are provided under the same MIT license as the QtForge library.
 ## 🚀 Migration from Old Structure
 
 **Upgrading from previous examples?** See [MIGRATION_GUIDE.md](MIGRATION_GUIDE.md) for:
+
 - Path mapping from old to new structure
 - Automated migration tools
 - Breaking changes and solutions

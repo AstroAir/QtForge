@@ -12,23 +12,26 @@
 #include <iostream>
 #include <memory>
 
-#include "security_plugin.hpp"
 #include "qtplugin/core/plugin_manager.hpp"
 #include "qtplugin/security/security_manager.hpp"
+#include "security_plugin.hpp"
 
 class SecurityPluginTester {
 public:
     explicit SecurityPluginTester() = default;
 
     int run_tests(const QString& test_type) {
-        // Note: SecurityPlugin is designed as a Qt plugin and should be loaded dynamically
-        // For this test, we'll test the plugin loading mechanism instead
+        // Note: SecurityPlugin is designed as a Qt plugin and should be loaded
+        // dynamically For this test, we'll test the plugin loading mechanism
+        // instead
 
         qInfo() << "=== SecurityPlugin Test Suite ===";
         qInfo() << "Test Type:" << test_type;
         qInfo() << "";
-        qInfo() << "Note: SecurityPlugin is a Qt plugin designed for dynamic loading";
-        qInfo() << "Direct instantiation testing skipped - plugin should be tested via PluginManager";
+        qInfo() << "Note: SecurityPlugin is a Qt plugin designed for dynamic "
+                   "loading";
+        qInfo() << "Direct instantiation testing skipped - plugin should be "
+                   "tested via PluginManager";
 
         bool success = false;
 
@@ -40,13 +43,13 @@ public:
             success = test_permission_functionality();
         } else if (test_type == "all") {
             success = test_basic_functionality() &&
-                     test_validation_functionality() &&
-                     test_permission_functionality() &&
-                     test_audit_functionality() &&
-                     test_policy_functionality();
+                      test_validation_functionality() &&
+                      test_permission_functionality() &&
+                      test_audit_functionality() && test_policy_functionality();
         } else {
             qCritical() << "Unknown test type:" << test_type;
-            qInfo() << "Available test types: basic, validation, permission, all";
+            qInfo()
+                << "Available test types: basic, validation, permission, all";
             return 1;
         }
 
@@ -65,8 +68,6 @@ private:
         qInfo() << "✓ Basic functionality test completed";
         return true;
 
-
-
         qInfo() << "Basic functionality tests: PASSED";
         return true;
     }
@@ -77,8 +78,7 @@ private:
         // Test validation command with dummy file
         QJsonObject params{
             {"file_path", QCoreApplication::applicationFilePath()},
-            {"security_level", 1}
-        };
+            {"security_level", 1}};
 
         qInfo() << "✓ Validation functionality test completed (stub)";
 
@@ -108,7 +108,7 @@ private:
     // Plugin testing via dynamic loading - no direct instantiation needed
 };
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
     QCoreApplication app(argc, argv);
 
     QString test_type = "basic";
@@ -121,5 +121,3 @@ int main(int argc, char *argv[]) {
 
     return result;
 }
-
-

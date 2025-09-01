@@ -1,123 +1,123 @@
 {
-    "name": "RequestResponsePlugin",
-    "version": "1.0.0",
-    "description": "Request-Response communication pattern example plugin",
-    "author": "QtForge Examples",
-    "category": "communication",
-    "tags": ["request-response", "async", "communication", "messaging", "rpc"],
-    "dependencies": {
-        "qtforge_core": ">=1.0.0",
-        "qt_core": ">=6.0.0"
-    },
-    "capabilities": [
-        "request_handling",
-        "response_correlation",
-        "timeout_management",
-        "request_queuing",
-        "statistics_tracking"
-    ],
-    "commands": {
-        "send_request": {
-            "description": "Send a request to a target",
-            "parameters": {
-                "target": {
-                    "type": "string",
-                    "required": true,
-                    "description": "Target service or plugin to send request to"
-                },
-                "request": {
-                    "type": "object",
-                    "required": true,
-                    "description": "Request payload"
-                },
-                "async": {
-                    "type": "boolean",
-                    "required": false,
-                    "default": true,
-                    "description": "Whether to send request asynchronously"
-                },
-                "priority": {
-                    "type": "integer",
-                    "required": false,
-                    "default": 0,
-                    "description": "Request priority (higher = more priority)"
-                }
-            }
+  "name": "RequestResponsePlugin",
+  "version": "1.0.0",
+  "description": "Request-Response communication pattern example plugin",
+  "author": "QtForge Examples",
+  "category": "communication",
+  "tags": ["request-response", "async", "communication", "messaging", "rpc"],
+  "dependencies": {
+    "qtforge_core": ">=1.0.0",
+    "qt_core": ">=6.0.0"
+  },
+  "capabilities": [
+    "request_handling",
+    "response_correlation",
+    "timeout_management",
+    "request_queuing",
+    "statistics_tracking"
+  ],
+  "commands": {
+    "send_request": {
+      "description": "Send a request to a target",
+      "parameters": {
+        "target": {
+          "type": "string",
+          "required": true,
+          "description": "Target service or plugin to send request to"
         },
-        "get_statistics": {
-            "description": "Get request-response statistics",
-            "parameters": {}
+        "request": {
+          "type": "object",
+          "required": true,
+          "description": "Request payload"
         },
-        "clear_statistics": {
-            "description": "Clear all statistics",
-            "parameters": {}
+        "async": {
+          "type": "boolean",
+          "required": false,
+          "default": true,
+          "description": "Whether to send request asynchronously"
         },
-        "list_pending": {
-            "description": "List all pending requests",
-            "parameters": {}
-        },
-        "cancel_request": {
-            "description": "Cancel a pending request",
-            "parameters": {
-                "request_id": {
-                    "type": "string",
-                    "required": true,
-                    "description": "ID of the request to cancel"
-                }
-            }
+        "priority": {
+          "type": "integer",
+          "required": false,
+          "default": 0,
+          "description": "Request priority (higher = more priority)"
         }
+      }
     },
-    "configuration_schema": {
-        "default_timeout_ms": {
-            "type": "integer",
-            "default": 30000,
-            "minimum": 1000,
-            "maximum": 300000,
-            "description": "Default request timeout in milliseconds"
-        },
-        "max_pending_requests": {
-            "type": "integer",
-            "default": 1000,
-            "minimum": 1,
-            "maximum": 10000,
-            "description": "Maximum number of pending requests"
-        },
-        "max_retry_count": {
-            "type": "integer",
-            "default": 3,
-            "minimum": 0,
-            "maximum": 10,
-            "description": "Maximum number of request retries"
-        },
-        "enable_request_queuing": {
-            "type": "boolean",
-            "default": true,
-            "description": "Enable request queuing and prioritization"
-        }
+    "get_statistics": {
+      "description": "Get request-response statistics",
+      "parameters": {}
     },
-    "events": {
-        "request_sent": {
-            "description": "Emitted when a request is sent",
-            "data": {
-                "request_id": "string",
-                "target": "string",
-                "timestamp": "string"
-            }
-        },
-        "response_received": {
-            "description": "Emitted when a response is received",
-            "data": {
-                "request_id": "string",
-                "success": "boolean",
-                "response_time_ms": "number"
-            }
-        },
-        "request_timeout": {
-            "description": "Emitted when a request times out",
-            "data": {
-                "request_id": "string",
-                "timeout_ms": "number"
-            }
+    "clear_statistics": {
+      "description": "Clear all statistics",
+      "parameters": {}
+    },
+    "list_pending": {
+      "description": "List all pending requests",
+      "parameters": {}
+    },
+    "cancel_request": {
+      "description": "Cancel a pending request",
+      "parameters": {
+        "request_id": {
+          "type": "string",
+          "required": true,
+          "description": "ID of the request to cancel"
         }
+      }
     }
+  },
+  "configuration_schema": {
+    "default_timeout_ms": {
+      "type": "integer",
+      "default": 30000,
+      "minimum": 1000,
+      "maximum": 300000,
+      "description": "Default request timeout in milliseconds"
+    },
+    "max_pending_requests": {
+      "type": "integer",
+      "default": 1000,
+      "minimum": 1,
+      "maximum": 10000,
+      "description": "Maximum number of pending requests"
+    },
+    "max_retry_count": {
+      "type": "integer",
+      "default": 3,
+      "minimum": 0,
+      "maximum": 10,
+      "description": "Maximum number of request retries"
+    },
+    "enable_request_queuing": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable request queuing and prioritization"
+    }
+  },
+  "events": {
+    "request_sent": {
+      "description": "Emitted when a request is sent",
+      "data": {
+        "request_id": "string",
+        "target": "string",
+        "timestamp": "string"
+      }
+    },
+    "response_received": {
+      "description": "Emitted when a response is received",
+      "data": {
+        "request_id": "string",
+        "success": "boolean",
+        "response_time_ms": "number"
+      }
+    },
+    "request_timeout": {
+      "description": "Emitted when a request times out",
+      "data": {
+        "request_id": "string",
+        "timeout_ms": "number"
+      }
+    }
+  }
 }

@@ -136,10 +136,10 @@ if "%BUILD_TESTS%"=="ON" (
     echo Running Tests
     echo ================================
     echo.
-    
+
     echo [INFO] Running test suite...
     ctest --output-on-failure --parallel %PARALLEL_JOBS% --build-config %BUILD_TYPE%
-    
+
     if errorlevel 1 (
         echo [WARNING] Some tests failed
     ) else (
@@ -155,7 +155,7 @@ if "%BUILD_DOCUMENTATION%"=="ON" (
     echo Generating Documentation
     echo ================================
     echo.
-    
+
     where doxygen >nul 2>&1
     if errorlevel 1 (
         echo [WARNING] Doxygen not found, skipping documentation generation
@@ -173,15 +173,15 @@ if "%INSTALL_PROJECT%"=="true" (
     echo Installing Project
     echo ================================
     echo.
-    
+
     echo [INFO] Installing to %INSTALL_PREFIX%...
     cmake --install . --prefix "%INSTALL_PREFIX%" --config %BUILD_TYPE%
-    
+
     if errorlevel 1 (
         echo [ERROR] Installation failed
         exit /b 1
     )
-    
+
     echo [INFO] Installation completed successfully
 )
 
@@ -191,15 +191,15 @@ if "%CREATE_PACKAGE%"=="true" (
     echo Creating Package
     echo ================================
     echo.
-    
+
     echo [INFO] Creating distribution package...
     cpack --config CPackConfig.cmake
-    
+
     if errorlevel 1 (
         echo [ERROR] Package creation failed
         exit /b 1
     )
-    
+
     echo [INFO] Package created successfully
 )
 
@@ -209,19 +209,19 @@ if "%RUN_DEMO%"=="true" (
     echo Running Demo
     echo ================================
     echo.
-    
+
     echo [INFO] Starting comprehensive demo...
-    
+
     REM Ensure plugins directory exists
     if not exist "plugins" mkdir "plugins"
-    
+
     REM Run the demo
     if "%BUILD_TYPE%"=="Debug" (
         comprehensive_demo_d.exe --plugin-dir=plugins --enable-python=%QTFORGE_PYTHON_SUPPORT%
     ) else (
         comprehensive_demo.exe --plugin-dir=plugins --enable-python=%QTFORGE_PYTHON_SUPPORT%
     )
-    
+
     echo [INFO] Demo completed
 )
 

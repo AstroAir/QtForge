@@ -144,13 +144,13 @@ The UI plugin supports extensive configuration:
 
 ```json
 {
-    "default_theme": "default",           // Default theme (default|dark|light|blue|green)
-    "logging_enabled": true,              // Enable/disable logging
-    "auto_save_enabled": true,            // Enable automatic state saving
-    "refresh_interval": 1000,             // Widget refresh interval (100-10000ms)
-    "show_tooltips": true,                // Show tooltips on UI elements
-    "enable_animations": true,            // Enable UI animations
-    "window_opacity": 1.0                 // Window opacity (0.0-1.0)
+  "default_theme": "default", // Default theme (default|dark|light|blue|green)
+  "logging_enabled": true, // Enable/disable logging
+  "auto_save_enabled": true, // Enable automatic state saving
+  "refresh_interval": 1000, // Widget refresh interval (100-10000ms)
+  "show_tooltips": true, // Show tooltips on UI elements
+  "enable_animations": true, // Enable UI animations
+  "window_opacity": 1.0 // Window opacity (0.0-1.0)
 }
 ```
 
@@ -197,15 +197,15 @@ auto init_result = plugin->initialize();
 
 if (init_result) {
     // Create demo widget
-    auto widget_result = plugin->execute_command("widget", 
+    auto widget_result = plugin->execute_command("widget",
         QJsonObject{{"action", "create"}, {"widget_id", "demo_widget"}});
-    
+
     // Apply dark theme
-    auto theme_result = plugin->execute_command("theme", 
+    auto theme_result = plugin->execute_command("theme",
         QJsonObject{{"action", "apply"}, {"theme_name", "dark"}});
-    
+
     // Show settings dialog
-    auto dialog_result = plugin->execute_command("dialog", 
+    auto dialog_result = plugin->execute_command("dialog",
         QJsonObject{{"action", "show"}, {"dialog_id", "settings"}});
 }
 ```
@@ -221,7 +221,7 @@ if (ui_plugin) {
     if (widget) {
         widget.value()->show();
     }
-    
+
     // Get widget information
     auto widget_info = ui_plugin->get_widget_info("demo_widget");
     if (widget_info) {
@@ -237,7 +237,7 @@ if (ui_plugin) {
 // Get available themes
 auto themes = ui_plugin->get_available_themes();
 for (const auto& theme : themes) {
-    qDebug() << "Theme:" << theme.name 
+    qDebug() << "Theme:" << theme.name
              << "Display:" << theme.display_name
              << "Dark:" << theme.is_dark;
 }
@@ -245,7 +245,7 @@ for (const auto& theme : themes) {
 // Apply theme with error handling
 auto theme_result = ui_plugin->apply_theme("dark");
 if (!theme_result) {
-    qWarning() << "Failed to apply theme:" 
+    qWarning() << "Failed to apply theme:"
                << QString::fromStdString(theme_result.error().message);
 }
 

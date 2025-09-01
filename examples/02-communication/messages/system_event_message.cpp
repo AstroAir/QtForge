@@ -9,15 +9,12 @@
 namespace qtplugin::examples {
 
 SystemEventMessage::SystemEventMessage(const std::string& sender,
-                                      const std::string& content,
-                                      EventType event_type,
-                                      Priority priority)
-    : m_sender(sender)
-    , m_content(content)
-    , m_event_type(event_type)
-    , m_priority(priority)
-    , m_timestamp(std::chrono::system_clock::now())
-{
-}
+                                       const std::string& content,
+                                       EventType event_type, Priority priority)
+    : m_sender(sender),
+      m_content(content),
+      m_event_type(event_type),
+      m_priority(priority),
+      m_timestamp(std::chrono::system_clock::now()) {}
 
-} // namespace qtplugin::examples
+}  // namespace qtplugin::examples

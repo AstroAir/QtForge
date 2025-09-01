@@ -102,7 +102,8 @@ class ModuleIntrospectionExample:
                     functions.append((attr, obj))
 
         # Analyze function signatures
-        for func_name, func_obj in functions[:5]:  # Limit to first 5 for brevity
+        # Limit to first 5 for brevity
+        for func_name, func_obj in functions[:5]:
             try:
                 sig = inspect.signature(func_obj)
                 print(f"     - {func_name}{sig}")
@@ -141,9 +142,11 @@ class ModuleIntrospectionExample:
                 if callable(obj) and obj.__doc__:
                     documented_functions.append((attr, obj.__doc__))
 
-        print(f"     Functions with documentation: {len(documented_functions)}")
+        print(
+            f"     Functions with documentation: {len(documented_functions)}")
         for func_name, doc in documented_functions[:3]:  # Show first 3
-            doc_preview = doc.strip().split('\n')[0] if doc else "No documentation"
+            doc_preview = doc.strip().split(
+                '\n')[0] if doc else "No documentation"
             print(f"       - {func_name}: {doc_preview[:60]}...")
 
     def run_introspection_examples(self) -> int:

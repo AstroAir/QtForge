@@ -6,27 +6,27 @@
 
 #pragma once
 
-#include <QWidget>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
+#include <QCheckBox>
+#include <QComboBox>
 #include <QGridLayout>
-#include <QTabWidget>
+#include <QGroupBox>
+#include <QHBoxLayout>
+#include <QJsonObject>
 #include <QLabel>
 #include <QLineEdit>
-#include <QTextEdit>
-#include <QPushButton>
-#include <QCheckBox>
-#include <QRadioButton>
-#include <QComboBox>
-#include <QSpinBox>
-#include <QSlider>
-#include <QProgressBar>
-#include <QTreeWidget>
 #include <QListWidget>
+#include <QProgressBar>
+#include <QPushButton>
+#include <QRadioButton>
+#include <QSlider>
+#include <QSpinBox>
+#include <QTabWidget>
 #include <QTableWidget>
-#include <QGroupBox>
+#include <QTextEdit>
 #include <QTimer>
-#include <QJsonObject>
+#include <QTreeWidget>
+#include <QVBoxLayout>
+#include <QWidget>
 
 /**
  * @brief Comprehensive demo widget showcasing various Qt controls

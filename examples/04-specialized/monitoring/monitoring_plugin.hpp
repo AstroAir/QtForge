@@ -1,6 +1,7 @@
 /**
  * @file monitoring_plugin.hpp
- * @brief Monitoring plugin demonstrating QtForge monitoring and hot reload features
+ * @brief Monitoring plugin demonstrating QtForge monitoring and hot reload
+ * features
  * @version 3.0.0
  *
  * This plugin demonstrates comprehensive monitoring functionality including:
@@ -13,22 +14,22 @@
 
 #pragma once
 
-#include <QObject>
-#include <QTimer>
 #include <QFileSystemWatcher>
 #include <QJsonObject>
 #include <QMutex>
+#include <QObject>
 #include <QReadWriteLock>
+#include <QTimer>
 #include <atomic>
-#include <memory>
-#include <vector>
-#include <unordered_map>
 #include <chrono>
+#include <memory>
+#include <unordered_map>
+#include <vector>
 
+#include "qtplugin/communication/message_bus.hpp"
 #include "qtplugin/core/plugin_interface.hpp"
 #include "qtplugin/monitoring/plugin_hot_reload_manager.hpp"
 #include "qtplugin/monitoring/plugin_metrics_collector.hpp"
-#include "qtplugin/communication/message_bus.hpp"
 #include "qtplugin/utils/error_handling.hpp"
 
 /**
@@ -43,7 +44,8 @@
  */
 class MonitoringPlugin : public QObject, public qtplugin::IPlugin {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "qtplugin.MonitoringPlugin" FILE "monitoring_plugin.json")
+    Q_PLUGIN_METADATA(IID "qtplugin.MonitoringPlugin" FILE
+                          "monitoring_plugin.json")
     Q_INTERFACES(qtplugin::IPlugin)
 
 public:
@@ -72,7 +74,8 @@ public:
 
     // === Configuration Management ===
     std::optional<QJsonObject> default_configuration() const override;
-    qtplugin::expected<void, qtplugin::PluginError> configure(const QJsonObject& config) override;
+    qtplugin::expected<void, qtplugin::PluginError> configure(
+        const QJsonObject& config) override;
     QJsonObject current_configuration() const override;
     bool validate_configuration(const QJsonObject& config) const override;
 
@@ -143,8 +146,8 @@ public:
      * @param plugin_id Optional plugin filter
      * @return Historical metrics
      */
-    QJsonObject get_historical_metrics(
-        const QJsonObject& time_range, const QString& plugin_id = QString());
+    QJsonObject get_historical_metrics(const QJsonObject& time_range,
+                                       const QString& plugin_id = QString());
 
 private slots:
     void on_monitoring_timer_timeout();
@@ -168,9 +171,9 @@ private:
     bool m_hot_reload_enabled{true};
     bool m_metrics_collection_enabled{true};
     bool m_alerts_enabled{true};
-    int m_monitoring_interval{5000}; // 5 seconds
-    int m_metrics_collection_interval{10000}; // 10 seconds
-    int m_alert_check_interval{15000}; // 15 seconds
+    int m_monitoring_interval{5000};           // 5 seconds
+    int m_metrics_collection_interval{10000};  // 10 seconds
+    int m_alert_check_interval{15000};         // 15 seconds
     int m_metrics_history_size{1000};
 
     // === Timers ===
@@ -183,12 +186,15 @@ private:
     mutable QMutex m_metrics_mutex;
     std::vector<QJsonObject> m_metrics_history;
     std::unordered_map<QString, QJsonObject> m_plugin_metrics;
-    std::unordered_map<QString, std::chrono::system_clock::time_point> m_plugin_last_seen;
+    std::unordered_map<QString, std::chrono::system_clock::time_point>
+        m_plugin_last_seen;
 
     // === Hot Reload Tracking ===
     mutable QMutex m_hot_reload_mutex;
-    std::unordered_map<QString, QString> m_monitored_plugins; // plugin_id -> file_path
-    std::unordered_map<QString, std::chrono::system_clock::time_point> m_last_reload_times;
+    std::unordered_map<QString, QString>
+        m_monitored_plugins;  // plugin_id -> file_path
+    std::unordered_map<QString, std::chrono::system_clock::time_point>
+        m_last_reload_times;
     std::atomic<uint64_t> m_reload_count{0};
 
     // === Alert System ===
@@ -231,9 +237,11 @@ private:
     void collect_system_metrics();
     void check_alerts();
     void process_file_change(const QString& file_path);
-    QJsonObject create_metric_entry(const QString& plugin_id, const QJsonObject& data);
+    QJsonObject create_metric_entry(const QString& plugin_id,
+                                    const QJsonObject& data);
     void maintain_metrics_history();
-    bool evaluate_alert_condition(const QJsonObject& condition, const QJsonObject& metrics);
+    bool evaluate_alert_condition(const QJsonObject& condition,
+                                  const QJsonObject& metrics);
 
 public:
     // === Plugin Factory ===

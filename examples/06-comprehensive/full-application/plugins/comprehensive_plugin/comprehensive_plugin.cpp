@@ -1,35 +1,38 @@
 /**
  * @file comprehensive_plugin.cpp
- * @brief Implementation of comprehensive plugin demonstrating ALL QtForge features
+ * @brief Implementation of comprehensive plugin demonstrating ALL QtForge
+ * features
  */
 
 #include "comprehensive_plugin.hpp"
-#include <QDebug>
-#include <QLoggingCategory>
-#include <QJsonDocument>
-#include <QNetworkRequest>
-#include <QNetworkReply>
 #include <QCoreApplication>
-#include <QStandardPaths>
+#include <QDebug>
 #include <QDir>
-#include <chrono>
+#include <QJsonDocument>
+#include <QLoggingCategory>
+#include <QNetworkReply>
+#include <QNetworkRequest>
+#include <QStandardPaths>
 #include <algorithm>
+#include <chrono>
 
 Q_LOGGING_CATEGORY(comprehensivePlugin, "qtforge.plugin.comprehensive")
 
 ComprehensivePlugin::ComprehensivePlugin(QObject* parent)
-    : QObject(parent)
-    , m_startTime(QDateTime::currentDateTime())
-    , m_metricsTimer(new QTimer(this))
-    , m_healthTimer(new QTimer(this))
-    , m_backgroundTimer(new QTimer(this))
-{
+    : QObject(parent),
+      m_startTime(QDateTime::currentDateTime()),
+      m_metricsTimer(new QTimer(this)),
+      m_healthTimer(new QTimer(this)),
+      m_backgroundTimer(new QTimer(this)) {
     qCDebug(comprehensivePlugin) << "ComprehensivePlugin constructor";
 
     // Setup timers
-    connect(m_metricsTimer, &QTimer::timeout, this, &ComprehensivePlugin::onMetricsCollection);
-    connect(m_healthTimer, &QTimer::timeout, this, &ComprehensivePlugin::onHealthCheck);
-    connect(m_backgroundTimer, &QTimer::timeout, this, &ComprehensivePlugin::onBackgroundTask);
+    connect(m_metricsTimer, &QTimer::timeout, this,
+            &ComprehensivePlugin::onMetricsCollection);
+    connect(m_healthTimer, &QTimer::timeout, this,
+            &ComprehensivePlugin::onHealthCheck);
+    connect(m_backgroundTimer, &QTimer::timeout, this,
+            &ComprehensivePlugin::onBackgroundTask);
 
     m_metricsTimer->setInterval(DEFAULT_METRICS_INTERVAL);
     m_healthTimer->setInterval(DEFAULT_HEALTH_CHECK_INTERVAL);
@@ -46,8 +49,10 @@ std::string_view ComprehensivePlugin::name() const noexcept {
 }
 
 std::string_view ComprehensivePlugin::description() const noexcept {
-    return "A comprehensive plugin demonstrating all QtForge features including "
-           "communication, security, monitoring, transactions, workflows, and more.";
+    return "A comprehensive plugin demonstrating all QtForge features "
+           "including "
+           "communication, security, monitoring, transactions, workflows, and "
+           "more.";
 }
 
 qtplugin::Version ComprehensivePlugin::version() const noexcept {
@@ -62,7 +67,8 @@ std::string ComprehensivePlugin::id() const noexcept {
     return "com.qtforge.comprehensive_plugin";
 }
 
-qtplugin::expected<void, qtplugin::PluginError> ComprehensivePlugin::initialize() {
+qtplugin::expected<void, qtplugin::PluginError>
+ComprehensivePlugin::initialize() {
     qCInfo(comprehensivePlugin) << "Initializing comprehensive plugin...";
 
     try {
@@ -93,7 +99,8 @@ qtplugin::expected<void, qtplugin::PluginError> ComprehensivePlugin::initialize(
         m_state = qtplugin::PluginState::Initialized;
         emit pluginStateChanged(m_state);
 
-        qCInfo(comprehensivePlugin) << "✅ Comprehensive plugin initialized successfully";
+        qCInfo(comprehensivePlugin)
+            << "✅ Comprehensive plugin initialized successfully";
         return {};
 
     } catch (const std::exception& e) {
@@ -102,8 +109,7 @@ qtplugin::expected<void, qtplugin::PluginError> ComprehensivePlugin::initialize(
 
         return qtplugin::make_unexpected(qtplugin::PluginError{
             qtplugin::PluginErrorCode::InitializationFailed,
-            std::string("Initialization failed: ") + e.what()
-        });
+            std::string("Initialization failed: ") + e.what()});
     }
 }
 
@@ -138,7 +144,8 @@ void ComprehensivePlugin::shutdown() noexcept {
         m_state = qtplugin::PluginState::Unloaded;
         emit pluginStateChanged(m_state);
 
-        qCInfo(comprehensivePlugin) << "✅ Comprehensive plugin shutdown completed";
+        qCInfo(comprehensivePlugin)
+            << "✅ Comprehensive plugin shutdown completed";
 
     } catch (const std::exception& e) {
         qCWarning(comprehensivePlugin) << "Error during shutdown:" << e.what();
@@ -150,7 +157,8 @@ qtplugin::PluginState ComprehensivePlugin::state() const noexcept {
     return m_state;
 }
 
-qtplugin::PluginCapabilities ComprehensivePlugin::capabilities() const noexcept {
+qtplugin::PluginCapabilities ComprehensivePlugin::capabilities()
+    const noexcept {
     return qtplugin::PluginCapability::Service |
            qtplugin::PluginCapability::Network |
            qtplugin::PluginCapability::DataProcessor |
@@ -158,8 +166,10 @@ qtplugin::PluginCapabilities ComprehensivePlugin::capabilities() const noexcept 
 }
 
 qtplugin::expected<QJsonObject, qtplugin::PluginError>
-ComprehensivePlugin::execute_command(std::string_view command, const QJsonObject& params) {
-    qCDebug(comprehensivePlugin) << "Executing command:" << command.data() << "with params:" << params;
+ComprehensivePlugin::execute_command(std::string_view command,
+                                     const QJsonObject& params) {
+    qCDebug(comprehensivePlugin)
+        << "Executing command:" << command.data() << "with params:" << params;
 
     startPerformanceTimer(std::string(command));
     m_commandsExecuted++;
@@ -192,8 +202,7 @@ ComprehensivePlugin::execute_command(std::string_view command, const QJsonObject
             m_errorsEncountered++;
             return qtplugin::make_unexpected(qtplugin::PluginError{
                 qtplugin::PluginErrorCode::InvalidCommand,
-                std::string("Unknown command: ") + std::string(command)
-            });
+                std::string("Unknown command: ") + std::string(command)});
         }
 
         endPerformanceTimer(std::string(command));
@@ -203,7 +212,8 @@ ComprehensivePlugin::execute_command(std::string_view command, const QJsonObject
         eventData["command"] = QString::fromStdString(std::string(command));
         eventData["params"] = params;
         eventData["result"] = result;
-        eventData["timestamp"] = QDateTime::currentDateTime().toString(Qt::ISODate);
+        eventData["timestamp"] =
+            QDateTime::currentDateTime().toString(Qt::ISODate);
         publishEvent("command.executed", eventData);
 
         return result;
@@ -214,28 +224,27 @@ ComprehensivePlugin::execute_command(std::string_view command, const QJsonObject
 
         return qtplugin::make_unexpected(qtplugin::PluginError{
             qtplugin::PluginErrorCode::ExecutionFailed,
-            std::string("Command execution failed: ") + e.what()
-        });
+            std::string("Command execution failed: ") + e.what()});
     }
 }
 
 std::vector<std::string> ComprehensivePlugin::available_commands() const {
     return {
         "status",           // Get plugin status and health information
-        "echo",            // Echo input parameters for testing
-        "process_data",    // Process data with various algorithms
-        "network_request", // Make network requests
-        "metrics",         // Get performance metrics
-        "config",          // Get/set configuration
-        "security",        // Security operations
-        "transaction",     // Transaction operations
-        "workflow",        // Workflow operations
-        "python"           // Python integration operations
+        "echo",             // Echo input parameters for testing
+        "process_data",     // Process data with various algorithms
+        "network_request",  // Make network requests
+        "metrics",          // Get performance metrics
+        "config",           // Get/set configuration
+        "security",         // Security operations
+        "transaction",      // Transaction operations
+        "workflow",         // Workflow operations
+        "python"            // Python integration operations
     };
 }
 
-qtplugin::expected<void, qtplugin::PluginError>
-ComprehensivePlugin::configure(const QJsonObject& config) {
+qtplugin::expected<void, qtplugin::PluginError> ComprehensivePlugin::configure(
+    const QJsonObject& config) {
     qCDebug(comprehensivePlugin) << "Configuring plugin with:" << config;
 
     QMutexLocker locker(&m_configMutex);
@@ -247,8 +256,7 @@ ComprehensivePlugin::configure(const QJsonObject& config) {
             if (interval < 1000 || interval > 60000) {
                 return qtplugin::make_unexpected(qtplugin::PluginError{
                     qtplugin::PluginErrorCode::ConfigurationError,
-                    "metrics_interval must be between 1000 and 60000 ms"
-                });
+                    "metrics_interval must be between 1000 and 60000 ms"});
             }
             m_metricsTimer->setInterval(interval);
         }
@@ -258,8 +266,8 @@ ComprehensivePlugin::configure(const QJsonObject& config) {
             if (interval < 5000 || interval > 300000) {
                 return qtplugin::make_unexpected(qtplugin::PluginError{
                     qtplugin::PluginErrorCode::ConfigurationError,
-                    "health_check_interval must be between 5000 and 300000 ms"
-                });
+                    "health_check_interval must be between 5000 and 300000 "
+                    "ms"});
             }
             m_healthTimer->setInterval(interval);
         }
@@ -289,7 +297,8 @@ ComprehensivePlugin::configure(const QJsonObject& config) {
         }
 
         if (config.contains("background_processing_enabled")) {
-            m_backgroundProcessingEnabledFlag = config["background_processing_enabled"].toBool();
+            m_backgroundProcessingEnabledFlag =
+                config["background_processing_enabled"].toBool();
             if (m_backgroundProcessingEnabledFlag) {
                 m_backgroundTimer->start();
             } else {
@@ -298,7 +307,8 @@ ComprehensivePlugin::configure(const QJsonObject& config) {
         }
 
         if (config.contains("python_integration_enabled")) {
-            m_pythonIntegrationEnabled = config["python_integration_enabled"].toBool();
+            m_pythonIntegrationEnabled =
+                config["python_integration_enabled"].toBool();
         }
 
         // Merge with existing configuration
@@ -308,14 +318,14 @@ ComprehensivePlugin::configure(const QJsonObject& config) {
 
         emit configurationChanged(m_configuration);
 
-        qCInfo(comprehensivePlugin) << "✅ Plugin configuration updated successfully";
+        qCInfo(comprehensivePlugin)
+            << "✅ Plugin configuration updated successfully";
         return {};
 
     } catch (const std::exception& e) {
         return qtplugin::make_unexpected(qtplugin::PluginError{
             qtplugin::PluginErrorCode::ConfigurationError,
-            std::string("Configuration failed: ") + e.what()
-        });
+            std::string("Configuration failed: ") + e.what()});
     }
 }
 
@@ -332,24 +342,30 @@ qtplugin::PluginMetadata ComprehensivePlugin::metadata() const {
     meta.version = version();
     meta.author = std::string(author());
     meta.capabilities = capabilities();
-    meta.dependencies = {}; // No dependencies for this demo
+    meta.dependencies = {};  // No dependencies for this demo
 
     // Add custom metadata
-    meta.custom_data["features"] = QJsonArray{
-        "communication", "security", "monitoring", "networking",
-        "background_processing", "transactions", "workflows", "python_integration"
-    };
+    meta.custom_data["features"] = QJsonArray{"communication",
+                                              "security",
+                                              "monitoring",
+                                              "networking",
+                                              "background_processing",
+                                              "transactions",
+                                              "workflows",
+                                              "python_integration"};
 
     meta.custom_data["supported_commands"] = QJsonArray();
     for (const auto& cmd : available_commands()) {
-        meta.custom_data["supported_commands"].toArray().append(QString::fromStdString(cmd));
+        meta.custom_data["supported_commands"].toArray().append(
+            QString::fromStdString(cmd));
     }
 
     return meta;
 }
 
 void ComprehensivePlugin::setupCommunication() {
-    if (!m_communicationEnabled) return;
+    if (!m_communicationEnabled)
+        return;
 
     qCDebug(comprehensivePlugin) << "Setting up communication subsystem...";
 
@@ -357,13 +373,15 @@ void ComprehensivePlugin::setupCommunication() {
     m_messageBus = std::make_unique<qtplugin::MessageBus>();
 
     // Subscribe to relevant topics
-    m_messageBus->subscribe("system.*", [this](const QString& topic, const QJsonObject& message) {
-        onMessageReceived(topic, message);
-    });
+    m_messageBus->subscribe(
+        "system.*", [this](const QString& topic, const QJsonObject& message) {
+            onMessageReceived(topic, message);
+        });
 
-    m_messageBus->subscribe("plugin.*", [this](const QString& topic, const QJsonObject& message) {
-        onMessageReceived(topic, message);
-    });
+    m_messageBus->subscribe(
+        "plugin.*", [this](const QString& topic, const QJsonObject& message) {
+            onMessageReceived(topic, message);
+        });
 
     // Initialize request-response system
     m_requestResponse = std::make_unique<qtplugin::RequestResponseSystem>();
@@ -372,7 +390,8 @@ void ComprehensivePlugin::setupCommunication() {
 }
 
 void ComprehensivePlugin::setupMonitoring() {
-    if (!m_monitoringEnabled) return;
+    if (!m_monitoringEnabled)
+        return;
 
     qCDebug(comprehensivePlugin) << "Setting up monitoring subsystem...";
 
@@ -383,7 +402,8 @@ void ComprehensivePlugin::setupMonitoring() {
 }
 
 void ComprehensivePlugin::setupSecurity() {
-    if (!m_securityEnabled) return;
+    if (!m_securityEnabled)
+        return;
 
     qCDebug(comprehensivePlugin) << "Setting up security subsystem...";
 
@@ -395,7 +415,8 @@ void ComprehensivePlugin::setupSecurity() {
 }
 
 void ComprehensivePlugin::setupNetworking() {
-    if (!m_networkingEnabled) return;
+    if (!m_networkingEnabled)
+        return;
 
     qCDebug(comprehensivePlugin) << "Setting up networking subsystem...";
 
@@ -406,7 +427,8 @@ void ComprehensivePlugin::setupNetworking() {
 }
 
 void ComprehensivePlugin::setupBackgroundProcessing() {
-    if (!m_backgroundProcessingEnabledFlag) return;
+    if (!m_backgroundProcessingEnabledFlag)
+        return;
 
     qCDebug(comprehensivePlugin) << "Setting up background processing...";
 
@@ -418,13 +440,17 @@ void ComprehensivePlugin::setupBackgroundProcessing() {
 }
 
 // Command implementations
-QJsonObject ComprehensivePlugin::handleStatusCommand(const QJsonObject& params) {
+QJsonObject ComprehensivePlugin::handleStatusCommand(
+    const QJsonObject& params) {
     Q_UNUSED(params)
 
     QJsonObject status;
     status["plugin_id"] = QString::fromStdString(id());
     status["plugin_name"] = QString::fromStdString(std::string(name()));
-    status["version"] = QString("%1.%2.%3").arg(version().major).arg(version().minor).arg(version().patch);
+    status["version"] = QString("%1.%2.%3")
+                            .arg(version().major)
+                            .arg(version().minor)
+                            .arg(version().patch);
     status["state"] = static_cast<int>(m_state.load());
     status["service_status"] = static_cast<int>(m_serviceStatus.load());
     status["uptime_seconds"] = m_startTime.secsTo(QDateTime::currentDateTime());
@@ -459,7 +485,8 @@ QJsonObject ComprehensivePlugin::handleEchoCommand(const QJsonObject& params) {
     return createSuccessResponse(response);
 }
 
-QJsonObject ComprehensivePlugin::handleProcessDataCommand(const QJsonObject& params) {
+QJsonObject ComprehensivePlugin::handleProcessDataCommand(
+    const QJsonObject& params) {
     if (!validateInput(params, {"data"})) {
         return createErrorResponse("Missing required field: data");
     }
@@ -490,7 +517,8 @@ QJsonObject ComprehensivePlugin::handleProcessDataCommand(const QJsonObject& par
     return createSuccessResponse(result);
 }
 
-QJsonObject ComprehensivePlugin::handleNetworkRequestCommand(const QJsonObject& params) {
+QJsonObject ComprehensivePlugin::handleNetworkRequestCommand(
+    const QJsonObject& params) {
     if (!m_networkingEnabled) {
         return createErrorResponse("Networking is disabled");
     }
@@ -510,16 +538,16 @@ QJsonObject ComprehensivePlugin::handleNetworkRequestCommand(const QJsonObject& 
 
     // In a real implementation, this would make an actual network request
     // For demo purposes, we'll simulate a successful response
-    response["simulated_response"] = QJsonObject{
-        {"status_code", 200},
-        {"content_type", "application/json"},
-        {"response_time_ms", 150}
-    };
+    response["simulated_response"] =
+        QJsonObject{{"status_code", 200},
+                    {"content_type", "application/json"},
+                    {"response_time_ms", 150}};
 
     return createSuccessResponse(response);
 }
 
-QJsonObject ComprehensivePlugin::handleMetricsCommand(const QJsonObject& params) {
+QJsonObject ComprehensivePlugin::handleMetricsCommand(
+    const QJsonObject& params) {
     Q_UNUSED(params)
 
     if (!m_monitoringEnabled) {
@@ -530,7 +558,8 @@ QJsonObject ComprehensivePlugin::handleMetricsCommand(const QJsonObject& params)
 
     QJsonObject metrics;
     metrics["timestamp"] = QDateTime::currentDateTime().toString(Qt::ISODate);
-    metrics["uptime_seconds"] = m_startTime.secsTo(QDateTime::currentDateTime());
+    metrics["uptime_seconds"] =
+        m_startTime.secsTo(QDateTime::currentDateTime());
     metrics["commands_executed"] = m_commandsExecuted.load();
     metrics["messages_processed"] = m_messagesProcessed.load();
     metrics["service_requests_handled"] = m_serviceRequestsHandled.load();
@@ -541,7 +570,8 @@ QJsonObject ComprehensivePlugin::handleMetricsCommand(const QJsonObject& params)
     QJsonObject performance;
     for (const auto& [operation, times] : m_performanceHistory) {
         if (!times.empty()) {
-            double avg = std::accumulate(times.begin(), times.end(), 0.0) / times.size();
+            double avg =
+                std::accumulate(times.begin(), times.end(), 0.0) / times.size();
             double min = *std::min_element(times.begin(), times.end());
             double max = *std::max_element(times.begin(), times.end());
 
@@ -565,12 +595,14 @@ void ComprehensivePlugin::updateMetrics() {
     emit metricsUpdated(handleMetricsCommand({}).value("data").toObject());
 }
 
-void ComprehensivePlugin::publishEvent(const QString& event, const QJsonObject& data) {
+void ComprehensivePlugin::publishEvent(const QString& event,
+                                       const QJsonObject& data) {
     if (m_communicationEnabled && m_messageBus) {
         QJsonObject eventMessage;
         eventMessage["event"] = event;
         eventMessage["plugin_id"] = QString::fromStdString(id());
-        eventMessage["timestamp"] = QDateTime::currentDateTime().toString(Qt::ISODate);
+        eventMessage["timestamp"] =
+            QDateTime::currentDateTime().toString(Qt::ISODate);
         eventMessage["data"] = data;
 
         m_messageBus->publish("plugin.events", eventMessage);
@@ -578,7 +610,8 @@ void ComprehensivePlugin::publishEvent(const QString& event, const QJsonObject& 
     }
 }
 
-bool ComprehensivePlugin::validateInput(const QJsonObject& input, const QStringList& requiredFields) {
+bool ComprehensivePlugin::validateInput(const QJsonObject& input,
+                                        const QStringList& requiredFields) {
     for (const QString& field : requiredFields) {
         if (!input.contains(field)) {
             return false;
@@ -587,7 +620,8 @@ bool ComprehensivePlugin::validateInput(const QJsonObject& input, const QStringL
     return true;
 }
 
-QJsonObject ComprehensivePlugin::createErrorResponse(const QString& error, int code) {
+QJsonObject ComprehensivePlugin::createErrorResponse(const QString& error,
+                                                     int code) {
     QJsonObject response;
     response["success"] = false;
     response["error"] = error;
@@ -597,7 +631,8 @@ QJsonObject ComprehensivePlugin::createErrorResponse(const QString& error, int c
     return response;
 }
 
-QJsonObject ComprehensivePlugin::createSuccessResponse(const QJsonObject& data) {
+QJsonObject ComprehensivePlugin::createSuccessResponse(
+    const QJsonObject& data) {
     QJsonObject response;
     response["success"] = true;
     response["data"] = data;
@@ -608,7 +643,8 @@ QJsonObject ComprehensivePlugin::createSuccessResponse(const QJsonObject& data) 
 
 void ComprehensivePlugin::startPerformanceTimer(const QString& operation) {
     QMutexLocker locker(&m_performanceMutex);
-    m_performanceTimers[operation.toStdString()] = std::chrono::steady_clock::now();
+    m_performanceTimers[operation.toStdString()] =
+        std::chrono::steady_clock::now();
 }
 
 void ComprehensivePlugin::endPerformanceTimer(const QString& operation) {
@@ -616,7 +652,8 @@ void ComprehensivePlugin::endPerformanceTimer(const QString& operation) {
     auto it = m_performanceTimers.find(operation.toStdString());
     if (it != m_performanceTimers.end()) {
         auto end = std::chrono::steady_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - it->second);
+        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
+            end - it->second);
         double ms = duration.count() / 1000.0;
 
         auto& history = m_performanceHistory[operation.toStdString()];
@@ -632,9 +669,11 @@ void ComprehensivePlugin::endPerformanceTimer(const QString& operation) {
 }
 
 // Slot implementations
-void ComprehensivePlugin::onMessageReceived(const QString& topic, const QJsonObject& message) {
+void ComprehensivePlugin::onMessageReceived(const QString& topic,
+                                            const QJsonObject& message) {
     m_messagesProcessed++;
-    qCDebug(comprehensivePlugin) << "Message received on topic" << topic << ":" << message;
+    qCDebug(comprehensivePlugin)
+        << "Message received on topic" << topic << ":" << message;
 
     // Handle system messages
     if (topic.startsWith("system.")) {
@@ -645,13 +684,11 @@ void ComprehensivePlugin::onMessageReceived(const QString& topic, const QJsonObj
     }
 }
 
-void ComprehensivePlugin::onMetricsCollection() {
-    updateMetrics();
-}
+void ComprehensivePlugin::onMetricsCollection() { updateMetrics(); }
 
 void ComprehensivePlugin::onHealthCheck() {
     bool healthy = (m_state == qtplugin::PluginState::Running ||
-                   m_state == qtplugin::PluginState::Initialized);
+                    m_state == qtplugin::PluginState::Initialized);
 
     QJsonObject healthData;
     healthData["healthy"] = healthy;
@@ -668,22 +705,23 @@ void ComprehensivePlugin::onBackgroundTask() {
         QJsonObject taskData;
         taskData["task_id"] = QUuid::createUuid().toString();
         taskData["type"] = "background_processing";
-        taskData["timestamp"] = QDateTime::currentDateTime().toString(Qt::ISODate);
+        taskData["timestamp"] =
+            QDateTime::currentDateTime().toString(Qt::ISODate);
 
         publishEvent("background.task", taskData);
     }
 }
 
 // Service Plugin Interface Implementation
-qtplugin::expected<void, qtplugin::PluginError> ComprehensivePlugin::start_service() {
+qtplugin::expected<void, qtplugin::PluginError>
+ComprehensivePlugin::start_service() {
     qCInfo(comprehensivePlugin) << "Starting service...";
 
     if (m_state != qtplugin::PluginState::Initialized &&
         m_state != qtplugin::PluginState::Running) {
         return qtplugin::make_unexpected(qtplugin::PluginError{
             qtplugin::PluginErrorCode::InvalidState,
-            "Plugin must be initialized before starting service"
-        });
+            "Plugin must be initialized before starting service"});
     }
 
     try {
@@ -715,12 +753,12 @@ qtplugin::expected<void, qtplugin::PluginError> ComprehensivePlugin::start_servi
 
         return qtplugin::make_unexpected(qtplugin::PluginError{
             qtplugin::PluginErrorCode::ServiceError,
-            std::string("Failed to start service: ") + e.what()
-        });
+            std::string("Failed to start service: ") + e.what()});
     }
 }
 
-qtplugin::expected<void, qtplugin::PluginError> ComprehensivePlugin::stop_service() {
+qtplugin::expected<void, qtplugin::PluginError>
+ComprehensivePlugin::stop_service() {
     qCInfo(comprehensivePlugin) << "Stopping service...";
 
     try {
@@ -743,8 +781,7 @@ qtplugin::expected<void, qtplugin::PluginError> ComprehensivePlugin::stop_servic
 
         return qtplugin::make_unexpected(qtplugin::PluginError{
             qtplugin::PluginErrorCode::ServiceError,
-            std::string("Failed to stop service: ") + e.what()
-        });
+            std::string("Failed to stop service: ") + e.what()});
     }
 }
 

@@ -32,7 +32,7 @@ class AdvancedUsageRunner:
         print("\n" + "="*60)
         print("RUNNING MODULE INTROSPECTION EXAMPLES")
         print("="*60)
-        
+
         try:
             from patterns.module_introspection import ModuleIntrospectionExample
             example = ModuleIntrospectionExample()
@@ -46,7 +46,7 @@ class AdvancedUsageRunner:
         print("\n" + "="*60)
         print("RUNNING PERFORMANCE PATTERNS EXAMPLES")
         print("="*60)
-        
+
         try:
             from patterns.performance_patterns import PerformancePatternsExample
             example = PerformancePatternsExample()
@@ -60,7 +60,7 @@ class AdvancedUsageRunner:
         print("\n" + "="*60)
         print("RUNNING ASYNC PATTERNS EXAMPLES")
         print("="*60)
-        
+
         try:
             from patterns.async_patterns import AsyncPatternsExample
             example = AsyncPatternsExample()
@@ -74,11 +74,11 @@ class AdvancedUsageRunner:
         print("\n" + "="*60)
         print("RUNNING INTEGRATION PATTERNS EXAMPLES")
         print("="*60)
-        
+
         try:
             # Import the original integration patterns from advanced_usage
             import qtforge
-            
+
             # Integration with logging
             import logging
             logging.basicConfig(level=logging.INFO)
@@ -127,10 +127,10 @@ class AdvancedUsageRunner:
         print("\n" + "="*60)
         print("RUNNING ERROR HANDLING PATTERNS EXAMPLES")
         print("="*60)
-        
+
         try:
             import qtforge
-            
+
             # Context manager for error handling
             class QtForgeErrorHandler:
                 def __init__(self, qtforge_module: Any) -> None:
@@ -142,7 +142,8 @@ class AdvancedUsageRunner:
 
                 def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> bool:
                     if exc_type:
-                        error_msg = self.qtforge.create_error(999, str(exc_val))
+                        error_msg = self.qtforge.create_error(
+                            999, str(exc_val))
                         self.errors.append(error_msg)
                         print(f"     Caught and logged: {error_msg}")
                     return True  # Suppress the exception
@@ -171,10 +172,10 @@ class AdvancedUsageRunner:
         print("\n" + "="*60)
         print("RUNNING CACHING PATTERNS EXAMPLES")
         print("="*60)
-        
+
         try:
             import qtforge
-            
+
             # Simple function result cache
             class QtForgeCache:
                 def __init__(self) -> None:
@@ -193,7 +194,8 @@ class AdvancedUsageRunner:
                 def create_version_cached(self, qtforge_module: Any, major: int, minor: int, patch: int) -> str:
                     key = f"version_{major}_{minor}_{patch}"
                     if key not in self.cache:
-                        self.cache[key] = qtforge_module.create_version(major, minor, patch)
+                        self.cache[key] = qtforge_module.create_version(
+                            major, minor, patch)
                         self.misses += 1
                     else:
                         self.hits += 1
@@ -208,7 +210,8 @@ class AdvancedUsageRunner:
                 version_str = cache.create_version_cached(qtforge, 1, 2, 3)
 
             print(f"     Cache hits: {cache.hits}, misses: {cache.misses}")
-            print(f"     Hit ratio: {cache.hits / (cache.hits + cache.misses) * 100:.1f}%")
+            print(
+                f"     Hit ratio: {cache.hits / (cache.hits + cache.misses) * 100:.1f}%")
             print("   ✅ Caching patterns successful")
             return 0
 
@@ -262,27 +265,29 @@ class AdvancedUsageRunner:
         print("\n" + "="*60)
         print("SUMMARY")
         print("="*60)
-        
+
         total_examples = len(self.results)
-        successful_examples = sum(1 for result in self.results.values() if result == 0)
-        
+        successful_examples = sum(
+            1 for result in self.results.values() if result == 0)
+
         print(f"Total examples: {total_examples}")
         print(f"Successful: {successful_examples}")
         print(f"Failed: {total_examples - successful_examples}")
-        
+
         print("\nDetailed Results:")
         for name, result in self.results.items():
             status = "✅ PASS" if result == 0 else "❌ FAIL"
             print(f"  {name}: {status}")
 
         # Return overall success/failure
-        overall_result = 0 if all(result == 0 for result in self.results.values()) else 1
-        
+        overall_result = 0 if all(
+            result == 0 for result in self.results.values()) else 1
+
         if overall_result == 0:
             print(f"\n🎉 All advanced usage examples completed successfully!")
         else:
             print(f"\n❌ Some advanced usage examples failed!")
-            
+
         return overall_result
 
 

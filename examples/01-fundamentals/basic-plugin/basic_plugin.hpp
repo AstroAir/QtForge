@@ -16,15 +16,15 @@
 
 #pragma once
 
-#include <QObject>
 #include <QJsonObject>
-#include <QTimer>
 #include <QMutex>
+#include <QObject>
+#include <QTimer>
 #include <atomic>
 #include <memory>
-#include <string_view>
-#include <string>
 #include <optional>
+#include <string>
+#include <string_view>
 
 #include "qtplugin/core/plugin_interface.hpp"
 #include "qtplugin/utils/error_handling.hpp"
@@ -112,8 +112,7 @@ public:
      * @return Command result or error
      */
     qtplugin::expected<QJsonObject, qtplugin::PluginError> execute_command(
-        std::string_view command,
-        const QJsonObject& params = {}) override;
+        std::string_view command, const QJsonObject& params = {}) override;
 
     /**
      * @brief Get list of available commands
@@ -179,5 +178,6 @@ private:
     // === Plugin Information ===
     static constexpr const char* PLUGIN_NAME = "BasicPlugin";
     static constexpr const char* PLUGIN_ID = "com.qtforge.examples.basic";
-    static constexpr const char* PLUGIN_DESCRIPTION = "Core QtForge plugin demonstrating essential IPlugin interface";
+    static constexpr const char* PLUGIN_DESCRIPTION =
+        "Core QtForge plugin demonstrating essential IPlugin interface";
 };

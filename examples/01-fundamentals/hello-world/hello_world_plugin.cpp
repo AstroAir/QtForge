@@ -4,11 +4,10 @@
  */
 
 #include "hello_world_plugin.hpp"
-#include <QDebug>
 #include <QDateTime>
+#include <QDebug>
 
-HelloWorldPlugin::HelloWorldPlugin(QObject* parent)
-    : QObject(parent) {
+HelloWorldPlugin::HelloWorldPlugin(QObject* parent) : QObject(parent) {
     // Minimal constructor - just set parent
 }
 
@@ -33,7 +32,8 @@ std::string HelloWorldPlugin::id() const noexcept {
 }
 
 qtplugin::PluginCapabilities HelloWorldPlugin::capabilities() const noexcept {
-    return static_cast<qtplugin::PluginCapabilities>(qtplugin::PluginCapability::None);
+    return static_cast<qtplugin::PluginCapabilities>(
+        qtplugin::PluginCapability::None);
 }
 
 qtplugin::expected<void, qtplugin::PluginError> HelloWorldPlugin::initialize() {
@@ -51,14 +51,12 @@ void HelloWorldPlugin::shutdown() noexcept {
     qDebug() << "HelloWorldPlugin: Shutdown complete.";
 }
 
-qtplugin::expected<QJsonObject, qtplugin::PluginError> HelloWorldPlugin::execute_command(
-    std::string_view command, const QJsonObject& params) {
-
+qtplugin::expected<QJsonObject, qtplugin::PluginError>
+HelloWorldPlugin::execute_command(std::string_view command,
+                                  const QJsonObject& params) {
     if (m_state != qtplugin::PluginState::Loaded) {
         return qtplugin::unexpected(qtplugin::PluginError{
-            qtplugin::PluginErrorCode::InvalidState,
-            "Plugin not initialized"
-        });
+            qtplugin::PluginErrorCode::InvalidState, "Plugin not initialized"});
     }
 
     if (command == "hello") {
@@ -66,7 +64,8 @@ qtplugin::expected<QJsonObject, qtplugin::PluginError> HelloWorldPlugin::execute
 
         QJsonObject result;
         result["message"] = QString("Hello, %1!").arg(name);
-        result["timestamp"] = QDateTime::currentDateTime().toString(Qt::ISODate);
+        result["timestamp"] =
+            QDateTime::currentDateTime().toString(Qt::ISODate);
         result["plugin"] = "HelloWorldPlugin";
 
         qDebug() << "HelloWorldPlugin: Executed 'hello' command for" << name;
@@ -75,8 +74,7 @@ qtplugin::expected<QJsonObject, qtplugin::PluginError> HelloWorldPlugin::execute
 
     return qtplugin::unexpected(qtplugin::PluginError{
         qtplugin::PluginErrorCode::CommandNotFound,
-        std::string("Unknown command: ") + std::string(command)
-    });
+        std::string("Unknown command: ") + std::string(command)});
 }
 
 std::vector<std::string> HelloWorldPlugin::available_commands() const {

@@ -6,21 +6,21 @@
 
 #pragma once
 
+#include <QJsonObject>
 #include <QObject>
 #include <QTimer>
-#include <QJsonObject>
+#include <atomic>
 #include <chrono>
 #include <memory>
-#include <vector>
-#include <unordered_map>
-#include <atomic>
 #include <mutex>
+#include <unordered_map>
+#include <vector>
 
-#include "qtplugin/communication/message_bus.hpp"
-#include "../messages/system_event_message.hpp"
 #include "../messages/performance_metrics_message.hpp"
+#include "../messages/system_event_message.hpp"
 #include "../statistics/message_statistics.hpp"
 #include "../utils/message_utils.hpp"
+#include "qtplugin/communication/message_bus.hpp"
 
 namespace qtplugin::examples {
 
@@ -52,7 +52,8 @@ public:
 
 private slots:
     void on_system_event_received(std::shared_ptr<SystemEventMessage> message);
-    void on_performance_metrics_received(std::shared_ptr<PerformanceMetricsMessage> message);
+    void on_performance_metrics_received(
+        std::shared_ptr<PerformanceMetricsMessage> message);
     void on_monitoring_timer();
 
 private:
@@ -107,4 +108,4 @@ private:
     std::chrono::milliseconds m_monitoring_interval{1000};
 };
 
-} // namespace qtplugin::examples
+}  // namespace qtplugin::examples

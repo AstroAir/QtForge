@@ -42,7 +42,7 @@ class AsyncPatternsExample:
 
         # Single async operation
         operation_name, result = await self.async_qtforge_operation(
-            "get_version", 
+            "get_version",
             lambda: self.qtforge.get_version()
         )
         print(f"   {operation_name}: {result}")
@@ -71,7 +71,8 @@ class AsyncPatternsExample:
             ("create_error", lambda: self.qtforge.create_error(200, "Async error"))
         ]
 
-        tasks = [self.async_qtforge_operation(name, op) for name, op in operations]
+        tasks = [self.async_qtforge_operation(
+            name, op) for name, op in operations]
         results = await asyncio.gather(*tasks)
 
         print("   Concurrent results:")
@@ -93,7 +94,7 @@ class AsyncPatternsExample:
 
         # Process batch concurrently
         batch_results = await asyncio.gather(*version_tasks)
-        
+
         print(f"   Processed {len(batch_results)} versions concurrently:")
         for name, result in batch_results[:5]:  # Show first 5
             print(f"     {name}: {result}")

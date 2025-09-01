@@ -13,23 +13,23 @@
 
 #pragma once
 
-#include <QObject>
-#include <QNetworkAccessManager>
-#include <QNetworkReply>
 #include <QHttpServer>
-#include <QWebSocket>
-#include <QWebSocketServer>
-#include <QTimer>
 #include <QJsonObject>
 #include <QMutex>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+#include <QObject>
 #include <QReadWriteLock>
+#include <QTimer>
+#include <QWebSocket>
+#include <QWebSocketServer>
 #include <atomic>
 #include <memory>
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
-#include "qtplugin/core/plugin_interface.hpp"
 #include "qtplugin/communication/message_bus.hpp"
+#include "qtplugin/core/plugin_interface.hpp"
 #include "qtplugin/utils/error_handling.hpp"
 
 /**
@@ -74,7 +74,8 @@ public:
 
     // === Configuration Management ===
     std::optional<QJsonObject> default_configuration() const override;
-    qtplugin::expected<void, qtplugin::PluginError> configure(const QJsonObject& config) override;
+    qtplugin::expected<void, qtplugin::PluginError> configure(
+        const QJsonObject& config) override;
     QJsonObject current_configuration() const override;
     bool validate_configuration(const QJsonObject& config) const override;
 
@@ -133,14 +134,16 @@ public:
      * @param port Port to listen on
      * @return Success or error
      */
-    qtplugin::expected<void, qtplugin::PluginError> start_websocket_server(int port);
+    qtplugin::expected<void, qtplugin::PluginError> start_websocket_server(
+        int port);
 
     /**
      * @brief Connect to WebSocket server
      * @param url WebSocket server URL
      * @return Success or error
      */
-    qtplugin::expected<void, qtplugin::PluginError> connect_websocket(const QString& url);
+    qtplugin::expected<void, qtplugin::PluginError> connect_websocket(
+        const QString& url);
 
     /**
      * @brief Send WebSocket message
@@ -192,7 +195,7 @@ private:
     bool m_ssl_enabled{false};
     int m_http_server_port{8080};
     int m_websocket_server_port{8081};
-    int m_request_timeout{30000}; // 30 seconds
+    int m_request_timeout{30000};  // 30 seconds
     int m_max_connections{100};
     QString m_user_agent{QStringLiteral("QtForge-NetworkPlugin/3.0.0")};
 

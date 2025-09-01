@@ -108,13 +108,13 @@ The service plugin supports extensive configuration:
 
 ```json
 {
-    "processing_interval": 5000,        // Processing timer interval (1000-300000ms)
-    "heartbeat_interval": 30000,        // Heartbeat timer interval (5000-600000ms)
-    "logging_enabled": true,            // Enable/disable logging
-    "service_name": "ExampleService",   // Service name (max 100 chars)
-    "max_concurrent_tasks": 10,         // Max concurrent tasks (1-100)
-    "auto_register_service": true,      // Auto-register on initialization
-    "message_bus_enabled": true         // Enable MessageBus integration
+  "processing_interval": 5000, // Processing timer interval (1000-300000ms)
+  "heartbeat_interval": 30000, // Heartbeat timer interval (5000-600000ms)
+  "logging_enabled": true, // Enable/disable logging
+  "service_name": "ExampleService", // Service name (max 100 chars)
+  "max_concurrent_tasks": 10, // Max concurrent tasks (1-100)
+  "auto_register_service": true, // Auto-register on initialization
+  "message_bus_enabled": true // Enable MessageBus integration
 }
 ```
 
@@ -157,9 +157,9 @@ auto init_result = plugin->initialize();
 
 if (init_result) {
     // Register service
-    auto register_result = plugin->execute_command("service", 
+    auto register_result = plugin->execute_command("service",
         QJsonObject{{"action", "register"}});
-    
+
     // Submit background task
     QJsonObject task{
         {"id", "task_001"},
@@ -167,12 +167,12 @@ if (init_result) {
         {"processing_time", 2000},
         {"data", QJsonObject{{"input", "test_data"}}}
     };
-    
-    auto task_result = plugin->execute_command("task", 
+
+    auto task_result = plugin->execute_command("task",
         QJsonObject{{"action", "submit"}, {"task", task}});
-    
+
     // Monitor performance
-    auto metrics = plugin->execute_command("monitoring", 
+    auto metrics = plugin->execute_command("monitoring",
         QJsonObject{{"type", "performance"}});
 }
 ```
@@ -185,10 +185,10 @@ class CustomServiceMessage : public qtplugin::Message<CustomServiceMessage> {
 public:
     CustomServiceMessage(std::string_view sender, const QJsonObject& data)
         : qtplugin::Message<CustomServiceMessage>(sender), m_data(data) {}
-    
+
     std::string_view type() const noexcept override { return "CustomService"; }
     QJsonObject to_json() const override { return m_data; }
-    
+
 private:
     QJsonObject m_data;
 };
@@ -205,14 +205,14 @@ plugin->execute_command("message", QJsonObject{
 
 ```cpp
 // Get service information
-auto service_info = plugin->execute_command("service", 
+auto service_info = plugin->execute_command("service",
     QJsonObject{{"action", "info"}});
 
 if (service_info) {
     auto info = service_info.value();
     QString service_id = info.value("service_id").toString();
     QString service_name = info.value("service_name").toString();
-    
+
     // Use service endpoints
     auto endpoints = info.value("endpoints").toObject();
     QString status_endpoint = endpoints.value("status").toString();

@@ -1,208 +1,203 @@
 {
-    "name": "SecurityPlugin",
-    "version": "3.0.0",
-    "description": "Comprehensive security plugin demonstrating QtForge security features",
-    "author": "QtForge Team",
-    "license": "MIT",
-    "website": "https://github.com/QtForge/QtPlugin",
-    "category": "Security",
-    "tags": ["security", "validation", "permissions", "audit", "example"],
-    
-    "plugin_interface": "qtplugin.IPlugin",
-    "plugin_type": "security",
-    
-    "capabilities": [
-        "Security",
-        "Configuration", 
-        "Monitoring",
-        "Logging",
-        "Threading"
-    ],
-    
-    "priority": "High",
-    "thread_safe": true,
-    "thread_model": "multi-threaded",
-    
-    "dependencies": {
-        "required": [
-            "qtplugin.SecurityManager"
-        ],
-        "optional": [
-            "qtplugin.MessageBus",
-            "qtplugin.ConfigurationManager"
-        ]
-    },
-    
-    "commands": [
-        {
-            "name": "validate",
-            "description": "Validate a plugin file using security manager",
-            "parameters": {
-                "file_path": {
-                    "type": "string",
-                    "required": true,
-                    "description": "Path to plugin file to validate"
-                },
-                "security_level": {
-                    "type": "integer",
-                    "required": false,
-                    "default": 1,
-                    "description": "Required security level (0=None, 1=Basic, 2=Standard, 3=Strict, 4=Maximum)"
-                }
-            }
+  "name": "SecurityPlugin",
+  "version": "3.0.0",
+  "description": "Comprehensive security plugin demonstrating QtForge security features",
+  "author": "QtForge Team",
+  "license": "MIT",
+  "website": "https://github.com/QtForge/QtPlugin",
+  "category": "Security",
+  "tags": ["security", "validation", "permissions", "audit", "example"],
+
+  "plugin_interface": "qtplugin.IPlugin",
+  "plugin_type": "security",
+
+  "capabilities": [
+    "Security",
+    "Configuration",
+    "Monitoring",
+    "Logging",
+    "Threading"
+  ],
+
+  "priority": "High",
+  "thread_safe": true,
+  "thread_model": "multi-threaded",
+
+  "dependencies": {
+    "required": ["qtplugin.SecurityManager"],
+    "optional": ["qtplugin.MessageBus", "qtplugin.ConfigurationManager"]
+  },
+
+  "commands": [
+    {
+      "name": "validate",
+      "description": "Validate a plugin file using security manager",
+      "parameters": {
+        "file_path": {
+          "type": "string",
+          "required": true,
+          "description": "Path to plugin file to validate"
         },
-        {
-            "name": "permission",
-            "description": "Check permissions for a specific operation",
-            "parameters": {
-                "operation": {
-                    "type": "string",
-                    "required": true,
-                    "description": "Operation to check permissions for"
-                },
-                "context": {
-                    "type": "object",
-                    "required": false,
-                    "description": "Security context for the operation"
-                }
-            }
-        },
-        {
-            "name": "policy",
-            "description": "Manage security policies",
-            "parameters": {
-                "action": {
-                    "type": "string",
-                    "required": false,
-                    "default": "get",
-                    "enum": ["set", "list"],
-                    "description": "Policy action to perform"
-                },
-                "policy_name": {
-                    "type": "string",
-                    "required": false,
-                    "description": "Name of the policy (required for 'set' action)"
-                },
-                "policy_config": {
-                    "type": "object",
-                    "required": false,
-                    "description": "Policy configuration (required for 'set' action)"
-                }
-            }
-        },
-        {
-            "name": "audit",
-            "description": "Manage security audit logs",
-            "parameters": {
-                "action": {
-                    "type": "string",
-                    "required": false,
-                    "default": "get",
-                    "enum": ["get", "clear"],
-                    "description": "Audit action to perform"
-                },
-                "limit": {
-                    "type": "integer",
-                    "required": false,
-                    "default": 50,
-                    "description": "Maximum number of audit events to return"
-                }
-            }
-        },
-        {
-            "name": "status",
-            "description": "Get comprehensive security status",
-            "parameters": {}
-        },
-        {
-            "name": "security_test",
-            "description": "Run security functionality tests",
-            "parameters": {
-                "test_type": {
-                    "type": "string",
-                    "required": false,
-                    "default": "basic",
-                    "enum": ["basic", "validation", "permission"],
-                    "description": "Type of security test to run"
-                }
-            }
-        }
-    ],
-    
-    "configuration": {
         "security_level": {
-            "type": "integer",
-            "default": 1,
-            "min": 0,
-            "max": 4,
-            "description": "Default security level for validations"
-        },
-        "audit_enabled": {
-            "type": "boolean",
-            "default": true,
-            "description": "Enable security event auditing"
-        },
-        "strict_validation": {
-            "type": "boolean",
-            "default": false,
-            "description": "Enable strict validation mode"
-        },
-        "security_check_interval": {
-            "type": "integer",
-            "default": 30000,
-            "min": 1000,
-            "max": 300000,
-            "description": "Interval for periodic security checks (ms)"
-        },
-        "max_audit_log_size": {
-            "type": "integer",
-            "default": 1000,
-            "min": 100,
-            "max": 10000,
-            "description": "Maximum number of audit events to keep"
-        },
-        "allowed_operations": {
-            "type": "array",
-            "default": ["validate", "check_permission", "audit"],
-            "description": "List of allowed security operations"
-        },
-        "trust_store_path": {
-            "type": "string",
-            "default": "trust_store.json",
-            "description": "Path to trust store file"
-        },
-        "signature_algorithms": {
-            "type": "array",
-            "default": ["SHA256", "RSA"],
-            "description": "Supported signature algorithms"
-        },
-        "permission_policies": {
-            "type": "object",
-            "default": {
-                "default_deny": false,
-                "require_signature": true,
-                "allow_self_signed": false
-            },
-            "description": "Permission policy configuration"
+          "type": "integer",
+          "required": false,
+          "default": 1,
+          "description": "Required security level (0=None, 1=Basic, 2=Standard, 3=Strict, 4=Maximum)"
         }
+      }
     },
-    
-    "security": {
-        "trust_level": "high",
-        "signature_required": true,
-        "permissions": [
-            "file_system_read",
-            "file_system_write",
-            "network_access",
-            "system_info"
-        ],
-        "sandbox": false
+    {
+      "name": "permission",
+      "description": "Check permissions for a specific operation",
+      "parameters": {
+        "operation": {
+          "type": "string",
+          "required": true,
+          "description": "Operation to check permissions for"
+        },
+        "context": {
+          "type": "object",
+          "required": false,
+          "description": "Security context for the operation"
+        }
+      }
     },
-    
-    "build_info": {
-        "qt_version": "6.0+",
-        "cmake_minimum": "3.21",
-        "cpp_standard": "20",
-        "compiler_features": ["concepts", "ranges"]
+    {
+      "name": "policy",
+      "description": "Manage security policies",
+      "parameters": {
+        "action": {
+          "type": "string",
+          "required": false,
+          "default": "get",
+          "enum": ["set", "list"],
+          "description": "Policy action to perform"
+        },
+        "policy_name": {
+          "type": "string",
+          "required": false,
+          "description": "Name of the policy (required for 'set' action)"
+        },
+        "policy_config": {
+          "type": "object",
+          "required": false,
+          "description": "Policy configuration (required for 'set' action)"
+        }
+      }
+    },
+    {
+      "name": "audit",
+      "description": "Manage security audit logs",
+      "parameters": {
+        "action": {
+          "type": "string",
+          "required": false,
+          "default": "get",
+          "enum": ["get", "clear"],
+          "description": "Audit action to perform"
+        },
+        "limit": {
+          "type": "integer",
+          "required": false,
+          "default": 50,
+          "description": "Maximum number of audit events to return"
+        }
+      }
+    },
+    {
+      "name": "status",
+      "description": "Get comprehensive security status",
+      "parameters": {}
+    },
+    {
+      "name": "security_test",
+      "description": "Run security functionality tests",
+      "parameters": {
+        "test_type": {
+          "type": "string",
+          "required": false,
+          "default": "basic",
+          "enum": ["basic", "validation", "permission"],
+          "description": "Type of security test to run"
+        }
+      }
     }
+  ],
+
+  "configuration": {
+    "security_level": {
+      "type": "integer",
+      "default": 1,
+      "min": 0,
+      "max": 4,
+      "description": "Default security level for validations"
+    },
+    "audit_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable security event auditing"
+    },
+    "strict_validation": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable strict validation mode"
+    },
+    "security_check_interval": {
+      "type": "integer",
+      "default": 30000,
+      "min": 1000,
+      "max": 300000,
+      "description": "Interval for periodic security checks (ms)"
+    },
+    "max_audit_log_size": {
+      "type": "integer",
+      "default": 1000,
+      "min": 100,
+      "max": 10000,
+      "description": "Maximum number of audit events to keep"
+    },
+    "allowed_operations": {
+      "type": "array",
+      "default": ["validate", "check_permission", "audit"],
+      "description": "List of allowed security operations"
+    },
+    "trust_store_path": {
+      "type": "string",
+      "default": "trust_store.json",
+      "description": "Path to trust store file"
+    },
+    "signature_algorithms": {
+      "type": "array",
+      "default": ["SHA256", "RSA"],
+      "description": "Supported signature algorithms"
+    },
+    "permission_policies": {
+      "type": "object",
+      "default": {
+        "default_deny": false,
+        "require_signature": true,
+        "allow_self_signed": false
+      },
+      "description": "Permission policy configuration"
+    }
+  },
+
+  "security": {
+    "trust_level": "high",
+    "signature_required": true,
+    "permissions": [
+      "file_system_read",
+      "file_system_write",
+      "network_access",
+      "system_info"
+    ],
+    "sandbox": false
+  },
+
+  "build_info": {
+    "qt_version": "6.0+",
+    "cmake_minimum": "3.21",
+    "cpp_standard": "20",
+    "compiler_features": ["concepts", "ranges"]
+  }
 }

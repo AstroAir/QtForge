@@ -1,26 +1,26 @@
 {
-    "IID": "qtplugin.IPlugin/3.0",
-    "MetaData": {
-        "name": "HelloWorldPlugin",
-        "description": "Minimal QtForge plugin for absolute beginners",
-        "version": "1.0.0",
-        "author": "QtForge Examples",
-        "id": "com.qtforge.examples.hello_world",
-        "category": "Example",
-        "license": "MIT",
-        "homepage": "https://github.com/qtforge/examples",
-        "capabilities": ["Basic"],
-        "commands": ["hello"],
-        "dependencies": {
-            "required": [],
-            "optional": []
-        },
-        "configuration": {
-            "schema": {
-                "type": "object",
-                "properties": {},
-                "additionalProperties": false
-            }
-        }
+  "IID": "qtplugin.IPlugin/3.0",
+  "MetaData": {
+    "name": "HelloWorldPlugin",
+    "description": "Minimal QtForge plugin for absolute beginners",
+    "version": "1.0.0",
+    "author": "QtForge Examples",
+    "id": "com.qtforge.examples.hello_world",
+    "category": "Example",
+    "license": "MIT",
+    "homepage": "https://github.com/qtforge/examples",
+    "capabilities": ["Basic"],
+    "commands": ["hello"],
+    "dependencies": {
+      "required": [],
+      "optional": []
+    },
+    "configuration": {
+      "schema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      }
     }
+  }
 }

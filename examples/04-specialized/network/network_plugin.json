@@ -1,275 +1,270 @@
 {
-    "name": "NetworkPlugin",
-    "version": "3.0.0",
-    "description": "Comprehensive network plugin demonstrating QtForge network features",
-    "author": "QtForge Team",
-    "license": "MIT",
-    "website": "https://github.com/QtForge/QtPlugin",
-    "category": "Network",
-    "tags": ["network", "http", "websocket", "rest-api", "ssl", "example"],
-    
-    "plugin_interface": "qtplugin.IPlugin",
-    "plugin_type": "network",
-    
-    "capabilities": [
-        "Network",
-        "Configuration",
-        "Monitoring",
-        "Logging",
-        "Threading"
-    ],
-    
-    "priority": "Normal",
-    "thread_safe": true,
-    "thread_model": "multi-threaded",
-    
-    "dependencies": {
-        "required": [
-            "qtplugin.NetworkManager"
-        ],
-        "optional": [
-            "qtplugin.MessageBus",
-            "qtplugin.ConfigurationManager"
-        ]
-    },
-    
-    "commands": [
-        {
-            "name": "http",
-            "description": "Make HTTP requests with full method support",
-            "parameters": {
-                "method": {
-                    "type": "string",
-                    "required": false,
-                    "default": "GET",
-                    "enum": ["GET", "POST", "PUT", "DELETE", "HEAD", "PATCH"],
-                    "description": "HTTP method to use"
-                },
-                "url": {
-                    "type": "string",
-                    "required": true,
-                    "description": "Target URL for the request"
-                },
-                "headers": {
-                    "type": "object",
-                    "required": false,
-                    "description": "Custom headers to include in the request"
-                },
-                "body": {
-                    "type": "object",
-                    "required": false,
-                    "description": "Request body (for POST/PUT requests)"
-                }
-            }
+  "name": "NetworkPlugin",
+  "version": "3.0.0",
+  "description": "Comprehensive network plugin demonstrating QtForge network features",
+  "author": "QtForge Team",
+  "license": "MIT",
+  "website": "https://github.com/QtForge/QtPlugin",
+  "category": "Network",
+  "tags": ["network", "http", "websocket", "rest-api", "ssl", "example"],
+
+  "plugin_interface": "qtplugin.IPlugin",
+  "plugin_type": "network",
+
+  "capabilities": [
+    "Network",
+    "Configuration",
+    "Monitoring",
+    "Logging",
+    "Threading"
+  ],
+
+  "priority": "Normal",
+  "thread_safe": true,
+  "thread_model": "multi-threaded",
+
+  "dependencies": {
+    "required": ["qtplugin.NetworkManager"],
+    "optional": ["qtplugin.MessageBus", "qtplugin.ConfigurationManager"]
+  },
+
+  "commands": [
+    {
+      "name": "http",
+      "description": "Make HTTP requests with full method support",
+      "parameters": {
+        "method": {
+          "type": "string",
+          "required": false,
+          "default": "GET",
+          "enum": ["GET", "POST", "PUT", "DELETE", "HEAD", "PATCH"],
+          "description": "HTTP method to use"
         },
-        {
-            "name": "server",
-            "description": "Manage HTTP and WebSocket servers",
-            "parameters": {
-                "action": {
-                    "type": "string",
-                    "required": false,
-                    "default": "status",
-                    "enum": ["start_http", "stop_http", "start_websocket", "status"],
-                    "description": "Server action to perform"
-                },
-                "port": {
-                    "type": "integer",
-                    "required": false,
-                    "description": "Port number for server (required for start actions)"
-                },
-                "routes": {
-                    "type": "object",
-                    "required": false,
-                    "description": "Custom routes configuration for HTTP server"
-                }
-            }
+        "url": {
+          "type": "string",
+          "required": true,
+          "description": "Target URL for the request"
         },
-        {
-            "name": "websocket",
-            "description": "Manage WebSocket client connections",
-            "parameters": {
-                "action": {
-                    "type": "string",
-                    "required": false,
-                    "default": "status",
-                    "enum": ["connect", "send", "status"],
-                    "description": "WebSocket action to perform"
-                },
-                "url": {
-                    "type": "string",
-                    "required": false,
-                    "description": "WebSocket server URL (required for connect action)"
-                },
-                "message": {
-                    "type": "object",
-                    "required": false,
-                    "description": "Message to send (required for send action)"
-                }
-            }
+        "headers": {
+          "type": "object",
+          "required": false,
+          "description": "Custom headers to include in the request"
         },
-        {
-            "name": "diagnostics",
-            "description": "Get comprehensive network diagnostics",
-            "parameters": {}
-        },
-        {
-            "name": "status",
-            "description": "Get network plugin status and statistics",
-            "parameters": {}
-        },
-        {
-            "name": "connectivity",
-            "description": "Test network connectivity to a host",
-            "parameters": {
-                "host": {
-                    "type": "string",
-                    "required": true,
-                    "description": "Host to test connectivity to"
-                },
-                "port": {
-                    "type": "integer",
-                    "required": false,
-                    "default": 80,
-                    "description": "Port to test connectivity on"
-                }
-            }
+        "body": {
+          "type": "object",
+          "required": false,
+          "description": "Request body (for POST/PUT requests)"
         }
-    ],
-    
-    "configuration": {
-        "http_server_enabled": {
-            "type": "boolean",
-            "default": false,
-            "description": "Enable HTTP server functionality"
+      }
+    },
+    {
+      "name": "server",
+      "description": "Manage HTTP and WebSocket servers",
+      "parameters": {
+        "action": {
+          "type": "string",
+          "required": false,
+          "default": "status",
+          "enum": ["start_http", "stop_http", "start_websocket", "status"],
+          "description": "Server action to perform"
         },
-        "websocket_server_enabled": {
-            "type": "boolean",
-            "default": false,
-            "description": "Enable WebSocket server functionality"
+        "port": {
+          "type": "integer",
+          "required": false,
+          "description": "Port number for server (required for start actions)"
         },
-        "ssl_enabled": {
-            "type": "boolean",
-            "default": false,
-            "description": "Enable SSL/TLS support"
-        },
-        "http_server_port": {
-            "type": "integer",
-            "default": 8080,
-            "min": 1,
-            "max": 65535,
-            "description": "Default port for HTTP server"
-        },
-        "websocket_server_port": {
-            "type": "integer",
-            "default": 8081,
-            "min": 1,
-            "max": 65535,
-            "description": "Default port for WebSocket server"
-        },
-        "request_timeout": {
-            "type": "integer",
-            "default": 30000,
-            "min": 1000,
-            "max": 300000,
-            "description": "HTTP request timeout in milliseconds"
-        },
-        "max_connections": {
-            "type": "integer",
-            "default": 100,
-            "min": 1,
-            "max": 10000,
-            "description": "Maximum number of concurrent connections"
-        },
-        "user_agent": {
-            "type": "string",
-            "default": "QtForge-NetworkPlugin/3.0.0",
-            "description": "User agent string for HTTP requests"
-        },
-        "network_monitoring_interval": {
-            "type": "integer",
-            "default": 10000,
-            "min": 1000,
-            "max": 300000,
-            "description": "Network monitoring interval in milliseconds"
-        },
-        "enable_cors": {
-            "type": "boolean",
-            "default": true,
-            "description": "Enable CORS support for HTTP server"
-        },
-        "cors_origins": {
-            "type": "array",
-            "default": ["*"],
-            "description": "Allowed CORS origins"
-        },
-        "ssl_certificate_path": {
-            "type": "string",
-            "default": "",
-            "description": "Path to SSL certificate file"
-        },
-        "ssl_private_key_path": {
-            "type": "string",
-            "default": "",
-            "description": "Path to SSL private key file"
-        },
-        "authentication_enabled": {
-            "type": "boolean",
-            "default": false,
-            "description": "Enable authentication for server endpoints"
-        },
-        "api_key_header": {
-            "type": "string",
-            "default": "X-API-Key",
-            "description": "Header name for API key authentication"
-        },
-        "rate_limiting_enabled": {
-            "type": "boolean",
-            "default": false,
-            "description": "Enable rate limiting for server endpoints"
-        },
-        "rate_limit_requests_per_minute": {
-            "type": "integer",
-            "default": 60,
-            "min": 1,
-            "max": 10000,
-            "description": "Maximum requests per minute per client"
-        },
-        "compression_enabled": {
-            "type": "boolean",
-            "default": true,
-            "description": "Enable response compression"
-        },
-        "keep_alive_enabled": {
-            "type": "boolean",
-            "default": true,
-            "description": "Enable HTTP keep-alive connections"
-        },
-        "connection_pool_size": {
-            "type": "integer",
-            "default": 10,
-            "min": 1,
-            "max": 100,
-            "description": "HTTP connection pool size"
+        "routes": {
+          "type": "object",
+          "required": false,
+          "description": "Custom routes configuration for HTTP server"
         }
+      }
     },
-    
-    "network": {
-        "protocols": ["HTTP", "HTTPS", "WebSocket", "WebSocket Secure"],
-        "http_methods": ["GET", "POST", "PUT", "DELETE", "HEAD", "PATCH"],
-        "ssl_support": true,
-        "server_support": true,
-        "client_support": true,
-        "websocket_support": true,
-        "authentication_support": true,
-        "rate_limiting_support": true
+    {
+      "name": "websocket",
+      "description": "Manage WebSocket client connections",
+      "parameters": {
+        "action": {
+          "type": "string",
+          "required": false,
+          "default": "status",
+          "enum": ["connect", "send", "status"],
+          "description": "WebSocket action to perform"
+        },
+        "url": {
+          "type": "string",
+          "required": false,
+          "description": "WebSocket server URL (required for connect action)"
+        },
+        "message": {
+          "type": "object",
+          "required": false,
+          "description": "Message to send (required for send action)"
+        }
+      }
     },
-    
-    "build_info": {
-        "qt_version": "6.0+",
-        "cmake_minimum": "3.21",
-        "cpp_standard": "20",
-        "compiler_features": ["concepts", "ranges"],
-        "qt_modules": ["Core", "Network", "WebSockets", "HttpServer"]
+    {
+      "name": "diagnostics",
+      "description": "Get comprehensive network diagnostics",
+      "parameters": {}
+    },
+    {
+      "name": "status",
+      "description": "Get network plugin status and statistics",
+      "parameters": {}
+    },
+    {
+      "name": "connectivity",
+      "description": "Test network connectivity to a host",
+      "parameters": {
+        "host": {
+          "type": "string",
+          "required": true,
+          "description": "Host to test connectivity to"
+        },
+        "port": {
+          "type": "integer",
+          "required": false,
+          "default": 80,
+          "description": "Port to test connectivity on"
+        }
+      }
     }
+  ],
+
+  "configuration": {
+    "http_server_enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable HTTP server functionality"
+    },
+    "websocket_server_enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable WebSocket server functionality"
+    },
+    "ssl_enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable SSL/TLS support"
+    },
+    "http_server_port": {
+      "type": "integer",
+      "default": 8080,
+      "min": 1,
+      "max": 65535,
+      "description": "Default port for HTTP server"
+    },
+    "websocket_server_port": {
+      "type": "integer",
+      "default": 8081,
+      "min": 1,
+      "max": 65535,
+      "description": "Default port for WebSocket server"
+    },
+    "request_timeout": {
+      "type": "integer",
+      "default": 30000,
+      "min": 1000,
+      "max": 300000,
+      "description": "HTTP request timeout in milliseconds"
+    },
+    "max_connections": {
+      "type": "integer",
+      "default": 100,
+      "min": 1,
+      "max": 10000,
+      "description": "Maximum number of concurrent connections"
+    },
+    "user_agent": {
+      "type": "string",
+      "default": "QtForge-NetworkPlugin/3.0.0",
+      "description": "User agent string for HTTP requests"
+    },
+    "network_monitoring_interval": {
+      "type": "integer",
+      "default": 10000,
+      "min": 1000,
+      "max": 300000,
+      "description": "Network monitoring interval in milliseconds"
+    },
+    "enable_cors": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable CORS support for HTTP server"
+    },
+    "cors_origins": {
+      "type": "array",
+      "default": ["*"],
+      "description": "Allowed CORS origins"
+    },
+    "ssl_certificate_path": {
+      "type": "string",
+      "default": "",
+      "description": "Path to SSL certificate file"
+    },
+    "ssl_private_key_path": {
+      "type": "string",
+      "default": "",
+      "description": "Path to SSL private key file"
+    },
+    "authentication_enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable authentication for server endpoints"
+    },
+    "api_key_header": {
+      "type": "string",
+      "default": "X-API-Key",
+      "description": "Header name for API key authentication"
+    },
+    "rate_limiting_enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable rate limiting for server endpoints"
+    },
+    "rate_limit_requests_per_minute": {
+      "type": "integer",
+      "default": 60,
+      "min": 1,
+      "max": 10000,
+      "description": "Maximum requests per minute per client"
+    },
+    "compression_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable response compression"
+    },
+    "keep_alive_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable HTTP keep-alive connections"
+    },
+    "connection_pool_size": {
+      "type": "integer",
+      "default": 10,
+      "min": 1,
+      "max": 100,
+      "description": "HTTP connection pool size"
+    }
+  },
+
+  "network": {
+    "protocols": ["HTTP", "HTTPS", "WebSocket", "WebSocket Secure"],
+    "http_methods": ["GET", "POST", "PUT", "DELETE", "HEAD", "PATCH"],
+    "ssl_support": true,
+    "server_support": true,
+    "client_support": true,
+    "websocket_support": true,
+    "authentication_support": true,
+    "rate_limiting_support": true
+  },
+
+  "build_info": {
+    "qt_version": "6.0+",
+    "cmake_minimum": "3.21",
+    "cpp_standard": "20",
+    "compiler_features": ["concepts", "ranges"],
+    "qt_modules": ["Core", "Network", "WebSockets", "HttpServer"]
+  }
 }

@@ -6,13 +6,13 @@
 
 #pragma once
 
-#include <QObject>
-#include <QJsonObject>
 #include <QJsonDocument>
-#include <QTimer>
+#include <QJsonObject>
 #include <QMutex>
-#include <memory>
+#include <QObject>
+#include <QTimer>
 #include <atomic>
+#include <memory>
 
 #include "qtplugin/core/plugin_interface.hpp"
 #include "qtplugin/managers/configuration_manager.hpp"
@@ -21,7 +21,7 @@ namespace qtplugin::examples {
 
 /**
  * @brief Configuration management example plugin
- * 
+ *
  * Demonstrates advanced configuration management patterns including:
  * - Dynamic configuration updates
  * - Configuration validation
@@ -30,7 +30,8 @@ namespace qtplugin::examples {
  */
 class ConfigurationPlugin : public QObject, public qtplugin::IPlugin {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "qtplugin.IPlugin/3.0" FILE "configuration_plugin.json")
+    Q_PLUGIN_METADATA(IID "qtplugin.IPlugin/3.0" FILE
+                          "configuration_plugin.json")
     Q_INTERFACES(qtplugin::IPlugin)
 
 public:
@@ -42,10 +43,13 @@ public:
     void shutdown() override;
     QString name() const override { return "ConfigurationPlugin"; }
     QString version() const override { return "1.0.0"; }
-    QString description() const override { return "Advanced configuration management example"; }
+    QString description() const override {
+        return "Advanced configuration management example";
+    }
     qtplugin::PluginState state() const override { return m_state.load(); }
     QJsonObject metadata() const override;
-    QJsonObject execute_command(const QString& command, const QJsonObject& params = {}) override;
+    QJsonObject execute_command(const QString& command,
+                                const QJsonObject& params = {}) override;
 
 public slots:
     void on_configuration_changed(const QString& key, const QJsonValue& value);
@@ -72,20 +76,20 @@ private:
     // State management
     std::atomic<qtplugin::PluginState> m_state{qtplugin::PluginState::Unloaded};
     mutable QMutex m_config_mutex;
-    
+
     // Configuration data
     QJsonObject m_configuration;
     QJsonObject m_default_configuration;
     QString m_config_file_path;
-    
+
     // Configuration management components
     std::unique_ptr<qtplugin::ConfigurationManager> m_config_manager;
     std::unique_ptr<QTimer> m_validation_timer;
-    
+
     // Statistics
     std::atomic<int> m_config_changes{0};
     std::atomic<int> m_validation_runs{0};
     std::atomic<int> m_reload_count{0};
 };
 
-} // namespace qtplugin::examples
+}  // namespace qtplugin::examples

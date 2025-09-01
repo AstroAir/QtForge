@@ -3,12 +3,12 @@
  * @brief Test application for BasicPlugin
  */
 
-#include "basic_plugin.hpp"
 #include <QCoreApplication>
 #include <QDebug>
 #include <QJsonDocument>
 #include <QTimer>
 #include <memory>
+#include "basic_plugin.hpp"
 
 void test_plugin_lifecycle(BasicPlugin& plugin) {
     qDebug() << "\n=== Testing Plugin Lifecycle ===";
@@ -23,14 +23,16 @@ void test_plugin_lifecycle(BasicPlugin& plugin) {
         qDebug() << "✅ Plugin initialized successfully";
         qDebug() << "State after init:" << static_cast<int>(plugin.state());
     } else {
-        qDebug() << "❌ Plugin initialization failed:" << init_result.error().message.c_str();
+        qDebug() << "❌ Plugin initialization failed:"
+                 << init_result.error().message.c_str();
         return;
     }
 
     // Test double initialization (should fail)
     auto double_init = plugin.initialize();
     if (!double_init) {
-        qDebug() << "✅ Double initialization correctly rejected:" << double_init.error().message.c_str();
+        qDebug() << "✅ Double initialization correctly rejected:"
+                 << double_init.error().message.c_str();
     }
 }
 
@@ -48,9 +50,11 @@ void test_plugin_commands(BasicPlugin& plugin) {
     auto status_result = plugin.execute_command("status");
     if (status_result) {
         qDebug() << "✅ Status command result:";
-        qDebug() << QJsonDocument(status_result.value()).toJson(QJsonDocument::Compact);
+        qDebug() << QJsonDocument(status_result.value())
+                        .toJson(QJsonDocument::Compact);
     } else {
-        qDebug() << "❌ Status command failed:" << status_result.error().message.c_str();
+        qDebug() << "❌ Status command failed:"
+                 << status_result.error().message.c_str();
     }
 
     // Test echo command
@@ -61,15 +65,18 @@ void test_plugin_commands(BasicPlugin& plugin) {
     auto echo_result = plugin.execute_command("echo", echo_params);
     if (echo_result) {
         qDebug() << "✅ Echo command result:";
-        qDebug() << QJsonDocument(echo_result.value()).toJson(QJsonDocument::Compact);
+        qDebug() << QJsonDocument(echo_result.value())
+                        .toJson(QJsonDocument::Compact);
     } else {
-        qDebug() << "❌ Echo command failed:" << echo_result.error().message.c_str();
+        qDebug() << "❌ Echo command failed:"
+                 << echo_result.error().message.c_str();
     }
 
     // Test invalid command
     auto invalid_result = plugin.execute_command("invalid_command");
     if (!invalid_result) {
-        qDebug() << "✅ Invalid command correctly rejected:" << invalid_result.error().message.c_str();
+        qDebug() << "✅ Invalid command correctly rejected:"
+                 << invalid_result.error().message.c_str();
     }
 }
 
@@ -80,7 +87,8 @@ void test_plugin_configuration(BasicPlugin& plugin) {
     auto default_config = plugin.default_configuration();
     qDebug() << "Default configuration:";
     if (default_config.has_value()) {
-        qDebug() << QJsonDocument(default_config.value()).toJson(QJsonDocument::Compact);
+        qDebug() << QJsonDocument(default_config.value())
+                        .toJson(QJsonDocument::Compact);
     }
 
     // Test current configuration
@@ -99,18 +107,21 @@ void test_plugin_configuration(BasicPlugin& plugin) {
 
         auto updated_config = plugin.current_configuration();
         qDebug() << "Updated configuration:";
-        qDebug() << QJsonDocument(updated_config).toJson(QJsonDocument::Compact);
+        qDebug()
+            << QJsonDocument(updated_config).toJson(QJsonDocument::Compact);
     } else {
-        qDebug() << "❌ Configuration update failed:" << config_result.error().message.c_str();
+        qDebug() << "❌ Configuration update failed:"
+                 << config_result.error().message.c_str();
     }
 
     // Test invalid configuration
     QJsonObject invalid_config;
-    invalid_config["timer_interval"] = 100; // Too small
+    invalid_config["timer_interval"] = 100;  // Too small
 
     auto invalid_config_result = plugin.configure(invalid_config);
     if (!invalid_config_result) {
-        qDebug() << "✅ Invalid configuration correctly rejected:" << invalid_config_result.error().message.c_str();
+        qDebug() << "✅ Invalid configuration correctly rejected:"
+                 << invalid_config_result.error().message.c_str();
     }
 }
 
@@ -129,7 +140,7 @@ void test_plugin_metadata(BasicPlugin& plugin) {
     qDebug() << "  Homepage:" << metadata.homepage.c_str();
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
     QCoreApplication app(argc, argv);
 
     qDebug() << "QtForge BasicPlugin Test Application";
@@ -153,7 +164,8 @@ int main(int argc, char *argv[]) {
         auto final_status = plugin->execute_command("status");
         if (final_status) {
             qDebug() << "Final status:";
-            qDebug() << QJsonDocument(final_status.value()).toJson(QJsonDocument::Compact);
+            qDebug() << QJsonDocument(final_status.value())
+                            .toJson(QJsonDocument::Compact);
         }
 
         // Shutdown
