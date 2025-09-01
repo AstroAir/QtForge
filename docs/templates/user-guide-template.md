@@ -1,10 +1,10 @@
 # [Guide Topic] User Guide
 
 !!! info "Guide Information"
-    **Difficulty**: [Beginner|Intermediate|Advanced]  
-    **Prerequisites**: [List required knowledge]  
-    **Estimated Time**: [X minutes/hours]  
-    **QtForge Version**: v[version]+
+**Difficulty**: [Beginner|Intermediate|Advanced]  
+ **Prerequisites**: [List required knowledge]  
+ **Estimated Time**: [X minutes/hours]  
+ **QtForge Version**: v[version]+
 
 ## Overview
 
@@ -13,7 +13,7 @@ Brief introduction to the topic and what users will learn from this guide.
 ### What You'll Learn
 
 - [ ] Concept 1: Brief description
-- [ ] Concept 2: Brief description  
+- [ ] Concept 2: Brief description
 - [ ] Concept 3: Brief description
 - [ ] Practical application of the concepts
 
@@ -40,7 +40,7 @@ auto component = ComponentClass::create();
 ```
 
 !!! tip "Pro Tip"
-    Helpful advice or best practice related to this step.
+Helpful advice or best practice related to this step.
 
 ### Step 2: Configuration
 
@@ -61,8 +61,8 @@ if (!result) {
 
 **Configuration Options:**
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
+| Option    | Type   | Default   | Description               |
+| --------- | ------ | --------- | ------------------------- |
 | `option1` | `Type` | `default` | What this option controls |
 | `option2` | `Type` | `default` | What this option controls |
 
@@ -75,19 +75,19 @@ Core implementation details with examples.
 class MyImplementation {
 private:
     std::shared_ptr<ComponentClass> m_component;
-    
+
 public:
     bool initialize() {
         m_component = ComponentClass::create();
-        
+
         // Configure component
         ComponentConfig config;
         config.enable_feature = true;
-        
+
         auto result = m_component->configure(config);
         return result.has_value();
     }
-    
+
     void process_data(const DataType& data) {
         auto result = m_component->process(data);
         if (result) {
@@ -96,12 +96,12 @@ public:
             handle_error(result.error());
         }
     }
-    
+
 private:
     void handle_success(const ResultType& result) {
         // Success handling
     }
-    
+
     void handle_error(const PluginError& error) {
         // Error handling
     }
@@ -174,14 +174,17 @@ Another common pattern.
 #### Issue 1: [Problem Description]
 
 **Symptoms:**
+
 - Symptom 1
 - Symptom 2
 
 **Causes:**
+
 - Possible cause 1
 - Possible cause 2
 
 **Solutions:**
+
 1. Solution step 1
 2. Solution step 2
 3. Verification step
@@ -189,24 +192,26 @@ Another common pattern.
 #### Issue 2: [Problem Description]
 
 **Symptoms:**
+
 - Symptom description
 
 **Solution:**
+
 ```cpp
 // Code solution
 ```
 
 ### Error Messages
 
-| Error Message | Meaning | Solution |
-|---------------|---------|----------|
+| Error Message     | Meaning       | Solution   |
+| ----------------- | ------------- | ---------- |
 | "Error message 1" | What it means | How to fix |
 | "Error message 2" | What it means | How to fix |
 
 ## Python Integration
 
 !!! note "Python Support"
-    This functionality is also available through Python bindings.
+This functionality is also available through Python bindings.
 
 ### Python Example
 
@@ -253,12 +258,12 @@ Another practical example.
 
 class ComponentTest : public QObject {
     Q_OBJECT
-    
+
 private slots:
     void test_basic_functionality() {
         auto component = ComponentClass::create();
         QVERIFY(component != nullptr);
-        
+
         // Test implementation
     }
 };
@@ -293,11 +298,13 @@ After completing this guide, you might want to:
 ## Related Resources
 
 ### Documentation
+
 - [API Reference](../api/module/component.md) - Detailed API documentation
 - [Architecture Guide](../architecture/system-design.md) - System design overview
 - [Examples](../examples/component-examples.md) - More examples
 
 ### External Resources
+
 - [External Resource 1](https://example.com) - Description
 - [External Resource 2](https://example.com) - Description
 
@@ -307,4 +314,4 @@ Found an issue with this guide? Please [open an issue](https://github.com/QtForg
 
 ---
 
-*Last updated: [Date] | QtForge v[version]*
+_Last updated: [Date] | QtForge v[version]_

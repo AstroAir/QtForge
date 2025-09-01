@@ -1,10 +1,10 @@
 # PluginOrchestrator API Reference
 
 !!! info "Module Information"
-    **Header**: `qtplugin/orchestration/plugin_orchestrator.hpp`  
-    **Namespace**: `qtplugin::orchestration`  
-    **Since**: QtForge v3.1.0  
-    **Status**: Beta
+**Header**: `qtplugin/orchestration/plugin_orchestrator.hpp`  
+ **Namespace**: `qtplugin::orchestration`  
+ **Since**: QtForge v3.1.0  
+ **Status**: Beta
 
 ## Overview
 
@@ -107,7 +107,7 @@ struct WorkflowStep {
     std::chrono::milliseconds retry_delay{1000}; ///< Delay between retries
     bool critical{true};                ///< Whether failure should stop workflow
     QJsonObject metadata;               ///< Additional metadata
-    
+
     WorkflowStep() = default;
     WorkflowStep(const QString& step_id, const QString& plugin, const QString& method);
 };
@@ -124,7 +124,7 @@ struct StepResult {
     int retry_count{0};                 ///< Number of retries attempted
     std::chrono::system_clock::time_point start_time;  ///< Execution start time
     std::chrono::system_clock::time_point end_time;    ///< Execution end time
-    
+
     std::chrono::milliseconds execution_time() const;
 };
 ```
@@ -145,6 +145,7 @@ Workflow(const QString& workflow_id, const QString& name = "");
 #### Configuration Methods
 
 ##### `set_description()`
+
 ```cpp
 Workflow& set_description(const QString& desc);
 ```
@@ -152,12 +153,15 @@ Workflow& set_description(const QString& desc);
 Sets the workflow description.
 
 **Parameters:**
+
 - `desc` - Workflow description
 
 **Returns:**
+
 - `Workflow&` - Reference to this workflow for method chaining
 
 ##### `set_execution_mode()`
+
 ```cpp
 Workflow& set_execution_mode(ExecutionMode mode);
 ```
@@ -165,12 +169,15 @@ Workflow& set_execution_mode(ExecutionMode mode);
 Sets the workflow execution mode.
 
 **Parameters:**
+
 - `mode` - Execution mode (Sequential, Parallel, Conditional, Pipeline)
 
 **Returns:**
+
 - `Workflow&` - Reference to this workflow for method chaining
 
 ##### `add_step()`
+
 ```cpp
 Workflow& add_step(const WorkflowStep& step);
 ```
@@ -178,12 +185,15 @@ Workflow& add_step(const WorkflowStep& step);
 Adds a step to the workflow.
 
 **Parameters:**
+
 - `step` - Workflow step to add
 
 **Returns:**
+
 - `Workflow&` - Reference to this workflow for method chaining
 
 **Example:**
+
 ```cpp
 WorkflowStep step("process_data", "data_processor", "process");
 step.parameters = QJsonObject{{"mode", "batch"}};
@@ -191,6 +201,7 @@ workflow.add_step(step);
 ```
 
 ##### `add_rollback_step()`
+
 ```cpp
 Workflow& add_rollback_step(const QString& step_id, const WorkflowStep& rollback_step);
 ```
@@ -198,15 +209,18 @@ Workflow& add_rollback_step(const QString& step_id, const WorkflowStep& rollback
 Adds a rollback step for error recovery.
 
 **Parameters:**
+
 - `step_id` - ID of the step this rollback is for
 - `rollback_step` - Rollback step definition
 
 **Returns:**
+
 - `Workflow&` - Reference to this workflow for method chaining
 
 #### Query Methods
 
 ##### `id()`
+
 ```cpp
 QString id() const;
 ```
@@ -214,6 +228,7 @@ QString id() const;
 Returns the workflow identifier.
 
 ##### `name()`
+
 ```cpp
 QString name() const;
 ```
@@ -221,6 +236,7 @@ QString name() const;
 Returns the workflow name.
 
 ##### `execution_mode()`
+
 ```cpp
 ExecutionMode execution_mode() const;
 ```
@@ -230,6 +246,7 @@ Returns the workflow execution mode.
 #### Static Methods
 
 ##### `from_json()`
+
 ```cpp
 static qtplugin::expected<Workflow, PluginError> from_json(const QJsonObject& json);
 ```
@@ -237,9 +254,11 @@ static qtplugin::expected<Workflow, PluginError> from_json(const QJsonObject& js
 Creates a workflow from JSON definition.
 
 **Parameters:**
+
 - `json` - JSON workflow definition
 
 **Returns:**
+
 - `expected<Workflow, PluginError>` - Workflow instance or error
 
 ### PluginOrchestrator
@@ -255,6 +274,7 @@ explicit PluginOrchestrator(QObject* parent = nullptr);
 #### Static Methods
 
 ##### `create()`
+
 ```cpp
 static std::shared_ptr<PluginOrchestrator> create();
 ```
@@ -262,11 +282,13 @@ static std::shared_ptr<PluginOrchestrator> create();
 Creates a new orchestrator instance.
 
 **Returns:**
+
 - `std::shared_ptr<PluginOrchestrator>` - Shared pointer to new instance
 
 #### Workflow Management
 
 ##### `register_workflow()`
+
 ```cpp
 qtplugin::expected<void, PluginError> register_workflow(const Workflow& workflow);
 ```
@@ -274,16 +296,20 @@ qtplugin::expected<void, PluginError> register_workflow(const Workflow& workflow
 Registers a workflow for execution.
 
 **Parameters:**
+
 - `workflow` - Workflow to register
 
 **Returns:**
+
 - `expected<void, PluginError>` - Success or error
 
 **Errors:**
+
 - `PluginErrorCode::InvalidConfiguration` - Invalid workflow definition
 - `PluginErrorCode::AlreadyExists` - Workflow ID already registered
 
 ##### `unregister_workflow()`
+
 ```cpp
 qtplugin::expected<void, PluginError> unregister_workflow(const QString& workflow_id);
 ```
@@ -291,12 +317,15 @@ qtplugin::expected<void, PluginError> unregister_workflow(const QString& workflo
 Unregisters a workflow.
 
 **Parameters:**
+
 - `workflow_id` - Workflow identifier
 
 **Returns:**
+
 - `expected<void, PluginError>` - Success or error
 
 ##### `get_workflow()`
+
 ```cpp
 qtplugin::expected<Workflow, PluginError> get_workflow(const QString& workflow_id) const;
 ```
@@ -304,12 +333,15 @@ qtplugin::expected<Workflow, PluginError> get_workflow(const QString& workflow_i
 Retrieves a registered workflow.
 
 **Parameters:**
+
 - `workflow_id` - Workflow identifier
 
 **Returns:**
+
 - `expected<Workflow, PluginError>` - Workflow instance or error
 
 ##### `list_workflows()`
+
 ```cpp
 std::vector<QString> list_workflows() const;
 ```
@@ -317,29 +349,34 @@ std::vector<QString> list_workflows() const;
 Lists all registered workflow IDs.
 
 **Returns:**
+
 - `std::vector<QString>` - List of workflow IDs
 
 #### Workflow Execution
 
 ##### `execute_workflow()`
+
 ```cpp
 qtplugin::expected<QString, PluginError> execute_workflow(
-    const QString& workflow_id, 
-    const QJsonObject& initial_data = {}, 
+    const QString& workflow_id,
+    const QJsonObject& initial_data = {},
     bool async = false);
 ```
 
 Executes a registered workflow.
 
 **Parameters:**
+
 - `workflow_id` - Workflow to execute
 - `initial_data` - Initial data for the workflow
 - `async` - Whether to execute asynchronously
 
 **Returns:**
+
 - `expected<QString, PluginError>` - Execution ID or error
 
 **Example:**
+
 ```cpp
 QJsonObject input_data{{"source_file", "data.csv"}};
 auto execution_id = orchestrator->execute_workflow("data_pipeline", input_data);
@@ -349,22 +386,26 @@ if (execution_id) {
 ```
 
 ##### `execute_workflow_async()`
+
 ```cpp
 std::future<qtplugin::expected<QJsonObject, PluginError>> execute_workflow_async(
-    const QString& workflow_id, 
+    const QString& workflow_id,
     const QJsonObject& initial_data = {});
 ```
 
 Executes a workflow asynchronously with future result.
 
 **Parameters:**
+
 - `workflow_id` - Workflow to execute
 - `initial_data` - Initial data for the workflow
 
 **Returns:**
+
 - `std::future<expected<QJsonObject, PluginError>>` - Future result
 
 ##### `cancel_workflow()`
+
 ```cpp
 qtplugin::expected<void, PluginError> cancel_workflow(const QString& execution_id);
 ```
@@ -372,14 +413,17 @@ qtplugin::expected<void, PluginError> cancel_workflow(const QString& execution_i
 Cancels a running workflow execution.
 
 **Parameters:**
+
 - `execution_id` - Execution to cancel
 
 **Returns:**
+
 - `expected<void, PluginError>` - Success or error
 
 #### Execution Monitoring
 
 ##### `get_execution_status()`
+
 ```cpp
 qtplugin::expected<QJsonObject, PluginError> get_execution_status(const QString& execution_id) const;
 ```
@@ -387,12 +431,15 @@ qtplugin::expected<QJsonObject, PluginError> get_execution_status(const QString&
 Gets the current status of a workflow execution.
 
 **Parameters:**
+
 - `execution_id` - Execution identifier
 
 **Returns:**
+
 - `expected<QJsonObject, PluginError>` - Status information or error
 
 **Status Object Fields:**
+
 - `execution_id` - Execution identifier
 - `workflow_id` - Workflow identifier
 - `status` - Overall execution status
@@ -402,6 +449,7 @@ Gets the current status of a workflow execution.
 - `total_steps` - Total number of steps
 
 ##### `list_active_executions()`
+
 ```cpp
 std::vector<QString> list_active_executions() const;
 ```
@@ -409,9 +457,11 @@ std::vector<QString> list_active_executions() const;
 Lists all active execution IDs.
 
 **Returns:**
+
 - `std::vector<QString>` - List of active execution IDs
 
 ##### `get_step_results()`
+
 ```cpp
 qtplugin::expected<std::vector<StepResult>, PluginError> get_step_results(const QString& execution_id) const;
 ```
@@ -419,14 +469,17 @@ qtplugin::expected<std::vector<StepResult>, PluginError> get_step_results(const 
 Gets results for all steps in an execution.
 
 **Parameters:**
+
 - `execution_id` - Execution identifier
 
 **Returns:**
+
 - `expected<std::vector<StepResult>, PluginError>` - Step results or error
 
 #### Transaction Support
 
 ##### `begin_transaction()`
+
 ```cpp
 qtplugin::expected<void, PluginError> begin_transaction(const QString& transaction_id);
 ```
@@ -434,6 +487,7 @@ qtplugin::expected<void, PluginError> begin_transaction(const QString& transacti
 Begins a transaction for atomic workflow execution.
 
 ##### `commit_transaction()`
+
 ```cpp
 qtplugin::expected<void, PluginError> commit_transaction(const QString& transaction_id);
 ```
@@ -441,6 +495,7 @@ qtplugin::expected<void, PluginError> commit_transaction(const QString& transact
 Commits a transaction, making all changes permanent.
 
 ##### `rollback_transaction()`
+
 ```cpp
 qtplugin::expected<void, PluginError> rollback_transaction(const QString& transaction_id);
 ```
@@ -451,14 +506,14 @@ Rolls back a transaction, undoing all changes.
 
 Common error codes and their meanings:
 
-| Error Code | Description | Resolution |
-|------------|-------------|------------|
-| `InvalidConfiguration` | Invalid workflow definition | Check workflow structure and step definitions |
-| `NotFound` | Workflow or execution not found | Verify workflow is registered and execution ID is valid |
-| `InvalidState` | Operation not valid in current state | Check execution status before operation |
-| `PluginNotFound` | Required plugin not available | Ensure all referenced plugins are loaded |
-| `DependencyNotSatisfied` | Step dependencies not met | Check step dependency configuration |
-| `Timeout` | Step or workflow execution timeout | Increase timeout values or optimize step execution |
+| Error Code               | Description                          | Resolution                                              |
+| ------------------------ | ------------------------------------ | ------------------------------------------------------- |
+| `InvalidConfiguration`   | Invalid workflow definition          | Check workflow structure and step definitions           |
+| `NotFound`               | Workflow or execution not found      | Verify workflow is registered and execution ID is valid |
+| `InvalidState`           | Operation not valid in current state | Check execution status before operation                 |
+| `PluginNotFound`         | Required plugin not available        | Ensure all referenced plugins are loaded                |
+| `DependencyNotSatisfied` | Step dependencies not met            | Check step dependency configuration                     |
+| `Timeout`                | Step or workflow execution timeout   | Increase timeout values or optimize step execution      |
 
 ## Thread Safety
 
@@ -571,7 +626,7 @@ parallel_workflow.add_step(process_images)
 ## Python Bindings
 
 !!! note "Python Support"
-    This component is available in Python through the `qtforge.orchestration` module.
+This component is available in Python through the `qtforge.orchestration` module.
 
 ```python
 import qtforge
@@ -620,4 +675,4 @@ execution_id = orchestrator.execute_workflow("data_pipeline")
 
 ---
 
-*Last updated: December 2024 | QtForge v3.1.0*
+_Last updated: December 2024 | QtForge v3.1.0_

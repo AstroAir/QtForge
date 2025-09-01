@@ -1,10 +1,10 @@
 # PluginHotReloadManager API Reference
 
 !!! info "Module Information"
-    **Header**: `qtplugin/monitoring/plugin_hot_reload_manager.hpp`  
-    **Namespace**: `qtplugin`  
-    **Since**: QtForge v3.0.0  
-    **Status**: Stable
+**Header**: `qtplugin/monitoring/plugin_hot_reload_manager.hpp`  
+ **Namespace**: `qtplugin`  
+ **Since**: QtForge v3.0.0  
+ **Status**: Stable
 
 ## Overview
 
@@ -62,6 +62,7 @@ Base interface for hot reload management functionality.
 ### Virtual Methods
 
 #### `enable_hot_reload()`
+
 ```cpp
 virtual qtplugin::expected<void, PluginError> enable_hot_reload(
     const std::string& plugin_id,
@@ -71,18 +72,22 @@ virtual qtplugin::expected<void, PluginError> enable_hot_reload(
 Enables hot reload monitoring for a specific plugin.
 
 **Parameters:**
+
 - `plugin_id` - Unique plugin identifier
 - `file_path` - Path to the plugin file to monitor
 
 **Returns:**
+
 - `expected<void, PluginError>` - Success or error
 
 **Errors:**
+
 - `PluginErrorCode::FileNotFound` - Plugin file does not exist
 - `PluginErrorCode::InvalidPath` - Invalid file path provided
 - `PluginErrorCode::AlreadyExists` - Hot reload already enabled for plugin
 
 #### `disable_hot_reload()`
+
 ```cpp
 virtual void disable_hot_reload(const std::string& plugin_id) = 0;
 ```
@@ -90,9 +95,11 @@ virtual void disable_hot_reload(const std::string& plugin_id) = 0;
 Disables hot reload monitoring for a plugin.
 
 **Parameters:**
+
 - `plugin_id` - Plugin identifier to disable monitoring for
 
 #### `is_hot_reload_enabled()`
+
 ```cpp
 virtual bool is_hot_reload_enabled(const std::string& plugin_id) const = 0;
 ```
@@ -100,12 +107,15 @@ virtual bool is_hot_reload_enabled(const std::string& plugin_id) const = 0;
 Checks if hot reload is enabled for a specific plugin.
 
 **Parameters:**
+
 - `plugin_id` - Plugin identifier to check
 
 **Returns:**
+
 - `bool` - True if hot reload is enabled
 
 #### `set_reload_callback()`
+
 ```cpp
 virtual void set_reload_callback(
     std::function<void(const std::string&)> callback) = 0;
@@ -114,9 +124,11 @@ virtual void set_reload_callback(
 Sets the callback function to be called when a plugin needs reloading.
 
 **Parameters:**
+
 - `callback` - Function to call with plugin ID when reload is needed
 
 **Example:**
+
 ```cpp
 hot_reload->set_reload_callback([this](const std::string& plugin_id) {
     // Custom reload logic
@@ -129,6 +141,7 @@ hot_reload->set_reload_callback([this](const std::string& plugin_id) {
 ```
 
 #### `get_hot_reload_plugins()`
+
 ```cpp
 virtual std::vector<std::string> get_hot_reload_plugins() const = 0;
 ```
@@ -136,9 +149,11 @@ virtual std::vector<std::string> get_hot_reload_plugins() const = 0;
 Gets list of all plugins with hot reload enabled.
 
 **Returns:**
+
 - `std::vector<std::string>` - Vector of plugin IDs
 
 #### `clear()`
+
 ```cpp
 virtual void clear() = 0;
 ```
@@ -146,6 +161,7 @@ virtual void clear() = 0;
 Clears all hot reload watchers and disables monitoring for all plugins.
 
 #### `set_global_hot_reload_enabled()`
+
 ```cpp
 virtual void set_global_hot_reload_enabled(bool enabled) = 0;
 ```
@@ -153,9 +169,11 @@ virtual void set_global_hot_reload_enabled(bool enabled) = 0;
 Enables or disables hot reload globally for all plugins.
 
 **Parameters:**
+
 - `enabled` - Global hot reload state
 
 #### `is_global_hot_reload_enabled()`
+
 ```cpp
 virtual bool is_global_hot_reload_enabled() const = 0;
 ```
@@ -163,6 +181,7 @@ virtual bool is_global_hot_reload_enabled() const = 0;
 Checks if global hot reload is enabled.
 
 **Returns:**
+
 - `bool` - True if globally enabled
 
 ## Class: PluginHotReloadManager
@@ -178,6 +197,7 @@ explicit PluginHotReloadManager(QObject* parent = nullptr);
 ### Static Methods
 
 #### `create()`
+
 ```cpp
 static std::shared_ptr<PluginHotReloadManager> create();
 ```
@@ -185,9 +205,11 @@ static std::shared_ptr<PluginHotReloadManager> create();
 Creates a new hot reload manager instance.
 
 **Returns:**
+
 - `std::shared_ptr<PluginHotReloadManager>` - Shared pointer to new instance
 
 **Example:**
+
 ```cpp
 auto hot_reload = PluginHotReloadManager::create();
 ```
@@ -197,6 +219,7 @@ auto hot_reload = PluginHotReloadManager::create();
 The PluginHotReloadManager emits the following Qt signals:
 
 #### `plugin_file_changed`
+
 ```cpp
 void plugin_file_changed(const QString& plugin_id, const QString& file_path);
 ```
@@ -204,10 +227,12 @@ void plugin_file_changed(const QString& plugin_id, const QString& file_path);
 Emitted when a monitored plugin file changes.
 
 **Parameters:**
+
 - `plugin_id` - Plugin identifier
 - `file_path` - Path to the changed file
 
 #### `hot_reload_enabled`
+
 ```cpp
 void hot_reload_enabled(const QString& plugin_id);
 ```
@@ -215,6 +240,7 @@ void hot_reload_enabled(const QString& plugin_id);
 Emitted when hot reload is enabled for a plugin.
 
 #### `hot_reload_disabled`
+
 ```cpp
 void hot_reload_disabled(const QString& plugin_id);
 ```
@@ -225,12 +251,12 @@ Emitted when hot reload is disabled for a plugin.
 
 Common error codes and their meanings:
 
-| Error Code | Description | Resolution |
-|------------|-------------|------------|
-| `FileNotFound` | Plugin file does not exist | Verify file path is correct |
-| `InvalidPath` | Invalid file path provided | Check path format and accessibility |
-| `AlreadyExists` | Hot reload already enabled | Disable first or check current state |
-| `PermissionDenied` | Cannot watch file due to permissions | Check file system permissions |
+| Error Code         | Description                          | Resolution                           |
+| ------------------ | ------------------------------------ | ------------------------------------ |
+| `FileNotFound`     | Plugin file does not exist           | Verify file path is correct          |
+| `InvalidPath`      | Invalid file path provided           | Check path format and accessibility  |
+| `AlreadyExists`    | Hot reload already enabled           | Disable first or check current state |
+| `PermissionDenied` | Cannot watch file due to permissions | Check file system permissions        |
 
 ## Thread Safety
 
@@ -258,31 +284,31 @@ class DevelopmentEnvironment {
 private:
     std::shared_ptr<PluginManager> m_plugin_manager;
     std::shared_ptr<PluginHotReloadManager> m_hot_reload;
-    
+
 public:
     bool initialize() {
         m_plugin_manager = PluginManager::create();
         m_hot_reload = PluginHotReloadManager::create();
-        
+
         // Set up automatic reload handling
         m_hot_reload->set_reload_callback([this](const std::string& plugin_id) {
             handle_plugin_reload(plugin_id);
         });
-        
+
         // Connect to signals for logging
         connect(m_hot_reload.get(), &PluginHotReloadManager::plugin_file_changed,
                 this, &DevelopmentEnvironment::on_plugin_file_changed);
-        
+
         return true;
     }
-    
+
     bool enable_development_mode(const QString& plugin_id, const QString& plugin_path) {
         // Enable hot reload for development
         auto result = m_hot_reload->enable_hot_reload(
-            plugin_id.toStdString(), 
+            plugin_id.toStdString(),
             plugin_path.toStdString()
         );
-        
+
         if (result) {
             qDebug() << "Development mode enabled for" << plugin_id;
             return true;
@@ -291,21 +317,21 @@ public:
             return false;
         }
     }
-    
+
 private:
     void handle_plugin_reload(const std::string& plugin_id) {
         qDebug() << "Reloading plugin:" << QString::fromStdString(plugin_id);
-        
+
         // Unload current plugin
         auto unload_result = m_plugin_manager->unload_plugin(plugin_id);
         if (!unload_result) {
             qWarning() << "Failed to unload plugin:" << unload_result.error().message();
             return;
         }
-        
+
         // Small delay to ensure file operations complete
         QThread::msleep(100);
-        
+
         // Reload plugin
         auto load_result = m_plugin_manager->load_plugin(plugin_id);
         if (load_result) {
@@ -314,7 +340,7 @@ private:
             qWarning() << "Failed to reload plugin:" << load_result.error().message();
         }
     }
-    
+
 private slots:
     void on_plugin_file_changed(const QString& plugin_id, const QString& file_path) {
         qDebug() << "Plugin file changed:" << plugin_id << "at" << file_path;
@@ -330,36 +356,36 @@ class ProductionHotReload {
 private:
     std::shared_ptr<PluginHotReloadManager> m_hot_reload;
     std::shared_ptr<SecurityManager> m_security;
-    
+
 public:
     bool setup_production_reload() {
         m_hot_reload = PluginHotReloadManager::create();
-        
+
         // Set up validated reload callback
         m_hot_reload->set_reload_callback([this](const std::string& plugin_id) {
             handle_validated_reload(plugin_id);
         });
-        
+
         return true;
     }
-    
+
 private:
     void handle_validated_reload(const std::string& plugin_id) {
         // Validate plugin before reloading
         auto plugin_path = get_plugin_path(plugin_id);
-        
+
         // Security validation
         auto validation_result = m_security->validate_plugin(plugin_path);
         if (!validation_result || !validation_result.value().is_valid) {
-            qWarning() << "Plugin validation failed, skipping reload:" 
+            qWarning() << "Plugin validation failed, skipping reload:"
                        << QString::fromStdString(plugin_id);
             return;
         }
-        
+
         // Proceed with reload
         perform_safe_reload(plugin_id);
     }
-    
+
     void perform_safe_reload(const std::string& plugin_id) {
         // Implementation of safe reload with rollback capability
         // Save current state, attempt reload, rollback on failure
@@ -370,7 +396,7 @@ private:
 ## Python Bindings
 
 !!! note "Python Support"
-    This component is available in Python through the `qtforge.monitoring` module.
+This component is available in Python through the `qtforge.monitoring` module.
 
 ```python
 import qtforge
@@ -422,4 +448,4 @@ hot_reload.set_global_hot_reload_enabled(True)
 
 ---
 
-*Last updated: December 2024 | QtForge v3.0.0*
+_Last updated: December 2024 | QtForge v3.0.0_

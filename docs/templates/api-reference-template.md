@@ -1,10 +1,10 @@
 # [Component Name] API Reference
 
 !!! info "Module Information"
-    **Header**: `qtplugin/[module]/[component].hpp`  
-    **Namespace**: `qtplugin::[namespace]`  
-    **Since**: QtForge v[version]  
-    **Status**: [Stable|Beta|Experimental]
+**Header**: `qtplugin/[module]/[component].hpp`  
+ **Namespace**: `qtplugin::[namespace]`  
+ **Since**: QtForge v[version]  
+ **Status**: [Stable|Beta|Experimental]
 
 ## Overview
 
@@ -50,12 +50,14 @@ explicit [MainClass]([parameters]);
 ```
 
 **Parameters:**
+
 - `param1` - Description of parameter
 - `param2` - Description of parameter
 
 #### Static Methods
 
 ##### `create()`
+
 ```cpp
 static std::shared_ptr<[MainClass]> create([parameters]);
 ```
@@ -63,12 +65,15 @@ static std::shared_ptr<[MainClass]> create([parameters]);
 Creates a new instance of [MainClass].
 
 **Parameters:**
+
 - `param` - Parameter description
 
 **Returns:**
+
 - `std::shared_ptr<[MainClass]>` - Shared pointer to new instance
 
 **Example:**
+
 ```cpp
 auto instance = [MainClass]::create();
 ```
@@ -76,6 +81,7 @@ auto instance = [MainClass]::create();
 #### Public Methods
 
 ##### `method_name()`
+
 ```cpp
 qtplugin::expected<ReturnType, PluginError> method_name([parameters]);
 ```
@@ -83,17 +89,21 @@ qtplugin::expected<ReturnType, PluginError> method_name([parameters]);
 Description of what the method does.
 
 **Parameters:**
+
 - `param1` - Description
 - `param2` - Description
 
 **Returns:**
+
 - `expected<ReturnType, PluginError>` - Success result or error
 
 **Errors:**
+
 - `PluginErrorCode::InvalidState` - When component is not initialized
 - `PluginErrorCode::InvalidParameter` - When parameters are invalid
 
 **Example:**
+
 ```cpp
 auto result = instance->method_name(param1, param2);
 if (result) {
@@ -125,7 +135,7 @@ enum class [EnumName] {
 struct [StructName] {
     Type field1;        ///< Description of field1
     Type field2;        ///< Description of field2
-    
+
     // Methods if any
     bool is_valid() const;
 };
@@ -135,8 +145,8 @@ struct [StructName] {
 
 Common error codes and their meanings:
 
-| Error Code | Description | Resolution |
-|------------|-------------|------------|
+| Error Code   | Description | Resolution |
+| ------------ | ----------- | ---------- |
 | `ErrorCode1` | Description | How to fix |
 | `ErrorCode2` | Description | How to fix |
 
@@ -164,13 +174,13 @@ Common error codes and their meanings:
 class MyApplication {
 private:
     std::shared_ptr<[MainClass]> m_component;
-    
+
 public:
     bool initialize() {
         m_component = [MainClass]::create();
         return m_component != nullptr;
     }
-    
+
     void process() {
         auto result = m_component->method_name();
         // Handle result
@@ -188,7 +198,7 @@ public:
 ## Python Bindings
 
 !!! note "Python Support"
-    This component is available in Python through the `qtforge.[module]` module.
+This component is available in Python through the `qtforge.[module]` module.
 
 ```python
 import qtforge
@@ -221,4 +231,4 @@ result = component.method_name()
 
 ---
 
-*Last updated: [Date] | QtForge v[version]*
+_Last updated: [Date] | QtForge v[version]_

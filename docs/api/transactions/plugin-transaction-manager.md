@@ -1,10 +1,10 @@
 # PluginTransactionManager API Reference
 
 !!! info "Module Information"
-    **Header**: `qtplugin/transactions/plugin_transaction_manager.hpp`  
-    **Namespace**: `qtplugin::transactions`  
-    **Since**: QtForge v3.0.0  
-    **Status**: Beta
+**Header**: `qtplugin/transactions/plugin_transaction_manager.hpp`  
+ **Namespace**: `qtplugin::transactions`  
+ **Since**: QtForge v3.0.0  
+ **Status**: Beta
 
 ## Overview
 
@@ -122,7 +122,7 @@ struct TransactionOperation {
     std::function<qtplugin::expected<void, PluginError>()> rollback_func;        ///< Rollback function
     std::chrono::system_clock::time_point timestamp;  ///< Operation timestamp
     int priority{0};            ///< Operation priority
-    
+
     TransactionOperation();
     TransactionOperation(const QString& op_id, const QString& plugin, OperationType op_type);
 };
@@ -134,30 +134,30 @@ struct TransactionOperation {
 class TransactionContext {
 public:
     TransactionContext(const QString& transaction_id, IsolationLevel isolation);
-    
+
     // State management
     QString transaction_id() const noexcept;
     TransactionState state() const noexcept;
     IsolationLevel isolation_level() const noexcept;
     std::chrono::system_clock::time_point start_time() const noexcept;
     std::chrono::milliseconds timeout() const noexcept;
-    
+
     void set_state(TransactionState new_state);
     void set_timeout(std::chrono::milliseconds timeout);
-    
+
     // Operation management
     void add_operation(const TransactionOperation& operation);
     std::vector<TransactionOperation> get_operations() const;
-    
+
     // Participant management
     void add_participant(const QString& plugin_id);
     std::unordered_set<QString> get_participants() const;
-    
+
     // Data management
     void set_data(const QString& key, const QJsonValue& value);
     QJsonValue get_data(const QString& key) const;
     QJsonObject get_all_data() const;
-    
+
     // Savepoint management
     void create_savepoint(const QString& name);
     bool has_savepoint(const QString& name) const;
@@ -173,6 +173,7 @@ Interface that plugins must implement to participate in transactions.
 ### Virtual Methods
 
 #### `prepare()`
+
 ```cpp
 virtual qtplugin::expected<void, PluginError> prepare(const QString& transaction_id) = 0;
 ```
@@ -180,6 +181,7 @@ virtual qtplugin::expected<void, PluginError> prepare(const QString& transaction
 Prepares the plugin for transaction commit (Phase 1 of two-phase commit).
 
 #### `commit()`
+
 ```cpp
 virtual qtplugin::expected<void, PluginError> commit(const QString& transaction_id) = 0;
 ```
@@ -187,6 +189,7 @@ virtual qtplugin::expected<void, PluginError> commit(const QString& transaction_
 Commits the transaction changes (Phase 2 of two-phase commit).
 
 #### `abort()`
+
 ```cpp
 virtual qtplugin::expected<void, PluginError> abort(const QString& transaction_id) = 0;
 ```
@@ -194,6 +197,7 @@ virtual qtplugin::expected<void, PluginError> abort(const QString& transaction_i
 Aborts the transaction and rolls back changes.
 
 #### `supports_transactions()`
+
 ```cpp
 virtual bool supports_transactions() const = 0;
 ```
@@ -201,6 +205,7 @@ virtual bool supports_transactions() const = 0;
 Returns true if the plugin supports transactions.
 
 #### `supported_isolation_level()`
+
 ```cpp
 virtual IsolationLevel supported_isolation_level() const;
 ```
@@ -214,6 +219,7 @@ Main transaction manager class implementing singleton pattern.
 ### Static Methods
 
 #### `instance()`
+
 ```cpp
 static PluginTransactionManager& instance();
 ```
@@ -223,6 +229,7 @@ Gets the singleton instance of the transaction manager.
 ### Transaction Lifecycle
 
 #### `begin_transaction()`
+
 ```cpp
 qtplugin::expected<QString, PluginError> begin_transaction(
     IsolationLevel isolation = IsolationLevel::ReadCommitted,
@@ -232,15 +239,18 @@ qtplugin::expected<QString, PluginError> begin_transaction(
 Begins a new transaction.
 
 **Parameters:**
+
 - `isolation` - Transaction isolation level
 - `timeout` - Transaction timeout (default: 5 minutes)
 
 **Returns:**
+
 - `expected<QString, PluginError>` - Transaction ID or error
 
 **Example:**
+
 ```cpp
-auto tx_result = tx_manager.begin_transaction(IsolationLevel::Serializable, 
+auto tx_result = tx_manager.begin_transaction(IsolationLevel::Serializable,
                                              std::chrono::minutes(10));
 if (tx_result) {
     QString tx_id = tx_result.value();
@@ -249,6 +259,7 @@ if (tx_result) {
 ```
 
 #### `commit_transaction()`
+
 ```cpp
 qtplugin::expected<void, PluginError> commit_transaction(const QString& transaction_id);
 ```
@@ -256,12 +267,15 @@ qtplugin::expected<void, PluginError> commit_transaction(const QString& transact
 Commits a transaction using two-phase commit protocol.
 
 **Parameters:**
+
 - `transaction_id` - Transaction identifier
 
 **Returns:**
+
 - `expected<void, PluginError>` - Success or error
 
 #### `rollback_transaction()`
+
 ```cpp
 qtplugin::expected<void, PluginError> rollback_transaction(const QString& transaction_id);
 ```
@@ -269,6 +283,7 @@ qtplugin::expected<void, PluginError> rollback_transaction(const QString& transa
 Rolls back a transaction and undoes all operations.
 
 #### `prepare_transaction()`
+
 ```cpp
 qtplugin::expected<void, PluginError> prepare_transaction(const QString& transaction_id);
 ```
@@ -278,36 +293,41 @@ Prepares a transaction for commit (Phase 1 of two-phase commit).
 ### Transaction Operations
 
 #### `add_operation()`
+
 ```cpp
 qtplugin::expected<void, PluginError> add_operation(
-    const QString& transaction_id, 
+    const QString& transaction_id,
     const TransactionOperation& operation);
 ```
 
 Adds an operation to a transaction.
 
 **Parameters:**
+
 - `transaction_id` - Transaction identifier
 - `operation` - Operation to add
 
 **Returns:**
+
 - `expected<void, PluginError>` - Success or error
 
 #### `execute_operation()`
+
 ```cpp
 qtplugin::expected<QJsonObject, PluginError> execute_operation(
-    const QString& transaction_id, 
+    const QString& transaction_id,
     const QString& operation_id);
 ```
 
 Executes a specific operation within a transaction.
 
 #### `execute_transactional_command()`
+
 ```cpp
 qtplugin::expected<void, PluginError> execute_transactional_command(
-    const QString& transaction_id, 
+    const QString& transaction_id,
     const QString& plugin_id,
-    const QString& method_name, 
+    const QString& method_name,
     const QJsonObject& parameters);
 ```
 
@@ -316,27 +336,30 @@ Executes a plugin command within a transaction context.
 ### Savepoint Management
 
 #### `create_savepoint()`
+
 ```cpp
 qtplugin::expected<void, PluginError> create_savepoint(
-    const QString& transaction_id, 
+    const QString& transaction_id,
     const QString& savepoint_name);
 ```
 
 Creates a savepoint within a transaction for partial rollback.
 
 #### `rollback_to_savepoint()`
+
 ```cpp
 qtplugin::expected<void, PluginError> rollback_to_savepoint(
-    const QString& transaction_id, 
+    const QString& transaction_id,
     const QString& savepoint_name);
 ```
 
 Rolls back to a specific savepoint.
 
 #### `release_savepoint()`
+
 ```cpp
 qtplugin::expected<void, PluginError> release_savepoint(
-    const QString& transaction_id, 
+    const QString& transaction_id,
     const QString& savepoint_name);
 ```
 
@@ -345,6 +368,7 @@ Releases a savepoint, making it unavailable for rollback.
 ### Transaction Monitoring
 
 #### `get_transaction_status()`
+
 ```cpp
 qtplugin::expected<QJsonObject, PluginError> get_transaction_status(
     const QString& transaction_id) const;
@@ -353,6 +377,7 @@ qtplugin::expected<QJsonObject, PluginError> get_transaction_status(
 Gets detailed status information for a transaction.
 
 #### `list_active_transactions()`
+
 ```cpp
 std::vector<QString> list_active_transactions() const;
 ```
@@ -360,6 +385,7 @@ std::vector<QString> list_active_transactions() const;
 Lists all currently active transaction IDs.
 
 #### `get_transaction_participants()`
+
 ```cpp
 std::vector<QString> get_transaction_participants(const QString& transaction_id) const;
 ```
@@ -369,6 +395,7 @@ Gets list of plugins participating in a transaction.
 ### Participant Management
 
 #### `register_participant()`
+
 ```cpp
 void register_participant(const QString& plugin_id,
                          std::shared_ptr<ITransactionParticipant> participant);
@@ -377,6 +404,7 @@ void register_participant(const QString& plugin_id,
 Registers a plugin as a transaction participant.
 
 #### `unregister_participant()`
+
 ```cpp
 void unregister_participant(const QString& plugin_id);
 ```
@@ -400,15 +428,15 @@ signals:
 
 Common error codes and their meanings:
 
-| Error Code | Description | Resolution |
-|------------|-------------|------------|
-| `NotFound` | Transaction not found | Verify transaction ID is valid |
-| `InvalidState` | Invalid transaction state | Check transaction state before operation |
-| `Timeout` | Transaction timeout | Increase timeout or optimize operations |
+| Error Code            | Description                       | Resolution                                 |
+| --------------------- | --------------------------------- | ------------------------------------------ |
+| `NotFound`            | Transaction not found             | Verify transaction ID is valid             |
+| `InvalidState`        | Invalid transaction state         | Check transaction state before operation   |
+| `Timeout`             | Transaction timeout               | Increase timeout or optimize operations    |
 | `ParticipantNotFound` | Plugin participant not registered | Register plugin as transaction participant |
-| `PrepareFailed` | Prepare phase failed | Check plugin prepare implementation |
-| `CommitFailed` | Commit phase failed | Review plugin commit logic |
-| `RollbackFailed` | Rollback failed | Check plugin rollback implementation |
+| `PrepareFailed`       | Prepare phase failed              | Check plugin prepare implementation        |
+| `CommitFailed`        | Commit phase failed               | Review plugin commit logic                 |
+| `RollbackFailed`      | Rollback failed                   | Check plugin rollback implementation       |
 
 ## Thread Safety
 
@@ -582,7 +610,7 @@ private:
 ## Python Bindings
 
 !!! note "Python Support"
-    This component is available in Python through the `qtforge.transactions` module.
+This component is available in Python through the `qtforge.transactions` module.
 
 ```python
 import qtforge
@@ -643,4 +671,4 @@ success = qtforge.transactions.execute_atomic_operation(
 
 ---
 
-*Last updated: December 2024 | QtForge v3.0.0*
+_Last updated: December 2024 | QtForge v3.0.0_

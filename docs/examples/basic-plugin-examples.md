@@ -1,10 +1,10 @@
 # Basic Plugin Examples
 
 !!! info "Example Collection"
-    **Difficulty**: Beginner to Intermediate  
-    **Language**: C++  
-    **QtForge Version**: v3.0+  
-    **Complete Source**: Available in `examples/plugins/` directory
+**Difficulty**: Beginner to Intermediate  
+ **Language**: C++  
+ **QtForge Version**: v3.0+  
+ **Complete Source**: Available in `examples/plugins/` directory
 
 ## Overview
 
@@ -26,6 +26,7 @@ A minimal plugin that demonstrates the basic QtForge plugin structure.
 ### Source Code
 
 **hello_world_plugin.hpp**
+
 ```cpp
 #pragma once
 
@@ -45,7 +46,7 @@ public:
     qtplugin::expected<void, PluginError> initialize() override;
     void shutdown() noexcept override;
     qtplugin::expected<QJsonObject, PluginError> execute_command(
-        std::string_view command, 
+        std::string_view command,
         const QJsonObject& params = {}) override;
     std::vector<std::string> available_commands() const override;
     PluginMetadata metadata() const override;
@@ -58,6 +59,7 @@ private:
 ```
 
 **hello_world_plugin.cpp**
+
 ```cpp
 #include "hello_world_plugin.hpp"
 #include <QDebug>
@@ -69,9 +71,9 @@ HelloWorldPlugin::HelloWorldPlugin(QObject* parent)
 
 qtplugin::expected<void, PluginError> HelloWorldPlugin::initialize() {
     qDebug() << "HelloWorldPlugin: Initializing...";
-    
+
     m_state = PluginState::Running;
-    
+
     qDebug() << "HelloWorldPlugin: Initialized successfully";
     return make_success();
 }
@@ -82,18 +84,18 @@ void HelloWorldPlugin::shutdown() noexcept {
 }
 
 qtplugin::expected<QJsonObject, PluginError> HelloWorldPlugin::execute_command(
-    std::string_view command, 
+    std::string_view command,
     const QJsonObject& params) {
-    
+
     if (m_state != PluginState::Running) {
-        return make_error<QJsonObject>(PluginErrorCode::InvalidState, 
+        return make_error<QJsonObject>(PluginErrorCode::InvalidState,
                                      "Plugin not initialized");
     }
-    
+
     if (command == "hello") {
         QString name = params.value("name").toString("World");
         QString message = QString("Hello, %1!").arg(name);
-        
+
         return QJsonObject{
             {"message", message},
             {"timestamp", QDateTime::currentDateTime().toString(Qt::ISODate)}
@@ -111,8 +113,8 @@ qtplugin::expected<QJsonObject, PluginError> HelloWorldPlugin::execute_command(
             {"greeting", m_greeting}
         };
     }
-    
-    return make_error<QJsonObject>(PluginErrorCode::CommandNotFound, 
+
+    return make_error<QJsonObject>(PluginErrorCode::CommandNotFound,
                                  QString("Unknown command: %1").arg(QString::fromStdString(std::string(command))));
 }
 
@@ -138,16 +140,17 @@ PluginState HelloWorldPlugin::state() const {
 ```
 
 **hello_world_plugin.json**
+
 ```json
 {
-    "id": "hello_world_plugin",
-    "name": "Hello World Plugin",
-    "version": "1.0.0",
-    "description": "A simple example plugin",
-    "author": "QtForge Examples",
-    "license": "MIT",
-    "interfaces": ["IPlugin"],
-    "dependencies": []
+  "id": "hello_world_plugin",
+  "name": "Hello World Plugin",
+  "version": "1.0.0",
+  "description": "A simple example plugin",
+  "author": "QtForge Examples",
+  "license": "MIT",
+  "interfaces": ["IPlugin"],
+  "dependencies": []
 }
 ```
 
@@ -159,34 +162,34 @@ PluginState HelloWorldPlugin::state() const {
 
 int main() {
     auto manager = PluginManager::create();
-    
+
     // Load the plugin
     auto load_result = manager->load_plugin("hello_world_plugin.so");
     if (!load_result) {
         qWarning() << "Failed to load plugin:" << load_result.error().message();
         return 1;
     }
-    
+
     QString plugin_id = load_result.value();
     auto plugin = manager->get_plugin(plugin_id);
-    
+
     if (plugin) {
         // Execute hello command
         auto result = plugin->execute_command("hello", QJsonObject{{"name", "QtForge"}});
         if (result) {
             qDebug() << "Result:" << result.value();
         }
-        
+
         // Set custom greeting
         plugin->execute_command("set_greeting", QJsonObject{{"greeting", "Greetings"}});
-        
+
         // Get greeting
         auto greeting_result = plugin->execute_command("get_greeting");
         if (greeting_result) {
             qDebug() << "Current greeting:" << greeting_result.value()["greeting"].toString();
         }
     }
-    
+
     return 0;
 }
 ```
@@ -198,6 +201,7 @@ A more sophisticated plugin that processes CSV files and demonstrates file I/O o
 ### Source Code
 
 **data_processor_plugin.hpp**
+
 ```cpp
 #pragma once
 
@@ -218,7 +222,7 @@ public:
     qtplugin::expected<void, PluginError> initialize() override;
     void shutdown() noexcept override;
     qtplugin::expected<QJsonObject, PluginError> execute_command(
-        std::string_view command, 
+        std::string_view command,
         const QJsonObject& params = {}) override;
     std::vector<std::string> available_commands() const override;
     PluginMetadata metadata() const override;
@@ -226,12 +230,12 @@ public:
 
 private:
     PluginState m_state{PluginState::Unloaded};
-    
+
     // Helper methods
     qtplugin::expected<QJsonObject, PluginError> load_csv(const QString& file_path);
     qtplugin::expected<QJsonObject, PluginError> save_csv(const QString& file_path, const QJsonArray& data);
     qtplugin::expected<QJsonObject, PluginError> process_data(const QJsonArray& data, const QString& operation);
-    
+
     QJsonArray filter_data(const QJsonArray& data, const QString& column, const QJsonValue& value);
     QJsonArray sort_data(const QJsonArray& data, const QString& column, bool ascending = true);
     QJsonObject calculate_statistics(const QJsonArray& data, const QString& column);
@@ -239,6 +243,7 @@ private:
 ```
 
 **data_processor_plugin.cpp**
+
 ```cpp
 #include "data_processor_plugin.hpp"
 #include <QFile>
@@ -254,9 +259,9 @@ DataProcessorPlugin::DataProcessorPlugin(QObject* parent)
 
 qtplugin::expected<void, PluginError> DataProcessorPlugin::initialize() {
     qDebug() << "DataProcessorPlugin: Initializing...";
-    
+
     m_state = PluginState::Running;
-    
+
     qDebug() << "DataProcessorPlugin: Initialized successfully";
     return make_success();
 }
@@ -267,18 +272,18 @@ void DataProcessorPlugin::shutdown() noexcept {
 }
 
 qtplugin::expected<QJsonObject, PluginError> DataProcessorPlugin::execute_command(
-    std::string_view command, 
+    std::string_view command,
     const QJsonObject& params) {
-    
+
     if (m_state != PluginState::Running) {
-        return make_error<QJsonObject>(PluginErrorCode::InvalidState, 
+        return make_error<QJsonObject>(PluginErrorCode::InvalidState,
                                      "Plugin not initialized");
     }
-    
+
     if (command == "load_csv") {
         QString file_path = params.value("file_path").toString();
         if (file_path.isEmpty()) {
-            return make_error<QJsonObject>(PluginErrorCode::InvalidParameter, 
+            return make_error<QJsonObject>(PluginErrorCode::InvalidParameter,
                                          "file_path parameter is required");
         }
         return load_csv(file_path);
@@ -286,9 +291,9 @@ qtplugin::expected<QJsonObject, PluginError> DataProcessorPlugin::execute_comman
     else if (command == "save_csv") {
         QString file_path = params.value("file_path").toString();
         QJsonArray data = params.value("data").toArray();
-        
+
         if (file_path.isEmpty() || data.isEmpty()) {
-            return make_error<QJsonObject>(PluginErrorCode::InvalidParameter, 
+            return make_error<QJsonObject>(PluginErrorCode::InvalidParameter,
                                          "file_path and data parameters are required");
         }
         return save_csv(file_path, data);
@@ -296,15 +301,15 @@ qtplugin::expected<QJsonObject, PluginError> DataProcessorPlugin::execute_comman
     else if (command == "process_data") {
         QJsonArray data = params.value("data").toArray();
         QString operation = params.value("operation").toString();
-        
+
         if (data.isEmpty() || operation.isEmpty()) {
-            return make_error<QJsonObject>(PluginErrorCode::InvalidParameter, 
+            return make_error<QJsonObject>(PluginErrorCode::InvalidParameter,
                                          "data and operation parameters are required");
         }
         return process_data(data, operation);
     }
-    
-    return make_error<QJsonObject>(PluginErrorCode::CommandNotFound, 
+
+    return make_error<QJsonObject>(PluginErrorCode::CommandNotFound,
                                  QString("Unknown command: %1").arg(QString::fromStdString(std::string(command))));
 }
 
@@ -330,32 +335,32 @@ PluginState DataProcessorPlugin::state() const {
 qtplugin::expected<QJsonObject, PluginError> DataProcessorPlugin::load_csv(const QString& file_path) {
     QFile file(file_path);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        return make_error<QJsonObject>(PluginErrorCode::FileNotFound, 
+        return make_error<QJsonObject>(PluginErrorCode::FileNotFound,
                                      QString("Cannot open file: %1").arg(file_path));
     }
-    
+
     QTextStream in(&file);
     QJsonArray data;
     QStringList headers;
     bool first_line = true;
-    
+
     while (!in.atEnd()) {
         QString line = in.readLine();
         QStringList fields = line.split(',');
-        
+
         if (first_line) {
             headers = fields;
             first_line = false;
             continue;
         }
-        
+
         QJsonObject row;
         for (int i = 0; i < fields.size() && i < headers.size(); ++i) {
             row[headers[i]] = fields[i].trimmed();
         }
         data.append(row);
     }
-    
+
     return QJsonObject{
         {"status", "success"},
         {"data", data},
@@ -365,34 +370,34 @@ qtplugin::expected<QJsonObject, PluginError> DataProcessorPlugin::load_csv(const
 }
 
 qtplugin::expected<QJsonObject, PluginError> DataProcessorPlugin::save_csv(
-    const QString& file_path, 
+    const QString& file_path,
     const QJsonArray& data) {
-    
+
     if (data.isEmpty()) {
-        return make_error<QJsonObject>(PluginErrorCode::InvalidParameter, 
+        return make_error<QJsonObject>(PluginErrorCode::InvalidParameter,
                                      "No data to save");
     }
-    
+
     // Ensure directory exists
     QDir dir = QFileInfo(file_path).absoluteDir();
     if (!dir.exists()) {
         dir.mkpath(".");
     }
-    
+
     QFile file(file_path);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        return make_error<QJsonObject>(PluginErrorCode::FileAccessError, 
+        return make_error<QJsonObject>(PluginErrorCode::FileAccessError,
                                      QString("Cannot create file: %1").arg(file_path));
     }
-    
+
     QTextStream out(&file);
-    
+
     // Write headers (from first row keys)
     if (!data.isEmpty()) {
         QJsonObject first_row = data[0].toObject();
         QStringList headers = first_row.keys();
         out << headers.join(',') << '\n';
-        
+
         // Write data rows
         for (const auto& value : data) {
             QJsonObject row = value.toObject();
@@ -403,7 +408,7 @@ qtplugin::expected<QJsonObject, PluginError> DataProcessorPlugin::save_csv(
             out << row_data.join(',') << '\n';
         }
     }
-    
+
     return QJsonObject{
         {"status", "success"},
         {"file_path", file_path},
@@ -412,9 +417,9 @@ qtplugin::expected<QJsonObject, PluginError> DataProcessorPlugin::save_csv(
 }
 
 qtplugin::expected<QJsonObject, PluginError> DataProcessorPlugin::process_data(
-    const QJsonArray& data, 
+    const QJsonArray& data,
     const QString& operation) {
-    
+
     // This is a simplified example - real implementation would be more robust
     if (operation == "count") {
         return QJsonObject{
@@ -425,19 +430,19 @@ qtplugin::expected<QJsonObject, PluginError> DataProcessorPlugin::process_data(
     else if (operation == "summary") {
         QJsonObject summary;
         summary["total_rows"] = data.size();
-        
+
         if (!data.isEmpty()) {
             QJsonObject first_row = data[0].toObject();
             summary["columns"] = QJsonArray::fromStringList(first_row.keys());
             summary["column_count"] = first_row.keys().size();
         }
-        
+
         return QJsonObject{
             {"operation", "summary"},
             {"result", summary}
         };
     }
-    
+
     return make_error<QJsonObject>(PluginErrorCode::InvalidParameter,
                                  QString("Unknown operation: %1").arg(operation));
 }
@@ -504,6 +509,7 @@ Demonstrates service contracts and inter-plugin communication.
 ### Source Code
 
 **service_provider_plugin.hpp**
+
 ```cpp
 #pragma once
 
@@ -559,6 +565,7 @@ private:
 ```
 
 **service_provider_plugin.cpp**
+
 ```cpp
 #include "service_provider_plugin.hpp"
 #include <QDebug>

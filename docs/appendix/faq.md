@@ -9,6 +9,7 @@ This page answers common questions about QtPlugin. If you don't find your answer
 QtPlugin is a modern, enterprise-grade C++ plugin system built specifically for Qt applications. It provides a robust, type-safe, and performant way to add extensibility to your applications through dynamic plugin loading.
 
 **Key Features:**
+
 - Pure C++ implementation (no QML dependencies)
 - Modern C++20 features (concepts, coroutines, `std::expected`)
 - Type-safe plugin interfaces
@@ -18,15 +19,15 @@ QtPlugin is a modern, enterprise-grade C++ plugin system built specifically for 
 
 ### How is QtPlugin different from Qt's built-in plugin system?
 
-| Feature | QtPlugin | Qt Built-in |
-|---------|----------|-------------|
-| **C++ Standard** | C++20 | C++11/14 |
-| **Error Handling** | `expected<T,E>` | Exceptions/null pointers |
-| **Type Safety** | Compile-time concepts | Runtime checks |
-| **Hot Reloading** | Built-in support | Manual implementation |
-| **Security** | Multi-layer validation | Basic loading |
-| **Communication** | Message bus system | Manual implementation |
-| **Dependencies** | Qt6::Core only | Various Qt modules |
+| Feature            | QtPlugin               | Qt Built-in              |
+| ------------------ | ---------------------- | ------------------------ |
+| **C++ Standard**   | C++20                  | C++11/14                 |
+| **Error Handling** | `expected<T,E>`        | Exceptions/null pointers |
+| **Type Safety**    | Compile-time concepts  | Runtime checks           |
+| **Hot Reloading**  | Built-in support       | Manual implementation    |
+| **Security**       | Multi-layer validation | Basic loading            |
+| **Communication**  | Message bus system     | Manual implementation    |
+| **Dependencies**   | Qt6::Core only         | Various Qt modules       |
 
 ### Is QtPlugin production-ready?
 
@@ -43,6 +44,7 @@ Yes! QtPlugin v3.0.0 is production-ready with:
 ### What are the minimum requirements?
 
 **System Requirements:**
+
 - **Operating System**: Windows 10+, Linux (Ubuntu 20.04+), macOS 10.15+
 - **Qt Version**: Qt 6.0 or later (Qt 6.5+ recommended)
 - **Compiler**: C++20 compatible compiler
@@ -52,6 +54,7 @@ Yes! QtPlugin v3.0.0 is production-ready with:
 - **CMake**: 3.21 or later
 
 **Recommended Setup:**
+
 - Qt 6.5+ for best compatibility
 - 4GB+ RAM for development
 - 2GB+ free storage for build artifacts
@@ -65,6 +68,7 @@ No, QtPlugin requires Qt 6.0 or later. This is because:
 - Modern Qt features are leveraged for performance and safety
 
 If you need Qt 5 support, consider:
+
 - Upgrading to Qt 6 (recommended)
 - Using QtPlugin v2.x (legacy, limited support)
 - Contributing Qt 5 backport patches
@@ -74,7 +78,7 @@ If you need Qt 5 support, consider:
 See the comprehensive [Installation Guide](../getting-started/installation.md) for detailed instructions. Quick options:
 
 === "CMake FetchContent"
-    ```cmake
+`cmake
     include(FetchContent)
     FetchContent_Declare(QtPlugin
         GIT_REPOSITORY https://github.com/QtForge/QtPlugin.git
@@ -82,19 +86,19 @@ See the comprehensive [Installation Guide](../getting-started/installation.md) f
     )
     FetchContent_MakeAvailable(QtPlugin)
     target_link_libraries(your_app QtPlugin::Core)
-    ```
+    `
 
 === "vcpkg"
-    ```bash
+`bash
     vcpkg install qtplugin
-    ```
+    `
 
 === "Build from Source"
-    ```bash
+`bash
     git clone https://github.com/QtForge/QtPlugin.git
     cd QtPlugin && mkdir build && cd build
     cmake .. && cmake --build . && cmake --install .
-    ```
+    `
 
 ## Development Questions
 
@@ -103,6 +107,7 @@ See the comprehensive [Installation Guide](../getting-started/installation.md) f
 Follow the [First Plugin Guide](../getting-started/first-plugin.md) for a step-by-step tutorial. The basic steps are:
 
 1. **Implement the interface**:
+
    ```cpp
    class MyPlugin : public QObject, public qtplugin::IPlugin {
        Q_OBJECT
@@ -114,12 +119,13 @@ Follow the [First Plugin Guide](../getting-started/first-plugin.md) for a step-b
    ```
 
 2. **Create metadata.json**:
+
    ```json
    {
-       "id": "com.example.myplugin",
-       "name": "My Plugin",
-       "version": "1.0.0",
-       "description": "My first plugin"
+     "id": "com.example.myplugin",
+     "name": "My Plugin",
+     "version": "1.0.0",
+     "description": "My first plugin"
    }
    ```
 
@@ -133,14 +139,14 @@ Follow the [First Plugin Guide](../getting-started/first-plugin.md) for a step-b
 
 ### What's the difference between static and dynamic plugins?
 
-| Aspect | Static Plugins | Dynamic Plugins |
-|--------|----------------|-----------------|
-| **Loading** | Compile-time | Runtime |
-| **File Size** | Larger executable | Smaller executable + plugin files |
-| **Deployment** | Single file | Multiple files |
-| **Hot Reload** | Not supported | Supported |
-| **Performance** | Slightly faster | Minimal overhead |
-| **Use Case** | Fixed functionality | Extensible applications |
+| Aspect          | Static Plugins      | Dynamic Plugins                   |
+| --------------- | ------------------- | --------------------------------- |
+| **Loading**     | Compile-time        | Runtime                           |
+| **File Size**   | Larger executable   | Smaller executable + plugin files |
+| **Deployment**  | Single file         | Multiple files                    |
+| **Hot Reload**  | Not supported       | Supported                         |
+| **Performance** | Slightly faster     | Minimal overhead                  |
+| **Use Case**    | Fixed functionality | Extensible applications           |
 
 QtPlugin primarily supports **dynamic plugins** for maximum flexibility.
 
@@ -149,16 +155,18 @@ QtPlugin primarily supports **dynamic plugins** for maximum flexibility.
 QtPlugin provides several mechanisms for dependency management:
 
 1. **Metadata Dependencies**:
+
    ```json
    {
-       "dependencies": [
-           "com.example.core-plugin@>=1.0.0",
-           "com.example.utils@^2.1.0"
-       ]
+     "dependencies": [
+       "com.example.core-plugin@>=1.0.0",
+       "com.example.utils@^2.1.0"
+     ]
    }
    ```
 
 2. **Runtime Checks**:
+
    ```cpp
    expected<void, PluginError> MyPlugin::initialize() {
        auto core_plugin = manager->get_plugin("com.example.core-plugin");
@@ -183,15 +191,17 @@ QtPlugin provides several mechanisms for dependency management:
 Enable detailed logging and use debugging techniques:
 
 1. **Enable Debug Logging**:
+
    ```cpp
    // Set log level
    qtplugin::set_log_level(qtplugin::LogLevel::Debug);
-   
+
    // Enable component logging
    qtplugin::enable_component_logging(true);
    ```
 
 2. **Check Error Details**:
+
    ```cpp
    auto result = manager->load_plugin("plugin.so");
    if (!result) {
@@ -229,6 +239,7 @@ auto response = bus.request<RequestType, ResponseType>(request);
 ```
 
 **Key Features:**
+
 - Type-safe messaging
 - Publish-subscribe pattern
 - Request-response communication
@@ -240,16 +251,19 @@ auto response = bus.request<RequestType, ResponseType>(request);
 QtPlugin implements multi-layer security:
 
 1. **File Validation**:
+
    - File integrity checks
    - Digital signature verification
    - Malware scanning (optional)
 
 2. **Runtime Validation**:
+
    - Interface compliance
    - Capability verification
    - Resource usage monitoring
 
 3. **Trust Management**:
+
    - Publisher trust levels
    - Reputation system
    - Policy enforcement
@@ -260,6 +274,7 @@ QtPlugin implements multi-layer security:
    - Isolated execution
 
 Configure security levels:
+
 ```cpp
 SecurityConfig config;
 config.validation_level = SecurityLevel::High;
@@ -273,10 +288,11 @@ manager->configure_security(config);
 Yes, through several mechanisms:
 
 1. **Message Bus** (recommended):
+
    ```cpp
    // Plugin A publishes
    bus.publish(DataUpdateMessage{data});
-   
+
    // Plugin B subscribes
    bus.subscribe<DataUpdateMessage>([this](const auto& msg) {
        handle_data_update(msg.data);
@@ -284,6 +300,7 @@ Yes, through several mechanisms:
    ```
 
 2. **Direct Interface Access**:
+
    ```cpp
    // Get another plugin
    auto other_plugin = manager->get_plugin("other.plugin.id");
@@ -294,10 +311,11 @@ Yes, through several mechanisms:
    ```
 
 3. **Shared Services**:
+
    ```cpp
    // Register service
    manager->register_service<IDataService>(std::make_shared<DataService>());
-   
+
    // Use service from any plugin
    auto service = manager->get_service<IDataService>();
    ```
@@ -309,6 +327,7 @@ Yes, through several mechanisms:
 QtPlugin is designed for high performance:
 
 **Benchmarks (typical values):**
+
 - Plugin loading: 1.2ms average
 - Command execution: 0.05ms average
 - Memory usage: 2.1MB per plugin
@@ -316,6 +335,7 @@ QtPlugin is designed for high performance:
 - Concurrent operations: 1000+ ops/sec
 
 **Optimization techniques:**
+
 - Zero-cost abstractions where possible
 - Efficient memory management
 - Lazy loading of optional components
@@ -326,17 +346,20 @@ QtPlugin is designed for high performance:
 There's no hard limit, but practical considerations:
 
 **Factors affecting plugin count:**
+
 - Available memory
 - System resources
 - Plugin complexity
 - Inter-plugin dependencies
 
 **Typical limits:**
+
 - **Desktop applications**: 50-100 plugins
 - **Server applications**: 200+ plugins
 - **Embedded systems**: 10-20 plugins
 
 **Optimization strategies:**
+
 - Load plugins on-demand
 - Unload unused plugins
 - Use plugin pools
@@ -347,6 +370,7 @@ There's no hard limit, but practical considerations:
 Several strategies can improve loading performance:
 
 1. **Parallel Loading**:
+
    ```cpp
    // Load multiple plugins concurrently
    std::vector<std::future<expected<std::string, PluginError>>> futures;
@@ -358,20 +382,22 @@ Several strategies can improve loading performance:
    ```
 
 2. **Lazy Initialization**:
+
    ```cpp
    // Load plugin but don't initialize immediately
    auto result = manager->load_plugin(path, LoadOptions{.initialize = false});
-   
+
    // Initialize when needed
    auto plugin = manager->get_plugin(result.value());
    plugin->initialize();
    ```
 
 3. **Plugin Caching**:
+
    ```cpp
    // Cache plugin metadata
    manager->enable_metadata_cache(true);
-   
+
    // Preload frequently used plugins
    manager->preload_plugins({"core.plugin", "ui.plugin"});
    ```
@@ -383,19 +409,23 @@ Several strategies can improve loading performance:
 This usually indicates ABI compatibility issues:
 
 **Solutions:**
+
 1. **Check compiler compatibility**:
+
    - Ensure plugin and application use same compiler
    - Verify C++ standard library compatibility
 
 2. **Verify Qt versions**:
+
    - Plugin and application must use same Qt version
    - Check Qt module dependencies
 
 3. **Debug symbols**:
+
    ```bash
    # Check exported symbols (Linux)
    nm -D plugin.so | grep qtplugin
-   
+
    # Check dependencies
    ldd plugin.so  # Linux
    otool -L plugin.so  # macOS
@@ -406,6 +436,7 @@ This usually indicates ABI compatibility issues:
 Common causes and solutions:
 
 1. **Missing dependencies**:
+
    ```cpp
    // Check error details
    auto result = plugin->initialize();
@@ -415,6 +446,7 @@ Common causes and solutions:
    ```
 
 2. **Resource issues**:
+
    - Check file permissions
    - Verify required files exist
    - Ensure sufficient memory
@@ -429,6 +461,7 @@ Common causes and solutions:
 Safety measures and debugging:
 
 1. **Use safe loading**:
+
    ```cpp
    try {
        auto result = manager->load_plugin_safe(path);
@@ -438,6 +471,7 @@ Safety measures and debugging:
    ```
 
 2. **Enable crash reporting**:
+
    ```cpp
    manager->enable_crash_reporting(true);
    manager->set_crash_handler([](const CrashInfo& info) {
@@ -465,17 +499,20 @@ Safety measures and debugging:
 When reporting bugs, please include:
 
 1. **System Information**:
+
    - Operating system and version
    - Qt version
    - Compiler version
    - QtPlugin version
 
 2. **Reproduction Steps**:
+
    - Minimal code example
    - Steps to reproduce
    - Expected vs actual behavior
 
 3. **Error Information**:
+
    - Complete error messages
    - Stack traces (if available)
    - Log output with debug enabled
@@ -495,6 +532,7 @@ We welcome contributions! See the [Contributing Guide](../contributing/index.md)
 4. **Community**: Help others, answer questions
 
 **Getting Started:**
+
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes

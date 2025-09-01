@@ -1,9 +1,9 @@
 # PluginMarketplace API Reference
 
 !!! warning "Experimental Feature"
-    **Status**: Experimental  
-    **Since**: QtForge v3.2.0  
-    **Note**: API complete, core implementation in development. Use for testing and feedback.
+**Status**: Experimental  
+ **Since**: QtForge v3.2.0  
+ **Note**: API complete, core implementation in development. Use for testing and feedback.
 
 ## Overview
 
@@ -56,7 +56,7 @@ if (search_result) {
     for (const auto& plugin : plugins) {
         qDebug() << "Found plugin:" << plugin.name << "by" << plugin.author;
     }
-    
+
     // Install a plugin
     if (!plugins.empty()) {
         auto install_result = marketplace->install_plugin(plugins[0].id);
@@ -95,7 +95,7 @@ struct MarketplacePlugin {
     double price{0.0};              ///< Plugin price (if not free)
     QString currency{"USD"};        ///< Price currency
     QJsonObject metadata;           ///< Additional metadata
-    
+
     QJsonObject to_json() const;
     static MarketplacePlugin from_json(const QJsonObject& json);
 };
@@ -117,7 +117,7 @@ struct SearchFilters {
     bool ascending{false};          ///< Sort order
     int limit{50};                  ///< Maximum results
     int offset{0};                  ///< Result offset for pagination
-    
+
     QJsonObject to_json() const;
     static SearchFilters from_json(const QJsonObject& json);
 };
@@ -135,7 +135,7 @@ struct PluginReview {
     QString content;                ///< Review content
     QDateTime created_at;           ///< Review timestamp
     int helpful_count{0};           ///< Number of helpful votes
-    
+
     QJsonObject to_json() const;
     static PluginReview from_json(const QJsonObject& json);
 };
@@ -151,7 +151,7 @@ struct InstallationProgress {
     QString status_message;         ///< Status message
     qint64 bytes_downloaded{0};     ///< Bytes downloaded
     qint64 total_bytes{0};          ///< Total bytes to download
-    
+
     QJsonObject to_json() const;
 };
 ```
@@ -170,12 +170,14 @@ explicit PluginMarketplace(const QString& marketplace_url = "https://plugins.qtf
 Creates a marketplace client for the specified URL.
 
 **Parameters:**
+
 - `marketplace_url` - Marketplace API base URL
 - `parent` - Qt parent object
 
 ### Initialization
 
 #### `initialize()`
+
 ```cpp
 qtplugin::expected<void, PluginError> initialize(const QString& api_key = {});
 ```
@@ -183,9 +185,11 @@ qtplugin::expected<void, PluginError> initialize(const QString& api_key = {});
 Initializes the marketplace client.
 
 **Parameters:**
+
 - `api_key` - Optional API key for authenticated requests
 
 **Returns:**
+
 - `expected<void, PluginError>` - Success or error
 
 **Note:** Currently returns success immediately. Full implementation pending.
@@ -193,6 +197,7 @@ Initializes the marketplace client.
 ### Plugin Discovery
 
 #### `search_plugins()`
+
 ```cpp
 qtplugin::expected<std::vector<MarketplacePlugin>, PluginError> search_plugins(
     const SearchFilters& filters = {});
@@ -201,14 +206,17 @@ qtplugin::expected<std::vector<MarketplacePlugin>, PluginError> search_plugins(
 Searches for plugins in the marketplace.
 
 **Parameters:**
+
 - `filters` - Search filters and criteria
 
 **Returns:**
+
 - `expected<std::vector<MarketplacePlugin>, PluginError>` - Search results or error
 
 **Note:** Currently returns empty results. Implementation in progress.
 
 **Example:**
+
 ```cpp
 SearchFilters filters;
 filters.query = "image processing";
@@ -226,6 +234,7 @@ if (results) {
 ```
 
 #### `get_plugin_details()`
+
 ```cpp
 qtplugin::expected<MarketplacePlugin, PluginError> get_plugin_details(const QString& plugin_id);
 ```
@@ -233,12 +242,15 @@ qtplugin::expected<MarketplacePlugin, PluginError> get_plugin_details(const QStr
 Gets detailed information about a specific plugin.
 
 **Parameters:**
+
 - `plugin_id` - Plugin identifier
 
 **Returns:**
+
 - `expected<MarketplacePlugin, PluginError>` - Plugin details or error
 
 #### `get_featured_plugins()`
+
 ```cpp
 qtplugin::expected<std::vector<MarketplacePlugin>, PluginError> get_featured_plugins(int limit = 10);
 ```
@@ -246,12 +258,15 @@ qtplugin::expected<std::vector<MarketplacePlugin>, PluginError> get_featured_plu
 Gets featured/recommended plugins.
 
 **Parameters:**
+
 - `limit` - Maximum number of plugins to return
 
 **Returns:**
+
 - `expected<std::vector<MarketplacePlugin>, PluginError>` - Featured plugins or error
 
 #### `get_categories()`
+
 ```cpp
 qtplugin::expected<QStringList, PluginError> get_categories();
 ```
@@ -259,29 +274,34 @@ qtplugin::expected<QStringList, PluginError> get_categories();
 Gets available plugin categories.
 
 **Returns:**
+
 - `expected<QStringList, PluginError>` - Category list or error
 
 ### Plugin Management
 
 #### `install_plugin()`
+
 ```cpp
 qtplugin::expected<QString, PluginError> install_plugin(
-    const QString& plugin_id, 
+    const QString& plugin_id,
     const QString& version = {});
 ```
 
 Installs a plugin from the marketplace.
 
 **Parameters:**
+
 - `plugin_id` - Plugin identifier
 - `version` - Specific version to install (latest if empty)
 
 **Returns:**
+
 - `expected<QString, PluginError>` - Installation ID for tracking or error
 
 **Note:** Framework complete, core download/install logic pending implementation.
 
 #### `update_plugin()`
+
 ```cpp
 qtplugin::expected<QString, PluginError> update_plugin(const QString& plugin_id);
 ```
@@ -289,6 +309,7 @@ qtplugin::expected<QString, PluginError> update_plugin(const QString& plugin_id)
 Updates an installed plugin to the latest version.
 
 #### `uninstall_plugin()`
+
 ```cpp
 qtplugin::expected<void, PluginError> uninstall_plugin(const QString& plugin_id);
 ```
@@ -296,6 +317,7 @@ qtplugin::expected<void, PluginError> uninstall_plugin(const QString& plugin_id)
 Uninstalls a plugin.
 
 #### `get_installation_progress()`
+
 ```cpp
 qtplugin::expected<InstallationProgress, PluginError> get_installation_progress(
     const QString& installation_id);
@@ -304,6 +326,7 @@ qtplugin::expected<InstallationProgress, PluginError> get_installation_progress(
 Gets progress information for an ongoing installation.
 
 #### `get_installed_plugins()`
+
 ```cpp
 std::vector<QString> get_installed_plugins() const;
 ```
@@ -311,6 +334,7 @@ std::vector<QString> get_installed_plugins() const;
 Gets list of installed plugin IDs.
 
 #### `check_for_updates()`
+
 ```cpp
 qtplugin::expected<std::vector<MarketplacePlugin>, PluginError> check_for_updates();
 ```
@@ -320,27 +344,30 @@ Checks for available updates to installed plugins.
 ### Reviews and Ratings
 
 #### `get_plugin_reviews()`
+
 ```cpp
 qtplugin::expected<std::vector<PluginReview>, PluginError> get_plugin_reviews(
-    const QString& plugin_id, 
-    int limit = 10, 
+    const QString& plugin_id,
+    int limit = 10,
     int offset = 0);
 ```
 
 Gets reviews for a plugin.
 
 #### `submit_review()`
+
 ```cpp
 qtplugin::expected<void, PluginError> submit_review(
-    const QString& plugin_id, 
-    double rating, 
-    const QString& title, 
+    const QString& plugin_id,
+    double rating,
+    const QString& title,
     const QString& content);
 ```
 
 Submits a review for a plugin.
 
 **Parameters:**
+
 - `plugin_id` - Plugin to review
 - `rating` - Rating from 0.0 to 5.0
 - `title` - Review title
@@ -367,6 +394,7 @@ Singleton manager for handling multiple marketplace sources.
 ### Static Methods
 
 #### `instance()`
+
 ```cpp
 static MarketplaceManager& instance();
 ```
@@ -376,6 +404,7 @@ Gets the singleton instance of the marketplace manager.
 ### Marketplace Management
 
 #### `add_marketplace()`
+
 ```cpp
 void add_marketplace(const QString& name, std::shared_ptr<PluginMarketplace> marketplace);
 ```
@@ -383,10 +412,12 @@ void add_marketplace(const QString& name, std::shared_ptr<PluginMarketplace> mar
 Adds a marketplace to the manager.
 
 **Parameters:**
+
 - `name` - Marketplace identifier
 - `marketplace` - Marketplace instance
 
 #### `remove_marketplace()`
+
 ```cpp
 void remove_marketplace(const QString& name);
 ```
@@ -394,6 +425,7 @@ void remove_marketplace(const QString& name);
 Removes a marketplace from the manager.
 
 #### `get_marketplace()`
+
 ```cpp
 std::shared_ptr<PluginMarketplace> get_marketplace(const QString& name);
 ```
@@ -401,6 +433,7 @@ std::shared_ptr<PluginMarketplace> get_marketplace(const QString& name);
 Gets a specific marketplace by name.
 
 #### `get_marketplace_names()`
+
 ```cpp
 std::vector<QString> get_marketplace_names() const;
 ```
@@ -410,6 +443,7 @@ Gets names of all registered marketplaces.
 ### Aggregated Operations
 
 #### `search_all_marketplaces()`
+
 ```cpp
 qtplugin::expected<std::vector<MarketplacePlugin>, PluginError> search_all_marketplaces(
     const SearchFilters& filters = {});
@@ -420,6 +454,7 @@ Searches across all registered marketplaces.
 **Note:** Implementation pending - currently returns empty results.
 
 #### `check_all_updates()`
+
 ```cpp
 qtplugin::expected<std::vector<MarketplacePlugin>, PluginError> check_all_updates();
 ```
@@ -438,14 +473,14 @@ signals:
 
 Common error codes and their meanings:
 
-| Error Code | Description | Resolution |
-|------------|-------------|------------|
-| `NotImplemented` | Feature not yet implemented | Wait for future release or contribute implementation |
-| `NetworkError` | Network connectivity issues | Check internet connection and marketplace URL |
-| `AuthenticationFailed` | API key authentication failed | Verify API key is valid |
-| `PluginNotFound` | Plugin not found in marketplace | Check plugin ID and marketplace availability |
-| `InstallationFailed` | Plugin installation failed | Check disk space and permissions |
-| `InvalidChecksum` | Plugin file checksum mismatch | Re-download plugin or report security issue |
+| Error Code             | Description                     | Resolution                                           |
+| ---------------------- | ------------------------------- | ---------------------------------------------------- |
+| `NotImplemented`       | Feature not yet implemented     | Wait for future release or contribute implementation |
+| `NetworkError`         | Network connectivity issues     | Check internet connection and marketplace URL        |
+| `AuthenticationFailed` | API key authentication failed   | Verify API key is valid                              |
+| `PluginNotFound`       | Plugin not found in marketplace | Check plugin ID and marketplace availability         |
+| `InstallationFailed`   | Plugin installation failed      | Check disk space and permissions                     |
+| `InvalidChecksum`      | Plugin file checksum mismatch   | Re-download plugin or report security issue          |
 
 ## Thread Safety
 
@@ -614,7 +649,7 @@ public:
 ## Python Bindings
 
 !!! note "Python Support"
-    This component is available in Python through the `qtforge.marketplace` module.
+This component is available in Python through the `qtforge.marketplace` module.
 
 ```python
 import qtforge
@@ -671,7 +706,7 @@ all_results = manager.search_all_marketplaces(filters)
 ## Implementation Status
 
 !!! info "Current Implementation Status"
-    The marketplace system is currently in **experimental** status:
+The marketplace system is currently in **experimental** status:
 
     **✅ Complete:**
     - Full API definition and interfaces
@@ -701,4 +736,4 @@ all_results = manager.search_all_marketplaces(filters)
 
 ---
 
-*Last updated: December 2024 | QtForge v3.2.0*
+_Last updated: December 2024 | QtForge v3.2.0_

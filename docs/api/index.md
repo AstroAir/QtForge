@@ -16,22 +16,22 @@ QtPlugin provides a modern, type-safe C++ plugin system with the following key c
 
 ### Essential Classes
 
-| Class | Purpose | Header |
-|-------|---------|--------|
-| [`IPlugin`](core/plugin-interface.md) | Base plugin interface | `qtplugin/core/plugin_interface.hpp` |
-| [`PluginManager`](core/plugin-manager.md) | Central plugin management | `qtplugin/core/plugin_manager.hpp` |
-| [`PluginLoader`](core/plugin-loader.md) | Dynamic plugin loading | `qtplugin/core/plugin_loader.hpp` |
-| [`MessageBus`](communication/message-bus.md) | Inter-plugin communication | `qtplugin/communication/message_bus.hpp` |
-| [`SecurityManager`](security/security-manager.md) | Plugin security | `qtplugin/security/security_manager.hpp` |
+| Class                                             | Purpose                    | Header                                   |
+| ------------------------------------------------- | -------------------------- | ---------------------------------------- |
+| [`IPlugin`](core/plugin-interface.md)             | Base plugin interface      | `qtplugin/core/plugin_interface.hpp`     |
+| [`PluginManager`](core/plugin-manager.md)         | Central plugin management  | `qtplugin/core/plugin_manager.hpp`       |
+| [`PluginLoader`](core/plugin-loader.md)           | Dynamic plugin loading     | `qtplugin/core/plugin_loader.hpp`        |
+| [`MessageBus`](communication/message-bus.md)      | Inter-plugin communication | `qtplugin/communication/message_bus.hpp` |
+| [`SecurityManager`](security/security-manager.md) | Plugin security            | `qtplugin/security/security_manager.hpp` |
 
 ### Key Types
 
-| Type | Description | Header |
-|------|-------------|--------|
-| `expected<T, E>` | Error handling type | `qtplugin/utils/error_handling.hpp` |
-| `PluginError` | Plugin error information | `qtplugin/utils/error_handling.hpp` |
+| Type             | Description               | Header                               |
+| ---------------- | ------------------------- | ------------------------------------ |
+| `expected<T, E>` | Error handling type       | `qtplugin/utils/error_handling.hpp`  |
+| `PluginError`    | Plugin error information  | `qtplugin/utils/error_handling.hpp`  |
 | `PluginMetadata` | Plugin metadata structure | `qtplugin/core/plugin_interface.hpp` |
-| `Version` | Version information | `qtplugin/utils/version.hpp` |
+| `Version`        | Version information       | `qtplugin/utils/version.hpp`         |
 
 ## Core Components
 
@@ -41,53 +41,57 @@ The core plugin system provides the fundamental functionality for plugin managem
 
 <div class="grid cards" markdown>
 
--   :material-puzzle: **[Plugin Interface](core/plugin-interface.md)**
+- :material-puzzle: **[Plugin Interface](core/plugin-interface.md)**
 
-    ---
+  ***
 
-    Base interface that all plugins must implement
+  Base interface that all plugins must implement
 
-    **Key Features:**
-    - Lifecycle management (initialize, shutdown)
-    - Metadata and identification
-    - Command execution
-    - Configuration management
+  **Key Features:**
 
--   :material-cog: **[Plugin Manager](core/plugin-manager.md)**
+  - Lifecycle management (initialize, shutdown)
+  - Metadata and identification
+  - Command execution
+  - Configuration management
 
-    ---
+- :material-cog: **[Plugin Manager](core/plugin-manager.md)**
 
-    Central component for managing plugins
+  ***
 
-    **Key Features:**
-    - Plugin loading and unloading
-    - Plugin discovery and registration
-    - Lifecycle management
-    - Error handling and recovery
+  Central component for managing plugins
 
--   :material-download: **[Plugin Loader](core/plugin-loader.md)**
+  **Key Features:**
 
-    ---
+  - Plugin loading and unloading
+  - Plugin discovery and registration
+  - Lifecycle management
+  - Error handling and recovery
 
-    Handles dynamic loading of plugin libraries
+- :material-download: **[Plugin Loader](core/plugin-loader.md)**
 
-    **Key Features:**
-    - Cross-platform library loading
-    - Symbol resolution
-    - Dependency management
-    - Error reporting
+  ***
 
--   :material-database: **[Plugin Registry](core/plugin-registry.md)**
+  Handles dynamic loading of plugin libraries
 
-    ---
+  **Key Features:**
 
-    Maintains registry of available and loaded plugins
+  - Cross-platform library loading
+  - Symbol resolution
+  - Dependency management
+  - Error reporting
 
-    **Key Features:**
-    - Plugin metadata storage
-    - Dependency tracking
-    - Version management
-    - Query interface
+- :material-database: **[Plugin Registry](core/plugin-registry.md)**
+
+  ***
+
+  Maintains registry of available and loaded plugins
+
+  **Key Features:**
+
+  - Plugin metadata storage
+  - Dependency tracking
+  - Version management
+  - Query interface
 
 </div>
 
@@ -97,29 +101,31 @@ Inter-plugin communication and messaging:
 
 <div class="grid cards" markdown>
 
--   :material-message: **[Message Bus](communication/message-bus.md)**
+- :material-message: **[Message Bus](communication/message-bus.md)**
 
-    ---
+  ***
 
-    Central message routing and delivery system
+  Central message routing and delivery system
 
-    **Key Features:**
-    - Type-safe messaging
-    - Publish-subscribe pattern
-    - Request-response communication
-    - Event broadcasting
+  **Key Features:**
 
--   :material-format-list-bulleted-type: **[Message Types](communication/message-types.md)**
+  - Type-safe messaging
+  - Publish-subscribe pattern
+  - Request-response communication
+  - Event broadcasting
 
-    ---
+- :material-format-list-bulleted-type: **[Message Types](communication/message-types.md)**
 
-    Predefined message types and structures
+  ***
 
-    **Key Features:**
-    - Standard message formats
-    - Custom message support
-    - Serialization helpers
-    - Type validation
+  Predefined message types and structures
+
+  **Key Features:**
+
+  - Standard message formats
+  - Custom message support
+  - Serialization helpers
+  - Type validation
 
 </div>
 
@@ -129,29 +135,31 @@ Plugin validation and security management:
 
 <div class="grid cards" markdown>
 
--   :material-shield-check: **[Security Manager](security/security-manager.md)**
+- :material-shield-check: **[Security Manager](security/security-manager.md)**
 
-    ---
+  ***
 
-    Comprehensive plugin security management
+  Comprehensive plugin security management
 
-    **Key Features:**
-    - Multi-layer validation
-    - Trust management
-    - Permission system
-    - Security policies
+  **Key Features:**
 
--   :material-certificate: **[Plugin Validator](security/plugin-validator.md)**
+  - Multi-layer validation
+  - Trust management
+  - Permission system
+  - Security policies
 
-    ---
+- :material-certificate: **[Plugin Validator](security/plugin-validator.md)**
 
-    Plugin validation and verification
+  ***
 
-    **Key Features:**
-    - File integrity checking
-    - Digital signature verification
-    - Runtime validation
-    - Security scanning
+  Plugin validation and verification
+
+  **Key Features:**
+
+  - File integrity checking
+  - Digital signature verification
+  - Runtime validation
+  - Security scanning
 
 </div>
 
@@ -161,53 +169,57 @@ Helper classes and common functionality:
 
 <div class="grid cards" markdown>
 
--   :material-alert-circle: **[Error Handling](utils/error-handling.md)**
+- :material-alert-circle: **[Error Handling](utils/error-handling.md)**
 
-    ---
+  ***
 
-    Modern error handling with `expected<T, E>`
+  Modern error handling with `expected<T, E>`
 
-    **Key Features:**
-    - Type-safe error handling
-    - No exceptions
-    - Composable error types
-    - Rich error information
+  **Key Features:**
 
--   :material-tag: **[Version](utils/version.md)**
+  - Type-safe error handling
+  - No exceptions
+  - Composable error types
+  - Rich error information
 
-    ---
+- :material-tag: **[Version](utils/version.md)**
 
-    Version information and comparison
+  ***
 
-    **Key Features:**
-    - Semantic versioning
-    - Version comparison
-    - Compatibility checking
-    - Version ranges
+  Version information and comparison
 
--   :material-check-circle: **[Concepts](utils/concepts.md)**
+  **Key Features:**
 
-    ---
+  - Semantic versioning
+  - Version comparison
+  - Compatibility checking
+  - Version ranges
 
-    C++20 concepts for type validation
+- :material-check-circle: **[Concepts](utils/concepts.md)**
 
-    **Key Features:**
-    - Compile-time validation
-    - Plugin type concepts
-    - Interface concepts
-    - Constraint checking
+  ***
 
--   :material-tools: **[Helpers](utils/helpers.md)**
+  C++20 concepts for type validation
 
-    ---
+  **Key Features:**
 
-    Utility functions and helpers
+  - Compile-time validation
+  - Plugin type concepts
+  - Interface concepts
+  - Constraint checking
 
-    **Key Features:**
-    - Plugin creation helpers
-    - CMake integration
-    - Development utilities
-    - Testing support
+- :material-tools: **[Helpers](utils/helpers.md)**
+
+  ***
+
+  Utility functions and helpers
+
+  **Key Features:**
+
+  - Plugin creation helpers
+  - CMake integration
+  - Development utilities
+  - Testing support
 
 </div>
 
@@ -217,33 +229,35 @@ Extended functionality for specific use cases:
 
 <div class="grid cards" markdown>
 
--   :material-network: **[Network](optional/network.md)**
+- :material-network: **[Network](optional/network.md)**
 
-    ---
+  ***
 
-    Network-enabled plugin interfaces
+  Network-enabled plugin interfaces
 
-    **Requirements:** Qt6::Network
+  **Requirements:** Qt6::Network
 
-    **Key Features:**
-    - HTTP client/server plugins
-    - WebSocket support
-    - REST API integration
-    - Network discovery
+  **Key Features:**
 
--   :material-monitor: **[UI](optional/ui.md)**
+  - HTTP client/server plugins
+  - WebSocket support
+  - REST API integration
+  - Network discovery
 
-    ---
+- :material-monitor: **[UI](optional/ui.md)**
 
-    User interface plugin support
+  ***
 
-    **Requirements:** Qt6::Widgets
+  User interface plugin support
 
-    **Key Features:**
-    - Widget-based plugins
-    - Dialog integration
-    - Custom UI components
-    - Theme support
+  **Requirements:** Qt6::Widgets
+
+  **Key Features:**
+
+  - Widget-based plugins
+  - Dialog integration
+  - Custom UI components
+  - Theme support
 
 </div>
 
@@ -274,7 +288,7 @@ if (result) {
 ```cpp
 auto result = manager->load_plugin("plugin.so");
 if (!result) {
-    std::cerr << "Failed to load plugin: " 
+    std::cerr << "Failed to load plugin: "
               << result.error().message << std::endl;
     return;
 }
@@ -314,7 +328,7 @@ QtPlugin uses the `expected<T, E>` pattern for error handling:
 
 ```cpp
 // Function that can fail
-qtplugin::expected<std::string, qtplugin::PluginError> 
+qtplugin::expected<std::string, qtplugin::PluginError>
 load_plugin(const std::string& path);
 
 // Usage
@@ -340,11 +354,11 @@ if (result) {
 
 ## Version Compatibility
 
-| QtPlugin Version | Qt Version | C++ Standard | Status |
-|------------------|------------|--------------|--------|
-| 3.0.x | Qt 6.0+ | C++20 | Current |
-| 2.x.x | Qt 5.15+ | C++17 | Legacy |
-| 1.x.x | Qt 5.12+ | C++14 | Deprecated |
+| QtPlugin Version | Qt Version | C++ Standard | Status     |
+| ---------------- | ---------- | ------------ | ---------- |
+| 3.0.x            | Qt 6.0+    | C++20        | Current    |
+| 2.x.x            | Qt 5.15+   | C++17        | Legacy     |
+| 1.x.x            | Qt 5.12+   | C++14        | Deprecated |
 
 ## Getting Started
 

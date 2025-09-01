@@ -14,6 +14,7 @@ This guide covers everything you need to know to develop plugins for the QtPlugi
 ### Plugin Structure
 
 A typical plugin consists of:
+
 - **Plugin class**: Implements `qtplugin::IPlugin` interface
 - **Metadata file**: JSON file describing the plugin
 - **CMakeLists.txt**: Build configuration
@@ -56,7 +57,7 @@ public:
     QJsonObject current_configuration() const override;
 
     qtplugin::expected<QJsonObject, qtplugin::PluginError> execute_command(
-        std::string_view command, 
+        std::string_view command,
         const QJsonObject& params = {}
     ) override;
 
@@ -106,11 +107,11 @@ qtplugin::expected<void, qtplugin::PluginError> MyPlugin::initialize()
     try {
         // Perform initialization logic here
         qDebug() << "Initializing MyPlugin...";
-        
+
         // Example: Setup internal state, connect to services, etc.
         m_state = qtplugin::PluginState::Running;
         m_initialized = true;
-        
+
         qDebug() << "MyPlugin initialized successfully";
         return {};
     }
@@ -129,11 +130,11 @@ void MyPlugin::shutdown()
     }
 
     qDebug() << "Shutting down MyPlugin...";
-    
+
     // Perform cleanup logic here
     m_state = qtplugin::PluginState::Unloaded;
     m_initialized = false;
-    
+
     qDebug() << "MyPlugin shutdown complete";
 }
 
@@ -185,7 +186,7 @@ std::string MyPlugin::description() const
 qtplugin::expected<void, qtplugin::PluginError> MyPlugin::configure(const QJsonObject& config)
 {
     qDebug() << "Configuring MyPlugin with:" << QJsonDocument(config).toJson();
-    
+
     // Validate configuration
     if (config.contains("invalid_key")) {
         return qtplugin::make_unexpected(qtplugin::PluginError{
@@ -193,7 +194,7 @@ qtplugin::expected<void, qtplugin::PluginError> MyPlugin::configure(const QJsonO
             "Invalid configuration key: invalid_key"
         });
     }
-    
+
     m_configuration = config;
     return {};
 }
@@ -204,7 +205,7 @@ QJsonObject MyPlugin::current_configuration() const
 }
 
 qtplugin::expected<QJsonObject, qtplugin::PluginError> MyPlugin::execute_command(
-    std::string_view command, 
+    std::string_view command,
     const QJsonObject& params)
 {
     if (!m_initialized) {
@@ -268,40 +269,40 @@ Create `metadata.json`:
 
 ```json
 {
-    "id": "com.example.myplugin",
-    "name": "My Example Plugin",
-    "version": "1.0.0",
-    "description": "An example plugin demonstrating the QtPlugin system",
-    "author": "Your Name",
-    "license": "MIT",
-    "dependencies": [],
-    "tags": ["example", "demo"],
-    "capabilities": {
-        "supports_configuration": true,
-        "supports_hot_reload": true,
-        "supports_state_persistence": false,
-        "thread_safe": true,
-        "requires_ui": false,
-        "requires_network": false
-    },
-    "commands": [
-        {
-            "name": "hello",
-            "description": "Returns a greeting message",
-            "parameters": {
-                "name": {
-                    "type": "string",
-                    "description": "Name to greet",
-                    "default": "World"
-                }
-            }
-        },
-        {
-            "name": "status",
-            "description": "Returns plugin status information",
-            "parameters": {}
+  "id": "com.example.myplugin",
+  "name": "My Example Plugin",
+  "version": "1.0.0",
+  "description": "An example plugin demonstrating the QtPlugin system",
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": [],
+  "tags": ["example", "demo"],
+  "capabilities": {
+    "supports_configuration": true,
+    "supports_hot_reload": true,
+    "supports_state_persistence": false,
+    "thread_safe": true,
+    "requires_ui": false,
+    "requires_network": false
+  },
+  "commands": [
+    {
+      "name": "hello",
+      "description": "Returns a greeting message",
+      "parameters": {
+        "name": {
+          "type": "string",
+          "description": "Name to greet",
+          "default": "World"
         }
-    ]
+      }
+    },
+    {
+      "name": "status",
+      "description": "Returns plugin status information",
+      "parameters": {}
+    }
+  ]
 }
 ```
 
@@ -369,18 +370,18 @@ To create a plugin that depends on other plugins:
 
 ```json
 {
-    "dependencies": [
-        {
-            "id": "com.example.base_plugin",
-            "version": ">=1.0.0",
-            "required": true
-        },
-        {
-            "id": "com.example.optional_plugin",
-            "version": "^2.0.0",
-            "required": false
-        }
-    ]
+  "dependencies": [
+    {
+      "id": "com.example.base_plugin",
+      "version": ">=1.0.0",
+      "required": true
+    },
+    {
+      "id": "com.example.optional_plugin",
+      "version": "^2.0.0",
+      "required": false
+    }
+  ]
 }
 ```
 
@@ -424,7 +425,7 @@ qtplugin::expected<void, qtplugin::PluginError> MyPlugin::configure(const QJsonO
             "Missing required field: server_url"
         });
     }
-    
+
     // Validate types
     if (!config["server_url"].isString()) {
         return qtplugin::make_unexpected(qtplugin::PluginError{
@@ -432,12 +433,12 @@ qtplugin::expected<void, qtplugin::PluginError> MyPlugin::configure(const QJsonO
             "server_url must be a string"
         });
     }
-    
+
     // Apply configuration
     m_serverUrl = config["server_url"].toString();
     m_timeout = config.value("timeout").toInt(5000);
     m_retries = config.value("retries").toInt(3);
-    
+
     m_configuration = config;
     return {};
 }
@@ -449,7 +450,7 @@ Always use the expected<T,E> pattern:
 
 ```cpp
 qtplugin::expected<QJsonObject, qtplugin::PluginError> MyPlugin::execute_command(
-    std::string_view command, 
+    std::string_view command,
     const QJsonObject& params)
 {
     try {
@@ -462,10 +463,10 @@ qtplugin::expected<QJsonObject, qtplugin::PluginError> MyPlugin::execute_command
                     "Risky operation failed: " + result.errorString().toStdString()
                 });
             }
-            
+
             return result.toJsonObject();
         }
-        
+
         return qtplugin::make_unexpected(qtplugin::PluginError{
             qtplugin::PluginErrorCode::CommandNotSupported,
             std::string("Unknown command: ") + std::string(command)
@@ -522,7 +523,7 @@ void TestMyPlugin::testCommands()
 {
     QJsonObject params;
     params["name"] = "Test";
-    
+
     auto result = m_plugin->execute_command("hello", params);
     QVERIFY(result.has_value());
     QVERIFY(result.value().contains("message"));

@@ -5,6 +5,7 @@ This document describes the architecture and design principles of the QtPlugin l
 ## Overview
 
 QtPlugin is designed as a modern, enterprise-grade plugin system that emphasizes:
+
 - **Type Safety**: Compile-time validation using C++20 concepts
 - **Error Handling**: Modern error handling without exceptions using expected<T,E>
 - **Performance**: Efficient plugin loading and communication
@@ -45,15 +46,15 @@ graph TB
     PM --> LM[Logging Manager]
     PM --> LC[Lifecycle Manager]
     PM --> MB[Message Bus]
-    
+
     PL --> Plugin1[Plugin A]
     PL --> Plugin2[Plugin B]
     PL --> Plugin3[Plugin C]
-    
+
     Plugin1 --> MB
     Plugin2 --> MB
     Plugin3 --> MB
-    
+
     RM --> Monitor[Resource Monitor]
     LC --> Monitor
 ```
@@ -63,6 +64,7 @@ graph TB
 ### Plugin Manager
 
 The central orchestrator responsible for:
+
 - Plugin discovery and loading
 - Lifecycle management
 - Dependency resolution
@@ -70,6 +72,7 @@ The central orchestrator responsible for:
 - Event coordination
 
 **Key Design Patterns:**
+
 - **Facade Pattern**: Provides simplified interface to complex subsystem
 - **Observer Pattern**: Notifies subscribers of plugin events
 - **Factory Pattern**: Creates plugin instances through dependency injection
@@ -90,6 +93,7 @@ class PluginManager {
 Defines the contract that all plugins must implement:
 
 **Design Principles:**
+
 - **Interface Segregation**: Minimal, focused interface
 - **Dependency Inversion**: Plugins depend on abstractions, not concretions
 - **Open/Closed**: Open for extension, closed for modification
@@ -99,13 +103,13 @@ class IPlugin {
     // Core lifecycle (required)
     virtual expected<void, PluginError> initialize() = 0;
     virtual void shutdown() = 0;
-    
+
     // Metadata (required)
     virtual PluginMetadata metadata() const = 0;
-    
+
     // Configuration (optional)
     virtual expected<void, PluginError> configure(const QJsonObject&) = 0;
-    
+
     // Command execution (optional)
     virtual expected<QJsonObject, PluginError> execute_command(...) = 0;
 };
@@ -116,6 +120,7 @@ class IPlugin {
 Modern error handling without exceptions:
 
 **Design Philosophy:**
+
 - **Explicit Error Handling**: All errors are explicit in function signatures
 - **Composable**: Errors can be chained and transformed
 - **Type Safe**: Compile-time error checking
@@ -127,10 +132,10 @@ class expected {
     // Monadic operations for error composition
     template<typename F>
     auto and_then(F&& f) const -> expected<...>;
-    
+
     template<typename F>
     auto or_else(F&& f) const -> expected<T, ...>;
-    
+
     template<typename F>
     auto transform(F&& f) const -> expected<...>;
 };
@@ -141,6 +146,7 @@ class expected {
 Automatic resource tracking and cleanup:
 
 **RAII Principles:**
+
 - **Automatic Cleanup**: Resources cleaned up when plugins unload
 - **Exception Safety**: Strong exception safety guarantees
 - **Leak Prevention**: Automatic detection of resource leaks
@@ -149,10 +155,10 @@ Automatic resource tracking and cleanup:
 class ResourceManager {
     // Resource factories for different types
     std::map<std::string, std::unique_ptr<ResourceFactory>> m_factories;
-    
+
     // Per-plugin resource tracking
     std::map<std::string, std::vector<ResourceHandle>> m_plugin_resources;
-    
+
     // Automatic cleanup on plugin unload
     void cleanup_plugin_resources(const std::string& plugin_id);
 };
@@ -186,12 +192,12 @@ Event notification system:
 ```cpp
 class PluginManager : public QObject {
     Q_OBJECT
-    
+
 signals:
     void plugin_loaded(const QString& plugin_id);
     void plugin_unloaded(const QString& plugin_id);
     void plugin_error(const QString& plugin_id, const QString& error);
-    
+
     // Internal event coordination
 private slots:
     void on_plugin_state_changed(const QString& plugin_id, PluginState state);
@@ -206,7 +212,7 @@ Configurable behavior for security, validation, and loading:
 class SecurityManager {
     std::unique_ptr<ValidationStrategy> m_validator;
     std::unique_ptr<SignatureStrategy> m_signature_checker;
-    
+
 public:
     void set_validation_strategy(std::unique_ptr<ValidationStrategy> strategy);
     void set_signature_strategy(std::unique_ptr<SignatureStrategy> strategy);
@@ -221,19 +227,19 @@ Plugin command execution:
 class PluginCommand {
 public:
     virtual expected<QJsonObject, PluginError> execute(
-        IPlugin* plugin, 
+        IPlugin* plugin,
         const QJsonObject& params
     ) = 0;
 };
 
 class CommandRegistry {
     std::map<std::string, std::unique_ptr<PluginCommand>> m_commands;
-    
+
 public:
     void register_command(const std::string& name, std::unique_ptr<PluginCommand> cmd);
     expected<QJsonObject, PluginError> execute_command(
-        const std::string& name, 
-        IPlugin* plugin, 
+        const std::string& name,
+        IPlugin* plugin,
         const QJsonObject& params
     );
 };
@@ -266,17 +272,17 @@ All resources follow RAII:
 class PluginHandle {
     std::string m_plugin_id;
     PluginManager* m_manager;
-    
+
 public:
     PluginHandle(const std::string& id, PluginManager* mgr)
         : m_plugin_id(id), m_manager(mgr) {}
-    
+
     ~PluginHandle() {
         if (m_manager) {
             m_manager->unload_plugin(m_plugin_id);
         }
     }
-    
+
     // Move-only semantics
     PluginHandle(const PluginHandle&) = delete;
     PluginHandle& operator=(const PluginHandle&) = delete;
@@ -295,7 +301,7 @@ Thread-safe design with minimal locking:
 class PluginManager {
     mutable std::shared_mutex m_plugins_mutex;
     std::map<std::string, std::shared_ptr<IPlugin>> m_plugins;
-    
+
 public:
     // Read operations use shared lock
     std::shared_ptr<IPlugin> get_plugin(const std::string& id) const {
@@ -303,7 +309,7 @@ public:
         auto it = m_plugins.find(id);
         return (it != m_plugins.end()) ? it->second : nullptr;
     }
-    
+
     // Write operations use exclusive lock
     expected<std::string, PluginError> load_plugin(const std::string& path) {
         std::unique_lock lock(m_plugins_mutex);
@@ -325,7 +331,7 @@ std::atomic<size_t> m_commands_executed{0};
 class LockFreeMessageQueue {
     std::atomic<Node*> m_head;
     std::atomic<Node*> m_tail;
-    
+
 public:
     void enqueue(const Message& msg);
     bool dequeue(Message& msg);
@@ -344,11 +350,11 @@ public:
 class PluginLoader {
     // Metadata cache
     std::map<std::string, PluginMetadata> m_metadata_cache;
-    
+
     // Async loading
-    std::future<expected<std::shared_ptr<IPlugin>, PluginError>> 
+    std::future<expected<std::shared_ptr<IPlugin>, PluginError>>
     load_plugin_async(const std::string& path);
-    
+
     // Batch loading
     std::vector<std::future<...>> load_plugins_batch(
         const std::vector<std::string>& paths

@@ -1,10 +1,10 @@
 # Getting Started with QtForge - Complete Tutorial
 
 !!! info "Tutorial Information"
-    **Difficulty**: Beginner  
-    **Duration**: 45-60 minutes  
-    **Prerequisites**: Basic C++ knowledge, Qt6 installed  
-    **QtForge Version**: v3.0+
+**Difficulty**: Beginner  
+ **Duration**: 45-60 minutes  
+ **Prerequisites**: Basic C++ knowledge, Qt6 installed  
+ **QtForge Version**: v3.0+
 
 ## Overview
 
@@ -71,6 +71,7 @@ sudo cmake --install .
 Create a simple test to verify QtForge is working:
 
 **test_qtforge.cpp**
+
 ```cpp
 #include <qtplugin/core/plugin_manager.hpp>
 #include <QCoreApplication>
@@ -78,7 +79,7 @@ Create a simple test to verify QtForge is working:
 
 int main(int argc, char *argv[]) {
     QCoreApplication app(argc, argv);
-    
+
     // Test QtForge initialization
     auto manager = qtplugin::PluginManager::create();
     if (manager) {
@@ -93,6 +94,7 @@ int main(int argc, char *argv[]) {
 ```
 
 **CMakeLists.txt**
+
 ```cmake
 cmake_minimum_required(VERSION 3.16)
 project(QtForgeTest)
@@ -105,6 +107,7 @@ target_link_libraries(test_qtforge Qt6::Core QtForge::Core)
 ```
 
 Build and run:
+
 ```bash
 mkdir test_project && cd test_project
 # Copy the files above
@@ -130,6 +133,7 @@ calculator_plugin/
 ### 2.2 Plugin Header File
 
 **calculator_plugin.hpp**
+
 ```cpp
 #pragma once
 
@@ -148,24 +152,24 @@ public:
     // IPlugin interface implementation
     qtplugin::expected<void, qtplugin::PluginError> initialize() override;
     void shutdown() noexcept override;
-    
+
     qtplugin::expected<QJsonObject, qtplugin::PluginError> execute_command(
-        std::string_view command, 
+        std::string_view command,
         const QJsonObject& params = {}) override;
-    
+
     std::vector<std::string> available_commands() const override;
     qtplugin::PluginMetadata metadata() const override;
     qtplugin::PluginState state() const override;
 
 private:
     qtplugin::PluginState m_state{qtplugin::PluginState::Unloaded};
-    
+
     // Calculator operations
     double add(double a, double b) const { return a + b; }
     double subtract(double a, double b) const { return a - b; }
     double multiply(double a, double b) const { return a * b; }
     double divide(double a, double b) const;
-    
+
     // Helper methods
     bool validate_numbers(const QJsonObject& params, double& a, double& b) const;
 };
@@ -174,6 +178,7 @@ private:
 ### 2.3 Plugin Implementation
 
 **calculator_plugin.cpp**
+
 ```cpp
 #include "calculator_plugin.hpp"
 #include <QDebug>
@@ -185,10 +190,10 @@ CalculatorPlugin::CalculatorPlugin(QObject* parent)
 
 qtplugin::expected<void, qtplugin::PluginError> CalculatorPlugin::initialize() {
     qDebug() << "CalculatorPlugin: Initializing...";
-    
+
     // Perform any initialization logic here
     m_state = qtplugin::PluginState::Running;
-    
+
     qDebug() << "CalculatorPlugin: Successfully initialized";
     return qtplugin::make_success();
 }
@@ -199,25 +204,25 @@ void CalculatorPlugin::shutdown() noexcept {
 }
 
 qtplugin::expected<QJsonObject, qtplugin::PluginError> CalculatorPlugin::execute_command(
-    std::string_view command, 
+    std::string_view command,
     const QJsonObject& params) {
-    
+
     if (m_state != qtplugin::PluginState::Running) {
         return qtplugin::make_error<QJsonObject>(
-            qtplugin::PluginErrorCode::InvalidState, 
+            qtplugin::PluginErrorCode::InvalidState,
             "Plugin not initialized");
     }
-    
+
     double a, b;
     if (!validate_numbers(params, a, b)) {
         return qtplugin::make_error<QJsonObject>(
-            qtplugin::PluginErrorCode::InvalidParameter, 
+            qtplugin::PluginErrorCode::InvalidParameter,
             "Invalid or missing parameters 'a' and 'b'");
     }
-    
+
     double result = 0.0;
     QString operation;
-    
+
     if (command == "add") {
         result = add(a, b);
         operation = "addition";
@@ -233,7 +238,7 @@ qtplugin::expected<QJsonObject, qtplugin::PluginError> CalculatorPlugin::execute
     else if (command == "divide") {
         if (std::abs(b) < 1e-10) {
             return qtplugin::make_error<QJsonObject>(
-                qtplugin::PluginErrorCode::InvalidParameter, 
+                qtplugin::PluginErrorCode::InvalidParameter,
                 "Division by zero");
         }
         result = divide(a, b);
@@ -241,10 +246,10 @@ qtplugin::expected<QJsonObject, qtplugin::PluginError> CalculatorPlugin::execute
     }
     else {
         return qtplugin::make_error<QJsonObject>(
-            qtplugin::PluginErrorCode::CommandNotFound, 
+            qtplugin::PluginErrorCode::CommandNotFound,
             QString("Unknown command: %1").arg(QString::fromStdString(std::string(command))));
     }
-    
+
     return QJsonObject{
         {"result", result},
         {"operation", operation},
@@ -280,14 +285,14 @@ bool CalculatorPlugin::validate_numbers(const QJsonObject& params, double& a, do
     if (!params.contains("a") || !params.contains("b")) {
         return false;
     }
-    
+
     QJsonValue a_val = params["a"];
     QJsonValue b_val = params["b"];
-    
+
     if (!a_val.isDouble() || !b_val.isDouble()) {
         return false;
     }
-    
+
     a = a_val.toDouble();
     b = b_val.toDouble();
     return true;
@@ -297,58 +302,60 @@ bool CalculatorPlugin::validate_numbers(const QJsonObject& params, double& a, do
 ### 2.4 Plugin Metadata
 
 **calculator_plugin.json**
+
 ```json
 {
-    "id": "calculator_plugin",
-    "name": "Calculator Plugin",
-    "version": "1.0.0",
-    "description": "A simple calculator plugin for basic arithmetic operations",
-    "author": "QtForge Tutorial",
-    "license": "MIT",
-    "website": "https://github.com/QtForge/QtForge",
-    "interfaces": ["IPlugin"],
-    "dependencies": [],
-    "capabilities": ["arithmetic", "basic_math"],
-    "commands": [
-        {
-            "name": "add",
-            "description": "Add two numbers",
-            "parameters": {
-                "a": {"type": "number", "description": "First number"},
-                "b": {"type": "number", "description": "Second number"}
-            }
-        },
-        {
-            "name": "subtract",
-            "description": "Subtract two numbers",
-            "parameters": {
-                "a": {"type": "number", "description": "First number"},
-                "b": {"type": "number", "description": "Second number"}
-            }
-        },
-        {
-            "name": "multiply",
-            "description": "Multiply two numbers",
-            "parameters": {
-                "a": {"type": "number", "description": "First number"},
-                "b": {"type": "number", "description": "Second number"}
-            }
-        },
-        {
-            "name": "divide",
-            "description": "Divide two numbers",
-            "parameters": {
-                "a": {"type": "number", "description": "Dividend"},
-                "b": {"type": "number", "description": "Divisor (cannot be zero)"}
-            }
-        }
-    ]
+  "id": "calculator_plugin",
+  "name": "Calculator Plugin",
+  "version": "1.0.0",
+  "description": "A simple calculator plugin for basic arithmetic operations",
+  "author": "QtForge Tutorial",
+  "license": "MIT",
+  "website": "https://github.com/QtForge/QtForge",
+  "interfaces": ["IPlugin"],
+  "dependencies": [],
+  "capabilities": ["arithmetic", "basic_math"],
+  "commands": [
+    {
+      "name": "add",
+      "description": "Add two numbers",
+      "parameters": {
+        "a": { "type": "number", "description": "First number" },
+        "b": { "type": "number", "description": "Second number" }
+      }
+    },
+    {
+      "name": "subtract",
+      "description": "Subtract two numbers",
+      "parameters": {
+        "a": { "type": "number", "description": "First number" },
+        "b": { "type": "number", "description": "Second number" }
+      }
+    },
+    {
+      "name": "multiply",
+      "description": "Multiply two numbers",
+      "parameters": {
+        "a": { "type": "number", "description": "First number" },
+        "b": { "type": "number", "description": "Second number" }
+      }
+    },
+    {
+      "name": "divide",
+      "description": "Divide two numbers",
+      "parameters": {
+        "a": { "type": "number", "description": "Dividend" },
+        "b": { "type": "number", "description": "Divisor (cannot be zero)" }
+      }
+    }
+  ]
 }
 ```
 
 ### 2.5 Build Configuration
 
 **CMakeLists.txt**
+
 ```cmake
 cmake_minimum_required(VERSION 3.16)
 project(CalculatorPlugin)
@@ -416,6 +423,7 @@ calculator_app/
 ### 3.2 Main Application
 
 **main.cpp**
+
 ```cpp
 #include <qtplugin/core/plugin_manager.hpp>
 #include <QCoreApplication>
@@ -538,6 +546,7 @@ int main(int argc, char *argv[]) {
 ### 3.3 Application Build Configuration
 
 **CMakeLists.txt**
+
 ```cmake
 cmake_minimum_required(VERSION 3.16)
 project(CalculatorApp)
@@ -656,6 +665,7 @@ qCWarning(calculatorApp) << "Plugin operation failed:" << result.error().message
 Create a simple test for your plugin:
 
 **test_calculator_plugin.cpp**
+
 ```cpp
 #include <QtTest/QtTest>
 #include "../calculator_plugin.hpp"
@@ -718,6 +728,7 @@ QTEST_MAIN(TestCalculatorPlugin)
 **Problem**: Plugin fails to load with "file not found" error
 
 **Solutions**:
+
 1. Check file path and permissions
 2. Verify all dependencies are available
 3. Check Qt plugin path environment variables
@@ -727,6 +738,7 @@ QTEST_MAIN(TestCalculatorPlugin)
 **Problem**: Plugin loads but symbols are missing
 
 **Solutions**:
+
 1. Ensure proper linking with QtForge libraries
 2. Check that all required Qt modules are linked
 3. Verify plugin interface implementation
@@ -736,6 +748,7 @@ QTEST_MAIN(TestCalculatorPlugin)
 **Problem**: Application crashes when using plugin
 
 **Solutions**:
+
 1. Check for null pointer dereferences
 2. Validate input parameters
 3. Ensure proper plugin lifecycle management
@@ -758,4 +771,4 @@ Congratulations! You've successfully created your first QtForge plugin system. H
 
 ---
 
-*Tutorial completed! You now have a solid foundation for building plugin-based applications with QtForge.*
+_Tutorial completed! You now have a solid foundation for building plugin-based applications with QtForge._

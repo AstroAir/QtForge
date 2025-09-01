@@ -8,81 +8,81 @@ We welcome several types of contributions:
 
 <div class="grid cards" markdown>
 
--   :material-bug: **Bug Reports**
+- :material-bug: **Bug Reports**
 
-    ---
+  ***
 
-    Help us identify and fix issues
+  Help us identify and fix issues
 
-    - Report bugs and unexpected behavior
-    - Provide detailed reproduction steps
-    - Include system information and logs
+  - Report bugs and unexpected behavior
+  - Provide detailed reproduction steps
+  - Include system information and logs
 
-    [:octicons-arrow-right-24: Report a Bug](https://github.com/QtForge/QtPlugin/issues/new?template=bug_report.md)
+  [:octicons-arrow-right-24: Report a Bug](https://github.com/QtForge/QtPlugin/issues/new?template=bug_report.md)
 
--   :material-lightbulb: **Feature Requests**
+- :material-lightbulb: **Feature Requests**
 
-    ---
+  ***
 
-    Suggest new features and improvements
+  Suggest new features and improvements
 
-    - Propose new functionality
-    - Discuss API enhancements
-    - Share use case requirements
+  - Propose new functionality
+  - Discuss API enhancements
+  - Share use case requirements
 
-    [:octicons-arrow-right-24: Request Feature](https://github.com/QtForge/QtPlugin/issues/new?template=feature_request.md)
+  [:octicons-arrow-right-24: Request Feature](https://github.com/QtForge/QtPlugin/issues/new?template=feature_request.md)
 
--   :material-code-braces: **Code Contributions**
+- :material-code-braces: **Code Contributions**
 
-    ---
+  ***
 
-    Implement features and fix bugs
+  Implement features and fix bugs
 
-    - Fix reported issues
-    - Implement new features
-    - Improve performance
-    - Add platform support
+  - Fix reported issues
+  - Implement new features
+  - Improve performance
+  - Add platform support
 
-    [:octicons-arrow-right-24: Development Setup](development-setup.md)
+  [:octicons-arrow-right-24: Development Setup](development-setup.md)
 
--   :material-book-open-page-variant: **Documentation**
+- :material-book-open-page-variant: **Documentation**
 
-    ---
+  ***
 
-    Improve documentation and examples
+  Improve documentation and examples
 
-    - Fix documentation errors
-    - Add missing documentation
-    - Create tutorials and guides
-    - Improve API documentation
+  - Fix documentation errors
+  - Add missing documentation
+  - Create tutorials and guides
+  - Improve API documentation
 
-    [:octicons-arrow-right-24: Documentation Guide](documentation.md)
+  [:octicons-arrow-right-24: Documentation Guide](documentation.md)
 
--   :material-test-tube: **Testing**
+- :material-test-tube: **Testing**
 
-    ---
+  ***
 
-    Improve test coverage and quality
+  Improve test coverage and quality
 
-    - Write unit tests
-    - Add integration tests
-    - Test on different platforms
-    - Performance testing
+  - Write unit tests
+  - Add integration tests
+  - Test on different platforms
+  - Performance testing
 
-    [:octicons-arrow-right-24: Testing Guidelines](testing.md)
+  [:octicons-arrow-right-24: Testing Guidelines](testing.md)
 
--   :material-package: **Examples**
+- :material-package: **Examples**
 
-    ---
+  ***
 
-    Create examples and tutorials
+  Create examples and tutorials
 
-    - Build example plugins
-    - Write tutorials
-    - Create demo applications
-    - Share best practices
+  - Build example plugins
+  - Write tutorials
+  - Create demo applications
+  - Share best practices
 
-    [:octicons-arrow-right-24: Example Guidelines](../examples/index.md)
+  [:octicons-arrow-right-24: Example Guidelines](../examples/index.md)
 
 </div>
 
@@ -91,6 +91,7 @@ We welcome several types of contributions:
 ### Quick Start for Contributors
 
 1. **Fork the Repository**
+
    ```bash
    # Fork on GitHub, then clone your fork
    git clone https://github.com/YOUR_USERNAME/QtPlugin.git
@@ -98,6 +99,7 @@ We welcome several types of contributions:
    ```
 
 2. **Set Up Development Environment**
+
    ```bash
    # Install dependencies (see Development Setup guide)
    # Configure your IDE
@@ -105,6 +107,7 @@ We welcome several types of contributions:
    ```
 
 3. **Create a Branch**
+
    ```bash
    git checkout -b feature/your-feature-name
    # or
@@ -112,6 +115,7 @@ We welcome several types of contributions:
    ```
 
 4. **Make Changes**
+
    - Follow our [Coding Standards](coding-standards.md)
    - Write tests for your changes
    - Update documentation as needed
@@ -158,7 +162,7 @@ class PluginManager {
 public:
     // Method names: snake_case
     expected<std::string, PluginError> load_plugin(const std::string& path);
-    
+
     // Member variables: m_ prefix, snake_case
 private:
     std::unique_ptr<PluginLoader> m_loader;
@@ -190,6 +194,7 @@ Fixes #123
 ```
 
 **Types:**
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation changes
@@ -201,12 +206,14 @@ Fixes #123
 ### Pull Request Process
 
 1. **Before Submitting**:
+
    - Ensure all tests pass
    - Run code formatting tools
    - Update documentation
    - Add changelog entry
 
 2. **PR Description**:
+
    - Clear title and description
    - Link to related issues
    - List breaking changes
@@ -224,6 +231,7 @@ Fixes #123
 The heart of QtPlugin with essential functionality:
 
 **Areas for contribution:**
+
 - Plugin loading and management
 - Error handling improvements
 - Performance optimizations
@@ -231,6 +239,7 @@ The heart of QtPlugin with essential functionality:
 - Cross-platform compatibility
 
 **Skills needed:**
+
 - Advanced C++20 knowledge
 - Qt framework experience
 - System programming
@@ -241,6 +250,7 @@ The heart of QtPlugin with essential functionality:
 Plugin validation and trust management:
 
 **Areas for contribution:**
+
 - Signature verification
 - Sandboxing improvements
 - Trust management
@@ -248,6 +258,7 @@ Plugin validation and trust management:
 - Vulnerability scanning
 
 **Skills needed:**
+
 - Security expertise
 - Cryptography knowledge
 - System security
@@ -258,6 +269,7 @@ Plugin validation and trust management:
 Inter-plugin messaging and events:
 
 **Areas for contribution:**
+
 - Message routing optimization
 - New message types
 - Serialization improvements
@@ -265,6 +277,7 @@ Inter-plugin messaging and events:
 - Event system enhancements
 
 **Skills needed:**
+
 - Distributed systems
 - Network programming
 - Serialization formats
@@ -275,6 +288,7 @@ Inter-plugin messaging and events:
 Cross-platform compatibility and optimization:
 
 **Areas for contribution:**
+
 - Windows platform improvements
 - macOS optimizations
 - Linux distribution support
@@ -282,6 +296,7 @@ Cross-platform compatibility and optimization:
 - Embedded systems
 
 **Skills needed:**
+
 - Platform-specific knowledge
 - Build system expertise
 - Package management
@@ -292,6 +307,7 @@ Cross-platform compatibility and optimization:
 Comprehensive documentation and examples:
 
 **Areas for contribution:**
+
 - API documentation
 - Tutorial creation
 - Example development
@@ -299,6 +315,7 @@ Comprehensive documentation and examples:
 - Video tutorials
 
 **Skills needed:**
+
 - Technical writing
 - Documentation tools
 - Example development

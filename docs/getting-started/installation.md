@@ -15,10 +15,10 @@ This guide covers all the ways to install QtPlugin on different platforms and bu
     ./bootstrap-vcpkg.sh  # Linux/macOS
     # or
     .\bootstrap-vcpkg.bat  # Windows
-    
+
     # Install QtPlugin
     ./vcpkg install qtplugin
-    
+
     # With optional components
     ./vcpkg install qtplugin[network,ui,examples]
     ```
@@ -28,10 +28,10 @@ This guide covers all the ways to install QtPlugin on different platforms and bu
     ```bash
     # Add the remote (if not already added)
     conan remote add qtforge https://api.bintray.com/conan/qtforge/conan
-    
+
     # Install QtPlugin
     conan install qtplugin/3.0.0@qtforge/stable
-    
+
     # With options
     conan install qtplugin/3.0.0@qtforge/stable -o qtplugin:network=True -o qtplugin:ui=True
     ```
@@ -41,10 +41,10 @@ This guide covers all the ways to install QtPlugin on different platforms and bu
     ```bash
     # Add the tap
     brew tap qtforge/qtplugin
-    
+
     # Install QtPlugin
     brew install qtplugin
-    
+
     # With all components
     brew install qtplugin --with-network --with-ui
     ```
@@ -65,7 +65,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(QtPlugin)
 
 # Link to your target
-target_link_libraries(your_app 
+target_link_libraries(your_app
     QtPlugin::Core
     QtPlugin::Security  # optional
     QtPlugin::Network   # optional
@@ -94,20 +94,20 @@ target_link_libraries(your_app
     # Clone the repository
     git clone https://github.com/QtForge/QtPlugin.git
     cd QtPlugin
-    
+
     # Create build directory
     mkdir build
     cd build
-    
+
     # Configure with CMake
     cmake .. -G "Visual Studio 17 2022" -A x64 ^
         -DCMAKE_BUILD_TYPE=Release ^
         -DQTPLUGIN_BUILD_EXAMPLES=ON ^
         -DQTPLUGIN_BUILD_TESTS=ON
-    
+
     # Build
     cmake --build . --config Release
-    
+
     # Install
     cmake --install . --prefix "C:\QtPlugin"
     ```
@@ -117,16 +117,16 @@ target_link_libraries(your_app
     ```bash
     # Using MSYS2/MinGW64
     pacman -S mingw-w64-x86_64-cmake mingw-w64-x86_64-qt6-base
-    
+
     # Clone and build
     git clone https://github.com/QtForge/QtPlugin.git
     cd QtPlugin
     mkdir build && cd build
-    
+
     cmake .. -G "MinGW Makefiles" \
         -DCMAKE_BUILD_TYPE=Release \
         -DQTPLUGIN_BUILD_EXAMPLES=ON
-    
+
     cmake --build .
     cmake --install . --prefix /mingw64
     ```
@@ -155,7 +155,7 @@ target_link_libraries(your_app
         libqt6core6 \
         libqt6network6 \
         libqt6widgets6
-    
+
     # Optional: for network/UI components
     sudo apt install -y \
         qt6-networkauth-dev \
@@ -173,7 +173,7 @@ target_link_libraries(your_app
         qt6-qtbase-devel \
         qt6-qttools-devel \
         qt6-qtnetworkauth-devel
-    
+
     # CentOS/RHEL (enable EPEL first)
     sudo yum install -y epel-release
     sudo yum install -y \
@@ -237,11 +237,13 @@ sudo cmake --install .
 #### Prerequisites
 
 1. **Xcode Command Line Tools**:
+
    ```bash
    xcode-select --install
    ```
 
 2. **Homebrew** (recommended):
+
    ```bash
    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
    ```
@@ -291,21 +293,21 @@ QtPlugin provides several CMake options to customize your build:
 
 ### Core Options
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `QTPLUGIN_BUILD_NETWORK` | `AUTO` | Build network plugin support |
-| `QTPLUGIN_BUILD_UI` | `AUTO` | Build UI plugin support |
-| `QTPLUGIN_BUILD_EXAMPLES` | `ON` | Build example plugins |
-| `QTPLUGIN_BUILD_TESTS` | `OFF` | Build unit tests |
-| `QTPLUGIN_BUILD_COMPONENT_TESTS` | `OFF` | Build component-specific tests |
+| Option                           | Default | Description                    |
+| -------------------------------- | ------- | ------------------------------ |
+| `QTPLUGIN_BUILD_NETWORK`         | `AUTO`  | Build network plugin support   |
+| `QTPLUGIN_BUILD_UI`              | `AUTO`  | Build UI plugin support        |
+| `QTPLUGIN_BUILD_EXAMPLES`        | `ON`    | Build example plugins          |
+| `QTPLUGIN_BUILD_TESTS`           | `OFF`   | Build unit tests               |
+| `QTPLUGIN_BUILD_COMPONENT_TESTS` | `OFF`   | Build component-specific tests |
 
 ### Advanced Options
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `QTPLUGIN_ENABLE_COMPONENT_LOGGING` | `OFF` | Enable detailed component logging |
-| `CMAKE_BUILD_TYPE` | `Release` | Build type (Debug/Release/RelWithDebInfo) |
-| `BUILD_SHARED_LIBS` | `OFF` | Build shared libraries instead of static |
+| Option                              | Default   | Description                               |
+| ----------------------------------- | --------- | ----------------------------------------- |
+| `QTPLUGIN_ENABLE_COMPONENT_LOGGING` | `OFF`     | Enable detailed component logging         |
+| `CMAKE_BUILD_TYPE`                  | `Release` | Build type (Debug/Release/RelWithDebInfo) |
+| `BUILD_SHARED_LIBS`                 | `OFF`     | Build shared libraries instead of static  |
 
 ### Example Configurations
 
@@ -423,6 +425,7 @@ cmake --build .
 ```
 
 Expected output:
+
 ```
 QtPlugin library initialized successfully!
 Version: 3.0.0
@@ -618,6 +621,7 @@ QtPlugin provides automated installation scripts:
     ```
 
 These scripts will:
+
 - Detect your system and install dependencies
 - Download and build QtPlugin
 - Install to appropriate system locations

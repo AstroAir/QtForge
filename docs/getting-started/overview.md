@@ -46,29 +46,29 @@ graph TB
     PM --> PL[Plugin Loader]
     PM --> PR[Plugin Registry]
     PM --> SM[Security Manager]
-    
+
     PL --> P1[Plugin 1]
     PL --> P2[Plugin 2]
     PL --> P3[Plugin N...]
-    
+
     P1 --> MB[Message Bus]
     P2 --> MB
     P3 --> MB
-    
+
     SM --> PV[Plugin Validator]
     SM --> TM[Trust Manager]
-    
+
     subgraph "Core Components"
         PM
         PL
         PR
         SM
     end
-    
+
     subgraph "Communication"
         MB
     end
-    
+
     subgraph "Security"
         PV
         TM
@@ -128,17 +128,17 @@ Enables communication between plugins:
 
 ### Core Components (Always Available)
 
-| Component | Description | Dependencies |
-|-----------|-------------|--------------|
-| **QtPlugin::Core** | Essential plugin management | Qt6::Core |
-| **QtPlugin::Security** | Plugin validation and security | Qt6::Core |
+| Component              | Description                    | Dependencies |
+| ---------------------- | ------------------------------ | ------------ |
+| **QtPlugin::Core**     | Essential plugin management    | Qt6::Core    |
+| **QtPlugin::Security** | Plugin validation and security | Qt6::Core    |
 
 ### Optional Components
 
-| Component | Description | Dependencies |
-|-----------|-------------|--------------|
+| Component             | Description               | Dependencies |
+| --------------------- | ------------------------- | ------------ |
 | **QtPlugin::Network** | Network plugin interfaces | Qt6::Network |
-| **QtPlugin::UI** | UI plugin interfaces | Qt6::Widgets |
+| **QtPlugin::UI**      | UI plugin interfaces      | Qt6::Widgets |
 
 ## Next Steps
 

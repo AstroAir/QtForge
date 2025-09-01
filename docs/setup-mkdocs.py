@@ -37,7 +37,7 @@ def check_python_version():
 def install_mkdocs():
     """Install MkDocs and required plugins."""
     print("\n📦 Installing MkDocs and plugins...")
-    
+
     # Install from requirements file
     requirements_file = Path(__file__).parent / "requirements.txt"
     if requirements_file.exists():
@@ -54,22 +54,22 @@ def install_mkdocs():
             "pygments>=2.16.0",
             "pymdown-extensions>=10.3.0"
         ]
-        
+
         for package in packages:
             run_command([sys.executable, "-m", "pip", "install", package])
 
 def validate_mkdocs_config():
     """Validate the MkDocs configuration."""
     print("\n🔍 Validating MkDocs configuration...")
-    
+
     config_file = Path(__file__).parent.parent / "mkdocs.yml"
     if not config_file.exists():
         print("❌ mkdocs.yml not found")
         return False
-    
+
     # Change to project root directory
     os.chdir(config_file.parent)
-    
+
     # Validate configuration
     result = run_command(["mkdocs", "config"], check=False)
     if result.returncode == 0:
@@ -82,7 +82,7 @@ def validate_mkdocs_config():
 def build_docs():
     """Build the documentation."""
     print("\n🏗️ Building documentation...")
-    
+
     result = run_command(["mkdocs", "build", "--clean"], check=False)
     if result.returncode == 0:
         print("✅ Documentation built successfully")
@@ -96,7 +96,7 @@ def serve_docs():
     print("\n🚀 Starting development server...")
     print("📖 Documentation will be available at: http://127.0.0.1:8000")
     print("Press Ctrl+C to stop the server")
-    
+
     try:
         subprocess.run(["mkdocs", "serve"], check=True)
     except KeyboardInterrupt:
@@ -107,7 +107,7 @@ def serve_docs():
 def check_documentation_structure():
     """Check if required documentation files exist."""
     print("\n📁 Checking documentation structure...")
-    
+
     docs_dir = Path(__file__).parent
     required_files = [
         "index.md",
@@ -121,7 +121,7 @@ def check_documentation_structure():
         "appendix/faq.md",
         "user-guide/troubleshooting.md"
     ]
-    
+
     missing_files = []
     for file_path in required_files:
         full_path = docs_dir / file_path
@@ -130,7 +130,7 @@ def check_documentation_structure():
         else:
             print(f"❌ {file_path} (missing)")
             missing_files.append(file_path)
-    
+
     if missing_files:
         print(f"\n⚠️  {len(missing_files)} files are missing")
         return False
@@ -142,36 +142,36 @@ def main():
     """Main setup function."""
     print("🔧 QtPlugin MkDocs Setup")
     print("=" * 50)
-    
+
     # Check Python version
     check_python_version()
-    
+
     # Install MkDocs
     install_mkdocs()
-    
+
     # Check documentation structure
     structure_ok = check_documentation_structure()
-    
+
     # Validate configuration
     config_ok = validate_mkdocs_config()
-    
+
     # Build documentation
     build_ok = build_docs()
-    
+
     # Summary
     print("\n📊 Setup Summary")
     print("=" * 30)
     print(f"Documentation structure: {'✅ OK' if structure_ok else '❌ Issues'}")
     print(f"MkDocs configuration: {'✅ OK' if config_ok else '❌ Issues'}")
     print(f"Documentation build: {'✅ OK' if build_ok else '❌ Failed'}")
-    
+
     if structure_ok and config_ok and build_ok:
         print("\n🎉 Setup completed successfully!")
         print("\nNext steps:")
         print("1. Run 'mkdocs serve' to start the development server")
         print("2. Open http://127.0.0.1:8000 in your browser")
         print("3. Edit documentation files and see live updates")
-        
+
         # Ask if user wants to start the server
         try:
             response = input("\nStart development server now? (y/N): ").strip().lower()

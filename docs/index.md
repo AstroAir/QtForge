@@ -36,7 +36,7 @@ QtPlugin is a **modern, enterprise-grade C++ plugin system** built on Qt 6 that 
 **Latest Status**: All core libraries and comprehensive test suites are building and passing successfully!
 
 - ✅ **Core Library**: `libqtplugin-core.a` - Complete implementation
-- ✅ **Security Module**: `libqtplugin-security.a` - Full security features  
+- ✅ **Security Module**: `libqtplugin-security.a` - Full security features
 - ✅ **Example Plugins** - Working demonstration plugins
 - ✅ **Test Results**: **181/181 PASSING** (100% success rate)
 
@@ -86,29 +86,29 @@ int main() {
         std::cerr << "Failed to initialize QtPlugin library" << std::endl;
         return -1;
     }
-    
+
     // Create plugin manager
     qtplugin::PluginManager manager;
-    
+
     // Load a plugin
     auto result = manager.load_plugin("./plugins/example_plugin.so");
     if (!result) {
         std::cerr << "Failed to load plugin: " << result.error().message << std::endl;
         return -1;
     }
-    
+
     // Get the loaded plugin
     auto plugin = manager.get_plugin(result.value());
     if (plugin) {
         std::cout << "Loaded plugin: " << plugin->name() << std::endl;
-        
+
         // Initialize the plugin
         auto init_result = plugin->initialize();
         if (init_result) {
             std::cout << "Plugin initialized successfully" << std::endl;
         }
     }
-    
+
     return 0;
 }
 ```
@@ -121,21 +121,21 @@ int main() {
 
 <div class="grid cards" markdown>
 
--   :material-rocket-launch: **[Getting Started](getting-started/overview.md)**
+- :material-rocket-launch: **[Getting Started](getting-started/overview.md)**
 
-    ---
+  ***
 
-    Learn the basics and get QtPlugin up and running quickly
+  Learn the basics and get QtPlugin up and running quickly
 
-    [:octicons-arrow-right-24: Start here](getting-started/overview.md)
+  [:octicons-arrow-right-24: Start here](getting-started/overview.md)
 
--   :material-book-open-page-variant: **[User Guide](user-guide/plugin-management.md)**
+- :material-book-open-page-variant: **[User Guide](user-guide/plugin-management.md)**
 
-    ---
+  ***
 
-    Comprehensive guides for using QtPlugin in your applications
+  Comprehensive guides for using QtPlugin in your applications
 
-    [:octicons-arrow-right-24: User Guide](user-guide/plugin-management.md)
+  [:octicons-arrow-right-24: User Guide](user-guide/plugin-management.md)
 
 </div>
 
@@ -143,21 +143,21 @@ int main() {
 
 <div class="grid cards" markdown>
 
--   :material-code-braces: **[Developer Guide](developer-guide/plugin-development.md)**
+- :material-code-braces: **[Developer Guide](developer-guide/plugin-development.md)**
 
-    ---
+  ***
 
-    Step-by-step guides for creating plugins and advanced usage
+  Step-by-step guides for creating plugins and advanced usage
 
-    [:octicons-arrow-right-24: Developer Guide](developer-guide/plugin-development.md)
+  [:octicons-arrow-right-24: Developer Guide](developer-guide/plugin-development.md)
 
--   :material-api: **[API Reference](api/index.md)**
+- :material-api: **[API Reference](api/index.md)**
 
-    ---
+  ***
 
-    Complete API documentation with examples and cross-references
+  Complete API documentation with examples and cross-references
 
-    [:octicons-arrow-right-24: API Reference](api/index.md)
+  [:octicons-arrow-right-24: API Reference](api/index.md)
 
 </div>
 
@@ -165,21 +165,21 @@ int main() {
 
 <div class="grid cards" markdown>
 
--   :material-hammer-wrench: **[Contributing](contributing/index.md)**
+- :material-hammer-wrench: **[Contributing](contributing/index.md)**
 
-    ---
+  ***
 
-    Guidelines for contributing to the QtPlugin project
+  Guidelines for contributing to the QtPlugin project
 
-    [:octicons-arrow-right-24: Contributing](contributing/index.md)
+  [:octicons-arrow-right-24: Contributing](contributing/index.md)
 
--   :material-architecture: **[Architecture](architecture/system-design.md)**
+- :material-architecture: **[Architecture](architecture/system-design.md)**
 
-    ---
+  ***
 
-    Deep dive into system design and architectural patterns
+  Deep dive into system design and architectural patterns
 
-    [:octicons-arrow-right-24: Architecture](architecture/system-design.md)
+  [:octicons-arrow-right-24: Architecture](architecture/system-design.md)
 
 </div>
 
@@ -206,7 +206,7 @@ QtPlugin showcases **modern C++20 engineering practices**:
 ### ⚡ High Performance
 
 - **Plugin loading**: 1.2ms average
-- **Command execution**: 0.05ms average  
+- **Command execution**: 0.05ms average
 - **Memory usage**: 2.1MB per plugin
 - **Concurrent operations**: 1000+ ops/sec
 

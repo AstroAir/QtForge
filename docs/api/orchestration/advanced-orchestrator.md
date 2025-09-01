@@ -1,10 +1,10 @@
 # AdvancedPluginOrchestrator API Reference
 
 !!! info "Module Information"
-    **Header**: `qtplugin/orchestration/advanced/plugin_orchestrator_v2.hpp`  
-    **Namespace**: `qtplugin`  
-    **Since**: QtForge v3.2.0  
-    **Status**: Beta
+**Header**: `qtplugin/orchestration/advanced/plugin_orchestrator_v2.hpp`  
+ **Namespace**: `qtplugin`  
+ **Since**: QtForge v3.2.0  
+ **Status**: Beta
 
 ## Overview
 
@@ -145,7 +145,7 @@ struct WorkflowNode {
     QJsonObject ui_properties;          ///< UI positioning and properties
     std::vector<QString> input_ports;   ///< Input port names
     std::vector<QString> output_ports;  ///< Output port names
-    
+
     QJsonObject to_json() const;
     static WorkflowNode from_json(const QJsonObject& json);
 };
@@ -162,7 +162,7 @@ struct WorkflowConnection {
     QString target_port;                ///< Target port name
     ConnectionType connection_type;     ///< Type of connection
     QJsonObject properties;             ///< Connection properties
-    
+
     QJsonObject to_json() const;
     static WorkflowConnection from_json(const QJsonObject& json);
 };
@@ -180,7 +180,7 @@ struct PluginWorkflow {
     std::vector<WorkflowConnection> connections; ///< Node connections
     QJsonObject global_configuration;          ///< Global workflow configuration
     QJsonObject metadata;                       ///< Additional metadata
-    
+
     QJsonObject to_json() const;
     static PluginWorkflow from_json(const QJsonObject& json);
 };
@@ -218,6 +218,7 @@ explicit AdvancedPluginOrchestrator(QObject* parent = nullptr);
 #### Workflow Management
 
 ##### `register_workflow()`
+
 ```cpp
 qtplugin::expected<void, PluginError> register_workflow(const PluginWorkflow& workflow);
 ```
@@ -225,12 +226,15 @@ qtplugin::expected<void, PluginError> register_workflow(const PluginWorkflow& wo
 Registers an advanced workflow for execution.
 
 **Parameters:**
+
 - `workflow` - Advanced workflow definition
 
 **Returns:**
+
 - `expected<void, PluginError>` - Success or error
 
 **Example:**
+
 ```cpp
 PluginWorkflow workflow;
 workflow.workflow_id = "streaming_pipeline";
@@ -245,6 +249,7 @@ if (!result) {
 ```
 
 ##### `unregister_workflow()`
+
 ```cpp
 void unregister_workflow(const QString& workflow_id);
 ```
@@ -252,6 +257,7 @@ void unregister_workflow(const QString& workflow_id);
 Unregisters a workflow.
 
 ##### `get_workflow()`
+
 ```cpp
 qtplugin::expected<PluginWorkflow, PluginError> get_workflow(const QString& workflow_id);
 ```
@@ -259,6 +265,7 @@ qtplugin::expected<PluginWorkflow, PluginError> get_workflow(const QString& work
 Retrieves a registered workflow definition.
 
 ##### `get_registered_workflows()`
+
 ```cpp
 std::vector<QString> get_registered_workflows() const;
 ```
@@ -268,22 +275,26 @@ Lists all registered workflow IDs.
 #### Workflow Execution
 
 ##### `execute_workflow()`
+
 ```cpp
 qtplugin::expected<QString, PluginError> execute_workflow(
-    const QString& workflow_id, 
+    const QString& workflow_id,
     const QJsonObject& input_data = {});
 ```
 
 Executes a registered workflow.
 
 **Parameters:**
+
 - `workflow_id` - Workflow to execute
 - `input_data` - Initial input data
 
 **Returns:**
+
 - `expected<QString, PluginError>` - Execution ID or error
 
 ##### `cancel_execution()`
+
 ```cpp
 void cancel_execution(const QString& execution_id);
 ```
@@ -291,6 +302,7 @@ void cancel_execution(const QString& execution_id);
 Cancels a running workflow execution.
 
 ##### `pause_execution()`
+
 ```cpp
 qtplugin::expected<void, PluginError> pause_execution(const QString& execution_id);
 ```
@@ -298,6 +310,7 @@ qtplugin::expected<void, PluginError> pause_execution(const QString& execution_i
 Pauses a running workflow execution.
 
 ##### `resume_execution()`
+
 ```cpp
 qtplugin::expected<void, PluginError> resume_execution(const QString& execution_id);
 ```
@@ -307,6 +320,7 @@ Resumes a paused workflow execution.
 #### Execution Monitoring
 
 ##### `get_execution_status()`
+
 ```cpp
 qtplugin::expected<WorkflowExecutionContext, PluginError> get_execution_status(
     const QString& execution_id);
@@ -315,12 +329,15 @@ qtplugin::expected<WorkflowExecutionContext, PluginError> get_execution_status(
 Gets detailed execution status and context.
 
 **Parameters:**
+
 - `execution_id` - Execution identifier
 
 **Returns:**
+
 - `expected<WorkflowExecutionContext, PluginError>` - Execution context or error
 
 ##### `get_active_executions()`
+
 ```cpp
 std::vector<QString> get_active_executions() const;
 ```
@@ -328,9 +345,10 @@ std::vector<QString> get_active_executions() const;
 Lists all active execution IDs.
 
 ##### `get_node_status()`
+
 ```cpp
 qtplugin::expected<QJsonObject, PluginError> get_node_status(
-    const QString& execution_id, 
+    const QString& execution_id,
     const QString& node_id);
 ```
 
@@ -339,27 +357,30 @@ Gets the status of a specific node in an execution.
 #### Dynamic Workflow Modification
 
 ##### `add_node_to_workflow()`
+
 ```cpp
 qtplugin::expected<void, PluginError> add_node_to_workflow(
-    const QString& workflow_id, 
+    const QString& workflow_id,
     const WorkflowNode& node);
 ```
 
 Dynamically adds a node to an existing workflow.
 
 ##### `remove_node_from_workflow()`
+
 ```cpp
 qtplugin::expected<void, PluginError> remove_node_from_workflow(
-    const QString& workflow_id, 
+    const QString& workflow_id,
     const QString& node_id);
 ```
 
 Removes a node from a workflow.
 
 ##### `add_connection_to_workflow()`
+
 ```cpp
 qtplugin::expected<void, PluginError> add_connection_to_workflow(
-    const QString& workflow_id, 
+    const QString& workflow_id,
     const WorkflowConnection& connection);
 ```
 
@@ -386,13 +407,13 @@ signals:
 
 Common error codes specific to advanced orchestration:
 
-| Error Code | Description | Resolution |
-|------------|-------------|------------|
-| `InvalidWorkflowStructure` | Invalid node or connection structure | Verify workflow graph is valid |
-| `CircularDependency` | Circular dependency in workflow | Check node connections for cycles |
-| `NodeNotFound` | Referenced node not found | Ensure all referenced nodes exist |
-| `InvalidConnection` | Invalid connection between nodes | Check port compatibility |
-| `ExecutionModeNotSupported` | Execution mode not supported | Use supported execution modes |
+| Error Code                  | Description                          | Resolution                        |
+| --------------------------- | ------------------------------------ | --------------------------------- |
+| `InvalidWorkflowStructure`  | Invalid node or connection structure | Verify workflow graph is valid    |
+| `CircularDependency`        | Circular dependency in workflow      | Check node connections for cycles |
+| `NodeNotFound`              | Referenced node not found            | Ensure all referenced nodes exist |
+| `InvalidConnection`         | Invalid connection between nodes     | Check port compatibility          |
+| `ExecutionModeNotSupported` | Execution mode not supported         | Use supported execution modes     |
 
 ## Thread Safety
 
@@ -558,7 +579,7 @@ event_workflow.connections = {valid_conn, invalid_conn};
 ## Python Bindings
 
 !!! note "Python Support"
-    Advanced orchestration features are available through the `qtforge.orchestration` module.
+Advanced orchestration features are available through the `qtforge.orchestration` module.
 
 ```python
 import qtforge
@@ -608,4 +629,4 @@ execution_id = orchestrator.execute_workflow("python_pipeline")
 
 ---
 
-*Last updated: December 2024 | QtForge v3.2.0*
+_Last updated: December 2024 | QtForge v3.2.0_

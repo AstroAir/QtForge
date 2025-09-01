@@ -68,9 +68,9 @@ set_target_properties(my_app PROPERTIES
 int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
-    
+
     std::cout << "=== QtPlugin Quick Start Demo ===" << std::endl;
-    
+
     // Step 1: Initialize QtPlugin library
     std::cout << "1. Initializing QtPlugin library..." << std::endl;
     qtplugin::LibraryInitializer init;
@@ -78,9 +78,9 @@ int main(int argc, char *argv[])
         std::cerr << "❌ Failed to initialize QtPlugin library" << std::endl;
         return -1;
     }
-    std::cout << "✅ QtPlugin library initialized (version " 
+    std::cout << "✅ QtPlugin library initialized (version "
               << qtplugin::version_string() << ")" << std::endl;
-    
+
     // Step 2: Create plugin manager
     std::cout << "\n2. Creating plugin manager..." << std::endl;
     auto manager = qtplugin::PluginManager::create();
@@ -89,52 +89,52 @@ int main(int argc, char *argv[])
         return -1;
     }
     std::cout << "✅ Plugin manager created successfully" << std::endl;
-    
+
     // Step 3: Set up plugin directory
     QString pluginDir = QDir::currentPath() + "/plugins";
     std::cout << "\n3. Looking for plugins in: " << pluginDir.toStdString() << std::endl;
-    
+
     // Step 4: Discover plugins
     QDir dir(pluginDir);
     if (!dir.exists()) {
         std::cout << "⚠️  Plugin directory doesn't exist yet" << std::endl;
         std::cout << "   Create some plugins using the 'First Plugin' guide!" << std::endl;
     } else {
-        auto pluginFiles = dir.entryList(QStringList() << "*.so" << "*.dll" << "*.dylib", 
+        auto pluginFiles = dir.entryList(QStringList() << "*.so" << "*.dll" << "*.dylib",
                                         QDir::Files);
-        
+
         if (pluginFiles.isEmpty()) {
             std::cout << "⚠️  No plugin files found" << std::endl;
             std::cout << "   Create some plugins using the 'First Plugin' guide!" << std::endl;
         } else {
             std::cout << "📦 Found " << pluginFiles.size() << " plugin file(s):" << std::endl;
-            
+
             // Step 5: Load each plugin
             for (const QString& fileName : pluginFiles) {
                 QString fullPath = dir.absoluteFilePath(fileName);
                 std::cout << "\n5. Loading plugin: " << fileName.toStdString() << std::endl;
-                
+
                 auto result = manager->load_plugin(fullPath.toStdString());
                 if (!result) {
-                    std::cerr << "❌ Failed to load plugin: " 
+                    std::cerr << "❌ Failed to load plugin: "
                               << result.error().message << std::endl;
                     continue;
                 }
-                
+
                 std::cout << "✅ Plugin loaded with ID: " << result.value() << std::endl;
-                
+
                 // Step 6: Get plugin information
                 auto plugin = manager->get_plugin(result.value());
                 if (plugin) {
                     std::cout << "   Name: " << plugin->name() << std::endl;
                     std::cout << "   Version: " << plugin->version() << std::endl;
                     std::cout << "   Description: " << plugin->description() << std::endl;
-                    
+
                     // Step 7: Initialize the plugin
                     auto init_result = plugin->initialize();
                     if (init_result) {
                         std::cout << "✅ Plugin initialized successfully" << std::endl;
-                        
+
                         // Step 8: Execute a command (if supported)
                         auto commands = plugin->supported_commands();
                         if (!commands.empty()) {
@@ -144,29 +144,29 @@ int main(int argc, char *argv[])
                                 if (i < commands.size() - 1) std::cout << ", ";
                             }
                             std::cout << std::endl;
-                            
+
                             // Try to execute the first command
                             auto cmd_result = plugin->execute_command(commands[0]);
                             if (cmd_result) {
-                                std::cout << "✅ Command '" << commands[0] 
+                                std::cout << "✅ Command '" << commands[0]
                                           << "' executed successfully" << std::endl;
                             }
                         }
                     } else {
-                        std::cerr << "❌ Failed to initialize plugin: " 
+                        std::cerr << "❌ Failed to initialize plugin: "
                                   << init_result.error().message << std::endl;
                     }
                 }
             }
         }
     }
-    
+
     std::cout << "\n=== Demo Complete ===" << std::endl;
     std::cout << "Next steps:" << std::endl;
     std::cout << "1. Create your first plugin: see 'First Plugin' guide" << std::endl;
     std::cout << "2. Explore examples: see 'Examples' section" << std::endl;
     std::cout << "3. Read the API documentation for advanced usage" << std::endl;
-    
+
     return 0;
 }
 ```
@@ -285,6 +285,7 @@ if (result) {
 ```
 
 This provides:
+
 - **Type Safety**: Compile-time error checking
 - **No Exceptions**: Explicit error handling
 - **Performance**: Zero-cost abstractions

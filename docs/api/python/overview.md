@@ -1,10 +1,10 @@
 # QtForge Python API Overview
 
 !!! info "Python Integration"
-    **Module**: `qtforge`  
-    **Python Version**: 3.8+  
-    **Since**: QtForge v3.0.0  
-    **Status**: Stable
+**Module**: `qtforge`  
+ **Python Version**: 3.8+  
+ **Since**: QtForge v3.0.0  
+ **Status**: Stable
 
 ## Overview
 
@@ -88,7 +88,7 @@ result = manager.load_plugin("path/to/plugin.so")
 if result:
     plugin_id = result.value()
     print(f"Loaded plugin: {plugin_id}")
-    
+
     # Get plugin instance
     plugin = manager.get_plugin(plugin_id)
     if plugin:
@@ -258,14 +258,14 @@ import qtforge
 try:
     manager = qtforge.PluginManager()
     result = manager.load_plugin("plugin.so")
-    
+
     if result:
         plugin_id = result.value()
         print(f"Success: {plugin_id}")
     else:
         error = result.error()
         print(f"Error: {error.message}")
-        
+
 except qtforge.PluginError as e:
     print(f"Plugin error: {e}")
 except Exception as e:
@@ -284,13 +284,13 @@ def process_plugins(manager: qtforge.PluginManager) -> List[str]:
     """Process all loaded plugins and return their IDs."""
     plugins: List[str] = manager.get_loaded_plugins()
     results: List[str] = []
-    
+
     for plugin_id in plugins:
         plugin: Optional[qtforge.IPlugin] = manager.get_plugin(plugin_id)
         if plugin:
             metadata: qtforge.PluginMetadata = plugin.metadata()
             results.append(f"{metadata.name} v{metadata.version}")
-    
+
     return results
 ```
 
@@ -308,7 +308,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.plugin_manager = qtforge.PluginManager()
         self.setup_plugins()
-    
+
     def setup_plugins(self):
         # Load plugins and integrate with Qt application
         result = self.plugin_manager.load_plugin("ui_plugin.so")
@@ -367,4 +367,4 @@ hot_reload.set_global_hot_reload_enabled(True)
 
 ---
 
-*Last updated: December 2024 | QtForge v3.0.0*
+_Last updated: December 2024 | QtForge v3.0.0_

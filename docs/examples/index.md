@@ -10,33 +10,35 @@ Perfect for beginners learning QtPlugin fundamentals:
 
 <div class="grid cards" markdown>
 
--   :material-hand-wave: **[Basic Plugin](basic-plugin.md)**
+- :material-hand-wave: **[Basic Plugin](basic-plugin.md)**
 
-    ---
+  ***
 
-    Simple "Hello World" plugin demonstrating core concepts
+  Simple "Hello World" plugin demonstrating core concepts
 
-    **Features:**
-    - Plugin interface implementation
-    - Command execution
-    - Configuration management
-    - Lifecycle handling
+  **Features:**
 
-    **Difficulty:** Beginner
+  - Plugin interface implementation
+  - Command execution
+  - Configuration management
+  - Lifecycle handling
 
--   :material-cog: **[Service Plugin](service-plugin.md)**
+  **Difficulty:** Beginner
 
-    ---
+- :material-cog: **[Service Plugin](service-plugin.md)**
 
-    Background service with timer-based processing
+  ***
 
-    **Features:**
-    - Background processing
-    - Timer management
-    - State persistence
-    - Resource monitoring
+  Background service with timer-based processing
 
-    **Difficulty:** Intermediate
+  **Features:**
+
+  - Background processing
+  - Timer management
+  - State persistence
+  - Resource monitoring
+
+  **Difficulty:** Intermediate
 
 </div>
 
@@ -46,33 +48,35 @@ For developers building production applications:
 
 <div class="grid cards" markdown>
 
--   :material-network: **[Network Plugin](network-plugin.md)**
+- :material-network: **[Network Plugin](network-plugin.md)**
 
-    ---
+  ***
 
-    HTTP client/server plugin with REST API
+  HTTP client/server plugin with REST API
 
-    **Features:**
-    - HTTP requests/responses
-    - REST API integration
-    - Async networking
-    - Error handling
+  **Features:**
 
-    **Difficulty:** Advanced
+  - HTTP requests/responses
+  - REST API integration
+  - Async networking
+  - Error handling
 
--   :material-monitor: **[UI Plugin](ui-plugin.md)**
+  **Difficulty:** Advanced
 
-    ---
+- :material-monitor: **[UI Plugin](ui-plugin.md)**
 
-    Plugin with custom user interface
+  ***
 
-    **Features:**
-    - Qt Widgets integration
-    - Custom dialogs
-    - Event handling
-    - Theme support
+  Plugin with custom user interface
 
-    **Difficulty:** Advanced
+  **Features:**
+
+  - Qt Widgets integration
+  - Custom dialogs
+  - Event handling
+  - Theme support
+
+  **Difficulty:** Advanced
 
 </div>
 
@@ -82,29 +86,31 @@ Demonstrating advanced architectural patterns:
 
 <div class="grid cards" markdown>
 
--   :material-puzzle-plus: **[Plugin Composition](advanced.md#plugin-composition)**
+- :material-puzzle-plus: **[Plugin Composition](advanced.md#plugin-composition)**
 
-    ---
+  ***
 
-    Multiple plugins working together
+  Multiple plugins working together
 
-    **Features:**
-    - Inter-plugin communication
-    - Dependency management
-    - Service registration
-    - Event coordination
+  **Features:**
 
--   :material-message-processing: **[Message Bus Usage](advanced.md#message-bus)**
+  - Inter-plugin communication
+  - Dependency management
+  - Service registration
+  - Event coordination
 
-    ---
+- :material-message-processing: **[Message Bus Usage](advanced.md#message-bus)**
 
-    Advanced messaging patterns
+  ***
 
-    **Features:**
-    - Publish-subscribe
-    - Request-response
-    - Event broadcasting
-    - Type-safe messaging
+  Advanced messaging patterns
+
+  **Features:**
+
+  - Publish-subscribe
+  - Request-response
+  - Event broadcasting
+  - Type-safe messaging
 
 </div>
 
@@ -212,10 +218,10 @@ private slots:
 
 void PluginTest::testPluginLoading() {
     qtplugin::testing::PluginTestFramework framework;
-    
+
     auto result = framework.load_test_plugin("my_plugin.so");
     QVERIFY(result.has_value());
-    
+
     auto plugin = framework.get_plugin(result.value());
     QVERIFY(plugin != nullptr);
     QVERIFY(plugin->is_initialized());
@@ -241,13 +247,13 @@ qDebug() << "Plugin loading time:" << metrics.average_load_time;
 
 ## 📊 Example Comparison
 
-| Example | Complexity | Features | Use Cases |
-|---------|------------|----------|-----------|
-| **Basic Plugin** | ⭐ | Commands, Config | Learning, Simple tools |
-| **Service Plugin** | ⭐⭐ | Background tasks | Monitoring, Processing |
-| **Network Plugin** | ⭐⭐⭐ | HTTP, REST API | Web services, APIs |
-| **UI Plugin** | ⭐⭐⭐ | Widgets, Dialogs | Desktop apps, Tools |
-| **Advanced** | ⭐⭐⭐⭐ | Multi-plugin | Enterprise apps |
+| Example            | Complexity | Features         | Use Cases              |
+| ------------------ | ---------- | ---------------- | ---------------------- |
+| **Basic Plugin**   | ⭐         | Commands, Config | Learning, Simple tools |
+| **Service Plugin** | ⭐⭐       | Background tasks | Monitoring, Processing |
+| **Network Plugin** | ⭐⭐⭐     | HTTP, REST API   | Web services, APIs     |
+| **UI Plugin**      | ⭐⭐⭐     | Widgets, Dialogs | Desktop apps, Tools    |
+| **Advanced**       | ⭐⭐⭐⭐   | Multi-plugin     | Enterprise apps        |
 
 ## 🎯 Use Case Examples
 
@@ -274,11 +280,13 @@ qDebug() << "Plugin loading time:" << metrics.average_load_time;
 ### Common Plugin Patterns
 
 1. **Command Pattern**:
+
    ```cpp
    auto result = plugin->execute_command("process_data", params);
    ```
 
 2. **Observer Pattern**:
+
    ```cpp
    bus.subscribe<DataUpdateEvent>([](const auto& event) {
        // Handle data update
@@ -286,6 +294,7 @@ qDebug() << "Plugin loading time:" << metrics.average_load_time;
    ```
 
 3. **Factory Pattern**:
+
    ```cpp
    auto processor = plugin->create_processor(ProcessorType::Advanced);
    ```
@@ -324,11 +333,11 @@ void TestMyPlugin::testCommandExecution() {
     // Setup
     MyPlugin plugin;
     QVERIFY(plugin.initialize().has_value());
-    
+
     // Test
     QJsonObject params{{"input", "test_data"}};
     auto result = plugin.execute_command("process", params);
-    
+
     // Verify
     QVERIFY(result.has_value());
     QCOMPARE(result.value()["status"].toString(), "success");
@@ -343,17 +352,17 @@ void TestPluginIntegration::testPluginCommunication() {
     auto manager = qtplugin::PluginManager::create();
     auto producer_id = manager->load_plugin("producer_plugin.so");
     auto consumer_id = manager->load_plugin("consumer_plugin.so");
-    
+
     // Test communication
     auto& bus = manager->message_bus();
     bool message_received = false;
-    
+
     bus.subscribe<TestMessage>([&](const TestMessage& msg) {
         message_received = true;
     });
-    
+
     bus.publish(TestMessage{"test"});
-    
+
     // Wait and verify
     QTest::qWait(100);
     QVERIFY(message_received);

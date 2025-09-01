@@ -71,16 +71,13 @@ Plugins can be configured using JSON configuration files:
 
 ```json
 {
-    "plugin_id": "com.example.myplugin",
-    "enabled": true,
-    "settings": {
-        "option1": "value1",
-        "option2": 42
-    },
-    "dependencies": [
-        "com.example.dependency1",
-        "com.example.dependency2"
-    ]
+  "plugin_id": "com.example.myplugin",
+  "enabled": true,
+  "settings": {
+    "option1": "value1",
+    "option2": 42
+  },
+  "dependencies": ["com.example.dependency1", "com.example.dependency2"]
 }
 ```
 
@@ -149,18 +146,18 @@ QtForge automatically handles plugin dependencies:
 
 ```json
 {
-    "dependencies": [
-        {
-            "id": "com.example.core",
-            "version": ">=1.0.0",
-            "required": true
-        },
-        {
-            "id": "com.example.optional",
-            "version": "^2.0.0",
-            "required": false
-        }
-    ]
+  "dependencies": [
+    {
+      "id": "com.example.core",
+      "version": ">=1.0.0",
+      "required": true
+    },
+    {
+      "id": "com.example.optional",
+      "version": "^2.0.0",
+      "required": false
+    }
+  ]
 }
 ```
 

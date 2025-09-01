@@ -66,11 +66,11 @@ find_package(QtPlugin REQUIRED COMPONENTS Core)
 # Create the plugin
 qtplugin_add_plugin(hello_plugin
     TYPE service
-    SOURCES 
+    SOURCES
         src/hello_plugin.cpp
-    HEADERS 
+    HEADERS
         include/hello_plugin.hpp
-    METADATA 
+    METADATA
         metadata.json
     INCLUDE_DIRECTORIES
         include
@@ -91,21 +91,21 @@ set_target_properties(hello_plugin PROPERTIES
 
 ```json
 {
-    "id": "com.example.hello-plugin",
-    "name": "Hello World Plugin",
-    "version": "1.0.0",
-    "description": "A simple Hello World plugin demonstrating QtPlugin basics",
-    "author": "Your Name",
-    "license": "MIT",
-    "qtplugin_version": "3.0.0",
-    "qt_version": "6.0.0",
-    "tags": ["example", "tutorial", "hello-world"],
-    "capabilities": ["service"],
-    "dependencies": [],
-    "custom_data": {
-        "category": "Examples",
-        "documentation_url": "https://example.com/docs"
-    }
+  "id": "com.example.hello-plugin",
+  "name": "Hello World Plugin",
+  "version": "1.0.0",
+  "description": "A simple Hello World plugin demonstrating QtPlugin basics",
+  "author": "Your Name",
+  "license": "MIT",
+  "qtplugin_version": "3.0.0",
+  "qt_version": "6.0.0",
+  "tags": ["example", "tutorial", "hello-world"],
+  "capabilities": ["service"],
+  "dependencies": [],
+  "custom_data": {
+    "category": "Examples",
+    "documentation_url": "https://example.com/docs"
+  }
 }
 ```
 
@@ -152,7 +152,7 @@ public:
 
     // Command execution
     qtplugin::expected<QJsonObject, qtplugin::PluginError> execute_command(
-        std::string_view command, 
+        std::string_view command,
         const QJsonObject& params = {}
     ) override;
 
@@ -218,20 +218,20 @@ qtplugin::expected<void, qtplugin::PluginError> HelloPlugin::initialize()
 
     try {
         qDebug() << "HelloPlugin: Initializing...";
-        
+
         // Start uptime timer
         m_uptime_timer.start();
-        
+
         // Reset counters
         m_command_count = 0;
-        
+
         // Set state
         m_initialized = true;
         m_state = qtplugin::PluginState::Running;
-        
+
         qDebug() << "HelloPlugin: Initialization completed successfully";
         return {};
-        
+
     } catch (const std::exception& e) {
         m_state = qtplugin::PluginState::Error;
         return qtplugin::make_unexpected(qtplugin::PluginError{
@@ -245,16 +245,16 @@ void HelloPlugin::shutdown() noexcept
 {
     try {
         qDebug() << "HelloPlugin: Shutting down...";
-        
+
         if (m_initialized) {
             // Cleanup resources
             m_command_count = 0;
             m_initialized = false;
         }
-        
+
         m_state = qtplugin::PluginState::Unloaded;
         qDebug() << "HelloPlugin: Shutdown completed";
-        
+
     } catch (...) {
         qWarning() << "HelloPlugin: Error during shutdown (ignored)";
     }
@@ -282,14 +282,14 @@ qtplugin::PluginMetadata HelloPlugin::metadata() const
     meta.license = "MIT";
     meta.tags = {"example", "tutorial", "hello-world"};
     meta.capabilities = capabilities();
-    
+
     // Custom data
     meta.custom_data = QJsonObject{
         {"category", "Examples"},
         {"uptime_ms", m_uptime_timer.isValid() ? m_uptime_timer.elapsed() : 0},
         {"command_count", m_command_count}
     };
-    
+
     return meta;
 }
 
@@ -323,7 +323,7 @@ qtplugin::expected<void, qtplugin::PluginError> HelloPlugin::configure(const QJs
 {
     try {
         qDebug() << "HelloPlugin: Applying configuration...";
-        
+
         // Validate configuration
         if (config.contains("greeting_prefix")) {
             if (!config["greeting_prefix"].isString()) {
@@ -334,13 +334,13 @@ qtplugin::expected<void, qtplugin::PluginError> HelloPlugin::configure(const QJs
             }
             m_greeting_prefix = config["greeting_prefix"].toString();
         }
-        
+
         // Store configuration
         m_configuration = config;
-        
+
         qDebug() << "HelloPlugin: Configuration applied successfully";
         return {};
-        
+
     } catch (const std::exception& e) {
         return qtplugin::make_unexpected(qtplugin::PluginError{
             qtplugin::PluginErrorCode::ConfigurationFailed,
@@ -356,7 +356,7 @@ QJsonObject HelloPlugin::current_configuration() const
 
 // Command Execution
 qtplugin::expected<QJsonObject, qtplugin::PluginError> HelloPlugin::execute_command(
-    std::string_view command, 
+    std::string_view command,
     const QJsonObject& params)
 {
     if (!m_initialized) {
@@ -367,31 +367,31 @@ qtplugin::expected<QJsonObject, qtplugin::PluginError> HelloPlugin::execute_comm
     }
 
     ++m_command_count;
-    
+
     try {
         if (command == "hello") {
             QString name = params.value("name").toString("World");
             return create_hello_response(name);
-            
+
         } else if (command == "status") {
             return create_status_response();
-            
+
         } else if (command == "echo") {
             QJsonObject result;
             result["echo"] = params;
             result["timestamp"] = QDateTime::currentDateTime().toString(Qt::ISODate);
             return result;
-            
+
         } else if (command == "config") {
             return current_configuration();
-            
+
         } else {
             return qtplugin::make_unexpected(qtplugin::PluginError{
                 qtplugin::PluginErrorCode::UnknownCommand,
                 std::string("Unknown command: ") + std::string(command)
             });
         }
-        
+
     } catch (const std::exception& e) {
         return qtplugin::make_unexpected(qtplugin::PluginError{
             qtplugin::PluginErrorCode::CommandExecutionFailed,
@@ -425,7 +425,7 @@ void HelloPlugin::setup_default_configuration()
         {"enable_timestamps", true},
         {"max_name_length", 50}
     };
-    
+
     m_greeting_prefix = m_configuration["greeting_prefix"].toString();
 }
 
@@ -436,7 +436,7 @@ QJsonObject HelloPlugin::create_hello_response(const QString& name) const
     result["timestamp"] = QDateTime::currentDateTime().toString(Qt::ISODate);
     result["plugin_id"] = QString::fromStdString(id());
     result["command_count"] = m_command_count;
-    
+
     return result;
 }
 
@@ -449,7 +449,7 @@ QJsonObject HelloPlugin::create_status_response() const
     result["command_count"] = m_command_count;
     result["plugin_id"] = QString::fromStdString(id());
     result["version"] = QString::fromStdString(version());
-    
+
     return result;
 }
 
@@ -476,6 +476,7 @@ ls -la plugins/
 ```
 
 You should see output like:
+
 ```
 plugins/
 ├── hello_plugin.so          # Linux
@@ -488,6 +489,7 @@ plugins/
 If you encounter build errors:
 
 1. **MOC Issues**:
+
    ```bash
    # Clean and rebuild
    rm -rf build
@@ -496,6 +498,7 @@ If you encounter build errors:
    ```
 
 2. **Missing QtPlugin**:
+
    ```cmake
    # Add to CMakeLists.txt if needed
    find_package(QtPlugin REQUIRED COMPONENTS Core)
@@ -669,6 +672,7 @@ cmake --build .
 ```
 
 Expected output:
+
 ```
 === Testing Hello Plugin ===
 Loading plugin: /path/to/build/plugins/hello_plugin.so
@@ -702,18 +706,22 @@ Supported commands: hello, status, echo, config
 ### Key Concepts Demonstrated
 
 1. **Plugin Interface Implementation**:
+
    - All plugins must inherit from `qtplugin::IPlugin`
    - Use Qt's plugin system with `Q_OBJECT`, `Q_PLUGIN_METADATA`, and `Q_INTERFACES`
 
 2. **Error Handling**:
+
    - Use `expected<T, E>` for operations that can fail
    - Provide meaningful error messages and codes
 
 3. **Lifecycle Management**:
+
    - Proper initialization and shutdown procedures
    - State tracking and validation
 
 4. **Command System**:
+
    - Flexible command execution with JSON parameters
    - Type-safe parameter handling
 

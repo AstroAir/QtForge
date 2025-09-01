@@ -1,10 +1,10 @@
 # CompositePlugin API Reference
 
 !!! info "Module Information"
-    **Header**: `qtplugin/composition/plugin_composition.hpp`  
-    **Namespace**: `qtplugin::composition`  
-    **Since**: QtForge v3.1.0  
-    **Status**: Stable
+**Header**: `qtplugin/composition/plugin_composition.hpp`  
+ **Namespace**: `qtplugin::composition`  
+ **Since**: QtForge v3.1.0  
+ **Status**: Stable
 
 ## Overview
 
@@ -109,12 +109,12 @@ struct CompositionBinding {
     QString target_port;        ///< Target port/input name
     BindingType type;           ///< Type of binding
     QJsonObject transformation; ///< Data transformation rules
-    
+
     CompositionBinding() = default;
     CompositionBinding(const QString& src_plugin, const QString& src_port,
                       const QString& tgt_plugin, const QString& tgt_port,
                       BindingType binding_type = BindingType::DataFlow);
-    
+
     QJsonObject to_json() const;
     static CompositionBinding from_json(const QJsonObject& json);
 };
@@ -133,12 +133,14 @@ PluginComposition(const QString& composition_id, const QString& name = "");
 Creates a new plugin composition definition.
 
 **Parameters:**
+
 - `composition_id` - Unique composition identifier
 - `name` - Human-readable name (defaults to composition_id)
 
 ### Configuration Methods
 
 #### `set_description()`
+
 ```cpp
 PluginComposition& set_description(const QString& desc);
 ```
@@ -146,9 +148,11 @@ PluginComposition& set_description(const QString& desc);
 Sets the composition description.
 
 **Returns:**
+
 - `PluginComposition&` - Reference for method chaining
 
 #### `set_strategy()`
+
 ```cpp
 PluginComposition& set_strategy(CompositionStrategy strategy);
 ```
@@ -156,12 +160,15 @@ PluginComposition& set_strategy(CompositionStrategy strategy);
 Sets the composition strategy.
 
 **Parameters:**
+
 - `strategy` - Composition strategy to use
 
 **Returns:**
+
 - `PluginComposition&` - Reference for method chaining
 
 #### `add_plugin()`
+
 ```cpp
 PluginComposition& add_plugin(const QString& plugin_id, PluginRole role = PluginRole::Secondary);
 ```
@@ -169,13 +176,16 @@ PluginComposition& add_plugin(const QString& plugin_id, PluginRole role = Plugin
 Adds a plugin to the composition.
 
 **Parameters:**
+
 - `plugin_id` - Plugin identifier
 - `role` - Plugin role in the composition
 
 **Returns:**
+
 - `PluginComposition&` - Reference for method chaining
 
 #### `set_primary_plugin()`
+
 ```cpp
 PluginComposition& set_primary_plugin(const QString& plugin_id);
 ```
@@ -183,12 +193,15 @@ PluginComposition& set_primary_plugin(const QString& plugin_id);
 Sets the primary plugin for the composition.
 
 **Parameters:**
+
 - `plugin_id` - Primary plugin identifier
 
 **Returns:**
+
 - `PluginComposition&` - Reference for method chaining
 
 #### `add_binding()`
+
 ```cpp
 PluginComposition& add_binding(const CompositionBinding& binding);
 ```
@@ -196,12 +209,15 @@ PluginComposition& add_binding(const CompositionBinding& binding);
 Adds a binding between plugins.
 
 **Parameters:**
+
 - `binding` - Binding definition
 
 **Returns:**
+
 - `PluginComposition&` - Reference for method chaining
 
 #### `set_configuration()`
+
 ```cpp
 PluginComposition& set_configuration(const QJsonObject& config);
 ```
@@ -209,14 +225,17 @@ PluginComposition& set_configuration(const QJsonObject& config);
 Sets global configuration for the composition.
 
 **Parameters:**
+
 - `config` - Configuration object
 
 **Returns:**
+
 - `PluginComposition&` - Reference for method chaining
 
 ### Query Methods
 
 #### `id()`
+
 ```cpp
 QString id() const;
 ```
@@ -224,6 +243,7 @@ QString id() const;
 Returns the composition identifier.
 
 #### `name()`
+
 ```cpp
 QString name() const;
 ```
@@ -231,6 +251,7 @@ QString name() const;
 Returns the composition name.
 
 #### `strategy()`
+
 ```cpp
 CompositionStrategy strategy() const;
 ```
@@ -238,6 +259,7 @@ CompositionStrategy strategy() const;
 Returns the composition strategy.
 
 #### `plugins()`
+
 ```cpp
 std::unordered_map<QString, PluginRole> plugins() const;
 ```
@@ -245,6 +267,7 @@ std::unordered_map<QString, PluginRole> plugins() const;
 Returns all plugins and their roles.
 
 #### `bindings()`
+
 ```cpp
 std::vector<CompositionBinding> bindings() const;
 ```
@@ -252,6 +275,7 @@ std::vector<CompositionBinding> bindings() const;
 Returns all composition bindings.
 
 #### `primary_plugin_id()`
+
 ```cpp
 QString primary_plugin_id() const;
 ```
@@ -261,6 +285,7 @@ Returns the primary plugin identifier.
 ### Serialization
 
 #### `to_json()`
+
 ```cpp
 QJsonObject to_json() const;
 ```
@@ -268,6 +293,7 @@ QJsonObject to_json() const;
 Serializes the composition to JSON.
 
 #### `from_json()`
+
 ```cpp
 static PluginComposition from_json(const QJsonObject& json);
 ```
@@ -287,12 +313,14 @@ explicit CompositePlugin(const PluginComposition& composition, QObject* parent =
 Creates a composite plugin from a composition definition.
 
 **Parameters:**
+
 - `composition` - Composition definition
 - `parent` - Qt parent object
 
 ### IPlugin Implementation
 
 #### `initialize()`
+
 ```cpp
 qtplugin::expected<void, PluginError> initialize() override;
 ```
@@ -300,15 +328,18 @@ qtplugin::expected<void, PluginError> initialize() override;
 Initializes the composite plugin and all component plugins.
 
 **Returns:**
+
 - `expected<void, PluginError>` - Success or error
 
 **Process:**
+
 1. Loads all component plugins
 2. Initializes component plugins in dependency order
 3. Sets up data bindings between plugins
 4. Calculates combined capabilities
 
 #### `shutdown()`
+
 ```cpp
 void shutdown() noexcept override;
 ```
@@ -316,27 +347,32 @@ void shutdown() noexcept override;
 Shuts down all component plugins and cleans up resources.
 
 #### `execute_command()`
+
 ```cpp
 qtplugin::expected<QJsonObject, PluginError> execute_command(
-    std::string_view command, 
+    std::string_view command,
     const QJsonObject& params = {}) override;
 ```
 
 Executes a command using the configured composition strategy.
 
 **Parameters:**
+
 - `command` - Command to execute
 - `params` - Command parameters
 
 **Returns:**
+
 - `expected<QJsonObject, PluginError>` - Command result or error
 
 **Strategy Behavior:**
+
 - **Aggregation**: Executes command on all plugins that support it
 - **Pipeline**: Passes data through plugins sequentially
 - **Facade**: Routes command to appropriate plugin based on configuration
 
 #### `available_commands()`
+
 ```cpp
 std::vector<std::string> available_commands() const override;
 ```
@@ -344,6 +380,7 @@ std::vector<std::string> available_commands() const override;
 Returns all commands available from component plugins.
 
 #### `metadata()`
+
 ```cpp
 PluginMetadata metadata() const override;
 ```
@@ -353,6 +390,7 @@ Returns combined metadata from all component plugins.
 ### IAdvancedPlugin Implementation
 
 #### `get_service_contracts()`
+
 ```cpp
 std::vector<contracts::ServiceContract> get_service_contracts() const override;
 ```
@@ -360,9 +398,10 @@ std::vector<contracts::ServiceContract> get_service_contracts() const override;
 Returns combined service contracts from all component plugins.
 
 #### `call_service()`
+
 ```cpp
 qtplugin::expected<QJsonObject, PluginError> call_service(
-    const QString& service_name, 
+    const QString& service_name,
     const QString& method_name,
     const QJsonObject& parameters = {},
     std::chrono::milliseconds timeout = std::chrono::milliseconds{30000}) override;
@@ -373,6 +412,7 @@ Calls a service on the appropriate component plugin.
 ### Composition-Specific Methods
 
 #### `get_component_plugin()`
+
 ```cpp
 std::shared_ptr<IPlugin> get_component_plugin(const QString& plugin_id) const;
 ```
@@ -380,6 +420,7 @@ std::shared_ptr<IPlugin> get_component_plugin(const QString& plugin_id) const;
 Gets a specific component plugin by ID.
 
 #### `get_component_plugins()`
+
 ```cpp
 std::unordered_map<QString, std::shared_ptr<IPlugin>> get_component_plugins() const;
 ```
@@ -387,6 +428,7 @@ std::unordered_map<QString, std::shared_ptr<IPlugin>> get_component_plugins() co
 Gets all component plugins.
 
 #### `get_composition()`
+
 ```cpp
 const PluginComposition& get_composition() const;
 ```
@@ -394,6 +436,7 @@ const PluginComposition& get_composition() const;
 Gets the composition definition.
 
 #### `update_binding()`
+
 ```cpp
 qtplugin::expected<void, PluginError> update_binding(const CompositionBinding& binding);
 ```
@@ -401,8 +444,9 @@ qtplugin::expected<void, PluginError> update_binding(const CompositionBinding& b
 Updates or adds a binding at runtime.
 
 #### `remove_binding()`
+
 ```cpp
-qtplugin::expected<void, PluginError> remove_binding(const QString& source_plugin, 
+qtplugin::expected<void, PluginError> remove_binding(const QString& source_plugin,
                                                      const QString& target_plugin);
 ```
 
@@ -412,13 +456,13 @@ Removes a binding between plugins.
 
 Common error codes and their meanings:
 
-| Error Code | Description | Resolution |
-|------------|-------------|------------|
-| `PluginNotFound` | Component plugin not found | Verify plugin ID and ensure plugin is loaded |
-| `InvalidConfiguration` | Invalid composition configuration | Check composition definition and bindings |
-| `BindingFailed` | Failed to establish plugin binding | Verify binding compatibility and plugin states |
-| `CircularDependency` | Circular dependency in composition | Review plugin dependencies and bindings |
-| `IncompatibleInterface` | Plugin interfaces incompatible | Check plugin interface compatibility |
+| Error Code              | Description                        | Resolution                                     |
+| ----------------------- | ---------------------------------- | ---------------------------------------------- |
+| `PluginNotFound`        | Component plugin not found         | Verify plugin ID and ensure plugin is loaded   |
+| `InvalidConfiguration`  | Invalid composition configuration  | Check composition definition and bindings      |
+| `BindingFailed`         | Failed to establish plugin binding | Verify binding compatibility and plugin states |
+| `CircularDependency`    | Circular dependency in composition | Review plugin dependencies and bindings        |
+| `IncompatibleInterface` | Plugin interfaces incompatible     | Check plugin interface compatibility           |
 
 ## Thread Safety
 
@@ -572,7 +616,7 @@ public:
 ## Python Bindings
 
 !!! note "Python Support"
-    This component is available in Python through the `qtforge.composition` module.
+This component is available in Python through the `qtforge.composition` module.
 
 ```python
 import qtforge
@@ -626,4 +670,4 @@ pipeline = qtforge.composition.create_pipeline_composition("data_pipeline", ["re
 
 ---
 
-*Last updated: December 2024 | QtForge v3.1.0*
+_Last updated: December 2024 | QtForge v3.1.0_

@@ -20,25 +20,20 @@ The main application configuration is typically stored in `qtforge.json`:
 
 ```json
 {
-    "application": {
-        "name": "MyApp",
-        "version": "1.0.0",
-        "log_level": "info"
-    },
-    "plugin_system": {
-        "plugin_directories": [
-            "./plugins",
-            "~/.qtforge/plugins"
-        ],
-        "auto_load": true,
-        "dependency_resolution": true
-    },
-    "security": {
-        "enable_signature_verification": true,
-        "trusted_publishers": [
-            "com.example.trusted"
-        ]
-    }
+  "application": {
+    "name": "MyApp",
+    "version": "1.0.0",
+    "log_level": "info"
+  },
+  "plugin_system": {
+    "plugin_directories": ["./plugins", "~/.qtforge/plugins"],
+    "auto_load": true,
+    "dependency_resolution": true
+  },
+  "security": {
+    "enable_signature_verification": true,
+    "trusted_publishers": ["com.example.trusted"]
+  }
 }
 ```
 
@@ -48,17 +43,17 @@ Individual plugins can have their own configuration files:
 
 ```json
 {
-    "plugin_id": "com.example.myplugin",
-    "enabled": true,
-    "settings": {
-        "server_url": "https://api.example.com",
-        "timeout": 30000,
-        "retry_count": 3,
-        "features": {
-            "feature_a": true,
-            "feature_b": false
-        }
+  "plugin_id": "com.example.myplugin",
+  "enabled": true,
+  "settings": {
+    "server_url": "https://api.example.com",
+    "timeout": 30000,
+    "retry_count": 3,
+    "features": {
+      "feature_a": true,
+      "feature_b": false
     }
+  }
 }
 ```
 
@@ -149,22 +144,22 @@ QtForge supports JSON Schema validation for configuration files:
 
 ```json
 {
-    "$schema": "http://json-schema.org/draft-07/schema#",
-    "type": "object",
-    "properties": {
-        "application": {
-            "type": "object",
-            "properties": {
-                "name": {"type": "string"},
-                "version": {"type": "string"},
-                "log_level": {
-                    "type": "string",
-                    "enum": ["trace", "debug", "info", "warn", "error", "fatal"]
-                }
-            },
-            "required": ["name", "version"]
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "application": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "version": { "type": "string" },
+        "log_level": {
+          "type": "string",
+          "enum": ["trace", "debug", "info", "warn", "error", "fatal"]
         }
+      },
+      "required": ["name", "version"]
     }
+  }
 }
 ```
 
@@ -177,7 +172,7 @@ auto validator = std::make_unique<ConfigurationValidator>();
 validator->setSchema(schemaJson);
 
 if (!validator->validate(config->toJson())) {
-    qWarning() << "Configuration validation failed:" 
+    qWarning() << "Configuration validation failed:"
                << validator->lastError();
 }
 ```
@@ -207,18 +202,18 @@ Create configuration templates for common plugin types:
 
 ```json
 {
-    "templates": {
-        "network_plugin": {
-            "timeout": 30000,
-            "retry_count": 3,
-            "ssl_verify": true
-        },
-        "ui_plugin": {
-            "theme": "default",
-            "animations": true,
-            "shortcuts": {}
-        }
+  "templates": {
+    "network_plugin": {
+      "timeout": 30000,
+      "retry_count": 3,
+      "ssl_verify": true
+    },
+    "ui_plugin": {
+      "theme": "default",
+      "animations": true,
+      "shortcuts": {}
     }
+  }
 }
 ```
 
@@ -255,14 +250,14 @@ connect(config, &ConfigurationManager::valueChanged,
 
 ```json
 {
-    "environment": "development",
-    "application": {
-        "log_level": "debug"
-    },
-    "plugin_system": {
-        "auto_load": false,
-        "development_mode": true
-    }
+  "environment": "development",
+  "application": {
+    "log_level": "debug"
+  },
+  "plugin_system": {
+    "auto_load": false,
+    "development_mode": true
+  }
 }
 ```
 
@@ -270,14 +265,14 @@ connect(config, &ConfigurationManager::valueChanged,
 
 ```json
 {
-    "environment": "production",
-    "application": {
-        "log_level": "warn"
-    },
-    "security": {
-        "enable_signature_verification": true,
-        "strict_mode": true
-    }
+  "environment": "production",
+  "application": {
+    "log_level": "warn"
+  },
+  "security": {
+    "enable_signature_verification": true,
+    "strict_mode": true
+  }
 }
 ```
 

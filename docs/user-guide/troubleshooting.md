@@ -14,7 +14,7 @@ Run this diagnostic code to check your QtPlugin installation:
 
 void run_diagnostics() {
     std::cout << "=== QtPlugin Diagnostics ===" << std::endl;
-    
+
     // 1. Check library initialization
     std::cout << "1. Library initialization..." << std::endl;
     qtplugin::LibraryInitializer init;
@@ -24,12 +24,12 @@ void run_diagnostics() {
     }
     std::cout << "✅ SUCCESS: Library initialized" << std::endl;
     std::cout << "   Version: " << qtplugin::version_string() << std::endl;
-    
+
     // 2. Check Qt version
     std::cout << "\n2. Qt version check..." << std::endl;
     std::cout << "   Qt version: " << QT_VERSION_STR << std::endl;
     std::cout << "   Runtime Qt: " << qVersion() << std::endl;
-    
+
     // 3. Check plugin manager
     std::cout << "\n3. Plugin manager creation..." << std::endl;
     auto manager = qtplugin::PluginManager::create();
@@ -38,18 +38,18 @@ void run_diagnostics() {
         return;
     }
     std::cout << "✅ SUCCESS: Plugin manager created" << std::endl;
-    
+
     // 4. Check security manager
     std::cout << "\n4. Security manager check..." << std::endl;
     auto& security = manager->security_manager();
     std::cout << "✅ SUCCESS: Security manager available" << std::endl;
     std::cout << "   Security level: " << static_cast<int>(security.current_level()) << std::endl;
-    
+
     // 5. Check message bus
     std::cout << "\n5. Message bus check..." << std::endl;
     auto& bus = manager->message_bus();
     std::cout << "✅ SUCCESS: Message bus available" << std::endl;
-    
+
     std::cout << "\n=== Diagnostics Complete ===" << std::endl;
 }
 ```
@@ -82,6 +82,7 @@ pkg-config --modversion qtplugin
 **Problem**: CMake cannot find Qt6
 
 **Symptoms**:
+
 ```
 CMake Error: Could not find a package configuration file provided by "Qt6"
 ```
@@ -89,31 +90,26 @@ CMake Error: Could not find a package configuration file provided by "Qt6"
 **Solutions**:
 
 === "Set Qt6_DIR"
-    ```bash
-    # Find Qt installation
-    find /usr -name "Qt6Config.cmake" 2>/dev/null
-    # Windows: dir /s Qt6Config.cmake
-    
+```bash # Find Qt installation
+find /usr -name "Qt6Config.cmake" 2>/dev/null # Windows: dir /s Qt6Config.cmake
+
     # Set Qt6_DIR in CMake
     cmake .. -DQt6_DIR=/path/to/qt6/lib/cmake/Qt6
     ```
 
 === "Environment Variables"
-    ```bash
-    # Linux/macOS
-    export CMAKE_PREFIX_PATH="/path/to/qt6:$CMAKE_PREFIX_PATH"
+```bash # Linux/macOS
+export CMAKE_PREFIX_PATH="/path/to/qt6:$CMAKE_PREFIX_PATH"
     export PATH="/path/to/qt6/bin:$PATH"
-    
+
     # Windows
     set CMAKE_PREFIX_PATH=C:\Qt\6.5.0\msvc2019_64;%CMAKE_PREFIX_PATH%
     set PATH=C:\Qt\6.5.0\msvc2019_64\bin;%PATH%
     ```
 
 === "Qt Online Installer"
-    ```bash
-    # Install Qt using the official installer
-    # Download from: https://www.qt.io/download-qt-installer
-    
+```bash # Install Qt using the official installer # Download from: https://www.qt.io/download-qt-installer
+
     # Or use package managers:
     # Ubuntu: sudo apt install qt6-base-dev
     # macOS: brew install qt6
@@ -125,6 +121,7 @@ CMake Error: Could not find a package configuration file provided by "Qt6"
 **Problem**: C++20 features not available
 
 **Symptoms**:
+
 ```
 error: 'expected' is not a member of 'std'
 error: 'concept' does not name a type
@@ -133,16 +130,18 @@ error: 'concept' does not name a type
 **Solutions**:
 
 1. **Update Compiler**:
+
    - **GCC**: Use version 10 or later
    - **Clang**: Use version 12 or later
    - **MSVC**: Use Visual Studio 2019 16.8 or later
 
 2. **Check Compiler Flags**:
+
    ```cmake
    # Ensure C++20 is enabled
    set(CMAKE_CXX_STANDARD 20)
    set(CMAKE_CXX_STANDARD_REQUIRED ON)
-   
+
    # Compiler-specific flags
    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
        add_compile_options(-fcoroutines)
@@ -158,6 +157,7 @@ error: 'concept' does not name a type
 **Problem**: CMake version too old
 
 **Symptoms**:
+
 ```
 CMake Error: CMake 3.21 or higher is required. You are running version 3.16.3
 ```
@@ -165,10 +165,9 @@ CMake Error: CMake 3.21 or higher is required. You are running version 3.16.3
 **Solutions**:
 
 === "Linux (Ubuntu/Debian)"
-    ```bash
-    # Remove old version
-    sudo apt remove cmake
-    
+```bash # Remove old version
+sudo apt remove cmake
+
     # Add Kitware repository
     wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc | gpg --dearmor - | sudo tee /etc/apt/trusted.gpg.d/kitware.gpg
     sudo apt-add-repository 'deb https://apt.kitware.com/ubuntu/ focal main'
@@ -176,18 +175,16 @@ CMake Error: CMake 3.21 or higher is required. You are running version 3.16.3
     ```
 
 === "macOS"
-    ```bash
-    # Using Homebrew
-    brew install cmake
-    
+```bash # Using Homebrew
+brew install cmake
+
     # Or download from cmake.org
     ```
 
 === "Windows"
-    ```powershell
-    # Using winget
-    winget install Kitware.CMake
-    
+```powershell # Using winget
+winget install Kitware.CMake
+
     # Or download installer from cmake.org
     ```
 
@@ -198,6 +195,7 @@ CMake Error: CMake 3.21 or higher is required. You are running version 3.16.3
 **Problem**: Build fails due to missing libraries
 
 **Symptoms**:
+
 ```
 fatal error: 'QCore' file not found
 undefined reference to 'Qt6::Core'
@@ -206,23 +204,25 @@ undefined reference to 'Qt6::Core'
 **Solutions**:
 
 1. **Install Qt Development Packages**:
+
    ```bash
    # Ubuntu/Debian
    sudo apt install qt6-base-dev qt6-tools-dev
-   
+
    # CentOS/RHEL/Fedora
    sudo dnf install qt6-qtbase-devel qt6-qttools-devel
-   
+
    # Arch Linux
    sudo pacman -S qt6-base qt6-tools
    ```
 
 2. **Check CMake Configuration**:
+
    ```cmake
    # Verify required components
    find_package(Qt6 REQUIRED COMPONENTS Core)
    find_package(QtPlugin REQUIRED COMPONENTS Core Security)
-   
+
    # Link libraries
    target_link_libraries(your_target
        Qt6::Core
@@ -236,6 +236,7 @@ undefined reference to 'Qt6::Core'
 **Problem**: Undefined symbols during linking
 
 **Symptoms**:
+
 ```
 undefined reference to `qtplugin::PluginManager::create()'
 undefined symbol: _ZN8qtplugin13PluginManager6createEv
@@ -244,6 +245,7 @@ undefined symbol: _ZN8qtplugin13PluginManager6createEv
 **Solutions**:
 
 1. **Check Library Linking**:
+
    ```cmake
    # Ensure proper linking order
    target_link_libraries(your_target
@@ -254,19 +256,21 @@ undefined symbol: _ZN8qtplugin13PluginManager6createEv
    ```
 
 2. **Verify Installation**:
+
    ```bash
    # Check if libraries are installed
    find /usr/local -name "libqtplugin*" 2>/dev/null
-   
+
    # Check library symbols
    nm -D /usr/local/lib/libqtplugin-core.a | grep PluginManager
    ```
 
 3. **Static vs Dynamic Linking**:
+
    ```cmake
    # For static linking (default)
    set(BUILD_SHARED_LIBS OFF)
-   
+
    # For dynamic linking
    set(BUILD_SHARED_LIBS ON)
    ```
@@ -278,6 +282,7 @@ undefined symbol: _ZN8qtplugin13PluginManager6createEv
 **Problem**: Plugins fail to load at runtime
 
 **Symptoms**:
+
 ```
 Failed to load plugin: Library loading failed
 Plugin validation failed
@@ -287,11 +292,12 @@ Symbol not found: plugin_create_instance
 **Debugging Steps**:
 
 1. **Enable Debug Logging**:
+
    ```cpp
    // Enable detailed logging
    qtplugin::set_log_level(qtplugin::LogLevel::Debug);
    qtplugin::enable_component_logging(true);
-   
+
    // Load plugin with detailed error reporting
    auto result = manager->load_plugin("plugin.so");
    if (!result) {
@@ -305,31 +311,33 @@ Symbol not found: plugin_create_instance
    ```
 
 2. **Check Plugin File**:
+
    ```bash
    # Verify file exists and is readable
    ls -la plugin.so
-   
+
    # Check file type
    file plugin.so
-   
+
    # Check dependencies (Linux)
    ldd plugin.so
-   
+
    # Check dependencies (macOS)
    otool -L plugin.so
-   
+
    # Check exported symbols
    nm -D plugin.so | grep qtplugin
    ```
 
 3. **Verify Plugin Interface**:
+
    ```cpp
    // Check if plugin exports required symbols
    QPluginLoader loader("plugin.so");
    if (!loader.load()) {
        qDebug() << "Qt plugin loading failed:" << loader.errorString();
    }
-   
+
    // Check interface
    auto instance = loader.instance();
    auto plugin = qobject_cast<qtplugin::IPlugin*>(instance);
@@ -343,6 +351,7 @@ Symbol not found: plugin_create_instance
 **Problem**: Plugin loads but crashes or behaves incorrectly
 
 **Symptoms**:
+
 ```
 Segmentation fault
 Pure virtual function called
@@ -352,6 +361,7 @@ Unexpected behavior
 **Solutions**:
 
 1. **Check Compiler Compatibility**:
+
    ```bash
    # Ensure same compiler for app and plugin
    # Check compiler version used for each
@@ -360,11 +370,12 @@ Unexpected behavior
    ```
 
 2. **Verify Qt Versions**:
+
    ```cpp
    // Check Qt version compatibility
    qDebug() << "App Qt version:" << QT_VERSION_STR;
    qDebug() << "Runtime Qt version:" << qVersion();
-   
+
    // In plugin, check Qt version
    qDebug() << "Plugin compiled with Qt:" << QT_VERSION_STR;
    ```
@@ -381,6 +392,7 @@ Unexpected behavior
 **Problem**: Memory leaks or crashes related to memory
 
 **Symptoms**:
+
 ```
 Heap corruption detected
 Double free or corruption
@@ -390,15 +402,17 @@ Memory leak detected
 **Debugging Tools**:
 
 1. **Valgrind (Linux)**:
+
    ```bash
    # Check for memory leaks
    valgrind --leak-check=full --show-leak-kinds=all ./your_app
-   
+
    # Check for memory errors
    valgrind --tool=memcheck ./your_app
    ```
 
 2. **AddressSanitizer**:
+
    ```cmake
    # Enable AddressSanitizer
    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -g")
@@ -417,6 +431,7 @@ Memory leak detected
 **Problem**: Plugins take too long to load
 
 **Symptoms**:
+
 - Application freezes during plugin loading
 - Long startup times
 - Timeout errors
@@ -424,6 +439,7 @@ Memory leak detected
 **Solutions**:
 
 1. **Profile Plugin Loading**:
+
    ```cpp
    #include <QElapsedTimer>
 
@@ -436,6 +452,7 @@ Memory leak detected
    ```
 
 2. **Use Parallel Loading**:
+
    ```cpp
    #include <future>
    #include <vector>
@@ -456,6 +473,7 @@ Memory leak detected
    ```
 
 3. **Optimize Plugin Initialization**:
+
    ```cpp
    // Load plugin without immediate initialization
    auto result = manager->load_plugin(path, LoadOptions{.initialize = false});
@@ -472,6 +490,7 @@ Memory leak detected
 **Solutions**:
 
 1. **Monitor Memory Usage**:
+
    ```cpp
    // Get memory statistics
    auto stats = manager->memory_statistics();
@@ -481,6 +500,7 @@ Memory leak detected
    ```
 
 2. **Implement Plugin Unloading**:
+
    ```cpp
    // Unload unused plugins
    auto unused_plugins = manager->find_unused_plugins(std::chrono::minutes(10));
@@ -490,6 +510,7 @@ Memory leak detected
    ```
 
 3. **Use Memory Limits**:
+
    ```cpp
    // Set memory limits for plugins
    PluginLoadOptions options;
@@ -506,6 +527,7 @@ Memory leak detected
 **Problem**: Plugins fail security validation
 
 **Symptoms**:
+
 ```
 Plugin validation failed: Untrusted publisher
 Security check failed: Invalid signature
@@ -515,6 +537,7 @@ Plugin blocked by security policy
 **Solutions**:
 
 1. **Check Security Configuration**:
+
    ```cpp
    auto& security = manager->security_manager();
    auto config = security.current_configuration();
@@ -525,6 +548,7 @@ Plugin blocked by security policy
    ```
 
 2. **Adjust Security Settings**:
+
    ```cpp
    SecurityConfiguration config;
    config.level = SecurityLevel::Medium;  // Reduce from High
@@ -535,6 +559,7 @@ Plugin blocked by security policy
    ```
 
 3. **Add Trusted Publishers**:
+
    ```cpp
    // Add publisher to trust list
    security.add_trusted_publisher("com.example.publisher");
@@ -550,6 +575,7 @@ Plugin blocked by security policy
 **Solutions**:
 
 1. **Check File Permissions**:
+
    ```bash
    # Verify plugin file permissions
    ls -la plugin.so
@@ -563,6 +589,7 @@ Plugin blocked by security policy
    ```
 
 2. **Configure Plugin Permissions**:
+
    ```cpp
    PluginPermissions permissions;
    permissions.allow_file_system_access = true;
@@ -579,6 +606,7 @@ Plugin blocked by security policy
 **Problem**: Inter-plugin communication not working
 
 **Symptoms**:
+
 - Messages not delivered
 - Subscribers not receiving messages
 - Request-response timeouts
@@ -586,6 +614,7 @@ Plugin blocked by security policy
 **Debugging**:
 
 1. **Enable Message Bus Logging**:
+
    ```cpp
    auto& bus = manager->message_bus();
    bus.enable_debug_logging(true);
@@ -598,6 +627,7 @@ Plugin blocked by security policy
    ```
 
 2. **Verify Message Types**:
+
    ```cpp
    // Ensure message types are properly registered
    bus.register_message_type<MyMessageType>();
@@ -609,6 +639,7 @@ Plugin blocked by security policy
    ```
 
 3. **Test Message Delivery**:
+
    ```cpp
    // Simple test message
    struct TestMessage {
@@ -633,6 +664,7 @@ Plugin blocked by security policy
 **Common Issues and Solutions**:
 
 1. **Plugin Not Recognized**:
+
    ```cpp
    // Ensure proper Qt plugin macros
    Q_OBJECT
@@ -644,14 +676,15 @@ Plugin blocked by security policy
    ```
 
 2. **Metadata File Issues**:
+
    ```json
    {
-       "id": "com.example.myplugin",
-       "name": "My Plugin",
-       "version": "1.0.0",
-       "description": "Plugin description",
-       "author": "Author Name",
-       "qtplugin_version": "3.0.0"
+     "id": "com.example.myplugin",
+     "name": "My Plugin",
+     "version": "1.0.0",
+     "description": "Plugin description",
+     "author": "Author Name",
+     "qtplugin_version": "3.0.0"
    }
    ```
 
@@ -674,6 +707,7 @@ Plugin blocked by security policy
 **Solutions**:
 
 1. **Unit Testing Framework**:
+
    ```cpp
    #include <QtTest>
    #include <qtplugin/testing/plugin_test_framework.hpp>
@@ -699,6 +733,7 @@ Plugin blocked by security policy
    ```
 
 2. **Mock Plugin Manager**:
+
    ```cpp
    #include <qtplugin/testing/mock_plugin_manager.hpp>
 

@@ -1,10 +1,10 @@
 # Advanced Plugin Development Guide
 
 !!! info "Guide Information"
-    **Difficulty**: Advanced  
-    **Prerequisites**: Basic plugin development, C++ knowledge, Qt framework familiarity  
-    **Estimated Time**: 2-3 hours  
-    **QtForge Version**: v3.0+
+**Difficulty**: Advanced  
+ **Prerequisites**: Basic plugin development, C++ knowledge, Qt framework familiarity  
+ **Estimated Time**: 2-3 hours  
+ **QtForge Version**: v3.0+
 
 ## Overview
 
@@ -56,18 +56,18 @@ public:
             }
         };
     }
-    
+
     qtplugin::expected<QJsonObject, PluginError> call_service(
         const QString& service_name,
         const QString& method_name,
         const QJsonObject& parameters = {},
         std::chrono::milliseconds timeout = std::chrono::milliseconds{30000}) override {
-        
+
         if (service_name != "data_processing") {
-            return make_error<QJsonObject>(PluginErrorCode::ServiceNotFound, 
+            return make_error<QJsonObject>(PluginErrorCode::ServiceNotFound,
                                          "Service not supported");
         }
-        
+
         if (method_name == "process_batch") {
             return process_batch_data(parameters);
         } else if (method_name == "process_stream") {
@@ -75,8 +75,8 @@ public:
         } else if (method_name == "get_statistics") {
             return get_processing_statistics();
         }
-        
-        return make_error<QJsonObject>(PluginErrorCode::MethodNotFound, 
+
+        return make_error<QJsonObject>(PluginErrorCode::MethodNotFound,
                                      "Method not found");
     }
 
@@ -85,7 +85,7 @@ private:
         // Advanced batch processing implementation
         auto batch_size = params["batch_size"].toInt(1000);
         auto input_data = params["data"].toArray();
-        
+
         QJsonArray processed_results;
         for (int i = 0; i < input_data.size(); i += batch_size) {
             auto batch = input_data.mid(i, batch_size);
@@ -95,7 +95,7 @@ private:
             }
             processed_results.append(batch_result.value());
         }
-        
+
         return QJsonObject{
             {"status", "completed"},
             {"processed_count", processed_results.size()},
@@ -112,53 +112,53 @@ Implement transaction support for atomic operations:
 ```cpp
 #include <qtplugin/transactions/plugin_transaction_manager.hpp>
 
-class TransactionalPlugin : public IAdvancedPlugin, 
+class TransactionalPlugin : public IAdvancedPlugin,
                            public qtplugin::transactions::ITransactionParticipant {
 private:
     std::unordered_map<QString, QJsonObject> m_transaction_states;
     std::unordered_map<QString, QJsonObject> m_rollback_data;
-    
+
 public:
     bool supports_transactions() const override { return true; }
-    
+
     qtplugin::transactions::IsolationLevel supported_isolation_level() const override {
         return qtplugin::transactions::IsolationLevel::ReadCommitted;
     }
-    
+
     qtplugin::expected<void, PluginError> prepare(const QString& transaction_id) override {
         // Phase 1: Prepare for commit
         if (m_transaction_states.find(transaction_id) == m_transaction_states.end()) {
             return make_error<void>(PluginErrorCode::NotFound, "Transaction not found");
         }
-        
+
         // Validate transaction can be committed
         auto& state = m_transaction_states[transaction_id];
         if (!validate_transaction_state(state)) {
-            return make_error<void>(PluginErrorCode::InvalidState, 
+            return make_error<void>(PluginErrorCode::InvalidState,
                                   "Transaction cannot be committed");
         }
-        
+
         // Prepare resources for commit
         return prepare_resources_for_commit(transaction_id);
     }
-    
+
     qtplugin::expected<void, PluginError> commit(const QString& transaction_id) override {
         // Phase 2: Commit changes
         auto it = m_transaction_states.find(transaction_id);
         if (it == m_transaction_states.end()) {
             return make_error<void>(PluginErrorCode::NotFound, "Transaction not found");
         }
-        
+
         // Apply changes permanently
         auto result = apply_transaction_changes(it->second);
-        
+
         // Cleanup transaction state
         m_transaction_states.erase(it);
         m_rollback_data.erase(transaction_id);
-        
+
         return result;
     }
-    
+
     qtplugin::expected<void, PluginError> abort(const QString& transaction_id) override {
         // Rollback changes
         auto rollback_it = m_rollback_data.find(transaction_id);
@@ -166,42 +166,42 @@ public:
             restore_from_rollback_data(rollback_it->second);
             m_rollback_data.erase(rollback_it);
         }
-        
+
         m_transaction_states.erase(transaction_id);
         return make_success();
     }
-    
+
     // Transactional command execution
     qtplugin::expected<QJsonObject, PluginError> execute_command(
-        std::string_view command, 
+        std::string_view command,
         const QJsonObject& params = {}) override {
-        
+
         auto transaction_id = params["transaction_id"].toString();
         if (!transaction_id.isEmpty()) {
             return execute_transactional_command(command, params, transaction_id);
         }
-        
+
         return execute_regular_command(command, params);
     }
 
 private:
     qtplugin::expected<QJsonObject, PluginError> execute_transactional_command(
-        std::string_view command, 
+        std::string_view command,
         const QJsonObject& params,
         const QString& transaction_id) {
-        
+
         // Store rollback data before making changes
         if (m_rollback_data.find(transaction_id) == m_rollback_data.end()) {
             m_rollback_data[transaction_id] = capture_current_state();
         }
-        
+
         // Execute command within transaction context
         auto result = execute_regular_command(command, params);
         if (result) {
             // Update transaction state
             m_transaction_states[transaction_id] = result.value();
         }
-        
+
         return result;
     }
 };
@@ -219,22 +219,22 @@ public:
         const QString& step_id,
         const QJsonObject& input_data,
         const QJsonObject& step_config) {
-        
+
         // Validate input data
         auto validation_result = validate_workflow_input(input_data, step_config);
         if (!validation_result) {
             return validation_result;
         }
-        
+
         // Execute step with progress reporting
         return execute_step_with_progress(step_id, input_data, step_config);
     }
-    
+
     // Progress reporting for long-running operations
     void report_progress(const QString& step_id, double progress, const QString& message) {
         emit step_progress_updated(step_id, progress, message);
     }
-    
+
     // Data binding support
     QJsonObject get_output_schema() const {
         return QJsonObject{
@@ -247,7 +247,7 @@ public:
             {"required", QJsonArray{"processed_data"}}
         };
     }
-    
+
     QJsonObject get_input_schema() const {
         return QJsonObject{
             {"type", "object"},
@@ -269,12 +269,12 @@ private:
         const QString& step_id,
         const QJsonObject& input_data,
         const QJsonObject& config) {
-        
+
         auto input_array = input_data["input_data"].toArray();
         auto total_items = input_array.size();
-        
+
         QJsonArray processed_results;
-        
+
         for (int i = 0; i < total_items; ++i) {
             // Process individual item
             auto item_result = process_single_item(input_array[i].toObject(), config);
@@ -282,15 +282,15 @@ private:
                 emit step_failed(step_id, item_result.error().message());
                 return item_result;
             }
-            
+
             processed_results.append(item_result.value());
-            
+
             // Report progress
             double progress = static_cast<double>(i + 1) / total_items;
-            report_progress(step_id, progress, 
+            report_progress(step_id, progress,
                           QString("Processed %1/%2 items").arg(i + 1).arg(total_items));
         }
-        
+
         auto result = QJsonObject{
             {"processed_data", processed_results},
             {"statistics", generate_statistics(processed_results)},
@@ -299,7 +299,7 @@ private:
                 {"items_processed", total_items}
             }}
         };
-        
+
         emit step_completed(step_id, result);
         return result;
     }
@@ -643,18 +643,20 @@ After completing this guide, you might want to:
 ## Related Resources
 
 ### Documentation
+
 - [Plugin Interface API](../api/core/plugin-interface.md) - Core plugin interface
 - [Transaction Manager API](../api/transactions/plugin-transaction-manager.md) - Transaction support
 - [Orchestration API](../api/orchestration/plugin-orchestrator.md) - Workflow integration
 
 ### Examples
+
 - [Advanced Plugin Examples](../examples/advanced-plugins/) - Complete examples
 - [Transaction Examples](../examples/transaction-examples/) - Transaction patterns
 - [Composition Examples](../examples/composition-examples/) - Composition patterns
 
 ---
 
-*Last updated: December 2024 | QtForge v3.0.0*
+_Last updated: December 2024 | QtForge v3.0.0_
 
 ## Performance Monitoring Integration
 
@@ -671,48 +673,48 @@ private:
     std::chrono::system_clock::time_point m_start_time;
     std::atomic<int> m_operation_count{0};
     std::atomic<int> m_error_count{0};
-    
+
 public:
     qtplugin::expected<void, PluginError> initialize() override {
         m_start_time = std::chrono::system_clock::now();
         m_metrics_collector = PluginMetricsCollector::create();
-        
+
         // Start metrics collection
         m_metrics_collector->start_monitoring(std::chrono::milliseconds(5000));
-        
+
         return IAdvancedPlugin::initialize();
     }
-    
+
     qtplugin::expected<QJsonObject, PluginError> execute_command(
-        std::string_view command, 
+        std::string_view command,
         const QJsonObject& params = {}) override {
-        
+
         auto start_time = std::chrono::high_resolution_clock::now();
         m_operation_count++;
-        
+
         // Execute command
         auto result = perform_command_operation(command, params);
-        
+
         auto end_time = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
             end_time - start_time);
-        
+
         // Update metrics
         if (!result) {
             m_error_count++;
         }
-        
+
         // Log performance metrics
         log_operation_metrics(std::string(command), duration, result.has_value());
-        
+
         return result;
     }
-    
+
     // Custom metrics for plugin-specific operations
     QJsonObject get_custom_metrics() const {
         auto uptime = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now() - m_start_time);
-        
+
         return QJsonObject{
             {"uptime_ms", static_cast<qint64>(uptime.count())},
             {"total_operations", m_operation_count.load()},
@@ -723,7 +725,7 @@ public:
     }
 
 private:
-    void log_operation_metrics(const std::string& operation, 
+    void log_operation_metrics(const std::string& operation,
                               std::chrono::milliseconds duration,
                               bool success) {
         // Log to metrics collector or custom logging system
@@ -731,11 +733,11 @@ private:
                  << "Duration:" << duration.count() << "ms"
                  << "Success:" << success;
     }
-    
+
     double calculate_success_rate() const {
         int total = m_operation_count.load();
         if (total == 0) return 1.0;
-        
+
         int errors = m_error_count.load();
         return static_cast<double>(total - errors) / total;
     }

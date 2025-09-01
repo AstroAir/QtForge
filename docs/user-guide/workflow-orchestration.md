@@ -1,10 +1,10 @@
 # Workflow Orchestration Guide
 
 !!! info "Guide Information"
-    **Difficulty**: Intermediate  
-    **Prerequisites**: Basic plugin development, understanding of workflows  
-    **Estimated Time**: 1-2 hours  
-    **QtForge Version**: v3.1.0+
+**Difficulty**: Intermediate  
+ **Prerequisites**: Basic plugin development, understanding of workflows  
+ **Estimated Time**: 1-2 hours  
+ **QtForge Version**: v3.1.0+
 
 ## Overview
 
@@ -39,30 +39,30 @@ Before starting this guide, you should have:
 class WorkflowManager {
 private:
     std::shared_ptr<PluginOrchestrator> m_orchestrator;
-    
+
 public:
     bool initialize() {
         m_orchestrator = PluginOrchestrator::create();
-        
+
         // Connect to orchestration signals
         connect(m_orchestrator.get(), &PluginOrchestrator::workflow_started,
                 this, &WorkflowManager::on_workflow_started);
-        
+
         connect(m_orchestrator.get(), &PluginOrchestrator::workflow_completed,
                 this, &WorkflowManager::on_workflow_completed);
-        
+
         connect(m_orchestrator.get(), &PluginOrchestrator::workflow_failed,
                 this, &WorkflowManager::on_workflow_failed);
-        
+
         return true;
     }
-    
+
     bool create_data_processing_workflow() {
         // Create workflow definition
         Workflow workflow("data_processing", "Data Processing Pipeline");
         workflow.set_description("Complete data processing pipeline with validation")
                 .set_execution_mode(ExecutionMode::Sequential);
-        
+
         // Step 1: Load data
         WorkflowStep load_step("load_data", "csv_loader", "load_file");
         load_step.parameters = QJsonObject{
@@ -71,7 +71,7 @@ public:
             {"has_header", true}
         };
         load_step.timeout = std::chrono::milliseconds(30000);
-        
+
         // Step 2: Validate data
         WorkflowStep validate_step("validate_data", "data_validator", "validate_schema");
         validate_step.dependencies = {"load_data"};
@@ -79,7 +79,7 @@ public:
             {"schema_file", "schemas/data_schema.json"},
             {"strict_mode", true}
         };
-        
+
         // Step 3: Clean data
         WorkflowStep clean_step("clean_data", "data_cleaner", "clean_dataset");
         clean_step.dependencies = {"validate_data"};
@@ -87,7 +87,7 @@ public:
             {"remove_duplicates", true},
             {"handle_missing", "interpolate"}
         };
-        
+
         // Step 4: Transform data
         WorkflowStep transform_step("transform_data", "data_transformer", "apply_transformations");
         transform_step.dependencies = {"clean_data"};
@@ -97,7 +97,7 @@ public:
                 QJsonObject{{"type", "encode"}, {"column", "category"}}
             }}
         };
-        
+
         // Step 5: Save results
         WorkflowStep save_step("save_results", "csv_writer", "save_file");
         save_step.dependencies = {"transform_data"};
@@ -105,14 +105,14 @@ public:
             {"output_path", "output/processed_data.csv"},
             {"include_metadata", true}
         };
-        
+
         // Add steps to workflow
         workflow.add_step(load_step)
                 .add_step(validate_step)
                 .add_step(clean_step)
                 .add_step(transform_step)
                 .add_step(save_step);
-        
+
         // Register workflow
         auto result = m_orchestrator->register_workflow(workflow);
         if (result) {
@@ -123,16 +123,16 @@ public:
             return false;
         }
     }
-    
+
     QString execute_workflow(const QString& workflow_id, const QJsonObject& initial_data = {}) {
         auto execution_result = m_orchestrator->execute_workflow(workflow_id, initial_data);
         if (execution_result) {
             QString execution_id = execution_result.value();
             qDebug() << "Workflow execution started:" << execution_id;
-            
+
             // Start monitoring execution
             monitor_workflow_execution(execution_id);
-            
+
             return execution_id;
         } else {
             qWarning() << "Failed to execute workflow:" << execution_result.error().message();
@@ -145,23 +145,23 @@ private:
         // Create timer for monitoring
         auto timer = new QTimer(this);
         timer->setInterval(2000); // Check every 2 seconds
-        
+
         connect(timer, &QTimer::timeout, [this, execution_id, timer]() {
             auto status_result = m_orchestrator->get_execution_status(execution_id);
             if (status_result) {
                 auto status = status_result.value();
-                
+
                 qDebug() << "Workflow" << execution_id << "status:";
                 qDebug() << "  Progress:" << status["progress"].toDouble() * 100 << "%";
                 qDebug() << "  Current step:" << status["current_step"].toString();
                 qDebug() << "  Status:" << status["status"].toString();
-                
+
                 // Check if workflow is complete
                 QString workflow_status = status["status"].toString();
                 if (workflow_status == "completed" || workflow_status == "failed" || workflow_status == "cancelled") {
                     timer->stop();
                     timer->deleteLater();
-                    
+
                     if (workflow_status == "completed") {
                         handle_workflow_completion(execution_id);
                     } else {
@@ -170,19 +170,19 @@ private:
                 }
             }
         });
-        
+
         timer->start();
     }
-    
+
     void handle_workflow_completion(const QString& execution_id) {
         qDebug() << "Workflow completed successfully:" << execution_id;
-        
+
         // Get final results
         auto results = m_orchestrator->get_step_results(execution_id);
         if (results) {
             auto step_results = results.value();
             qDebug() << "Workflow produced" << step_results.size() << "step results";
-            
+
             for (const auto& step_result : step_results) {
                 qDebug() << "Step" << step_result.step_id << ":"
                          << "Status:" << static_cast<int>(step_result.status)
@@ -190,10 +190,10 @@ private:
             }
         }
     }
-    
+
     void handle_workflow_failure(const QString& execution_id, const QString& status) {
         qWarning() << "Workflow failed:" << execution_id << "Status:" << status;
-        
+
         // Get error details
         auto results = m_orchestrator->get_step_results(execution_id);
         if (results) {
@@ -211,12 +211,12 @@ private slots:
     void on_workflow_started(const QString& execution_id, const QString& workflow_id) {
         qDebug() << "Workflow started:" << workflow_id << "Execution ID:" << execution_id;
     }
-    
+
     void on_workflow_completed(const QString& execution_id, const QJsonObject& results) {
         qDebug() << "Workflow completed:" << execution_id;
         qDebug() << "Results:" << results;
     }
-    
+
     void on_workflow_failed(const QString& execution_id, const QString& error) {
         qWarning() << "Workflow failed:" << execution_id << "Error:" << error;
     }
@@ -230,7 +230,7 @@ bool create_parallel_processing_workflow() {
     Workflow workflow("parallel_media", "Parallel Media Processing");
     workflow.set_description("Process different media types in parallel")
             .set_execution_mode(ExecutionMode::Parallel);
-    
+
     // Independent parallel steps
     WorkflowStep process_images("process_images", "image_processor", "batch_process");
     process_images.parameters = QJsonObject{
@@ -239,7 +239,7 @@ bool create_parallel_processing_workflow() {
         {"format", "jpg"},
         {"quality", 85}
     };
-    
+
     WorkflowStep process_videos("process_videos", "video_processor", "batch_process");
     process_videos.parameters = QJsonObject{
         {"input_directory", "media/videos/"},
@@ -247,7 +247,7 @@ bool create_parallel_processing_workflow() {
         {"codec", "h264"},
         {"bitrate", "2M"}
     };
-    
+
     WorkflowStep process_audio("process_audio", "audio_processor", "batch_process");
     process_audio.parameters = QJsonObject{
         {"input_directory", "media/audio/"},
@@ -255,7 +255,7 @@ bool create_parallel_processing_workflow() {
         {"format", "mp3"},
         {"bitrate", "320k"}
     };
-    
+
     // Aggregation step that depends on all parallel steps
     WorkflowStep create_manifest("create_manifest", "manifest_creator", "create_media_manifest");
     create_manifest.dependencies = {"process_images", "process_videos", "process_audio"};
@@ -263,7 +263,7 @@ bool create_parallel_processing_workflow() {
         {"output_file", "processed/manifest.json"},
         {"include_metadata", true}
     };
-    
+
     // Final packaging step
     WorkflowStep package_results("package_results", "archiver", "create_archive");
     package_results.dependencies = {"create_manifest"};
@@ -272,13 +272,13 @@ bool create_parallel_processing_workflow() {
         {"archive_name", "media_package.zip"},
         {"compression_level", 6}
     };
-    
+
     workflow.add_step(process_images)
             .add_step(process_videos)
             .add_step(process_audio)
             .add_step(create_manifest)
             .add_step(package_results);
-    
+
     return m_orchestrator->register_workflow(workflow).has_value();
 }
 ```
@@ -290,11 +290,11 @@ bool create_conditional_workflow() {
     Workflow workflow("data_analysis", "Conditional Data Analysis");
     workflow.set_description("Analyze data with conditional processing paths")
             .set_execution_mode(ExecutionMode::Conditional);
-    
+
     // Initial data inspection
     WorkflowStep inspect_data("inspect_data", "data_inspector", "analyze_structure");
     inspect_data.parameters = QJsonObject{{"input_file", "data/dataset.csv"}};
-    
+
     // Conditional steps based on data characteristics
     WorkflowStep small_dataset_processing("process_small", "simple_processor", "quick_analysis");
     small_dataset_processing.dependencies = {"inspect_data"};
@@ -302,7 +302,7 @@ bool create_conditional_workflow() {
         {"condition", "row_count < 10000"},
         {"algorithm", "basic_stats"}
     };
-    
+
     WorkflowStep large_dataset_processing("process_large", "advanced_processor", "distributed_analysis");
     large_dataset_processing.dependencies = {"inspect_data"};
     large_dataset_processing.parameters = QJsonObject{
@@ -310,14 +310,14 @@ bool create_conditional_workflow() {
         {"algorithm", "advanced_ml"},
         {"use_clustering", true}
     };
-    
+
     // Conditional visualization
     WorkflowStep simple_visualization("viz_simple", "chart_generator", "create_basic_charts");
     simple_visualization.dependencies = {"process_small"};
-    
+
     WorkflowStep advanced_visualization("viz_advanced", "dashboard_generator", "create_dashboard");
     advanced_visualization.dependencies = {"process_large"};
-    
+
     // Final report generation (depends on either processing path)
     WorkflowStep generate_report("generate_report", "report_generator", "create_analysis_report");
     generate_report.dependencies = {"viz_simple", "viz_advanced"}; // OR dependency
@@ -325,14 +325,14 @@ bool create_conditional_workflow() {
         {"template", "analysis_template.html"},
         {"include_raw_data", false}
     };
-    
+
     workflow.add_step(inspect_data)
             .add_step(small_dataset_processing)
             .add_step(large_dataset_processing)
             .add_step(simple_visualization)
             .add_step(advanced_visualization)
             .add_step(generate_report);
-    
+
     return m_orchestrator->register_workflow(workflow).has_value();
 }
 ```
@@ -542,4 +542,4 @@ After completing this guide, you might want to:
 
 ---
 
-*Last updated: December 2024 | QtForge v3.1.0*
+_Last updated: December 2024 | QtForge v3.1.0_

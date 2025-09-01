@@ -94,19 +94,19 @@ Register custom migration logic for complex version changes:
 ```cpp
 // Register custom migration
 auto migration_result = version_manager->register_migration(
-    "my.plugin", 
+    "my.plugin",
     Version(1, 0, 0),  // from version
     Version(2, 0, 0),  // to version
     [](const MigrationContext& context) -> qtplugin::expected<void, PluginError> {
         // Custom migration logic
         std::cout << "Migrating from " << context.from_version.to_string()
                   << " to " << context.to_version.to_string() << std::endl;
-        
+
         // Perform migration tasks
         // - Convert configuration files
         // - Update data structures
         // - Migrate user preferences
-        
+
         return {}; // Success
     });
 ```
@@ -229,7 +229,7 @@ int cleaned_versions = version_manager->cleanup_unused_versions("my.plugin", 3);
 
 // Get storage usage information
 auto usage = version_manager->get_storage_usage("my.plugin");
-std::cout << "Storage usage: " << usage["total_size"].toVariant().toLongLong() 
+std::cout << "Storage usage: " << usage["total_size"].toVariant().toLongLong()
           << " bytes" << std::endl;
 ```
 
@@ -260,7 +260,7 @@ auto stats = version_manager->get_version_statistics();
 std::cout << "Total plugins: " << stats["total_plugins"].toInt() << std::endl;
 std::cout << "Total versions: " << stats["total_versions"].toInt() << std::endl;
 std::cout << "Active versions: " << stats["active_versions"].toInt() << std::endl;
-std::cout << "Storage usage: " << stats["storage_size_bytes"].toVariant().toLongLong() 
+std::cout << "Storage usage: " << stats["storage_size_bytes"].toVariant().toLongLong()
           << " bytes" << std::endl;
 ```
 
