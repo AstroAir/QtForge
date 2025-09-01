@@ -24,7 +24,7 @@ if(QTFORGE_BUILD_COMPREHENSIVE_TESTS)
     )
 
     # Install test executables
-    install(TARGETS 
+    install(TARGETS
         test_plugin_orchestration
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}/tests/orchestration
     )

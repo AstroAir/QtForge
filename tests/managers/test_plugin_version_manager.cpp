@@ -5,16 +5,16 @@
  * @author QtPlugin Development Team
  */
 
-#include <QtTest/QtTest>
-#include <QTemporaryDir>
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <memory>
+#include <QTemporaryDir>
+#include <QtTest/QtTest>
 #include <filesystem>
 #include <fstream>
+#include <memory>
 
-#include "../include/qtplugin/managers/plugin_version_manager.hpp"
 #include "../include/qtplugin/core/plugin_registry.hpp"
+#include "../include/qtplugin/managers/plugin_version_manager.hpp"
 
 using namespace qtplugin;
 
@@ -73,8 +73,10 @@ private slots:
     void testGetVersionStatistics();
 
 private:
-    void createTestPlugin(const QString& plugin_id, const Version& version, const QString& content = "test plugin");
-    std::filesystem::path createTestPluginFile(const QString& plugin_id, const Version& version);
+    void createTestPlugin(const QString& plugin_id, const Version& version,
+                          const QString& content = "test plugin");
+    std::filesystem::path createTestPluginFile(const QString& plugin_id,
+                                               const Version& version);
 
     std::unique_ptr<IPluginVersionManager> version_manager_;
     std::shared_ptr<IPluginRegistry> registry_;
@@ -94,7 +96,7 @@ void TestPluginVersionManager::initTestCase() {
     // Create mock dependencies
     registry_ = std::make_shared<PluginRegistry>();
     config_manager_ = nullptr;  // Use nullptr for testing
-    logger_ = nullptr;  // Use nullptr for testing
+    logger_ = nullptr;          // Use nullptr for testing
 }
 
 void TestPluginVersionManager::cleanupTestCase() {
@@ -107,7 +109,8 @@ void TestPluginVersionManager::cleanupTestCase() {
 
 void TestPluginVersionManager::init() {
     // Create fresh version manager for each test
-    version_manager_ = create_plugin_version_manager(registry_, config_manager_, logger_);
+    version_manager_ =
+        create_plugin_version_manager(registry_, config_manager_, logger_);
 
     // Set test storage directory
     auto result = version_manager_->set_storage_directory(test_storage_dir_);
@@ -134,11 +137,13 @@ void TestPluginVersionManager::testInstallVersion() {
     auto plugin_file = createTestPluginFile(plugin_id, version);
 
     // Install version
-    auto result = version_manager_->install_version(plugin_id.toStdString(), version, plugin_file);
+    auto result = version_manager_->install_version(plugin_id.toStdString(),
+                                                    version, plugin_file);
     QVERIFY(result.has_value());
 
     // Verify installation
-    auto versions = version_manager_->get_installed_versions(plugin_id.toStdString());
+    auto versions =
+        version_manager_->get_installed_versions(plugin_id.toStdString());
     QCOMPARE(versions.size(), 1);
     QCOMPARE(versions[0].plugin_id, plugin_id.toStdString());
     QCOMPARE(versions[0].version, version);
@@ -153,16 +158,19 @@ void TestPluginVersionManager::testInstallVersionAlreadyExists() {
     auto plugin_file = createTestPluginFile(plugin_id, version);
 
     // Install version first time
-    auto result1 = version_manager_->install_version(plugin_id.toStdString(), version, plugin_file);
+    auto result1 = version_manager_->install_version(plugin_id.toStdString(),
+                                                     version, plugin_file);
     QVERIFY(result1.has_value());
 
     // Try to install same version again without replace flag
-    auto result2 = version_manager_->install_version(plugin_id.toStdString(), version, plugin_file, false);
+    auto result2 = version_manager_->install_version(
+        plugin_id.toStdString(), version, plugin_file, false);
     QVERIFY(!result2.has_value());
     QCOMPARE(result2.error().code, VersionErrorCode::VersionAlreadyExists);
 
     // Install with replace flag should succeed
-    auto result3 = version_manager_->install_version(plugin_id.toStdString(), version, plugin_file, true);
+    auto result3 = version_manager_->install_version(
+        plugin_id.toStdString(), version, plugin_file, true);
     QVERIFY(result3.has_value());
 }
 
@@ -172,7 +180,8 @@ void TestPluginVersionManager::testInstallVersionInvalidFile() {
 
     // Try to install from non-existent file
     std::filesystem::path invalid_file = test_storage_dir_ / "nonexistent.dll";
-    auto result = version_manager_->install_version(plugin_id.toStdString(), version, invalid_file);
+    auto result = version_manager_->install_version(plugin_id.toStdString(),
+                                                    version, invalid_file);
 
     QVERIFY(!result.has_value());
     QCOMPARE(result.error().code, VersionErrorCode::StorageError);
@@ -184,15 +193,18 @@ void TestPluginVersionManager::testUninstallVersion() {
 
     // Install version first
     auto plugin_file = createTestPluginFile(plugin_id, version);
-    auto install_result = version_manager_->install_version(plugin_id.toStdString(), version, plugin_file);
+    auto install_result = version_manager_->install_version(
+        plugin_id.toStdString(), version, plugin_file);
     QVERIFY(install_result.has_value());
 
     // Uninstall version
-    auto uninstall_result = version_manager_->uninstall_version(plugin_id.toStdString(), version);
+    auto uninstall_result =
+        version_manager_->uninstall_version(plugin_id.toStdString(), version);
     QVERIFY(uninstall_result.has_value());
 
     // Verify uninstallation
-    auto versions = version_manager_->get_installed_versions(plugin_id.toStdString());
+    auto versions =
+        version_manager_->get_installed_versions(plugin_id.toStdString());
     QCOMPARE(versions.size(), 0);
 }
 
@@ -201,7 +213,8 @@ void TestPluginVersionManager::testUninstallVersionNotFound() {
     const Version version(1, 0, 0);
 
     // Try to uninstall non-existent version
-    auto result = version_manager_->uninstall_version(plugin_id.toStdString(), version);
+    auto result =
+        version_manager_->uninstall_version(plugin_id.toStdString(), version);
 
     QVERIFY(!result.has_value());
     QCOMPARE(result.error().code, VersionErrorCode::VersionNotFound);
@@ -213,19 +226,24 @@ void TestPluginVersionManager::testUninstallActiveVersion() {
 
     // Install and activate version
     auto plugin_file = createTestPluginFile(plugin_id, version);
-    auto install_result = version_manager_->install_version(plugin_id.toStdString(), version, plugin_file);
+    auto install_result = version_manager_->install_version(
+        plugin_id.toStdString(), version, plugin_file);
     QVERIFY(install_result.has_value());
 
-    auto activate_result = version_manager_->set_active_version(plugin_id.toStdString(), version, false);
+    auto activate_result = version_manager_->set_active_version(
+        plugin_id.toStdString(), version, false);
     QVERIFY(activate_result.has_value());
 
     // Try to uninstall active version without force
-    auto uninstall_result = version_manager_->uninstall_version(plugin_id.toStdString(), version, false);
+    auto uninstall_result = version_manager_->uninstall_version(
+        plugin_id.toStdString(), version, false);
     QVERIFY(!uninstall_result.has_value());
-    QCOMPARE(uninstall_result.error().code, VersionErrorCode::ActiveVersionConflict);
+    QCOMPARE(uninstall_result.error().code,
+             VersionErrorCode::ActiveVersionConflict);
 
     // Uninstall with force should succeed
-    auto force_uninstall_result = version_manager_->uninstall_version(plugin_id.toStdString(), version, true);
+    auto force_uninstall_result = version_manager_->uninstall_version(
+        plugin_id.toStdString(), version, true);
     QVERIFY(force_uninstall_result.has_value());
 }
 
@@ -233,20 +251,19 @@ void TestPluginVersionManager::testGetInstalledVersions() {
     const QString plugin_id = "test.plugin";
 
     // Install multiple versions
-    std::vector<Version> versions = {
-        Version(1, 0, 0),
-        Version(1, 1, 0),
-        Version(2, 0, 0)
-    };
+    std::vector<Version> versions = {Version(1, 0, 0), Version(1, 1, 0),
+                                     Version(2, 0, 0)};
 
     for (const auto& version : versions) {
         auto plugin_file = createTestPluginFile(plugin_id, version);
-        auto result = version_manager_->install_version(plugin_id.toStdString(), version, plugin_file);
+        auto result = version_manager_->install_version(plugin_id.toStdString(),
+                                                        version, plugin_file);
         QVERIFY(result.has_value());
     }
 
     // Get installed versions
-    auto installed_versions = version_manager_->get_installed_versions(plugin_id.toStdString());
+    auto installed_versions =
+        version_manager_->get_installed_versions(plugin_id.toStdString());
     QCOMPARE(installed_versions.size(), versions.size());
 
     // Verify versions are sorted
@@ -264,27 +281,33 @@ void TestPluginVersionManager::testSetActiveVersion() {
     auto plugin_file1 = createTestPluginFile(plugin_id, version1);
     auto plugin_file2 = createTestPluginFile(plugin_id, version2);
 
-    auto install_result1 = version_manager_->install_version(plugin_id.toStdString(), version1, plugin_file1);
-    auto install_result2 = version_manager_->install_version(plugin_id.toStdString(), version2, plugin_file2);
+    auto install_result1 = version_manager_->install_version(
+        plugin_id.toStdString(), version1, plugin_file1);
+    auto install_result2 = version_manager_->install_version(
+        plugin_id.toStdString(), version2, plugin_file2);
     QVERIFY(install_result1.has_value());
     QVERIFY(install_result2.has_value());
 
     // Set first version as active
-    auto activate_result1 = version_manager_->set_active_version(plugin_id.toStdString(), version1, false);
+    auto activate_result1 = version_manager_->set_active_version(
+        plugin_id.toStdString(), version1, false);
     QVERIFY(activate_result1.has_value());
 
     // Verify active version
-    auto active_version = version_manager_->get_active_version(plugin_id.toStdString());
+    auto active_version =
+        version_manager_->get_active_version(plugin_id.toStdString());
     QVERIFY(active_version.has_value());
     QCOMPARE(active_version->version, version1);
     QVERIFY(active_version->is_active);
 
     // Switch to second version
-    auto activate_result2 = version_manager_->set_active_version(plugin_id.toStdString(), version2, false);
+    auto activate_result2 = version_manager_->set_active_version(
+        plugin_id.toStdString(), version2, false);
     QVERIFY(activate_result2.has_value());
 
     // Verify new active version
-    active_version = version_manager_->get_active_version(plugin_id.toStdString());
+    active_version =
+        version_manager_->get_active_version(plugin_id.toStdString());
     QVERIFY(active_version.has_value());
     QCOMPARE(active_version->version, version2);
     QVERIFY(active_version->is_active);
@@ -292,15 +315,16 @@ void TestPluginVersionManager::testSetActiveVersion() {
 
 std::filesystem::path TestPluginVersionManager::createTestPluginFile(
     const QString& plugin_id, const Version& version) {
-
     auto plugin_dir = test_storage_dir_ / "test_plugins";
     std::filesystem::create_directories(plugin_dir);
 
-    auto plugin_file = plugin_dir / (plugin_id.toStdString() + "_" + version.to_string() + ".dll");
+    auto plugin_file = plugin_dir / (plugin_id.toStdString() + "_" +
+                                     version.to_string() + ".dll");
 
     // Create a dummy plugin file
     std::ofstream file(plugin_file);
-    file << "Test plugin content for " << plugin_id.toStdString() << " v" << version.to_string();
+    file << "Test plugin content for " << plugin_id.toStdString() << " v"
+         << version.to_string();
     file.close();
 
     return plugin_file;
@@ -310,20 +334,24 @@ void TestPluginVersionManager::testGetActiveVersion() {
     const QString plugin_id = "test.plugin";
 
     // No active version initially
-    auto active_version = version_manager_->get_active_version(plugin_id.toStdString());
+    auto active_version =
+        version_manager_->get_active_version(plugin_id.toStdString());
     QVERIFY(!active_version.has_value());
 
     // Install and activate a version
     const Version version(1, 0, 0);
     auto plugin_file = createTestPluginFile(plugin_id, version);
-    auto install_result = version_manager_->install_version(plugin_id.toStdString(), version, plugin_file);
+    auto install_result = version_manager_->install_version(
+        plugin_id.toStdString(), version, plugin_file);
     QVERIFY(install_result.has_value());
 
-    auto activate_result = version_manager_->set_active_version(plugin_id.toStdString(), version, false);
+    auto activate_result = version_manager_->set_active_version(
+        plugin_id.toStdString(), version, false);
     QVERIFY(activate_result.has_value());
 
     // Verify active version
-    active_version = version_manager_->get_active_version(plugin_id.toStdString());
+    active_version =
+        version_manager_->get_active_version(plugin_id.toStdString());
     QVERIFY(active_version.has_value());
     QCOMPARE(active_version->plugin_id, plugin_id.toStdString());
     QCOMPARE(active_version->version, version);
@@ -335,15 +363,13 @@ void TestPluginVersionManager::testVersionHistory() {
     const QString plugin_id = "test.plugin";
 
     // Install multiple versions over time
-    std::vector<Version> versions = {
-        Version(1, 0, 0),
-        Version(1, 0, 1),
-        Version(1, 1, 0)
-    };
+    std::vector<Version> versions = {Version(1, 0, 0), Version(1, 0, 1),
+                                     Version(1, 1, 0)};
 
     for (const auto& version : versions) {
         auto plugin_file = createTestPluginFile(plugin_id, version);
-        auto result = version_manager_->install_version(plugin_id.toStdString(), version, plugin_file);
+        auto result = version_manager_->install_version(plugin_id.toStdString(),
+                                                        version, plugin_file);
         QVERIFY(result.has_value());
 
         // Small delay to ensure different timestamps
@@ -351,11 +377,13 @@ void TestPluginVersionManager::testVersionHistory() {
     }
 
     // Get version history
-    auto history = version_manager_->get_version_history(plugin_id.toStdString());
+    auto history =
+        version_manager_->get_version_history(plugin_id.toStdString());
     QCOMPARE(history.size(), versions.size());
 
     // Verify chronological order (sorted by install time, newest first)
-    // Since we installed in order [1.0.0, 1.0.1, 1.1.0], history should be [1.1.0, 1.0.1, 1.0.0]
+    // Since we installed in order [1.0.0, 1.0.1, 1.1.0], history should be
+    // [1.1.0, 1.0.1, 1.0.0]
     std::vector<Version> expected_order = {
         Version(1, 1, 0),  // Last installed (newest)
         Version(1, 0, 1),  // Second installed
@@ -375,32 +403,42 @@ void TestPluginVersionManager::testRegisterMigration() {
 
     // Register a custom migration
     bool migration_called = false;
-    auto migrator = [&migration_called](const MigrationContext&) -> qtplugin::expected<void, PluginError> {
+    auto migrator =
+        [&migration_called](
+            const MigrationContext&) -> qtplugin::expected<void, PluginError> {
         migration_called = true;
         return {};
     };
 
-    auto result = version_manager_->register_migration(plugin_id.toStdString(), from_version, to_version, migrator);
+    auto result = version_manager_->register_migration(
+        plugin_id.toStdString(), from_version, to_version, migrator);
     QVERIFY(result.has_value());
 
     // Verify migration is available
-    bool available = version_manager_->is_migration_available(plugin_id.toStdString(), from_version, to_version);
+    bool available = version_manager_->is_migration_available(
+        plugin_id.toStdString(), from_version, to_version);
     QVERIFY(available);
 }
 
 void TestPluginVersionManager::testIsMigrationAvailable() {
     const QString plugin_id = "test.plugin";
     const Version version1(1, 0, 0);
-    const Version version2(1, 1, 0);  // Minor version change - should have automatic migration
-    const Version version3(2, 0, 0);  // Major version change - might not have automatic migration
+    const Version version2(
+        1, 1, 0);  // Minor version change - should have automatic migration
+    const Version version3(
+        2, 0, 0);  // Major version change - might not have automatic migration
 
     // Test automatic migration availability for compatible versions
-    bool available_minor = version_manager_->is_migration_available(plugin_id.toStdString(), version1, version2);
-    QVERIFY(available_minor);  // Minor version changes should be automatically migratable
+    bool available_minor = version_manager_->is_migration_available(
+        plugin_id.toStdString(), version1, version2);
+    QVERIFY(available_minor);  // Minor version changes should be automatically
+                               // migratable
 
     // Test migration availability for major version changes
-    bool available_major = version_manager_->is_migration_available(plugin_id.toStdString(), version1, version3);
-    // This depends on the compatibility level determination - major changes might not be automatically migratable
+    bool available_major = version_manager_->is_migration_available(
+        plugin_id.toStdString(), version1, version3);
+    // This depends on the compatibility level determination - major changes
+    // might not be automatically migratable
     Q_UNUSED(available_major);
 }
 
@@ -415,7 +453,8 @@ void TestPluginVersionManager::testMigratePluginData() {
 
     // Test migration
     auto result = version_manager_->migrate_plugin_data(context);
-    QVERIFY(result.has_value());  // Automatic migration should succeed for minor version changes
+    QVERIFY(result.has_value());  // Automatic migration should succeed for
+                                  // minor version changes
 }
 
 void TestPluginVersionManager::testAutomaticMigration() {
@@ -439,16 +478,20 @@ void TestPluginVersionManager::testCallbackMigration() {
 
     // Register custom migration callback
     bool callback_executed = false;
-    auto migrator = [&callback_executed](const MigrationContext& context) -> qtplugin::expected<void, PluginError> {
+    auto migrator = [&callback_executed](const MigrationContext& context)
+        -> qtplugin::expected<void, PluginError> {
         callback_executed = true;
         // Verify context parameters
-        if (context.from_version != Version(1, 0, 0) || context.to_version != Version(2, 0, 0)) {
-            return qtplugin::unexpected(PluginError{PluginErrorCode::InvalidArgument, "Invalid migration context"});
+        if (context.from_version != Version(1, 0, 0) ||
+            context.to_version != Version(2, 0, 0)) {
+            return qtplugin::unexpected(PluginError{
+                PluginErrorCode::InvalidArgument, "Invalid migration context"});
         }
         return {};
     };
 
-    auto register_result = version_manager_->register_migration(plugin_id.toStdString(), from_version, to_version, migrator);
+    auto register_result = version_manager_->register_migration(
+        plugin_id.toStdString(), from_version, to_version, migrator);
     QVERIFY(register_result.has_value());
 
     // Create migration context
@@ -468,11 +511,13 @@ void TestPluginVersionManager::testCreateBackup() {
 
     // Install version first
     auto plugin_file = createTestPluginFile(plugin_id, version);
-    auto install_result = version_manager_->install_version(plugin_id.toStdString(), version, plugin_file);
+    auto install_result = version_manager_->install_version(
+        plugin_id.toStdString(), version, plugin_file);
     QVERIFY(install_result.has_value());
 
     // Create backup
-    auto backup_result = version_manager_->create_backup(plugin_id.toStdString(), version);
+    auto backup_result =
+        version_manager_->create_backup(plugin_id.toStdString(), version);
     QVERIFY(backup_result.has_value());
 
     const auto& backup_info = backup_result.value();
@@ -490,30 +535,37 @@ void TestPluginVersionManager::testRollbackToVersion() {
     auto plugin_file1 = createTestPluginFile(plugin_id, version1);
     auto plugin_file2 = createTestPluginFile(plugin_id, version2);
 
-    auto install_result1 = version_manager_->install_version(plugin_id.toStdString(), version1, plugin_file1);
+    auto install_result1 = version_manager_->install_version(
+        plugin_id.toStdString(), version1, plugin_file1);
     QVERIFY(install_result1.has_value());
 
     // Create backup of version1 so we can rollback to it later
-    auto backup_result1 = version_manager_->create_backup(plugin_id.toStdString(), version1);
+    auto backup_result1 =
+        version_manager_->create_backup(plugin_id.toStdString(), version1);
     QVERIFY(backup_result1.has_value());
 
-    auto install_result2 = version_manager_->install_version(plugin_id.toStdString(), version2, plugin_file2);
+    auto install_result2 = version_manager_->install_version(
+        plugin_id.toStdString(), version2, plugin_file2);
     QVERIFY(install_result2.has_value());
 
     // Set version2 as active
-    auto activate_result = version_manager_->set_active_version(plugin_id.toStdString(), version2, false);
+    auto activate_result = version_manager_->set_active_version(
+        plugin_id.toStdString(), version2, false);
     QVERIFY(activate_result.has_value());
 
     // Create backup of version2 as well
-    auto backup_result2 = version_manager_->create_backup(plugin_id.toStdString(), version2);
+    auto backup_result2 =
+        version_manager_->create_backup(plugin_id.toStdString(), version2);
     QVERIFY(backup_result2.has_value());
 
     // Rollback to version1
-    auto rollback_result = version_manager_->rollback_to_version(plugin_id.toStdString(), version1, true);
+    auto rollback_result = version_manager_->rollback_to_version(
+        plugin_id.toStdString(), version1, true);
     QVERIFY(rollback_result.has_value());
 
     // Verify rollback
-    auto active_version = version_manager_->get_active_version(plugin_id.toStdString());
+    auto active_version =
+        version_manager_->get_active_version(plugin_id.toStdString());
     QVERIFY(active_version.has_value());
     QCOMPARE(active_version->version, version1);
 }
@@ -524,14 +576,17 @@ void TestPluginVersionManager::testGetRollbackPoints() {
 
     // Install version and create backup
     auto plugin_file = createTestPluginFile(plugin_id, version);
-    auto install_result = version_manager_->install_version(plugin_id.toStdString(), version, plugin_file);
+    auto install_result = version_manager_->install_version(
+        plugin_id.toStdString(), version, plugin_file);
     QVERIFY(install_result.has_value());
 
-    auto backup_result = version_manager_->create_backup(plugin_id.toStdString(), version);
+    auto backup_result =
+        version_manager_->create_backup(plugin_id.toStdString(), version);
     QVERIFY(backup_result.has_value());
 
     // Get rollback points
-    auto rollback_points = version_manager_->get_rollback_points(plugin_id.toStdString());
+    auto rollback_points =
+        version_manager_->get_rollback_points(plugin_id.toStdString());
     QVERIFY(rollback_points.size() >= 1);
 
     const auto& rollback_point = rollback_points[0];
@@ -545,22 +600,26 @@ void TestPluginVersionManager::testCleanupOldBackups() {
 
     // Install version and create multiple backups
     auto plugin_file = createTestPluginFile(plugin_id, version);
-    auto install_result = version_manager_->install_version(plugin_id.toStdString(), version, plugin_file);
+    auto install_result = version_manager_->install_version(
+        plugin_id.toStdString(), version, plugin_file);
     QVERIFY(install_result.has_value());
 
     // Create several backups
     for (int i = 0; i < 10; ++i) {
-        auto backup_result = version_manager_->create_backup(plugin_id.toStdString(), version);
+        auto backup_result =
+            version_manager_->create_backup(plugin_id.toStdString(), version);
         QVERIFY(backup_result.has_value());
         QTest::qWait(10);  // Small delay to ensure different timestamps
     }
 
     // Clean up old backups, keeping only 3
-    int cleaned_count = version_manager_->cleanup_old_backups(plugin_id.toStdString(), 3);
+    int cleaned_count =
+        version_manager_->cleanup_old_backups(plugin_id.toStdString(), 3);
     QVERIFY(cleaned_count >= 0);
 
     // Verify remaining backups
-    auto rollback_points = version_manager_->get_rollback_points(plugin_id.toStdString());
+    auto rollback_points =
+        version_manager_->get_rollback_points(plugin_id.toStdString());
     QVERIFY(rollback_points.size() <= 3);
 }
 
@@ -570,9 +629,11 @@ void TestPluginVersionManager::testCheckCompatibility() {
     const Version host_version(1, 0, 0);
 
     // Test compatibility check
-    auto compatibility = version_manager_->check_compatibility(plugin_id.toStdString(), plugin_version, host_version);
+    auto compatibility = version_manager_->check_compatibility(
+        plugin_id.toStdString(), plugin_version, host_version);
 
-    // The result depends on the implementation, but should be a valid compatibility level
+    // The result depends on the implementation, but should be a valid
+    // compatibility level
     QVERIFY(compatibility == CompatibilityLevel::Breaking ||
             compatibility == CompatibilityLevel::Major ||
             compatibility == CompatibilityLevel::Minor ||
@@ -585,21 +646,19 @@ void TestPluginVersionManager::testGetCompatibleVersions() {
     const Version host_version(1, 0, 0);
 
     // Install multiple versions
-    std::vector<Version> versions = {
-        Version(1, 0, 0),
-        Version(1, 0, 1),
-        Version(1, 1, 0),
-        Version(2, 0, 0)
-    };
+    std::vector<Version> versions = {Version(1, 0, 0), Version(1, 0, 1),
+                                     Version(1, 1, 0), Version(2, 0, 0)};
 
     for (const auto& version : versions) {
         auto plugin_file = createTestPluginFile(plugin_id, version);
-        auto result = version_manager_->install_version(plugin_id.toStdString(), version, plugin_file);
+        auto result = version_manager_->install_version(plugin_id.toStdString(),
+                                                        version, plugin_file);
         QVERIFY(result.has_value());
     }
 
     // Get compatible versions
-    auto compatible_versions = version_manager_->get_compatible_versions(plugin_id.toStdString(), host_version);
+    auto compatible_versions = version_manager_->get_compatible_versions(
+        plugin_id.toStdString(), host_version);
 
     // Should return some compatible versions
     QVERIFY(compatible_versions.size() > 0);
@@ -620,7 +679,8 @@ void TestPluginVersionManager::testRegisterCompatibilityRules() {
     rules["compatibility_rules"] = rules_array;
 
     // Register compatibility rules
-    auto result = version_manager_->register_compatibility_rules(plugin_id.toStdString(), rules);
+    auto result = version_manager_->register_compatibility_rules(
+        plugin_id.toStdString(), rules);
     QVERIFY(result.has_value());
 }
 
@@ -645,7 +705,8 @@ void TestPluginVersionManager::testGetStorageUsage() {
 
     // Install a version to create some storage usage
     auto plugin_file = createTestPluginFile(plugin_id, version);
-    auto install_result = version_manager_->install_version(plugin_id.toStdString(), version, plugin_file);
+    auto install_result = version_manager_->install_version(
+        plugin_id.toStdString(), version, plugin_file);
     QVERIFY(install_result.has_value());
 
     // Get storage usage for specific plugin
@@ -660,29 +721,29 @@ void TestPluginVersionManager::testCleanupUnusedVersions() {
     const QString plugin_id = "test.plugin";
 
     // Install multiple versions
-    std::vector<Version> versions = {
-        Version(1, 0, 0),
-        Version(1, 1, 0),
-        Version(1, 2, 0),
-        Version(2, 0, 0)
-    };
+    std::vector<Version> versions = {Version(1, 0, 0), Version(1, 1, 0),
+                                     Version(1, 2, 0), Version(2, 0, 0)};
 
     for (const auto& version : versions) {
         auto plugin_file = createTestPluginFile(plugin_id, version);
-        auto result = version_manager_->install_version(plugin_id.toStdString(), version, plugin_file);
+        auto result = version_manager_->install_version(plugin_id.toStdString(),
+                                                        version, plugin_file);
         QVERIFY(result.has_value());
     }
 
     // Set one version as active
-    auto activate_result = version_manager_->set_active_version(plugin_id.toStdString(), versions.back(), false);
+    auto activate_result = version_manager_->set_active_version(
+        plugin_id.toStdString(), versions.back(), false);
     QVERIFY(activate_result.has_value());
 
     // Clean up unused versions, keeping only 2
-    int cleaned_count = version_manager_->cleanup_unused_versions(plugin_id.toStdString(), 2);
+    int cleaned_count =
+        version_manager_->cleanup_unused_versions(plugin_id.toStdString(), 2);
     QVERIFY(cleaned_count >= 0);
 
     // Verify remaining versions
-    auto remaining_versions = version_manager_->get_installed_versions(plugin_id.toStdString());
+    auto remaining_versions =
+        version_manager_->get_installed_versions(plugin_id.toStdString());
     QVERIFY(remaining_versions.size() <= 3);  // 2 unused + 1 active
 }
 
@@ -697,7 +758,8 @@ void TestPluginVersionManager::testVersionEventCallbacks() {
     VersionInstallStatus received_status;
 
     auto subscription_id = version_manager_->register_version_event_callback(
-        [&](const std::string& id, const Version& ver, VersionInstallStatus status) {
+        [&](const std::string& id, const Version& ver,
+            VersionInstallStatus status) {
             callback_called = true;
             received_plugin_id = id;
             received_version = ver;
@@ -708,7 +770,8 @@ void TestPluginVersionManager::testVersionEventCallbacks() {
 
     // Install version to trigger callback
     auto plugin_file = createTestPluginFile(plugin_id, version);
-    auto install_result = version_manager_->install_version(plugin_id.toStdString(), version, plugin_file);
+    auto install_result = version_manager_->install_version(
+        plugin_id.toStdString(), version, plugin_file);
     QVERIFY(install_result.has_value());
 
     // Verify callback was called
@@ -725,19 +788,18 @@ void TestPluginVersionManager::testGetVersionStatistics() {
     const QString plugin_id = "test.plugin";
 
     // Install some versions
-    std::vector<Version> versions = {
-        Version(1, 0, 0),
-        Version(1, 1, 0)
-    };
+    std::vector<Version> versions = {Version(1, 0, 0), Version(1, 1, 0)};
 
     for (const auto& version : versions) {
         auto plugin_file = createTestPluginFile(plugin_id, version);
-        auto result = version_manager_->install_version(plugin_id.toStdString(), version, plugin_file);
+        auto result = version_manager_->install_version(plugin_id.toStdString(),
+                                                        version, plugin_file);
         QVERIFY(result.has_value());
     }
 
     // Set one version as active
-    auto activate_result = version_manager_->set_active_version(plugin_id.toStdString(), versions[0], false);
+    auto activate_result = version_manager_->set_active_version(
+        plugin_id.toStdString(), versions[0], false);
     QVERIFY(activate_result.has_value());
 
     // Get statistics

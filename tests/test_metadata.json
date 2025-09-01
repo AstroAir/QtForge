@@ -1,13 +1,13 @@
 {
-    "name": "Test Plugin",
-    "description": "A test plugin for PluginManager testing",
-    "version": "1.0.0",
-    "author": "QtPlugin Test Suite",
-    "license": "MIT",
-    "homepage": "https://example.com/testplugin",
-    "category": "Test",
-    "capabilities": ["Service"],
-    "dependencies": [],
-    "qt_version": "6.2.0",
-    "plugin_version": "3.0.0"
+  "name": "Test Plugin",
+  "description": "A test plugin for PluginManager testing",
+  "version": "1.0.0",
+  "author": "QtPlugin Test Suite",
+  "license": "MIT",
+  "homepage": "https://example.com/testplugin",
+  "category": "Test",
+  "capabilities": ["Service"],
+  "dependencies": [],
+  "qt_version": "6.2.0",
+  "plugin_version": "3.0.0"
 }

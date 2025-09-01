@@ -11,8 +11,7 @@
 
 using namespace qtplugin;
 
-class TestVersionSimple : public QObject
-{
+class TestVersionSimple : public QObject {
     // Q_OBJECT  // Temporarily disabled for xmake demo
 
 public:  // Changed from private slots for xmake demo
@@ -32,22 +31,21 @@ public:  // Changed from private slots for xmake demo
 
 private:
     // Helper methods
-    void verifyVersionComponents(const Version& version, int major, int minor, int patch);
-    void verifyVersionString(const Version& version, const std::string& expected);
+    void verifyVersionComponents(const Version& version, int major, int minor,
+                                 int patch);
+    void verifyVersionString(const Version& version,
+                             const std::string& expected);
 };
 
-void TestVersionSimple::initTestCase()
-{
+void TestVersionSimple::initTestCase() {
     qDebug() << "Starting version utility tests";
 }
 
-void TestVersionSimple::cleanupTestCase()
-{
+void TestVersionSimple::cleanupTestCase() {
     qDebug() << "Version utility tests completed";
 }
 
-void TestVersionSimple::testVersionCreation()
-{
+void TestVersionSimple::testVersionCreation() {
     // Test default constructor
     Version default_version;
     QCOMPARE(default_version.major(), 0);
@@ -77,8 +75,7 @@ void TestVersionSimple::testVersionCreation()
     QCOMPARE(build_version.build(), "20231201.1");
 }
 
-void TestVersionSimple::testVersionFromString()
-{
+void TestVersionSimple::testVersionFromString() {
     // Test valid version strings
     auto result1 = Version::parse("1.2.3");
     QVERIFY(result1.has_value());
@@ -101,8 +98,7 @@ void TestVersionSimple::testVersionFromString()
     QCOMPARE(result4.value().build(), "build.123");
 }
 
-void TestVersionSimple::testInvalidVersionString()
-{
+void TestVersionSimple::testInvalidVersionString() {
     // Test invalid version strings
     auto result1 = Version::parse("");
     QVERIFY(!result1.has_value());
@@ -120,8 +116,7 @@ void TestVersionSimple::testInvalidVersionString()
     QVERIFY(!result5.has_value());
 }
 
-void TestVersionSimple::testVersionEquality()
-{
+void TestVersionSimple::testVersionEquality() {
     Version v1(1, 2, 3);
     Version v2(1, 2, 3);
     Version v3(1, 2, 4);
@@ -132,8 +127,7 @@ void TestVersionSimple::testVersionEquality()
     QVERIFY(!(v1 != v2));
 }
 
-void TestVersionSimple::testVersionOrdering()
-{
+void TestVersionSimple::testVersionOrdering() {
     Version v1(1, 0, 0);
     Version v2(1, 1, 0);
     Version v3(2, 0, 0);
@@ -146,20 +140,18 @@ void TestVersionSimple::testVersionOrdering()
     QVERIFY(v3 > v1);
 }
 
-void TestVersionSimple::testVersionRange()
-{
+void TestVersionSimple::testVersionRange() {
     VersionRange range(Version(1, 0, 0), Version(2, 0, 0));
 
     QVERIFY(range.satisfies(Version(1, 0, 0)));
     QVERIFY(range.satisfies(Version(1, 5, 0)));
     QVERIFY(range.satisfies(Version(1, 9, 9)));
-    QVERIFY(range.satisfies(Version(2, 0, 0))); // Range is inclusive
+    QVERIFY(range.satisfies(Version(2, 0, 0)));  // Range is inclusive
     QVERIFY(!range.satisfies(Version(0, 9, 9)));
     QVERIFY(!range.satisfies(Version(2, 0, 1)));
 }
 
-void TestVersionSimple::testPreReleaseVersions()
-{
+void TestVersionSimple::testPreReleaseVersions() {
     auto alpha = Version::parse("1.0.0-alpha");
     auto beta = Version::parse("1.0.0-beta");
     auto rc = Version::parse("1.0.0-rc.1");
@@ -180,8 +172,7 @@ void TestVersionSimple::testPreReleaseVersions()
     QVERIFY(beta.value() < rc.value());
 }
 
-void TestVersionSimple::testBuildMetadata()
-{
+void TestVersionSimple::testBuildMetadata() {
     auto v1 = Version::parse("1.0.0+build.1");
     auto v2 = Version::parse("1.0.0+build.2");
     auto v3 = Version::parse("1.0.0");
@@ -195,8 +186,7 @@ void TestVersionSimple::testBuildMetadata()
     QVERIFY(v1.value() == v3.value());
 }
 
-void TestVersionSimple::testVersionValidation()
-{
+void TestVersionSimple::testVersionValidation() {
     // Test valid versions
     QVERIFY(Version::parse("1.0.0").has_value());
     QVERIFY(Version::parse("10.20.30").has_value());
@@ -213,15 +203,16 @@ void TestVersionSimple::testVersionValidation()
 }
 
 // Helper methods implementation
-void TestVersionSimple::verifyVersionComponents(const Version& version, int major, int minor, int patch)
-{
+void TestVersionSimple::verifyVersionComponents(const Version& version,
+                                                int major, int minor,
+                                                int patch) {
     QCOMPARE(version.major(), major);
     QCOMPARE(version.minor(), minor);
     QCOMPARE(version.patch(), patch);
 }
 
-void TestVersionSimple::verifyVersionString(const Version& version, const std::string& expected)
-{
+void TestVersionSimple::verifyVersionString(const Version& version,
+                                            const std::string& expected) {
     QCOMPARE(version.to_string(), expected);
 }
 

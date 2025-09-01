@@ -4,61 +4,62 @@
  * @version 3.0.0
  */
 
-#include <QtTest/QtTest>
-#include <QElapsedTimer>
 #include <QDebug>
+#include <QElapsedTimer>
 #include <QTemporaryDir>
 #include <QThread>
-// #include <QConcurrentRun>  // Commented out due to Qt6::Concurrent not being available
-#include <memory>
-#include <vector>
+#include <QtTest/QtTest>
+// #include <QConcurrentRun>  // Commented out due to Qt6::Concurrent not being
+// available
 #include <chrono>
 #include <fstream>
+#include <memory>
 #include <sstream>
+#include <vector>
 
 #ifdef _WIN32
-#include <windows.h>
 #include <psapi.h>
+#include <windows.h>
 #elif defined(__APPLE__)
 #include <mach/mach.h>
 #endif
 
 // Component headers
-#include "qtplugin/core/plugin_manager.hpp"
-#include "qtplugin/core/plugin_registry.hpp"
-#include "qtplugin/managers/configuration_manager_impl.hpp"
-#include "qtplugin/managers/logging_manager_impl.hpp"
-#include "qtplugin/managers/resource_manager_impl.hpp"
-#include "qtplugin/managers/resource_lifecycle_impl.hpp"
-#include "qtplugin/managers/resource_monitor_impl.hpp"
-#include "qtplugin/security/security_manager.hpp"
-#include "qtplugin/core/plugin_loader.hpp"
 #include "qtplugin/communication/message_bus.hpp"
 #include "qtplugin/core/plugin_dependency_resolver.hpp"
-#include "qtplugin/monitoring/plugin_hot_reload_manager.hpp"
-#include "qtplugin/monitoring/plugin_metrics_collector.hpp"
-#include "qtplugin/security/components/security_validator.hpp"
-#include "qtplugin/security/components/signature_verifier.hpp"
-#include "qtplugin/security/components/permission_manager.hpp"
-#include "qtplugin/security/components/security_policy_engine.hpp"
+#include "qtplugin/core/plugin_loader.hpp"
+#include "qtplugin/core/plugin_manager.hpp"
+#include "qtplugin/core/plugin_registry.hpp"
+#include "qtplugin/managers/components/configuration_merger.hpp"
 #include "qtplugin/managers/components/configuration_storage.hpp"
 #include "qtplugin/managers/components/configuration_validator.hpp"
-#include "qtplugin/managers/components/configuration_merger.hpp"
 #include "qtplugin/managers/components/configuration_watcher.hpp"
-#include "qtplugin/managers/components/resource_pool.hpp"
 #include "qtplugin/managers/components/resource_allocator.hpp"
-// #include "qtplugin/managers/components/resource_monitor.hpp"  // Conflicts with resource_monitor_impl.hpp
+#include "qtplugin/managers/components/resource_pool.hpp"
+#include "qtplugin/managers/configuration_manager_impl.hpp"
+#include "qtplugin/managers/logging_manager_impl.hpp"
+#include "qtplugin/managers/resource_lifecycle_impl.hpp"
+#include "qtplugin/managers/resource_manager_impl.hpp"
+#include "qtplugin/managers/resource_monitor_impl.hpp"
+#include "qtplugin/monitoring/plugin_hot_reload_manager.hpp"
+#include "qtplugin/monitoring/plugin_metrics_collector.hpp"
+#include "qtplugin/security/components/permission_manager.hpp"
+#include "qtplugin/security/components/security_policy_engine.hpp"
+#include "qtplugin/security/components/security_validator.hpp"
+#include "qtplugin/security/components/signature_verifier.hpp"
+#include "qtplugin/security/security_manager.hpp"
+// #include "qtplugin/managers/components/resource_monitor.hpp"  // Conflicts
+// with resource_monitor_impl.hpp
 
 // Manager headers for comparison
 #include "qtplugin/core/plugin_manager.hpp"
-#include "qtplugin/security/security_manager.hpp"
 #include "qtplugin/managers/configuration_manager.hpp"
 #include "qtplugin/managers/resource_manager.hpp"
+#include "qtplugin/security/security_manager.hpp"
 
 using namespace qtplugin;
 
-class ComponentPerformanceTests : public QObject
-{
+class ComponentPerformanceTests : public QObject {
     Q_OBJECT
 
 public:
@@ -97,8 +98,10 @@ private slots:
 
 private:
     // Performance measurement helpers
-    void measureExecutionTime(const QString& testName, std::function<void()> testFunction);
-    void logPerformanceResult(const QString& testName, qint64 elapsedMs, const QString& details = QString());
+    void measureExecutionTime(const QString& testName,
+                              std::function<void()> testFunction);
+    void logPerformanceResult(const QString& testName, qint64 elapsedMs,
+                              const QString& details = QString());
     size_t getCurrentMemoryUsage() const;
     void createTestPlugins(int count);
 
@@ -108,8 +111,7 @@ private:
     std::vector<PluginInfo> m_test_plugins;
 };
 
-void ComponentPerformanceTests::initTestCase()
-{
+void ComponentPerformanceTests::initTestCase() {
     qDebug() << "Starting component performance tests";
     m_temp_dir = std::make_unique<QTemporaryDir>();
     QVERIFY(m_temp_dir->isValid());
@@ -119,23 +121,19 @@ void ComponentPerformanceTests::initTestCase()
     createTestPlugins(100);
 }
 
-void ComponentPerformanceTests::cleanupTestCase()
-{
+void ComponentPerformanceTests::cleanupTestCase() {
     qDebug() << "Component performance tests completed";
 }
 
-void ComponentPerformanceTests::init()
-{
+void ComponentPerformanceTests::init() {
     // Setup for each test
 }
 
-void ComponentPerformanceTests::cleanup()
-{
+void ComponentPerformanceTests::cleanup() {
     // Cleanup after each test
 }
 
-void ComponentPerformanceTests::testComponentInstantiationPerformance()
-{
+void ComponentPerformanceTests::testComponentInstantiationPerformance() {
     measureExecutionTime("Component Instantiation", []() {
         const int iterations = 1000;
         for (int i = 0; i < iterations; ++i) {
@@ -168,8 +166,7 @@ void ComponentPerformanceTests::testComponentInstantiationPerformance()
     });
 }
 
-void ComponentPerformanceTests::testManagerInstantiationPerformance()
-{
+void ComponentPerformanceTests::testManagerInstantiationPerformance() {
     measureExecutionTime("Manager Instantiation", []() {
         const int iterations = 1000;
         for (int i = 0; i < iterations; ++i) {
@@ -186,8 +183,7 @@ void ComponentPerformanceTests::testManagerInstantiationPerformance()
     });
 }
 
-void ComponentPerformanceTests::testPluginRegistryPerformance()
-{
+void ComponentPerformanceTests::testPluginRegistryPerformance() {
     auto registry = std::make_unique<PluginRegistry>();
 
     measureExecutionTime("Plugin Registry Operations", [&registry, this]() {
@@ -197,7 +193,8 @@ void ComponentPerformanceTests::testPluginRegistryPerformance()
             plugin_info_ptr->id = plugin_info.id;
             plugin_info_ptr->state = plugin_info.state;
             plugin_info_ptr->metadata = plugin_info.metadata;
-            auto result = registry->register_plugin(plugin_info.id, std::move(plugin_info_ptr));
+            auto result = registry->register_plugin(plugin_info.id,
+                                                    std::move(plugin_info_ptr));
             Q_UNUSED(result);
         }
 
@@ -213,8 +210,7 @@ void ComponentPerformanceTests::testPluginRegistryPerformance()
     });
 }
 
-void ComponentPerformanceTests::testResourcePoolPerformance()
-{
+void ComponentPerformanceTests::testResourcePoolPerformance() {
     // Simplified test that doesn't require ResourcePool template instantiation
     measureExecutionTime("Resource Pool Performance (Simplified)", []() {
         // Test basic resource allocation patterns without actual ResourcePool
@@ -222,7 +218,8 @@ void ComponentPerformanceTests::testResourcePoolPerformance()
 
         // Simulate resource acquisition
         for (int i = 0; i < 100; ++i) {
-            resources.push_back(std::make_unique<std::string>("test_resource_" + std::to_string(i)));
+            resources.push_back(std::make_unique<std::string>(
+                "test_resource_" + std::to_string(i)));
         }
 
         // Simulate resource usage
@@ -234,8 +231,7 @@ void ComponentPerformanceTests::testResourcePoolPerformance()
     });
 }
 
-void ComponentPerformanceTests::testComponentMemoryFootprint()
-{
+void ComponentPerformanceTests::testComponentMemoryFootprint() {
     size_t initial_memory = getCurrentMemoryUsage();
 
     // Create all component types
@@ -259,21 +255,25 @@ void ComponentPerformanceTests::testComponentMemoryFootprint()
 
     qDebug() << "Component memory footprint:";
     qDebug() << "  Total components memory:" << component_memory << "bytes";
-    qDebug() << "  Average per component:" << (component_memory / 14) << "bytes";
+    qDebug() << "  Average per component:" << (component_memory / 14)
+             << "bytes";
 
     // Each component should use less than 5MB
     QVERIFY2(component_memory < 14 * 5 * 1024 * 1024,
-             QString("Components use too much memory: %1 bytes").arg(component_memory).toLocal8Bit());
+             QString("Components use too much memory: %1 bytes")
+                 .arg(component_memory)
+                 .toLocal8Bit());
 
-    logPerformanceResult("Component Memory Footprint", component_memory, "bytes total");
+    logPerformanceResult("Component Memory Footprint", component_memory,
+                         "bytes total");
 }
 
-void ComponentPerformanceTests::testConcurrentComponentOperations()
-{
+void ComponentPerformanceTests::testConcurrentComponentOperations() {
     auto registry = std::make_unique<PluginRegistry>();
     auto allocator = std::make_unique<ResourceAllocator>();
 
-    measureExecutionTime("Sequential Component Operations", [&registry, &allocator]() {
+    measureExecutionTime("Sequential Component Operations", [&registry,
+                                                             &allocator]() {
         // Simplified sequential version since QtConcurrent is not available
         const int thread_count = 4;
         const int operations_per_thread = 250;
@@ -286,25 +286,24 @@ void ComponentPerformanceTests::testConcurrentComponentOperations()
             plugin_info_ptr->id = plugin_id;
             plugin_info_ptr->state = PluginState::Unloaded;
 
-            auto reg_result = registry->register_plugin(plugin_id, std::move(plugin_info_ptr));
+            auto reg_result = registry->register_plugin(
+                plugin_id, std::move(plugin_info_ptr));
             Q_UNUSED(reg_result);
 
             // Test resource allocation
             auto alloc_result = allocator->allocate_resource(
-                ResourceType::Memory,
-                plugin_id,
-                ResourcePriority::Normal
-            );
+                ResourceType::Memory, plugin_id, ResourcePriority::Normal);
 
             if (alloc_result.has_value()) {
-                allocator->deallocate_resource(alloc_result.value().allocation_id);
+                allocator->deallocate_resource(
+                    alloc_result.value().allocation_id);
             }
         }
     });
 }
 
-void ComponentPerformanceTests::measureExecutionTime(const QString& testName, std::function<void()> testFunction)
-{
+void ComponentPerformanceTests::measureExecutionTime(
+    const QString& testName, std::function<void()> testFunction) {
     QElapsedTimer timer;
     timer.start();
 
@@ -314,17 +313,18 @@ void ComponentPerformanceTests::measureExecutionTime(const QString& testName, st
     logPerformanceResult(testName, elapsed);
 }
 
-void ComponentPerformanceTests::logPerformanceResult(const QString& testName, qint64 elapsedMs, const QString& details)
-{
-    QString message = QString("Performance Test '%1': %2ms").arg(testName).arg(elapsedMs);
+void ComponentPerformanceTests::logPerformanceResult(const QString& testName,
+                                                     qint64 elapsedMs,
+                                                     const QString& details) {
+    QString message =
+        QString("Performance Test '%1': %2ms").arg(testName).arg(elapsedMs);
     if (!details.isEmpty()) {
         message += QString(" (%1)").arg(details);
     }
     qDebug() << message;
 }
 
-size_t ComponentPerformanceTests::getCurrentMemoryUsage() const
-{
+size_t ComponentPerformanceTests::getCurrentMemoryUsage() const {
 #ifdef _WIN32
     PROCESS_MEMORY_COUNTERS pmc;
     if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc))) {
@@ -339,34 +339,37 @@ size_t ComponentPerformanceTests::getCurrentMemoryUsage() const
             std::istringstream iss(line);
             std::string key, value, unit;
             iss >> key >> value >> unit;
-            return std::stoull(value) * 1024; // Convert KB to bytes
+            return std::stoull(value) * 1024;  // Convert KB to bytes
         }
     }
     return 0;
 #elif defined(__APPLE__)
     struct mach_task_basic_info info;
     mach_msg_type_number_t infoCount = MACH_TASK_BASIC_INFO_COUNT;
-    if (task_info(mach_task_self(), MACH_TASK_BASIC_INFO,
-                  (task_info_t)&info, &infoCount) == KERN_SUCCESS) {
+    if (task_info(mach_task_self(), MACH_TASK_BASIC_INFO, (task_info_t)&info,
+                  &infoCount) == KERN_SUCCESS) {
         return info.resident_size;
     }
     return 0;
 #else
-    return 1024 * 1024; // 1MB fallback
+    return 1024 * 1024;  // 1MB fallback
 #endif
 }
 
-void ComponentPerformanceTests::createTestPlugins(int count)
-{
+void ComponentPerformanceTests::createTestPlugins(int count) {
     m_test_plugins.clear();
     m_test_plugins.reserve(count);
 
     for (int i = 0; i < count; ++i) {
         PluginInfo plugin_info;
         plugin_info.id = QString("test.plugin.%1").arg(i).toStdString();
-        plugin_info.file_path = QString("%1/test_plugin_%2.so").arg(m_test_dir).arg(i).toStdString();
+        plugin_info.file_path = QString("%1/test_plugin_%2.so")
+                                    .arg(m_test_dir)
+                                    .arg(i)
+                                    .toStdString();
         plugin_info.state = PluginState::Unloaded;
-        plugin_info.metadata.name = QString("Test Plugin %1").arg(i).toStdString();
+        plugin_info.metadata.name =
+            QString("Test Plugin %1").arg(i).toStdString();
         plugin_info.metadata.version = Version{1, 0, 0};
         // api_version is not a field in PluginMetadata
 
@@ -374,8 +377,7 @@ void ComponentPerformanceTests::createTestPlugins(int count)
     }
 }
 
-void ComponentPerformanceTests::testComponentVsManagerInstantiation()
-{
+void ComponentPerformanceTests::testComponentVsManagerInstantiation() {
     const int iterations = 100;
 
     // Test component instantiation
@@ -406,13 +408,13 @@ void ComponentPerformanceTests::testComponentVsManagerInstantiation()
         manager_time = timer.elapsed();
     }
 
-    logPerformanceResult("Component vs Manager Instantiation",
-                        component_time,
-                        QString("Components: %1ms, Managers: %2ms").arg(component_time).arg(manager_time));
+    logPerformanceResult("Component vs Manager Instantiation", component_time,
+                         QString("Components: %1ms, Managers: %2ms")
+                             .arg(component_time)
+                             .arg(manager_time));
 }
 
-void ComponentPerformanceTests::testDependencyResolverPerformance()
-{
+void ComponentPerformanceTests::testDependencyResolverPerformance() {
     auto resolver = std::make_unique<PluginDependencyResolver>();
     auto registry = std::make_unique<PluginRegistry>();
 
@@ -420,41 +422,46 @@ void ComponentPerformanceTests::testDependencyResolverPerformance()
     for (int i = 0; i < 50; ++i) {
         auto plugin_info = std::make_unique<PluginInfo>();
         plugin_info->id = QString("test.plugin.%1").arg(i).toStdString();
-        plugin_info->file_path = QString("%1/test_plugin_%2.so").arg(m_test_dir).arg(i).toStdString();
+        plugin_info->file_path = QString("%1/test_plugin_%2.so")
+                                     .arg(m_test_dir)
+                                     .arg(i)
+                                     .toStdString();
         plugin_info->state = PluginState::Unloaded;
 
         // Add some dependencies
         if (i > 0) {
-            plugin_info->metadata.dependencies.push_back(QString("test.plugin.%1").arg(i-1).toStdString());
+            plugin_info->metadata.dependencies.push_back(
+                QString("test.plugin.%1").arg(i - 1).toStdString());
         }
 
         registry->register_plugin(plugin_info->id, std::move(plugin_info));
     }
 
-    measureExecutionTime("Dependency Resolver Performance", [&resolver, &registry]() {
-        auto result = resolver->update_dependency_graph(registry.get());
-        Q_UNUSED(result);
+    measureExecutionTime(
+        "Dependency Resolver Performance", [&resolver, &registry]() {
+            auto result = resolver->update_dependency_graph(registry.get());
+            Q_UNUSED(result);
 
-        auto load_order = resolver->get_load_order();
-        Q_UNUSED(load_order);
-    });
+            auto load_order = resolver->get_load_order();
+            Q_UNUSED(load_order);
+        });
 }
 
-void ComponentPerformanceTests::testSecurityValidatorPerformance()
-{
+void ComponentPerformanceTests::testSecurityValidatorPerformance() {
     auto validator = std::make_unique<SecurityValidator>();
 
-    measureExecutionTime("Security Validator Performance", [&validator, this]() {
-        for (const auto& plugin : m_test_plugins) {
-            // Test metadata validation (will fail but we're testing performance)
-            auto result = validator->validate_metadata(plugin.file_path);
-            Q_UNUSED(result);
-        }
-    });
+    measureExecutionTime(
+        "Security Validator Performance", [&validator, this]() {
+            for (const auto& plugin : m_test_plugins) {
+                // Test metadata validation (will fail but we're testing
+                // performance)
+                auto result = validator->validate_metadata(plugin.file_path);
+                Q_UNUSED(result);
+            }
+        });
 }
 
-void ComponentPerformanceTests::testConfigurationStoragePerformance()
-{
+void ComponentPerformanceTests::testConfigurationStoragePerformance() {
     auto storage = std::make_unique<ConfigurationStorage>();
 
     measureExecutionTime("Configuration Storage Performance", [&storage]() {
@@ -465,15 +472,16 @@ void ComponentPerformanceTests::testConfigurationStoragePerformance()
 
         for (int i = 0; i < 100; ++i) {
             QString key = QString("test_config_%1").arg(i);
-            storage->set_configuration(config, ConfigurationScope::Global, key.toStdString());
-            auto retrieved = storage->get_configuration(ConfigurationScope::Global, key.toStdString());
+            storage->set_configuration(config, ConfigurationScope::Global,
+                                       key.toStdString());
+            auto retrieved = storage->get_configuration(
+                ConfigurationScope::Global, key.toStdString());
             Q_UNUSED(retrieved);
         }
     });
 }
 
-void ComponentPerformanceTests::testManagerMemoryFootprint()
-{
+void ComponentPerformanceTests::testManagerMemoryFootprint() {
     size_t initial_memory = getCurrentMemoryUsage();
 
     // Create all manager types
@@ -488,13 +496,15 @@ void ComponentPerformanceTests::testManagerMemoryFootprint()
 
     // Verify memory usage is reasonable (less than 10MB)
     QVERIFY2(manager_memory < 10 * 1024 * 1024,
-             QString("Managers use too much memory: %1 bytes").arg(manager_memory).toLocal8Bit());
+             QString("Managers use too much memory: %1 bytes")
+                 .arg(manager_memory)
+                 .toLocal8Bit());
 
-    logPerformanceResult("Manager Memory Footprint", manager_memory, "bytes total");
+    logPerformanceResult("Manager Memory Footprint", manager_memory,
+                         "bytes total");
 }
 
-void ComponentPerformanceTests::testMemoryUsageComparison()
-{
+void ComponentPerformanceTests::testMemoryUsageComparison() {
     size_t component_memory = 0;
     size_t manager_memory = 0;
 
@@ -523,12 +533,13 @@ void ComponentPerformanceTests::testMemoryUsageComparison()
     }
 
     logPerformanceResult("Memory Usage Comparison",
-                        component_memory + manager_memory,
-                        QString("Components: %1 bytes, Managers: %2 bytes").arg(component_memory).arg(manager_memory));
+                         component_memory + manager_memory,
+                         QString("Components: %1 bytes, Managers: %2 bytes")
+                             .arg(component_memory)
+                             .arg(manager_memory));
 }
 
-void ComponentPerformanceTests::testComponentThreadSafety()
-{
+void ComponentPerformanceTests::testComponentThreadSafety() {
     auto registry = std::make_unique<PluginRegistry>();
 
     measureExecutionTime("Component Thread Safety", [&registry, this]() {
@@ -539,20 +550,26 @@ void ComponentPerformanceTests::testComponentThreadSafety()
         for (int t = 0; t < thread_count; ++t) {
             threads.emplace_back([&registry, t, this]() {
                 for (int i = 0; i < operations_per_thread; ++i) {
-                    QString plugin_id = QString("thread_%1_plugin_%2").arg(t).arg(i);
+                    QString plugin_id =
+                        QString("thread_%1_plugin_%2").arg(t).arg(i);
 
                     auto plugin_info = std::make_unique<PluginInfo>();
                     plugin_info->id = plugin_id.toStdString();
-                    plugin_info->file_path = QString("%1/%2.so").arg(m_test_dir).arg(plugin_id).toStdString();
+                    plugin_info->file_path = QString("%1/%2.so")
+                                                 .arg(m_test_dir)
+                                                 .arg(plugin_id)
+                                                 .toStdString();
                     plugin_info->state = PluginState::Unloaded;
 
-                    auto result = registry->register_plugin(plugin_info->id, std::move(plugin_info));
+                    auto result = registry->register_plugin(
+                        plugin_info->id, std::move(plugin_info));
                     Q_UNUSED(result);
 
                     // Small delay to increase chance of race conditions
                     std::this_thread::sleep_for(std::chrono::microseconds(1));
 
-                    auto unregister_result = registry->unregister_plugin(plugin_id.toStdString());
+                    auto unregister_result =
+                        registry->unregister_plugin(plugin_id.toStdString());
                     Q_UNUSED(unregister_result);
                 }
             });
@@ -564,34 +581,37 @@ void ComponentPerformanceTests::testComponentThreadSafety()
     });
 }
 
-void ComponentPerformanceTests::testManagerComponentDelegationOverhead()
-{
+void ComponentPerformanceTests::testManagerComponentDelegationOverhead() {
     auto plugin_manager = std::make_unique<PluginManager>();
 
-    measureExecutionTime("Manager Component Delegation Overhead", [&plugin_manager, this]() {
-        // Test operations that delegate to components
-        for (int i = 0; i < 50; ++i) {
-            // Test plugin discovery (delegates to multiple components)
-            auto discovery_result = plugin_manager->discover_plugins(m_test_dir.toStdString());
-            Q_UNUSED(discovery_result);
+    measureExecutionTime(
+        "Manager Component Delegation Overhead", [&plugin_manager, this]() {
+            // Test operations that delegate to components
+            for (int i = 0; i < 50; ++i) {
+                // Test plugin discovery (delegates to multiple components)
+                auto discovery_result =
+                    plugin_manager->discover_plugins(m_test_dir.toStdString());
+                Q_UNUSED(discovery_result);
 
-            // Test plugin loading (delegates to security, registry, etc.)
-            QString plugin_path = QString("%1/nonexistent_%2.so").arg(m_test_dir).arg(i);
-            auto load_result = plugin_manager->load_plugin(plugin_path.toStdString());
-            Q_UNUSED(load_result);
-        }
-    });
+                // Test plugin loading (delegates to security, registry, etc.)
+                QString plugin_path =
+                    QString("%1/nonexistent_%2.so").arg(m_test_dir).arg(i);
+                auto load_result =
+                    plugin_manager->load_plugin(plugin_path.toStdString());
+                Q_UNUSED(load_result);
+            }
+        });
 }
 
-void ComponentPerformanceTests::testComponentCompositionPerformance()
-{
+void ComponentPerformanceTests::testComponentCompositionPerformance() {
     measureExecutionTime("Component Composition Performance", [this]() {
         // Test creating a full component composition
         for (int i = 0; i < 10; ++i) {
             auto plugin_manager = std::make_unique<PluginManager>();
 
             // Trigger component initialization through manager operations
-            auto discovery_result = plugin_manager->discover_plugins(m_test_dir.toStdString());
+            auto discovery_result =
+                plugin_manager->discover_plugins(m_test_dir.toStdString());
             Q_UNUSED(discovery_result);
 
             auto plugin_list = plugin_manager->loaded_plugins();

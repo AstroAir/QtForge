@@ -9,12 +9,14 @@ This directory contains comprehensive tests for the QtForge Sandbox System, ensu
 ### Test Categories
 
 1. **Unit Tests** - Test individual components in isolation
+
    - `test_plugin_sandbox.cpp` - Core sandbox functionality
    - `test_resource_monitor.cpp` - Cross-platform resource monitoring
    - `test_security_enforcer.cpp` - Security policy enforcement
    - `test_sandbox_manager.cpp` - Sandbox lifecycle management
 
 2. **Integration Tests** - Test component interactions and workflows
+
    - `test_sandbox_integration.cpp` - End-to-end sandbox workflows
 
 3. **Performance Tests** - Benchmark and stress testing
@@ -23,6 +25,7 @@ This directory contains comprehensive tests for the QtForge Sandbox System, ensu
 ### Mock Plugins
 
 The `mock_plugins/` directory contains utilities for generating test plugins:
+
 - `MockPluginGenerator` - Creates various types of test plugins
 - Well-behaved plugins for normal operation testing
 - Resource-hungry plugins for limit testing
@@ -99,6 +102,7 @@ python3 tests/security/run_tests.py --list
 ### What's Tested
 
 #### Core Functionality
+
 - [x] Sandbox initialization and shutdown
 - [x] Plugin execution with different types (Python, Native)
 - [x] Resource usage tracking and limit enforcement
@@ -106,6 +110,7 @@ python3 tests/security/run_tests.py --list
 - [x] Error handling and recovery
 
 #### Resource Monitoring
+
 - [x] Cross-platform CPU usage tracking
 - [x] Memory consumption monitoring
 - [x] File handle counting
@@ -113,6 +118,7 @@ python3 tests/security/run_tests.py --list
 - [x] Disk space usage monitoring
 
 #### Security Enforcement
+
 - [x] File system access validation
 - [x] Network access control
 - [x] Process creation restrictions
@@ -121,12 +127,14 @@ python3 tests/security/run_tests.py --list
 - [x] Security violation detection and reporting
 
 #### Management
+
 - [x] Multiple sandbox lifecycle management
 - [x] Policy registration and retrieval
 - [x] Concurrent sandbox operations
 - [x] Thread safety
 
 #### Performance
+
 - [x] Sandbox creation/destruction overhead
 - [x] Resource monitoring performance impact
 - [x] Concurrent execution scalability
@@ -135,29 +143,34 @@ python3 tests/security/run_tests.py --list
 ### Test Scenarios
 
 #### Normal Operation
+
 - Well-behaved plugins executing successfully
 - Resource usage within limits
 - Proper cleanup after execution
 
 #### Resource Limits
+
 - Memory exhaustion handling
 - CPU time limit enforcement
 - Execution timeout handling
 - File handle limit enforcement
 
 #### Security Violations
+
 - Unauthorized file access attempts
 - Network access violations
 - Process creation attempts
 - System call restrictions
 
 #### Error Conditions
+
 - Plugin crashes and recovery
 - Invalid plugin paths
 - Malformed security policies
 - Resource cleanup failures
 
 #### Stress Testing
+
 - High-frequency operations
 - Large numbers of concurrent sandboxes
 - Long-running plugin monitoring
@@ -178,16 +191,19 @@ Test plugins and data files are generated dynamically during test execution to e
 ## Platform-Specific Considerations
 
 ### Windows
+
 - Uses Performance Counters for resource monitoring
 - Tests job object functionality for process isolation
 - Registry access control testing
 
 ### Linux
+
 - Uses `/proc` filesystem for resource monitoring
 - Tests cgroups integration where available
 - File descriptor limit testing
 
 ### macOS
+
 - Uses Mach APIs for resource monitoring
 - Tests BSD resource limits
 - Process isolation testing
@@ -197,14 +213,17 @@ Test plugins and data files are generated dynamically during test execution to e
 ### Common Issues
 
 1. **Python not found**
+
    - Ensure Python 3.6+ is installed and in PATH
    - Set `QTPLUGIN_TEST_PYTHON` environment variable
 
 2. **Resource monitoring tests fail**
+
    - Check platform support for resource monitoring APIs
    - Verify sufficient permissions for system resource access
 
 3. **Security tests fail**
+
    - May indicate actual security vulnerabilities
    - Review test output for specific violation details
 
@@ -249,6 +268,7 @@ export QT_LOGGING_RULES="qtplugin.sandbox.debug=true"
 ### Mock Plugin Development
 
 When creating new mock plugins:
+
 - Follow the existing plugin interface
 - Include JSON output for result parsing
 - Test both success and failure scenarios
@@ -278,6 +298,7 @@ Results are platform and hardware dependent. Use for relative performance compar
 ### CI Pipeline Integration
 
 Tests are designed to run in CI environments:
+
 - No interactive components
 - Configurable timeouts
 - Machine-readable output formats
@@ -292,6 +313,7 @@ python3 tests/security/run_tests.py --report ci_results.json
 ```
 
 The JSON report includes:
+
 - Test execution summary
 - Individual test results
 - Performance metrics

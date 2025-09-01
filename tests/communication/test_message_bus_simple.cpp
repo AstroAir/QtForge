@@ -11,8 +11,7 @@
 
 using namespace qtplugin;
 
-class TestMessageBusSimple : public QObject
-{
+class TestMessageBusSimple : public QObject {
     Q_OBJECT
 
 private slots:
@@ -32,49 +31,43 @@ private:
     std::unique_ptr<MessageBus> m_message_bus;
 };
 
-void TestMessageBusSimple::initTestCase()
-{
+void TestMessageBusSimple::initTestCase() {
     qDebug() << "Starting message bus tests";
 }
 
-void TestMessageBusSimple::cleanupTestCase()
-{
+void TestMessageBusSimple::cleanupTestCase() {
     qDebug() << "Message bus tests completed";
 }
 
-void TestMessageBusSimple::init()
-{
+void TestMessageBusSimple::init() {
     // Create fresh message bus for each test
     m_message_bus = std::make_unique<MessageBus>();
     QVERIFY(m_message_bus != nullptr);
 }
 
-void TestMessageBusSimple::cleanup()
-{
+void TestMessageBusSimple::cleanup() {
     // Clean up message bus
     if (m_message_bus) {
         m_message_bus.reset();
     }
 }
 
-void TestMessageBusSimple::testMessageBusCreation()
-{
+void TestMessageBusSimple::testMessageBusCreation() {
     // Test basic creation
     auto bus = std::make_unique<MessageBus>();
     QVERIFY(bus != nullptr);
-    
+
     // Test that it starts in a valid state
     // Note: We can't test much without knowing the exact API
     // This is a basic smoke test
 }
 
-void TestMessageBusSimple::testMessagePublishing()
-{
+void TestMessageBusSimple::testMessagePublishing() {
     // Test basic message publishing
     // Note: This test is limited by not knowing the exact API
     // We'll just verify the message bus exists and can be used
     QVERIFY(m_message_bus != nullptr);
-    
+
     // In a real implementation, we would test:
     // - Publishing messages with different topics
     // - Publishing messages with different data types
@@ -82,11 +75,10 @@ void TestMessageBusSimple::testMessagePublishing()
     // - Publishing with invalid data
 }
 
-void TestMessageBusSimple::testMessageSubscription()
-{
+void TestMessageBusSimple::testMessageSubscription() {
     // Test basic message subscription
     QVERIFY(m_message_bus != nullptr);
-    
+
     // In a real implementation, we would test:
     // - Subscribing to topics
     // - Receiving published messages
@@ -94,11 +86,10 @@ void TestMessageBusSimple::testMessageSubscription()
     // - Multiple subscriptions to same topic
 }
 
-void TestMessageBusSimple::testMessageUnsubscription()
-{
+void TestMessageBusSimple::testMessageUnsubscription() {
     // Test message unsubscription
     QVERIFY(m_message_bus != nullptr);
-    
+
     // In a real implementation, we would test:
     // - Unsubscribing from topics
     // - Verifying messages are no longer received
@@ -106,11 +97,10 @@ void TestMessageBusSimple::testMessageUnsubscription()
     // - Unsubscribing multiple times
 }
 
-void TestMessageBusSimple::testMultipleSubscribers()
-{
+void TestMessageBusSimple::testMultipleSubscribers() {
     // Test multiple subscribers to same topic
     QVERIFY(m_message_bus != nullptr);
-    
+
     // In a real implementation, we would test:
     // - Multiple subscribers receiving same message
     // - Order of message delivery

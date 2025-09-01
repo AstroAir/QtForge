@@ -17,7 +17,7 @@ endforeach
 # Create test executables for each test file
 foreach test_src : monitoring_existing_test_sources
   test_name = test_src.split('.')[0]
-  
+
   test_exe = executable(test_name,
     test_src,
     dependencies: [qtforge_core_dep, qt6_core_dep],
@@ -25,7 +25,7 @@ foreach test_src : monitoring_existing_test_sources
     cpp_args: test_cpp_args,
     install: false
   )
-  
+
   # Register the test
   test(test_name, test_exe,
     suite: 'monitoring',

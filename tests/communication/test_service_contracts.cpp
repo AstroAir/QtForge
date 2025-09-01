@@ -4,9 +4,9 @@
  * @version 3.1.0
  */
 
-#include <QtTest/QtTest>
-#include <QJsonObject>
 #include <QJsonArray>
+#include <QJsonObject>
+#include <QtTest/QtTest>
 #include "qtplugin/communication/plugin_service_contracts.hpp"
 
 using namespace qtplugin::contracts;
@@ -78,7 +78,8 @@ void TestServiceContracts::testServiceVersionString() {
 }
 
 void TestServiceContracts::testServiceContractCreation() {
-    ServiceContract contract("com.example.testservice", ServiceVersion(1, 0, 0));
+    ServiceContract contract("com.example.testservice",
+                             ServiceVersion(1, 0, 0));
 
     QCOMPARE(contract.service_name(), QString("com.example.testservice"));
     QCOMPARE(contract.version().major, 1u);
@@ -87,13 +88,16 @@ void TestServiceContracts::testServiceContractCreation() {
 
     // Test method chaining
     contract.set_description("Test service")
-           .set_provider("test_plugin")
-           .set_capabilities(static_cast<uint32_t>(ServiceCapability::Synchronous | ServiceCapability::ThreadSafe));
+        .set_provider("test_plugin")
+        .set_capabilities(static_cast<uint32_t>(ServiceCapability::Synchronous |
+                                                ServiceCapability::ThreadSafe));
 
     QCOMPARE(contract.description(), QString("Test service"));
     QCOMPARE(contract.provider(), QString("test_plugin"));
-    QVERIFY(contract.capabilities() & static_cast<uint32_t>(ServiceCapability::Synchronous));
-    QVERIFY(contract.capabilities() & static_cast<uint32_t>(ServiceCapability::ThreadSafe));
+    QVERIFY(contract.capabilities() &
+            static_cast<uint32_t>(ServiceCapability::Synchronous));
+    QVERIFY(contract.capabilities() &
+            static_cast<uint32_t>(ServiceCapability::ThreadSafe));
 }
 
 void TestServiceContracts::testServiceContractValidation() {
@@ -106,7 +110,8 @@ void TestServiceContracts::testServiceContractValidation() {
     ServiceContract invalid_contract("", ServiceVersion(1, 0, 0));
     auto invalid_result = invalid_contract.validate();
     QVERIFY(!invalid_result.has_value());
-    QCOMPARE(invalid_result.error().code, qtplugin::PluginErrorCode::InvalidConfiguration);
+    QCOMPARE(invalid_result.error().code,
+             qtplugin::PluginErrorCode::InvalidConfiguration);
 
     // Invalid contract - no methods
     ServiceContract no_methods_contract("com.example.empty");
@@ -141,29 +146,35 @@ void TestServiceContracts::testServiceContractMethodValidation() {
     valid_params["message"] = "Hello World";
     valid_params["count"] = 5;
 
-    auto valid_result = contract.validate_method_call("send_message", valid_params);
+    auto valid_result =
+        contract.validate_method_call("send_message", valid_params);
     QVERIFY(valid_result.has_value());
 
     // Invalid method call - missing required parameter
     QJsonObject missing_param;
     missing_param["count"] = 5;
 
-    auto missing_result = contract.validate_method_call("send_message", missing_param);
+    auto missing_result =
+        contract.validate_method_call("send_message", missing_param);
     QVERIFY(!missing_result.has_value());
-    QCOMPARE(missing_result.error().code, qtplugin::PluginErrorCode::InvalidParameters);
+    QCOMPARE(missing_result.error().code,
+             qtplugin::PluginErrorCode::InvalidParameters);
 
     // Invalid method call - wrong parameter type
     QJsonObject wrong_type;
-    wrong_type["message"] = 123; // Should be string
+    wrong_type["message"] = 123;  // Should be string
     wrong_type["count"] = 5;
 
-    auto wrong_type_result = contract.validate_method_call("send_message", wrong_type);
+    auto wrong_type_result =
+        contract.validate_method_call("send_message", wrong_type);
     QVERIFY(!wrong_type_result.has_value());
 
     // Invalid method call - unknown method
-    auto unknown_method_result = contract.validate_method_call("unknown_method", valid_params);
+    auto unknown_method_result =
+        contract.validate_method_call("unknown_method", valid_params);
     QVERIFY(!unknown_method_result.has_value());
-    QCOMPARE(unknown_method_result.error().code, qtplugin::PluginErrorCode::CommandNotFound);
+    QCOMPARE(unknown_method_result.error().code,
+             qtplugin::PluginErrorCode::CommandNotFound);
 }
 
 void TestServiceContracts::testRegistryRegistration() {
@@ -190,13 +201,16 @@ void TestServiceContracts::testRegistryRetrieval() {
     registry.register_contract("test_plugin", contract);
 
     // Test retrieval with version compatibility
-    auto get_result = registry.get_contract("com.example.testservice", ServiceVersion(1, 0, 0));
+    auto get_result = registry.get_contract("com.example.testservice",
+                                            ServiceVersion(1, 0, 0));
     QVERIFY(get_result.has_value());
 
     // Test retrieval with incompatible version
-    auto incompatible_result = registry.get_contract("com.example.testservice", ServiceVersion(2, 0, 0));
+    auto incompatible_result = registry.get_contract("com.example.testservice",
+                                                     ServiceVersion(2, 0, 0));
     QVERIFY(!incompatible_result.has_value());
-    QCOMPARE(incompatible_result.error().code, qtplugin::PluginErrorCode::IncompatibleVersion);
+    QCOMPARE(incompatible_result.error().code,
+             qtplugin::PluginErrorCode::IncompatibleVersion);
 
     // Cleanup
     registry.unregister_contract("test_plugin", "com.example.testservice");
@@ -209,7 +223,8 @@ void TestServiceContracts::testRegistryCapabilitySearch() {
     registry.register_contract("test_plugin", contract);
 
     // Search by capability
-    auto contracts = registry.find_contracts_by_capability(ServiceCapability::Synchronous);
+    auto contracts =
+        registry.find_contracts_by_capability(ServiceCapability::Synchronous);
     QVERIFY(!contracts.empty());
 
     bool found = false;
@@ -230,23 +245,31 @@ void TestServiceContracts::testInvalidContractValidation() {
 
     // Try to register invalid contract
     ServiceContract invalid_contract("", ServiceVersion(1, 0, 0));
-    auto register_result = registry.register_contract("test_plugin", invalid_contract);
+    auto register_result =
+        registry.register_contract("test_plugin", invalid_contract);
     QVERIFY(!register_result.has_value());
-    QCOMPARE(register_result.error().code, qtplugin::PluginErrorCode::InvalidConfiguration);
+    QCOMPARE(register_result.error().code,
+             qtplugin::PluginErrorCode::InvalidConfiguration);
 }
 
 ServiceContract TestServiceContracts::createTestContract() {
-    ServiceContract contract("com.example.testservice", ServiceVersion(1, 0, 0));
+    ServiceContract contract("com.example.testservice",
+                             ServiceVersion(1, 0, 0));
 
     contract.set_description("Test service for unit tests")
-           .set_provider("test_plugin")
-           .set_capabilities(static_cast<uint32_t>(ServiceCapability::Synchronous | ServiceCapability::ThreadSafe));
+        .set_provider("test_plugin")
+        .set_capabilities(static_cast<uint32_t>(ServiceCapability::Synchronous |
+                                                ServiceCapability::ThreadSafe));
 
     // Add a method
     ServiceMethod method("send_message", "Send a message");
-    method.add_parameter(ServiceParameter("message", "string", "Message to send", true))
-          .add_parameter(ServiceParameter("count", "number", "Number of times to send", false))
-          .set_return_type(ServiceParameter("result", "object", "Operation result"));
+    method
+        .add_parameter(
+            ServiceParameter("message", "string", "Message to send", true))
+        .add_parameter(ServiceParameter("count", "number",
+                                        "Number of times to send", false))
+        .set_return_type(
+            ServiceParameter("result", "object", "Operation result"));
 
     contract.add_method(method);
 
@@ -257,11 +280,14 @@ ServiceContract TestServiceContracts::createDependentContract() {
     ServiceContract contract("com.example.dependent", ServiceVersion(1, 0, 0));
 
     contract.set_description("Dependent service")
-           .add_dependency("com.example.testservice", ServiceVersion(1, 0, 0));
+        .add_dependency("com.example.testservice", ServiceVersion(1, 0, 0));
 
     ServiceMethod method("process", "Process data");
-    method.add_parameter(ServiceParameter("data", "object", "Data to process", true))
-          .set_return_type(ServiceParameter("result", "object", "Processed result"));
+    method
+        .add_parameter(
+            ServiceParameter("data", "object", "Data to process", true))
+        .set_return_type(
+            ServiceParameter("result", "object", "Processed result"));
 
     contract.add_method(method);
 
@@ -275,15 +301,18 @@ void TestServiceContracts::testRegistryDependencyValidation() {
     ServiceContract dependent_contract = createDependentContract();
 
     // Register the contract
-    auto result = registry.register_contract("dependent_plugin", dependent_contract);
+    auto result =
+        registry.register_contract("dependent_plugin", dependent_contract);
     QVERIFY(result.has_value());
 
     // Test dependency validation
-    auto contracts = registry.find_contracts_by_capability(ServiceCapability::Synchronous);
+    auto contracts =
+        registry.find_contracts_by_capability(ServiceCapability::Synchronous);
     QVERIFY(!contracts.empty());
 
     // Cleanup
-    registry.unregister_contract("dependent_plugin", dependent_contract.service_name());
+    registry.unregister_contract("dependent_plugin",
+                                 dependent_contract.service_name());
 }
 
 void TestServiceContracts::testRegistryProviderDiscovery() {
@@ -314,16 +343,20 @@ void TestServiceContracts::testDuplicateRegistration() {
     auto result1 = registry.register_contract("plugin1", contract);
     QVERIFY(result1.has_value());
 
-    // Try to register same contract again with different plugin - should fail due to same version
+    // Try to register same contract again with different plugin - should fail
+    // due to same version
     auto result2 = registry.register_contract("plugin2", contract);
-    QVERIFY(!result2.has_value()); // Should fail - same service version already registered
+    QVERIFY(!result2.has_value());  // Should fail - same service version
+                                    // already registered
     QCOMPARE(result2.error().code, qtplugin::PluginErrorCode::DuplicatePlugin);
 
     // Test that different versions can be registered
-    ServiceContract contract_v2("com.example.testservice", ServiceVersion(1, 1, 0));
+    ServiceContract contract_v2("com.example.testservice",
+                                ServiceVersion(1, 1, 0));
     contract_v2.set_description("Test service v1.1")
-               .set_provider("plugin2")
-               .set_capabilities(static_cast<uint32_t>(ServiceCapability::Synchronous));
+        .set_provider("plugin2")
+        .set_capabilities(
+            static_cast<uint32_t>(ServiceCapability::Synchronous));
 
     // Add a method to make the contract valid
     ServiceMethod method("test_method", "Test method");
@@ -331,7 +364,7 @@ void TestServiceContracts::testDuplicateRegistration() {
     contract_v2.add_method(method);
 
     auto result3 = registry.register_contract("plugin2", contract_v2);
-    QVERIFY(result3.has_value()); // Should succeed - different version
+    QVERIFY(result3.has_value());  // Should succeed - different version
 
     // Cleanup
     registry.unregister_contract("plugin1", contract.service_name());
@@ -346,8 +379,6 @@ void TestServiceContracts::testMissingDependencies() {
     QVERIFY(!result.has_value());
     QCOMPARE(result.error().code, qtplugin::PluginErrorCode::PluginNotFound);
 }
-
-
 
 QTEST_MAIN(TestServiceContracts)
 #include "test_service_contracts.moc"

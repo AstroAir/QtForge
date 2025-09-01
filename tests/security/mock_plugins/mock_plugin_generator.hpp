@@ -11,13 +11,15 @@
 #include <QStringList>
 
 /**
- * @brief Generates various types of mock plugins for testing sandbox functionality
+ * @brief Generates various types of mock plugins for testing sandbox
+ * functionality
  */
 class MockPluginGenerator : public QObject {
     Q_OBJECT
 
 public:
-    explicit MockPluginGenerator(const QString& output_dir, QObject* parent = nullptr);
+    explicit MockPluginGenerator(const QString& output_dir,
+                                 QObject* parent = nullptr);
     ~MockPluginGenerator() override;
 
     /**
@@ -62,7 +64,8 @@ public:
      * @param file_paths List of file paths to attempt to access
      * @return Path to created plugin file
      */
-    QString createFileAccessPlugin(const QString& name, const QStringList& file_paths);
+    QString createFileAccessPlugin(const QString& name,
+                                   const QStringList& file_paths);
 
     /**
      * @brief Create a plugin that attempts network access
@@ -70,7 +73,8 @@ public:
      * @param hosts List of hosts to attempt to connect to
      * @return Path to created plugin file
      */
-    QString createNetworkAccessPlugin(const QString& name, const QStringList& hosts);
+    QString createNetworkAccessPlugin(const QString& name,
+                                      const QStringList& hosts);
 
     /**
      * @brief Create a comprehensive test suite of plugins
@@ -100,22 +104,23 @@ private:
      * @param script_content Python script content
      * @return Path to created plugin file
      */
-    QString createPythonPlugin(const QString& name, const QString& script_content);
+    QString createPythonPlugin(const QString& name,
+                               const QString& script_content);
 };
 
 /**
  * @brief Test scenarios for mock plugins
  */
 enum class MockPluginScenario {
-    WellBehaved,        ///< Normal execution
-    ResourceHungry,     ///< High resource consumption
-    Malicious,          ///< Security violations
-    Crashing,           ///< Runtime crashes
-    LongRunning,        ///< Extended execution time
-    FileAccess,         ///< File system access attempts
-    NetworkAccess,      ///< Network access attempts
-    ProcessCreation,    ///< Process creation attempts
-    SystemCalls         ///< System call attempts
+    WellBehaved,      ///< Normal execution
+    ResourceHungry,   ///< High resource consumption
+    Malicious,        ///< Security violations
+    Crashing,         ///< Runtime crashes
+    LongRunning,      ///< Extended execution time
+    FileAccess,       ///< File system access attempts
+    NetworkAccess,    ///< Network access attempts
+    ProcessCreation,  ///< Process creation attempts
+    SystemCalls       ///< System call attempts
 };
 
 /**
@@ -130,11 +135,12 @@ struct MockPluginConfig {
     bool should_crash = false;
     bool consume_memory = false;
     bool consume_cpu = false;
-    
+
     /**
      * @brief Create a default configuration for a scenario
      */
-    static MockPluginConfig forScenario(MockPluginScenario scenario, const QString& name = "test_plugin");
+    static MockPluginConfig forScenario(MockPluginScenario scenario,
+                                        const QString& name = "test_plugin");
 };
 
 /**

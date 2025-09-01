@@ -43,22 +43,26 @@ tests/
 ## Test Categories
 
 ### Basic Tests
+
 - Simple, focused tests for individual components
 - Quick execution (< 60 seconds)
 - Essential functionality verification
 
 ### Comprehensive Tests
+
 - Detailed tests with extensive coverage
 - Longer execution time (60-300 seconds)
 - Advanced scenarios and edge cases
 - Enabled with `QTFORGE_BUILD_COMPREHENSIVE_TESTS=ON`
 
 ### Performance Tests
+
 - Benchmarking and performance validation
 - Resource usage monitoring
 - Enabled with `QTFORGE_BUILD_PERFORMANCE_TESTS=ON`
 
 ### Cross-Platform Tests
+
 - Platform-specific behavior validation
 - Cross-compilation verification
 - Enabled with `QTFORGE_BUILD_CROSS_PLATFORM_TESTS=ON`
@@ -66,6 +70,7 @@ tests/
 ## Building and Running Tests
 
 ### Quick Start
+
 ```bash
 # Configure with tests enabled
 cmake -S . -B build -DQTFORGE_BUILD_TESTS=ON
@@ -78,6 +83,7 @@ cd build && ctest --verbose
 ```
 
 ### Module-Specific Testing
+
 ```bash
 # Run only core tests
 ctest -R "Core" --verbose
@@ -90,6 +96,7 @@ ctest -R "Security" --verbose
 ```
 
 ### Test Configuration Options
+
 ```bash
 # Enable comprehensive tests (longer execution)
 -DQTFORGE_BUILD_COMPREHENSIVE_TESTS=ON
@@ -122,9 +129,9 @@ The tests have been reorganized from a flat structure to a modular one:
 Legacy test files have been moved to appropriate module directories and renamed for consistency.
 
 Run with:
+
 ```
 mkdir build && cd build
 cmake .. -DQTPLUGIN_BUILD_TESTS=ON
 ctest --output-on-failure
 ```
-

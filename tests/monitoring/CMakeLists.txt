@@ -50,7 +50,7 @@ endif()
 
 # Install test executables
 if(QTFORGE_BUILD_PERFORMANCE_TESTS)
-    install(TARGETS 
+    install(TARGETS
         test_performance
         test_component_performance
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}/tests/monitoring

@@ -1,33 +1,32 @@
-#include <QtTest/QtTest>
 #include <QCoreApplication>
+#include <QDebug>
 #include <QElapsedTimer>
 #include <QThread>
-#include <QDebug>
-#include <memory>
-#include <vector>
+#include <QtTest/QtTest>
 #include <fstream>
+#include <memory>
 #include <sstream>
+#include <vector>
 
 #ifdef _WIN32
-#include <windows.h>
 #include <psapi.h>
+#include <windows.h>
 #elif defined(__APPLE__)
 #include <mach/mach.h>
 #endif
 #include <chrono>
 
 // Include the plugin system headers
+#include "qtplugin/communication/message_bus.hpp"
+#include "qtplugin/communication/message_types.hpp"
 #include "qtplugin/core/plugin_manager.hpp"
 #include "qtplugin/managers/configuration_manager_impl.hpp"
 #include "qtplugin/managers/logging_manager_impl.hpp"
-#include "qtplugin/managers/resource_manager_impl.hpp"
 #include "qtplugin/managers/resource_lifecycle.hpp"
+#include "qtplugin/managers/resource_manager_impl.hpp"
 #include "qtplugin/managers/resource_monitor.hpp"
-#include "qtplugin/communication/message_bus.hpp"
-#include "qtplugin/communication/message_types.hpp"
 
-class PerformanceTests : public QObject
-{
+class PerformanceTests : public QObject {
     Q_OBJECT
 
 private slots:
@@ -60,29 +59,31 @@ private:
     std::unique_ptr<qtplugin::MessageBus> m_messageBus;
 
     // Performance measurement helpers
-    void measureExecutionTime(const QString& testName, std::function<void()> testFunction);
-    void logPerformanceResult(const QString& testName, qint64 elapsedMs, const QString& details = QString());
+    void measureExecutionTime(const QString& testName,
+                              std::function<void()> testFunction);
+    void logPerformanceResult(const QString& testName, qint64 elapsedMs,
+                              const QString& details = QString());
     size_t getCurrentMemoryUsage() const;
 };
 
-void PerformanceTests::initTestCase()
-{
+void PerformanceTests::initTestCase() {
     qDebug() << "Initializing Performance Tests...";
 
     // Initialize core components
     m_configManager = qtplugin::create_configuration_manager();
     m_messageBus = std::make_unique<qtplugin::MessageBus>();
-    // Create PluginManager with explicit nullptr parameters to avoid incomplete type issues
+    // Create PluginManager with explicit nullptr parameters to avoid incomplete
+    // type issues
     m_pluginManager = std::make_unique<qtplugin::PluginManager>(
-        nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+        nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+        nullptr, nullptr, nullptr, nullptr, nullptr);
 
     // Set up test environment
     m_configManager->set_value("test.performance.enabled", true);
     m_configManager->set_value("test.performance.iterations", 1000);
 }
 
-void PerformanceTests::cleanupTestCase()
-{
+void PerformanceTests::cleanupTestCase() {
     qDebug() << "Cleaning up Performance Tests...";
 
     // Clean up in reverse order
@@ -91,8 +92,7 @@ void PerformanceTests::cleanupTestCase()
     m_configManager.reset();
 }
 
-void PerformanceTests::testPluginLoadingPerformance()
-{
+void PerformanceTests::testPluginLoadingPerformance() {
     const int iterations = 100;
     QElapsedTimer timer;
 
@@ -103,14 +103,16 @@ void PerformanceTests::testPluginLoadingPerformance()
     }
     qint64 elapsed = timer.elapsed();
 
-    logPerformanceResult("Plugin Loading", elapsed, QString("Iterations: %1").arg(iterations));
+    logPerformanceResult("Plugin Loading", elapsed,
+                         QString("Iterations: %1").arg(iterations));
 
     // Performance threshold: should complete within reasonable time
-    QVERIFY2(elapsed < 5000, QString("Plugin loading took too long: %1ms").arg(elapsed).toLocal8Bit());
+    QVERIFY2(elapsed < 5000, QString("Plugin loading took too long: %1ms")
+                                 .arg(elapsed)
+                                 .toLocal8Bit());
 }
 
-void PerformanceTests::testMultiplePluginLoadingPerformance()
-{
+void PerformanceTests::testMultiplePluginLoadingPerformance() {
     measureExecutionTime("Multiple Plugin Loading", [this]() {
         // Simulate loading multiple plugins simultaneously
         for (int i = 0; i < 10; ++i) {
@@ -119,8 +121,7 @@ void PerformanceTests::testMultiplePluginLoadingPerformance()
     });
 }
 
-void PerformanceTests::testPluginUnloadingPerformance()
-{
+void PerformanceTests::testPluginUnloadingPerformance() {
     measureExecutionTime("Plugin Unloading", [this]() {
         // First load some plugins
         m_pluginManager->load_all_plugins();
@@ -133,35 +134,36 @@ void PerformanceTests::testPluginUnloadingPerformance()
     });
 }
 
-void PerformanceTests::testConfigurationReadPerformance()
-{
+void PerformanceTests::testConfigurationReadPerformance() {
     // Prepare test data
     const int iterations = 1000;
     for (int i = 0; i < 100; ++i) {
-        m_configManager->set_value(QString("test.key.%1").arg(i).toStdString(), QString("value_%1").arg(i));
+        m_configManager->set_value(QString("test.key.%1").arg(i).toStdString(),
+                                   QString("value_%1").arg(i));
     }
 
     measureExecutionTime("Configuration Read", [this, iterations]() {
         for (int i = 0; i < iterations; ++i) {
-            auto value = m_configManager->get_value(QString("test.key.%1").arg(i % 100).toStdString());
+            auto value = m_configManager->get_value(
+                QString("test.key.%1").arg(i % 100).toStdString());
             Q_UNUSED(value)
         }
     });
 }
 
-void PerformanceTests::testConfigurationWritePerformance()
-{
+void PerformanceTests::testConfigurationWritePerformance() {
     const int iterations = 1000;
 
     measureExecutionTime("Configuration Write", [this, iterations]() {
         for (int i = 0; i < iterations; ++i) {
-            m_configManager->set_value(QString("perf.test.%1").arg(i).toStdString(), QString("value_%1").arg(i));
+            m_configManager->set_value(
+                QString("perf.test.%1").arg(i).toStdString(),
+                QString("value_%1").arg(i));
         }
     });
 }
 
-void PerformanceTests::testLargeConfigurationPerformance()
-{
+void PerformanceTests::testLargeConfigurationPerformance() {
     const int largeDataSize = 10000;
     QString largeValue = QString("x").repeated(largeDataSize);
 
@@ -169,13 +171,13 @@ void PerformanceTests::testLargeConfigurationPerformance()
         m_configManager->set_value("large.data.test", largeValue);
         auto retrievedValue = m_configManager->get_value("large.data.test");
         if (retrievedValue) {
-            QCOMPARE(retrievedValue.value().toString().size(), largeValue.size());
+            QCOMPARE(retrievedValue.value().toString().size(),
+                     largeValue.size());
         }
     });
 }
 
-void PerformanceTests::testMessageBusPerformance()
-{
+void PerformanceTests::testMessageBusPerformance() {
     const int messageCount = 1000;
 
     measureExecutionTime("Message Bus", [this, messageCount]() {
@@ -183,32 +185,34 @@ void PerformanceTests::testMessageBusPerformance()
             QJsonObject data;
             data["id"] = i;
             data["data"] = QString("test_message_%1").arg(i);
-            qtplugin::messages::CustomDataMessage message("performance_test", "test_data", data);
+            qtplugin::messages::CustomDataMessage message("performance_test",
+                                                          "test_data", data);
             m_messageBus->publish(message);
         }
     });
 }
 
-void PerformanceTests::testHighFrequencyMessagingPerformance()
-{
+void PerformanceTests::testHighFrequencyMessagingPerformance() {
     const int highFrequencyCount = 5000;
 
-    measureExecutionTime("High Frequency Messaging", [this, highFrequencyCount]() {
-        for (int i = 0; i < highFrequencyCount; ++i) {
-            QJsonObject data;
-            data["sequence"] = i;
-            qtplugin::messages::CustomDataMessage message("performance_test", "high_frequency", data);
-            m_messageBus->publish(message);
-        }
-    });
+    measureExecutionTime(
+        "High Frequency Messaging", [this, highFrequencyCount]() {
+            for (int i = 0; i < highFrequencyCount; ++i) {
+                QJsonObject data;
+                data["sequence"] = i;
+                qtplugin::messages::CustomDataMessage message(
+                    "performance_test", "high_frequency", data);
+                m_messageBus->publish(message);
+            }
+        });
 }
 
-void PerformanceTests::testConcurrentMessagingPerformance()
-{
+void PerformanceTests::testConcurrentMessagingPerformance() {
     const int threadCount = 4;
     const int messagesPerThread = 250;
 
-    measureExecutionTime("Concurrent Messaging", [this, threadCount, messagesPerThread]() {
+    measureExecutionTime("Concurrent Messaging", [this, threadCount,
+                                                  messagesPerThread]() {
         QList<QThread*> threads;
 
         for (int t = 0; t < threadCount; ++t) {
@@ -217,7 +221,8 @@ void PerformanceTests::testConcurrentMessagingPerformance()
                     QJsonObject data;
                     data["thread"] = t;
                     data["message"] = i;
-                    qtplugin::messages::CustomDataMessage message("performance_test", "concurrent", data);
+                    qtplugin::messages::CustomDataMessage message(
+                        "performance_test", "concurrent", data);
                     m_messageBus->publish(message);
                 }
             });
@@ -233,8 +238,7 @@ void PerformanceTests::testConcurrentMessagingPerformance()
     });
 }
 
-void PerformanceTests::testMemoryUsageBaseline()
-{
+void PerformanceTests::testMemoryUsageBaseline() {
     // Measure baseline memory usage
     size_t initial_memory = getCurrentMemoryUsage();
 
@@ -251,27 +255,27 @@ void PerformanceTests::testMemoryUsageBaseline()
 
     // Manager should use less than 10MB baseline
     QVERIFY2(manager_overhead < 10 * 1024 * 1024,
-             QString("PluginManager uses too much memory: %1 bytes").arg(manager_overhead).toLocal8Bit());
+             QString("PluginManager uses too much memory: %1 bytes")
+                 .arg(manager_overhead)
+                 .toLocal8Bit());
 
     logPerformanceResult("Memory Baseline", manager_overhead, "bytes");
 }
 
-void PerformanceTests::testMemoryUsageWithPlugins()
-{
+void PerformanceTests::testMemoryUsageWithPlugins() {
     // Placeholder for memory usage with plugins loaded
     qDebug() << "Memory usage with plugins test - placeholder implementation";
-    QVERIFY(true); // Always pass for now
+    QVERIFY(true);  // Always pass for now
 }
 
-void PerformanceTests::testMemoryLeakDetection()
-{
+void PerformanceTests::testMemoryLeakDetection() {
     // Placeholder for memory leak detection
     qDebug() << "Memory leak detection test - placeholder implementation";
-    QVERIFY(true); // Always pass for now
+    QVERIFY(true);  // Always pass for now
 }
 
-void PerformanceTests::measureExecutionTime(const QString& testName, std::function<void()> testFunction)
-{
+void PerformanceTests::measureExecutionTime(
+    const QString& testName, std::function<void()> testFunction) {
     QElapsedTimer timer;
     timer.start();
 
@@ -281,9 +285,11 @@ void PerformanceTests::measureExecutionTime(const QString& testName, std::functi
     logPerformanceResult(testName, elapsed);
 }
 
-void PerformanceTests::logPerformanceResult(const QString& testName, qint64 elapsedMs, const QString& details)
-{
-    QString message = QString("Performance Test '%1': %2ms").arg(testName).arg(elapsedMs);
+void PerformanceTests::logPerformanceResult(const QString& testName,
+                                            qint64 elapsedMs,
+                                            const QString& details) {
+    QString message =
+        QString("Performance Test '%1': %2ms").arg(testName).arg(elapsedMs);
     if (!details.isEmpty()) {
         message += QString(" (%1)").arg(details);
     }
@@ -292,8 +298,7 @@ void PerformanceTests::logPerformanceResult(const QString& testName, qint64 elap
     // You could also write results to a file or database for analysis
 }
 
-size_t PerformanceTests::getCurrentMemoryUsage() const
-{
+size_t PerformanceTests::getCurrentMemoryUsage() const {
 #ifdef _WIN32
     PROCESS_MEMORY_COUNTERS pmc;
     if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc))) {
@@ -308,21 +313,21 @@ size_t PerformanceTests::getCurrentMemoryUsage() const
             std::istringstream iss(line);
             std::string key, value, unit;
             iss >> key >> value >> unit;
-            return std::stoull(value) * 1024; // Convert KB to bytes
+            return std::stoull(value) * 1024;  // Convert KB to bytes
         }
     }
     return 0;
 #elif defined(__APPLE__)
     struct mach_task_basic_info info;
     mach_msg_type_number_t infoCount = MACH_TASK_BASIC_INFO_COUNT;
-    if (task_info(mach_task_self(), MACH_TASK_BASIC_INFO,
-                  (task_info_t)&info, &infoCount) == KERN_SUCCESS) {
+    if (task_info(mach_task_self(), MACH_TASK_BASIC_INFO, (task_info_t)&info,
+                  &infoCount) == KERN_SUCCESS) {
         return info.resident_size;
     }
     return 0;
 #else
     // Fallback: return a reasonable estimate
-    return 1024 * 1024; // 1MB
+    return 1024 * 1024;  // 1MB
 #endif
 }
 

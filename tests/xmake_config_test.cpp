@@ -5,13 +5,12 @@
 #include <QDebug>
 #include <iostream>
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     QCoreApplication app(argc, argv);
-    
+
     qDebug() << "=== XMake Configuration Test ===";
     qDebug() << "Qt Version:" << QT_VERSION_STR;
-    qDebug() << "Compiler:" << 
+    qDebug() << "Compiler:" <<
 #ifdef _MSC_VER
         "MSVC" << _MSC_VER;
 #elif defined(__GNUC__)
@@ -21,7 +20,7 @@ int main(int argc, char *argv[])
 #else
         "Unknown";
 #endif
-    
+
     qDebug() << "Platform:" <<
 #ifdef _WIN32
         "Windows";
@@ -79,6 +78,6 @@ int main(int argc, char *argv[])
 #endif
 
     qDebug() << "=== XMake Configuration Test PASSED ===";
-    
+
     return 0;
 }

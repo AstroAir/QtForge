@@ -4,34 +4,33 @@
  * @version 3.0.0
  */
 
-#include <QtTest/QtTest>
 #include <QTemporaryDir>
+#include <QtTest/QtTest>
 #include <memory>
 
 // Manager headers
+#include "qtplugin/communication/message_bus.hpp"
+#include "qtplugin/core/plugin_loader.hpp"
 #include "qtplugin/core/plugin_manager.hpp"
-#include "qtplugin/security/security_manager.hpp"
 #include "qtplugin/managers/configuration_manager.hpp"
 #include "qtplugin/managers/configuration_manager_impl.hpp"
-#include "qtplugin/managers/resource_manager.hpp"
-#include "qtplugin/managers/resource_manager_impl.hpp"
 #include "qtplugin/managers/logging_manager_impl.hpp"
 #include "qtplugin/managers/resource_lifecycle_impl.hpp"
+#include "qtplugin/managers/resource_manager.hpp"
+#include "qtplugin/managers/resource_manager_impl.hpp"
 #include "qtplugin/managers/resource_monitor_impl.hpp"
-#include "qtplugin/core/plugin_loader.hpp"
-#include "qtplugin/communication/message_bus.hpp"
+#include "qtplugin/security/security_manager.hpp"
 
 // Component headers for verification
 #include "qtplugin/core/plugin_registry.hpp"
-#include "qtplugin/security/components/security_validator.hpp"
 #include "qtplugin/managers/components/configuration_storage.hpp"
-#include "qtplugin/managers/components/resource_pool.hpp"
 #include "qtplugin/managers/components/resource_allocator.hpp"
+#include "qtplugin/managers/components/resource_pool.hpp"
+#include "qtplugin/security/components/security_validator.hpp"
 
 using namespace qtplugin;
 
-class TestManagerComponentIntegration : public QObject
-{
+class TestManagerComponentIntegration : public QObject {
     Q_OBJECT
 
 public:
@@ -63,7 +62,8 @@ private slots:
     void testAPIStability();
 
 private:
-    void createTestPlugin(const QString& filename, const QString& plugin_id = "com.test.plugin");
+    void createTestPlugin(const QString& filename,
+                          const QString& plugin_id = "com.test.plugin");
     void createTestConfiguration(const QString& filename);
 
 private:
@@ -71,31 +71,26 @@ private:
     QString m_test_dir;
 };
 
-void TestManagerComponentIntegration::initTestCase()
-{
+void TestManagerComponentIntegration::initTestCase() {
     qDebug() << "Starting manager-component integration tests";
     m_temp_dir = std::make_unique<QTemporaryDir>();
     QVERIFY(m_temp_dir->isValid());
     m_test_dir = m_temp_dir->path();
 }
 
-void TestManagerComponentIntegration::cleanupTestCase()
-{
+void TestManagerComponentIntegration::cleanupTestCase() {
     qDebug() << "Manager-component integration tests completed";
 }
 
-void TestManagerComponentIntegration::init()
-{
+void TestManagerComponentIntegration::init() {
     // Setup for each test
 }
 
-void TestManagerComponentIntegration::cleanup()
-{
+void TestManagerComponentIntegration::cleanup() {
     // Cleanup after each test
 }
 
-void TestManagerComponentIntegration::testPluginManagerWithComponents()
-{
+void TestManagerComponentIntegration::testPluginManagerWithComponents() {
     // Test that PluginManager properly uses its components
     // Create PluginManager with default implementations
     auto manager = std::make_unique<PluginManager>();
@@ -103,13 +98,16 @@ void TestManagerComponentIntegration::testPluginManagerWithComponents()
 
     // Test that manager is initialized and components are working
     auto loaded_plugins = manager->loaded_plugins();
-    QVERIFY(loaded_plugins.empty()); // Should start empty
+    QVERIFY(loaded_plugins.empty());  // Should start empty
 
-    // Test plugin discovery on empty directory (should return empty but not crash)
+    // Test plugin discovery on empty directory (should return empty but not
+    // crash)
     auto discovery_result = manager->discover_plugins(m_test_dir.toStdString());
-    // Discovery should work (return empty list for empty directory) without crashing
-    // This tests that the discovery mechanism and components are working properly
-    QVERIFY(discovery_result.empty()); // Empty directory should return empty list
+    // Discovery should work (return empty list for empty directory) without
+    // crashing This tests that the discovery mechanism and components are
+    // working properly
+    QVERIFY(
+        discovery_result.empty());  // Empty directory should return empty list
 
     // Test that manager handles component errors gracefully
     auto load_result = manager->load_plugin("nonexistent_plugin.so");
@@ -117,8 +115,7 @@ void TestManagerComponentIntegration::testPluginManagerWithComponents()
     QVERIFY(load_result.error().code != PluginErrorCode::Success);
 }
 
-void TestManagerComponentIntegration::testSecurityManagerWithComponents()
-{
+void TestManagerComponentIntegration::testSecurityManagerWithComponents() {
     // Test that SecurityManager properly uses its security components
     auto security_manager = std::make_unique<SecurityManager>();
     QVERIFY(security_manager != nullptr);
@@ -132,9 +129,7 @@ void TestManagerComponentIntegration::testSecurityManagerWithComponents()
 
     // Test validation through manager (should use components internally)
     auto validation_result = security_manager->validate_plugin(
-        test_file.toStdString(),
-        SecurityLevel::Basic
-    );
+        test_file.toStdString(), SecurityLevel::Basic);
 
     // Should get a result (pass or fail, but not crash)
     QVERIFY(validation_result.validated_level != SecurityLevel::Maximum ||
@@ -152,22 +147,19 @@ void TestManagerComponentIntegration::testSecurityManagerWithComponents()
     QVERIFY(!security_manager->is_trusted("test.plugin"));
 }
 
-void TestManagerComponentIntegration::testConfigurationManagerWithComponents()
-{
+void TestManagerComponentIntegration::testConfigurationManagerWithComponents() {
     // Test that ConfigurationManager properly uses its configuration components
     auto config_manager = std::make_unique<ConfigurationManager>();
     QVERIFY(config_manager != nullptr);
 
     // Test configuration storage through manager
     auto set_result = config_manager->set_value(
-        "test.key",
-        QJsonValue("test_value"),
-        ConfigurationScope::Global
-    );
+        "test.key", QJsonValue("test_value"), ConfigurationScope::Global);
     QVERIFY(set_result.has_value());
 
     // Test configuration retrieval
-    auto get_result = config_manager->get_value("test.key", ConfigurationScope::Global);
+    auto get_result =
+        config_manager->get_value("test.key", ConfigurationScope::Global);
     QVERIFY(get_result.has_value());
     QCOMPARE(get_result.value().toString(), "test_value");
 
@@ -176,9 +168,7 @@ void TestManagerComponentIntegration::testConfigurationManagerWithComponents()
     createTestConfiguration(config_file);
 
     auto load_result = config_manager->load_from_file(
-        config_file.toStdString(),
-        ConfigurationScope::Global
-    );
+        config_file.toStdString(), ConfigurationScope::Global);
     QVERIFY(load_result.has_value());
 
     // Test configuration validation through components
@@ -203,12 +193,12 @@ void TestManagerComponentIntegration::testConfigurationManagerWithComponents()
 
     ConfigurationSchema schema(schema_obj, false);
 
-    auto schema_result = config_manager->set_schema(schema, ConfigurationScope::Global);
+    auto schema_result =
+        config_manager->set_schema(schema, ConfigurationScope::Global);
     QVERIFY(schema_result.has_value());
 }
 
-void TestManagerComponentIntegration::testResourceManagerWithComponents()
-{
+void TestManagerComponentIntegration::testResourceManagerWithComponents() {
     // Test that ResourceManager properly uses its resource components
     auto resource_manager = std::make_unique<ResourceManager>();
     QVERIFY(resource_manager != nullptr);
@@ -220,10 +210,7 @@ void TestManagerComponentIntegration::testResourceManagerWithComponents()
     quota.max_lifetime = std::chrono::minutes(10);
 
     auto pool_result = resource_manager->create_pool(
-        ResourceType::Thread,
-        "test_integration_pool",
-        quota
-    );
+        ResourceType::Thread, "test_integration_pool", quota);
     QVERIFY(pool_result.has_value());
 
     // Test resource statistics through manager
@@ -232,7 +219,8 @@ void TestManagerComponentIntegration::testResourceManagerWithComponents()
     QVERIFY(stats.currently_active >= 0);
 
     // Test active resources listing
-    auto active_resources = resource_manager->get_active_resources("test_plugin");
+    auto active_resources =
+        resource_manager->get_active_resources("test_plugin");
     QVERIFY(active_resources.size() >= 0);
 
     // Test resource monitoring through manager
@@ -241,8 +229,7 @@ void TestManagerComponentIntegration::testResourceManagerWithComponents()
     QVERIFY(stats2.currently_active >= 0);
 }
 
-void TestManagerComponentIntegration::testManagerInteraction()
-{
+void TestManagerComponentIntegration::testManagerInteraction() {
     // Test interaction between multiple managers using components
     auto plugin_manager = std::make_unique<PluginManager>();
     auto security_manager = std::make_unique<SecurityManager>();
@@ -262,51 +249,45 @@ void TestManagerComponentIntegration::testManagerInteraction()
     auto config_result = config_manager->set_value(
         "plugin.security_level",
         QJsonValue(static_cast<int>(SecurityLevel::Standard)),
-        ConfigurationScope::Global
-    );
+        ConfigurationScope::Global);
     QVERIFY(config_result.has_value());
 
     // 3. Create resource pool
     ResourceQuota quota;
     quota.max_instances = 10;
-    auto pool_result = resource_manager->create_pool(
-        ResourceType::Memory,
-        "plugin_pool",
-        quota
-    );
+    auto pool_result = resource_manager->create_pool(ResourceType::Memory,
+                                                     "plugin_pool", quota);
     QVERIFY(pool_result.has_value());
 
     // 4. Test plugin manager with configured environment
-    // Test plugin discovery (should work without crashing even on empty directory)
-    auto discovery_result = plugin_manager->discover_plugins(m_test_dir.toStdString());
+    // Test plugin discovery (should work without crashing even on empty
+    // directory)
+    auto discovery_result =
+        plugin_manager->discover_plugins(m_test_dir.toStdString());
     // Discovery should work properly (empty directory returns empty list)
-    QVERIFY(discovery_result.empty()); // Empty directory should return empty list
+    QVERIFY(
+        discovery_result.empty());  // Empty directory should return empty list
 }
 
-void TestManagerComponentIntegration::testComponentSharing()
-{
+void TestManagerComponentIntegration::testComponentSharing() {
     // Test that components can be shared or work independently
     auto config_manager1 = std::make_unique<ConfigurationManager>();
     auto config_manager2 = std::make_unique<ConfigurationManager>();
 
     // Test that managers maintain separate state
     auto set1_result = config_manager1->set_value(
-        "manager1.key",
-        QJsonValue("value1"),
-        ConfigurationScope::Global
-    );
+        "manager1.key", QJsonValue("value1"), ConfigurationScope::Global);
     QVERIFY(set1_result.has_value());
 
     auto set2_result = config_manager2->set_value(
-        "manager2.key",
-        QJsonValue("value2"),
-        ConfigurationScope::Global
-    );
+        "manager2.key", QJsonValue("value2"), ConfigurationScope::Global);
     QVERIFY(set2_result.has_value());
 
     // Both managers should be able to access their own data
-    auto get1_result = config_manager1->get_value("manager1.key", ConfigurationScope::Global);
-    auto get2_result = config_manager2->get_value("manager2.key", ConfigurationScope::Global);
+    auto get1_result =
+        config_manager1->get_value("manager1.key", ConfigurationScope::Global);
+    auto get2_result =
+        config_manager2->get_value("manager2.key", ConfigurationScope::Global);
 
     QVERIFY(get1_result.has_value());
     QVERIFY(get2_result.has_value());
@@ -314,24 +295,25 @@ void TestManagerComponentIntegration::testComponentSharing()
     QCOMPARE(get2_result.value().toString(), "value2");
 }
 
-void TestManagerComponentIntegration::testErrorPropagation()
-{
+void TestManagerComponentIntegration::testErrorPropagation() {
     // Test that errors from components are properly propagated through managers
     auto plugin_manager = std::make_unique<PluginManager>();
 
-    // Test loading a non-existent plugin (should propagate error from components)
-    auto load_result = plugin_manager->load_plugin("definitely_does_not_exist.so");
+    // Test loading a non-existent plugin (should propagate error from
+    // components)
+    auto load_result =
+        plugin_manager->load_plugin("definitely_does_not_exist.so");
     QVERIFY(!load_result.has_value());
 
     auto error = load_result.error();
     QVERIFY(error.code != PluginErrorCode::Success);
     QVERIFY(!error.message.empty());
-    // Error details may or may not be populated depending on the specific error path
-    // The important thing is that the error is properly propagated from components
+    // Error details may or may not be populated depending on the specific error
+    // path The important thing is that the error is properly propagated from
+    // components
 }
 
-void TestManagerComponentIntegration::testIntegratedPerformance()
-{
+void TestManagerComponentIntegration::testIntegratedPerformance() {
     // Test performance of integrated manager-component operations
     auto resource_manager = std::make_unique<ResourceManager>();
 
@@ -343,10 +325,7 @@ void TestManagerComponentIntegration::testIntegratedPerformance()
     for (int i = 0; i < num_operations; ++i) {
         std::string pool_name = QString("test_pool_%1").arg(i).toStdString();
         auto pool_result = resource_manager->create_pool(
-            ResourceType::Memory,
-            pool_name,
-            ResourceQuota{}
-        );
+            ResourceType::Memory, pool_name, ResourceQuota{});
 
         if (pool_result.has_value()) {
             pool_names.push_back(pool_name);
@@ -359,15 +338,16 @@ void TestManagerComponentIntegration::testIntegratedPerformance()
     }
 
     auto end_time = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+        end_time - start_time);
 
     // Performance should be reasonable (less than 1 second for 100 operations)
     QVERIFY(duration.count() < 1000);
-    qDebug() << "Integrated performance test completed in" << duration.count() << "ms";
+    qDebug() << "Integrated performance test completed in" << duration.count()
+             << "ms";
 }
 
-void TestManagerComponentIntegration::testBackwardCompatibility()
-{
+void TestManagerComponentIntegration::testBackwardCompatibility() {
     // Test that the new component architecture maintains backward compatibility
     auto plugin_manager = std::make_unique<PluginManager>();
 
@@ -386,8 +366,7 @@ void TestManagerComponentIntegration::testBackwardCompatibility()
     QVERIFY(plugin_manager != nullptr);
 }
 
-void TestManagerComponentIntegration::testAPIStability()
-{
+void TestManagerComponentIntegration::testAPIStability() {
     // Test that public APIs remain stable
     auto security_manager = std::make_unique<SecurityManager>();
 
@@ -401,8 +380,8 @@ void TestManagerComponentIntegration::testAPIStability()
     QVERIFY(!stats.isEmpty());
 }
 
-void TestManagerComponentIntegration::createTestPlugin(const QString& filename, const QString& plugin_id)
-{
+void TestManagerComponentIntegration::createTestPlugin(
+    const QString& filename, const QString& plugin_id) {
     QFile file(filename);
     if (file.open(QIODevice::WriteOnly)) {
         file.write("dummy plugin content");
@@ -424,16 +403,13 @@ void TestManagerComponentIntegration::createTestPlugin(const QString& filename, 
     }
 }
 
-void TestManagerComponentIntegration::createTestConfiguration(const QString& filename)
-{
+void TestManagerComponentIntegration::createTestConfiguration(
+    const QString& filename) {
     QJsonObject config;
     config["name"] = "Test Configuration";
     config["version"] = "1.0.0";
-    config["settings"] = QJsonObject{
-        {"debug", true},
-        {"timeout", 30},
-        {"max_connections", 100}
-    };
+    config["settings"] =
+        QJsonObject{{"debug", true}, {"timeout", 30}, {"max_connections", 100}};
 
     QJsonDocument doc(config);
     QFile file(filename);
@@ -459,7 +435,8 @@ void TestManagerComponentIntegration::testConcurrentManagerOperations() {
         threads.emplace_back([&, t]() {
             for (int i = 0; i < operations_per_thread; ++i) {
                 // Configuration operations
-                std::string key = QString("thread%1.key%2").arg(t).arg(i).toStdString();
+                std::string key =
+                    QString("thread%1.key%2").arg(t).arg(i).toStdString();
                 auto set_result = config_manager->set_value(
                     key, QJsonValue(QString("value_%1_%2").arg(t).arg(i)),
                     ConfigurationScope::Plugin, "test_plugin");
@@ -481,7 +458,8 @@ void TestManagerComponentIntegration::testConcurrentManagerOperations() {
     }
 
     // Verify that most operations succeeded (allowing for some contention)
-    int expected_min_success = (num_threads * operations_per_thread) * 0.8; // 80% success rate
+    int expected_min_success =
+        (num_threads * operations_per_thread) * 0.8;  // 80% success rate
     QVERIFY(success_count >= expected_min_success);
 }
 

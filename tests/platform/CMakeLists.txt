@@ -24,7 +24,7 @@ if(QTFORGE_BUILD_CROSS_PLATFORM_TESTS)
     )
 
     # Install test executables
-    install(TARGETS 
+    install(TARGETS
         test_cross_platform
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}/tests/platform
     )
