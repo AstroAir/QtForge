@@ -1,0 +1,194 @@
+# QtForge Build Options
+# Configure various aspects of the QtForge build system
+
+# Library build options
+# Note: default_library is a built-in Meson option, no need to redefine it
+
+# Component build options
+option('build_examples',
+  type: 'boolean',
+  value: true,
+  description: 'Build example applications and plugins'
+)
+
+option('build_tests',
+  type: 'boolean',
+  value: false,
+  description: 'Build unit tests and integration tests'
+)
+
+option('build_docs',
+  type: 'boolean',
+  value: false,
+  description: 'Build documentation using Doxygen'
+)
+
+# Language bindings
+option('python_bindings',
+  type: 'boolean',
+  value: false,
+  description: 'Build Python bindings using pybind11'
+)
+
+# Qt component options (auto-detected but can be forced)
+option('force_qt_network',
+  type: 'boolean',
+  value: false,
+  description: 'Force enable Qt Network support (fail if not available)'
+)
+
+option('force_qt_widgets',
+  type: 'boolean',
+  value: false,
+  description: 'Force enable Qt Widgets support (fail if not available)'
+)
+
+option('force_qt_sql',
+  type: 'boolean',
+  value: false,
+  description: 'Force enable Qt SQL support (fail if not available)'
+)
+
+option('force_qt_concurrent',
+  type: 'boolean',
+  value: false,
+  description: 'Force enable Qt Concurrent support (fail if not available)'
+)
+
+option('force_qt_statemachine',
+  type: 'boolean',
+  value: false,
+  description: 'Force enable Qt StateMachine support (fail if not available)'
+)
+
+# Compiler and build options
+option('enable_warnings',
+  type: 'boolean',
+  value: true,
+  description: 'Enable compiler warnings'
+)
+
+option('enable_werror',
+  type: 'boolean',
+  value: false,
+  description: 'Treat warnings as errors'
+)
+
+option('enable_sanitizers',
+  type: 'boolean',
+  value: false,
+  description: 'Enable address and undefined behavior sanitizers (debug builds only)'
+)
+
+option('enable_lto',
+  type: 'boolean',
+  value: false,
+  description: 'Enable Link Time Optimization for release builds'
+)
+
+option('enable_fast_math',
+  type: 'boolean',
+  value: false,
+  description: 'Enable fast math optimizations (may reduce precision)'
+)
+
+# Advanced options
+option('qt_method',
+  type: 'combo',
+  choices: ['auto', 'pkgconfig', 'qmake', 'cmake'],
+  value: 'auto',
+  description: 'Method to use for Qt detection'
+)
+
+option('install_private_headers',
+  type: 'boolean',
+  value: false,
+  description: 'Install private headers (for development use only)'
+)
+
+option('enable_plugin_sandbox',
+  type: 'boolean',
+  value: false,
+  description: 'Enable experimental plugin sandboxing features'
+)
+
+option('enable_marketplace',
+  type: 'boolean',
+  value: true,
+  description: 'Enable plugin marketplace integration features'
+)
+
+option('enable_hot_reload',
+  type: 'boolean',
+  value: true,
+  description: 'Enable plugin hot reload capabilities'
+)
+
+option('enable_metrics',
+  type: 'boolean',
+  value: true,
+  description: 'Enable plugin metrics collection'
+)
+
+option('enable_transactions',
+  type: 'boolean',
+  value: true,
+  description: 'Enable plugin transaction management'
+)
+
+option('enable_orchestration',
+  type: 'boolean',
+  value: true,
+  description: 'Enable advanced plugin orchestration features'
+)
+
+option('enable_composition',
+  type: 'boolean',
+  value: true,
+  description: 'Enable plugin composition features'
+)
+
+# Installation options
+option('install_examples',
+  type: 'boolean',
+  value: false,
+  description: 'Install example applications and source code'
+)
+
+option('install_tests',
+  type: 'boolean',
+  value: false,
+  description: 'Install test binaries and data'
+)
+
+option('install_cmake_config',
+  type: 'boolean',
+  value: true,
+  description: 'Install CMake configuration files for compatibility'
+)
+
+option('install_pkgconfig',
+  type: 'boolean',
+  value: true,
+  description: 'Install pkg-config files'
+)
+
+# Packaging options
+option('package_format',
+  type: 'combo',
+  choices: ['none', 'zip', 'tar.gz', 'tar.xz'],
+  value: 'none',
+  description: 'Package format for distribution'
+)
+
+option('package_vendor',
+  type: 'string',
+  value: 'QtForge Project',
+  description: 'Vendor name for packages'
+)
+
+option('package_maintainer',
+  type: 'string',
+  value: 'QtForge Maintainers <maintainers@qtforge.org>',
+  description: 'Maintainer information for packages'
+)

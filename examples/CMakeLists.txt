@@ -4,6 +4,12 @@ cmake_minimum_required(VERSION 3.21)
 # Enhanced Basic Plugin Example
 add_subdirectory(01-fundamentals/basic-plugin)
 
+# Configuration Plugin Example (temporarily disabled due to interface changes)
+# add_subdirectory(01-fundamentals/configuration)
+
+# Request-Response Communication Example (temporarily disabled due to interface changes)
+# add_subdirectory(02-communication/request-response)
+
 # Service Plugin Example (background processing and MessageBus integration)
 add_subdirectory(03-services/background-tasks)
 

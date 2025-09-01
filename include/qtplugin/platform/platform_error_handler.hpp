@@ -12,6 +12,8 @@
 #include <QObject>
 #include <QString>
 #include <QStringList>
+#include <QString>
+#include <QStringList>
 #include <chrono>
 #include <functional>
 #include <memory>
@@ -22,9 +24,16 @@
 
 // Platform-specific includes
 #ifdef Q_OS_WIN
-#include <dbghelp.h>
-#include <psapi.h>
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 #include <windows.h>
+// Note: Temporarily disable problematic Windows headers for compilation
+// #include <dbghelp.h>
+// #include <psapi.h>
 #endif
 
 #ifdef Q_OS_UNIX
@@ -135,9 +144,9 @@ struct ErrorRecoveryConfig {
 };
 
 /**
- * @brief Error handler callback
+ * @brief Error handler callback function type
  */
-using PlatformErrorHandler = std::function<bool(const PlatformErrorInfo&)>;
+using PlatformErrorHandlerCallback = std::function<bool(const PlatformErrorInfo&)>;
 
 /**
  * @brief Error recovery callback

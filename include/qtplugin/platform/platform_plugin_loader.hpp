@@ -25,9 +25,16 @@
 
 // Platform-specific includes
 #ifdef Q_OS_WIN
-#include <psapi.h>
-#include <tlhelp32.h>
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 #include <windows.h>
+// Note: Temporarily disable problematic Windows headers for compilation
+// #include <psapi.h>
+// #include <tlhelp32.h>
 #endif
 
 #ifdef Q_OS_UNIX

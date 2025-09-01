@@ -1,0 +1,123 @@
+{
+    "name": "ConfigurationPlugin",
+    "version": "1.0.0",
+    "description": "Advanced configuration management example plugin",
+    "author": "QtForge Examples",
+    "category": "fundamentals",
+    "tags": ["configuration", "settings", "persistence", "validation"],
+    "dependencies": {
+        "qtforge_core": ">=1.0.0",
+        "qt_core": ">=6.0.0"
+    },
+    "capabilities": [
+        "configuration_management",
+        "dynamic_updates",
+        "validation",
+        "persistence",
+        "file_watching"
+    ],
+    "commands": {
+        "get_config": {
+            "description": "Get configuration value(s)",
+            "parameters": {
+                "key": {
+                    "type": "string",
+                    "required": false,
+                    "description": "Configuration key to retrieve (omit for all)"
+                }
+            }
+        },
+        "set_config": {
+            "description": "Set configuration value",
+            "parameters": {
+                "key": {
+                    "type": "string",
+                    "required": true,
+                    "description": "Configuration key to set"
+                },
+                "value": {
+                    "type": "any",
+                    "required": true,
+                    "description": "Value to set"
+                }
+            }
+        },
+        "validate_config": {
+            "description": "Validate configuration",
+            "parameters": {
+                "config": {
+                    "type": "object",
+                    "required": false,
+                    "description": "Configuration to validate (omit for current)"
+                }
+            }
+        },
+        "reload_config": {
+            "description": "Reload configuration from file",
+            "parameters": {}
+        },
+        "save_config": {
+            "description": "Save current configuration to file",
+            "parameters": {}
+        }
+    },
+    "configuration_schema": {
+        "logging_enabled": {
+            "type": "boolean",
+            "default": true,
+            "description": "Enable logging"
+        },
+        "log_level": {
+            "type": "string",
+            "default": "info",
+            "enum": ["debug", "info", "warning", "error"],
+            "description": "Logging level"
+        },
+        "auto_save": {
+            "type": "boolean",
+            "default": true,
+            "description": "Automatically save configuration changes"
+        },
+        "validation_interval": {
+            "type": "integer",
+            "default": 30000,
+            "minimum": 1000,
+            "maximum": 300000,
+            "description": "Configuration validation interval in milliseconds"
+        },
+        "max_config_history": {
+            "type": "integer",
+            "default": 10,
+            "minimum": 1,
+            "maximum": 100,
+            "description": "Maximum number of configuration history entries"
+        },
+        "theme": {
+            "type": "string",
+            "default": "default",
+            "description": "UI theme"
+        },
+        "language": {
+            "type": "string",
+            "default": "en",
+            "description": "Interface language"
+        },
+        "features": {
+            "type": "object",
+            "properties": {
+                "advanced_mode": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "debug_mode": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "experimental": {
+                    "type": "boolean",
+                    "default": false
+                }
+            }
+        }
+    }
+}

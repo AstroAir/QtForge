@@ -1,12 +1,16 @@
 # Build directories
 build/
 build-*/
+builddir/
 debug/
 release/
 Debug/
 Release/
 RelWithDebInfo/
 MinSizeRel/
+out/
+dist/
+target/
 
 # CMake generated files
 CMakeCache.txt
@@ -17,6 +21,9 @@ install_manifest.txt
 compile_commands.json
 CTestTestfile.cmake
 _deps/
+CMakeUserPresets.json
+.cmake/
+cmake-build-*/
 
 # Qt specific
 *.pro.user
@@ -85,33 +92,101 @@ bld/
 .vscode/
 *.code-workspace
 
+# JetBrains IDEs
+.idea/
+*.iml
+*.ipr
+*.iws
+.idea_modules/
+
+# Vim/Neovim
+*.swp
+*.swo
+*~
+.netrwhist
+Session.vim
+.vim/
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
 # Temporary files
 *.tmp
 *.temp
 *~
-*.swp
-*.swo
 .DS_Store
 Thumbs.db
+desktop.ini
+*.lnk
+
+# Meson build system
+builddir/
+meson-logs/
+meson-private/
+meson-uninstalled/
+meson-info/
+subprojects/*/
+wrap-*/
+
+# XMake build system
+.xmake/
+build/
+.build/
+xmake_build/
 
 # Package managers
 conan.lock
+conandata.yml
+conanfile.txt.lock
+conanbuildinfo.*
+conan_imports_manifest.txt
 vcpkg_installed/
+vcpkg.json.lock
+_deps/
+node_modules/
+.pnpm-store/
+.yarn/
+.npm/
 
 # Testing
 Testing/
 test_results/
+test_output/
 *.gcov
 *.gcda
 *.gcno
 coverage/
+coverage.xml
+coverage.json
+htmlcov/
+.coverage
+.pytest_cache/
+.tox/
+.nox/
+junit.xml
+test-reports/
 
 # Documentation generated files
 docs/html/
 docs/latex/
 docs/xml/
 docs/doxygen/
+docs/_build/
+docs/build/
+site/
 doxygen_warnings.txt
+*.dox
+.doctrees/
+_build/
+_static/
+_templates/
 
 # IDE specific
 *.cbp
@@ -138,7 +213,14 @@ massif.out.*
 
 # Static analysis
 cppcheck-report.xml
+cppcheck-report.html
 scan-build-*/
+clang-analyzer-*/
+sonar-project.properties
+.sonarqube/
+.scannerwork/
+pvs-studio.log
+*.sarif
 
 # Packaging
 *.deb
@@ -152,6 +234,8 @@ scan-build-*/
 .env
 .env.local
 .env.*.local
+.envrc
+.direnv/
 
 # Plugin specific
 plugins/*.so
@@ -166,8 +250,79 @@ examples/*/build*/
 # Test artifacts
 tests/build*/
 tests/*/build*/
-test_output/
 
+# Python specific
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+pyrightconfig.json
+
+# Cache directories
 .cache/
+.ccache/
+.sccache/
+
+# Documentation sites
 site/
+
+# Container and virtualization
+Dockerfile.build
+docker-compose.override.yml
+.dockerignore
+*.dockerfile
+.vagrant/
+Vagrantfile.local
+
+# CI/CD artifacts
+.github/workflows/*.log
+.gitlab-ci-local/
+.circleci/
+.travis.yml
+.appveyor.yml
+azure-pipelines.yml
+
+# Security and secrets
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+secrets.json
+.secrets/
+
+# Performance and profiling
+*.perf
+*.prof
+*.trace
+perf.data*
+callgrind.out.*
+cachegrind.out.*
+massif.out.*
+*.gcov
+*.gcda
+*.gcno
+
+# Backup and temporary
+*.bak
+*.backup
+*.old
+*.orig
+*.rej
+*.swp
+*.swo
+*~
+.#*
+\#*#
 
