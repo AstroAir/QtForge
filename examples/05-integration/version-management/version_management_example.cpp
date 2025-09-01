@@ -10,9 +10,9 @@
 #include <iostream>
 #include <memory>
 
-#include "../../include/qtplugin/core/plugin_manager.hpp"
-#include "../../include/qtplugin/managers/plugin_version_manager.hpp"
-#include "../../include/qtplugin/utils/version.hpp"
+#include "qtplugin/core/plugin_manager.hpp"
+#include "qtplugin/managers/plugin_version_manager.hpp"
+#include "qtplugin/utils/version.hpp"
 
 using namespace qtplugin;
 

@@ -5,7 +5,7 @@
  */
 
 #include "message_bus_example.hpp"
-#include "../filters/message_filters.hpp"
+#include "../event-driven/message_filters.hpp"
 #include <QCoreApplication>
 #include <QDebug>
 #include <QJsonDocument>

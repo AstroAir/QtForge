@@ -1,0 +1,58 @@
+/**
+ * @file test_config.hpp.in
+ * @brief Test configuration template for sandbox tests
+ * @version 3.2.0
+ */
+
+#pragma once
+
+#include <QString>
+
+namespace TestConfig {
+    // Build configuration
+    constexpr const char* BUILD_TYPE = "@CMAKE_BUILD_TYPE@";
+    constexpr const char* SOURCE_DIR = "@CMAKE_CURRENT_SOURCE_DIR@";
+    constexpr const char* BINARY_DIR = "@CMAKE_CURRENT_BINARY_DIR@";
+    
+    // Test timeouts (in milliseconds)
+    constexpr int DEFAULT_TIMEOUT = 5000;
+    constexpr int LONG_TIMEOUT = 30000;
+    constexpr int PERFORMANCE_TIMEOUT = 60000;
+    
+    // Resource limits for testing
+    constexpr size_t TEST_MEMORY_LIMIT_MB = 128;
+    constexpr int TEST_CPU_TIME_LIMIT_MS = 5000;
+    constexpr int TEST_EXECUTION_TIMEOUT_MS = 10000;
+    
+    // Test plugin configuration
+    constexpr const char* PYTHON_EXECUTABLE = "python3";
+    constexpr const char* TEST_PLUGIN_DIR = "@CMAKE_CURRENT_BINARY_DIR@/test_plugins";
+    
+    // Platform-specific configuration
+#ifdef Q_OS_WIN
+    constexpr bool PLATFORM_SUPPORTS_RESOURCE_MONITORING = true;
+    constexpr const char* PLATFORM_NAME = "Windows";
+#elif defined(Q_OS_LINUX)
+    constexpr bool PLATFORM_SUPPORTS_RESOURCE_MONITORING = true;
+    constexpr const char* PLATFORM_NAME = "Linux";
+#elif defined(Q_OS_MACOS)
+    constexpr bool PLATFORM_SUPPORTS_RESOURCE_MONITORING = true;
+    constexpr const char* PLATFORM_NAME = "macOS";
+#else
+    constexpr bool PLATFORM_SUPPORTS_RESOURCE_MONITORING = false;
+    constexpr const char* PLATFORM_NAME = "Unknown";
+#endif
+    
+    // Test data paths
+    inline QString getTestDataDir() {
+        return QString(SOURCE_DIR) + "/test_data";
+    }
+    
+    inline QString getTestPluginDir() {
+        return QString(TEST_PLUGIN_DIR);
+    }
+    
+    inline QString getTempDir() {
+        return QString(BINARY_DIR) + "/temp";
+    }
+}

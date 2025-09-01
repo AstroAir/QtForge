@@ -15,16 +15,17 @@
 #include <QProcess>
 #include <QTimer>
 #include <QJsonObject>
-#include <QLoggingCategory>
-#include <QJsonObject>
 #include <QJsonArray>
+#include <QLoggingCategory>
 #include <QString>
 #include <QStringList>
 #include <QMutex>
 #include <QThread>
+#include <QFileSystemWatcher>
 #include <chrono>
 #include <memory>
 #include <unordered_map>
+#include <unordered_set>
 #include <functional>
 
 namespace qtplugin {
@@ -209,6 +210,11 @@ signals:
      */
     void execution_completed(int exit_code, const QJsonObject& result);
 
+    /**
+     * @brief Emitted when resource usage is updated
+     */
+    void resource_usage_updated(const ResourceUsage& usage);
+
 private slots:
     void monitor_resources();
     void handle_process_finished(int exit_code, QProcess::ExitStatus exit_status);
@@ -217,11 +223,14 @@ private slots:
 private:
     SecurityPolicy m_policy;
     std::unique_ptr<QProcess> m_process;
-    std::unique_ptr<QTimer> m_resource_monitor;
+    std::unique_ptr<QTimer> m_resource_monitor_timer;
     std::unique_ptr<QTimer> m_execution_timer;
     ResourceUsage m_resource_usage;
     bool m_active{false};
-    QMutex m_mutex;
+    mutable QMutex m_mutex;
+
+    std::unique_ptr<class ResourceMonitor> m_resource_monitor;
+    std::unique_ptr<class SecurityEnforcer> m_security_enforcer;
 
     qtplugin::expected<void, PluginError> setup_process_environment();
     qtplugin::expected<void, PluginError> apply_resource_limits();

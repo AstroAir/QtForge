@@ -82,8 +82,10 @@ set(QTFORGE_CORE_SOURCES
     src/core/dynamic_plugin_interface.cpp
     # Multi-language plugin bridges (v3.2.0)
     src/bridges/python_plugin_bridge.cpp
-    # Advanced security and sandboxing (v3.2.0)
-    src/security/sandbox/plugin_sandbox.cpp
+    # Advanced security and sandboxing (v3.2.0) - temporarily disabled due to incomplete implementation
+    # src/security/sandbox/plugin_sandbox.cpp
+    # src/security/sandbox/resource_monitor.cpp
+    # src/security/sandbox/security_enforcer.cpp
     # Advanced plugin composition (v3.2.0)
     src/orchestration/advanced/plugin_orchestrator_v2.cpp
     # Plugin marketplace integration (v3.2.0)
@@ -141,8 +143,8 @@ set(QTFORGE_CORE_HEADERS
     include/qtplugin/core/dynamic_plugin_interface.hpp
     # Multi-language plugin bridge headers (v3.2.0)
     include/qtplugin/bridges/python_plugin_bridge.hpp
-    # Advanced security and sandboxing headers (v3.2.0)
-    include/qtplugin/security/sandbox/plugin_sandbox.hpp
+    # Advanced security and sandboxing headers (v3.2.0) - temporarily disabled
+    # include/qtplugin/security/sandbox/plugin_sandbox.hpp
     # Enhanced plugin composition headers (v3.2.0)
     include/qtplugin/orchestration/advanced/plugin_orchestrator_v2.hpp
     # Plugin marketplace integration headers (v3.2.0)
@@ -180,47 +182,47 @@ qtforge_add_library(
     VERSION ${PROJECT_VERSION}
 )
 
-# Network plugin support (optional)
-if(QTFORGE_BUILD_NETWORK AND QTFORGE_HAS_NETWORK)
-    set(QTFORGE_NETWORK_SOURCES
-        # Network sources will be added when implemented
-    )
+# Network plugin support (optional) - disabled until sources are implemented
+# if(QTFORGE_BUILD_NETWORK AND QTFORGE_HAS_NETWORK)
+#     set(QTFORGE_NETWORK_SOURCES
+#         # Network sources will be added when implemented
+#     )
+#
+#     set(QTFORGE_NETWORK_HEADERS
+#         # Network headers will be added when implemented
+#     )
+#
+#     qtforge_add_library(
+#         NAME QtForgeNetwork
+#         SOURCES ${QTFORGE_NETWORK_SOURCES}
+#         HEADERS ${QTFORGE_NETWORK_HEADERS}
+#         QT_COMPONENTS Core Network
+#         DEPENDENCIES QtForge::Core
+#         EXPORT_NAME Network
+#         OUTPUT_NAME qtforge-network
+#     )
+# endif()
 
-    set(QTFORGE_NETWORK_HEADERS
-        # Network headers will be added when implemented
-    )
-
-    qtforge_add_library(
-        NAME QtForgeNetwork
-        SOURCES ${QTFORGE_NETWORK_SOURCES}
-        HEADERS ${QTFORGE_NETWORK_HEADERS}
-        QT_COMPONENTS Core Network
-        DEPENDENCIES QtForge::Core
-        EXPORT_NAME Network
-        OUTPUT_NAME qtforge-network
-    )
-endif()
-
-# UI plugin support (optional)
-if(QTFORGE_BUILD_UI AND QTFORGE_HAS_WIDGETS)
-    set(QTFORGE_UI_SOURCES
-        # UI sources will be added when implemented
-    )
-
-    set(QTFORGE_UI_HEADERS
-        include/qtplugin/ui/ui_plugin_interface.hpp
-    )
-
-    qtforge_add_library(
-        NAME QtForgeUI
-        SOURCES ${QTFORGE_UI_SOURCES}
-        HEADERS ${QTFORGE_UI_HEADERS}
-        QT_COMPONENTS Core Widgets
-        DEPENDENCIES QtForge::Core
-        EXPORT_NAME UI
-        OUTPUT_NAME qtforge-ui
-    )
-endif()
+# UI plugin support (optional) - disabled until sources are implemented
+# if(QTFORGE_BUILD_UI AND QTFORGE_HAS_WIDGETS)
+#     set(QTFORGE_UI_SOURCES
+#         # UI sources will be added when implemented
+#     )
+#
+#     set(QTFORGE_UI_HEADERS
+#         include/qtplugin/ui/ui_plugin_interface.hpp
+#     )
+#
+#     qtforge_add_library(
+#         NAME QtForgeUI
+#         SOURCES ${QTFORGE_UI_SOURCES}
+#         HEADERS ${QTFORGE_UI_HEADERS}
+#         QT_COMPONENTS Core Widgets
+#         DEPENDENCIES QtForge::Core
+#         EXPORT_NAME UI
+#         OUTPUT_NAME qtforge-ui
+#     )
+# endif()
 
 # Security component (always built)
 set(QTFORGE_SECURITY_SOURCES

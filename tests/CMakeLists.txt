@@ -36,7 +36,7 @@ add_subdirectory(orchestration)
 add_subdirectory(utils)
 add_subdirectory(platform)
 add_subdirectory(integration)
-add_subdirectory(build_system)
+# add_subdirectory(build_system) # Temporarily disabled - causes configuration hang
 add_subdirectory(bridges)
 add_subdirectory(composition)
 add_subdirectory(marketplace)

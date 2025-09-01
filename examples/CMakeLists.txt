@@ -14,8 +14,9 @@ else()
     message(STATUS "UI Plugin example skipped (QTPLUGIN_BUILD_UI=OFF)")
 endif()
 
-# Communication Examples (advanced MessageBus patterns) - temporarily disabled due to interface issues
-# add_subdirectory(communication_examples)
+# Communication Examples (advanced MessageBus patterns) - temporarily disabled due to complex dependencies
+# add_subdirectory(02-communication/event-driven)
+# add_subdirectory(02-communication/message-bus)
 
 # Python Integration Examples (commented out - directory doesn't exist)
 # if(QTPLUGIN_BUILD_PYTHON)
@@ -24,8 +25,8 @@ endif()
 #     message(STATUS "Python examples skipped (QTPLUGIN_BUILD_PYTHON=OFF)")
 # endif()
 
-# Version Management Example (commented out - directory doesn't exist)
-# add_subdirectory(version_management)
+# Version Management Example - temporarily disabled due to complex dependencies
+# add_subdirectory(05-integration/version-management)
 
 # === NEW COMPREHENSIVE EXAMPLES ===
 

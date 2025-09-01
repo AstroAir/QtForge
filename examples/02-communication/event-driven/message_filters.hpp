@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "qtplugin/communication/message_types.hpp"
 #include "../messages/system_event_message.hpp"
+#include <string>
 
 namespace qtplugin::examples {
 
@@ -18,7 +18,7 @@ class PriorityMessageFilter {
 public:
     explicit PriorityMessageFilter(SystemEventMessage::Priority min_priority);
 
-    bool operator()(const IMessage& message) const;
+    bool operator()(const SystemEventMessage& message) const;
 
 private:
     SystemEventMessage::Priority m_min_priority;
@@ -31,7 +31,7 @@ class EventTypeMessageFilter {
 public:
     explicit EventTypeMessageFilter(SystemEventMessage::EventType target_type);
 
-    bool operator()(const IMessage& message) const;
+    bool operator()(const SystemEventMessage& message) const;
 
 private:
     SystemEventMessage::EventType m_target_type;
@@ -44,7 +44,7 @@ class SenderMessageFilter {
 public:
     explicit SenderMessageFilter(const std::string& sender_pattern);
 
-    bool operator()(const IMessage& message) const;
+    bool operator()(const SystemEventMessage& message) const;
 
 private:
     std::string m_sender_pattern;

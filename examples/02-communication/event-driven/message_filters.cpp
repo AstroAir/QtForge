@@ -5,7 +5,6 @@
  */
 
 #include "message_filters.hpp"
-#include <algorithm>
 
 namespace qtplugin::examples {
 
@@ -15,12 +14,8 @@ PriorityMessageFilter::PriorityMessageFilter(SystemEventMessage::Priority min_pr
 {
 }
 
-bool PriorityMessageFilter::operator()(const IMessage& message) const {
-    // Try to cast to SystemEventMessage
-    if (auto* system_msg = dynamic_cast<const SystemEventMessage*>(&message)) {
-        return system_msg->priority() >= m_min_priority;
-    }
-    return true; // Allow non-system messages through
+bool PriorityMessageFilter::operator()(const SystemEventMessage& message) const {
+    return message.priority() >= m_min_priority;
 }
 
 // EventTypeMessageFilter Implementation
@@ -29,12 +24,8 @@ EventTypeMessageFilter::EventTypeMessageFilter(SystemEventMessage::EventType tar
 {
 }
 
-bool EventTypeMessageFilter::operator()(const IMessage& message) const {
-    // Try to cast to SystemEventMessage
-    if (auto* system_msg = dynamic_cast<const SystemEventMessage*>(&message)) {
-        return system_msg->event_type() == m_target_type;
-    }
-    return false; // Only allow matching system messages
+bool EventTypeMessageFilter::operator()(const SystemEventMessage& message) const {
+    return message.event_type() == m_target_type;
 }
 
 // SenderMessageFilter Implementation
@@ -43,9 +34,9 @@ SenderMessageFilter::SenderMessageFilter(const std::string& sender_pattern)
 {
 }
 
-bool SenderMessageFilter::operator()(const IMessage& message) const {
+bool SenderMessageFilter::operator()(const SystemEventMessage& message) const {
     std::string sender = message.sender();
-    
+
     // Simple pattern matching - check if sender contains the pattern
     return sender.find(m_sender_pattern) != std::string::npos;
 }
