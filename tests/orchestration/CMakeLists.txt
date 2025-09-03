@@ -17,10 +17,13 @@ if(QTFORGE_BUILD_COMPREHENSIVE_TESTS)
         QtForgeCore
     )
 
-    add_test(NAME OrchestrationPluginTests COMMAND test_plugin_orchestration)
+    add_test(NAME OrchestrationPluginTests
+        COMMAND powershell -ExecutionPolicy Bypass -File ${CMAKE_SOURCE_DIR}/run_test.ps1
+        -TestExecutable ${CMAKE_CURRENT_BINARY_DIR}/test_plugin_orchestration.exe
+        -WorkingDirectory ${CMAKE_CURRENT_BINARY_DIR}
+    )
     set_tests_properties(OrchestrationPluginTests PROPERTIES
         TIMEOUT 120
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
 
     # Install test executables

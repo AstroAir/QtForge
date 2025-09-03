@@ -1,6 +1,6 @@
 # Installation Guide
 
-This guide covers all the ways to install QtPlugin on different platforms and build systems.
+This guide covers all the ways to install QtForge on different platforms and build systems.
 
 ## Quick Installation
 
@@ -16,11 +16,11 @@ This guide covers all the ways to install QtPlugin on different platforms and bu
     # or
     .\bootstrap-vcpkg.bat  # Windows
 
-    # Install QtPlugin
-    ./vcpkg install qtplugin
+    # Install QtForge
+    ./vcpkg install qtforge
 
     # With optional components
-    ./vcpkg install qtplugin[network,ui,examples]
+    ./vcpkg install qtforge[network,ui,examples]
     ```
 
 === "Conan"
@@ -29,24 +29,24 @@ This guide covers all the ways to install QtPlugin on different platforms and bu
     # Add the remote (if not already added)
     conan remote add qtforge https://api.bintray.com/conan/qtforge/conan
 
-    # Install QtPlugin
-    conan install qtplugin/3.0.0@qtforge/stable
+    # Install QtForge
+    conan install qtforge/3.0.0@qtforge/stable
 
     # With options
-    conan install qtplugin/3.0.0@qtforge/stable -o qtplugin:network=True -o qtplugin:ui=True
+    conan install qtforge/3.0.0@qtforge/stable -o qtforge:network=True -o qtforge:ui=True
     ```
 
 === "Homebrew (macOS)"
 
     ```bash
     # Add the tap
-    brew tap qtforge/qtplugin
+    brew tap qtforge/qtforge
 
-    # Install QtPlugin
-    brew install qtplugin
+    # Install QtForge
+    brew install qtforge
 
     # With all components
-    brew install qtplugin --with-network --with-ui
+    brew install qtforge --with-network --with-ui
     ```
 
 ### Using CMake FetchContent
@@ -57,19 +57,19 @@ Add this to your `CMakeLists.txt`:
 include(FetchContent)
 
 FetchContent_Declare(
-    QtPlugin
-    GIT_REPOSITORY https://github.com/QtForge/QtPlugin.git
+    QtForge
+    GIT_REPOSITORY https://github.com/AstroAir/QtForge.git
     GIT_TAG        v3.0.0  # or main for latest
 )
 
-FetchContent_MakeAvailable(QtPlugin)
+FetchContent_MakeAvailable(QtForge)
 
 # Link to your target
 target_link_libraries(your_app
-    QtPlugin::Core
-    QtPlugin::Security  # optional
-    QtPlugin::Network   # optional
-    QtPlugin::UI        # optional
+    QtForge::Core
+    QtForge::Security  # optional
+    QtForge::Network   # optional
+    QtForge::UI        # optional
 )
 ```
 

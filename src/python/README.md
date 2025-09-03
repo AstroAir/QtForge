@@ -5,11 +5,17 @@ This directory contains the Python bindings for QtForge using pybind11.
 ## Structure
 
 - `qtforge_python.cpp` - Main Python module entry point
-- `core/` - Core plugin system bindings
-- `communication/` - Message bus and communication bindings
-- `security/` - Security manager bindings
+- `core/` - Core plugin system bindings (includes advanced and dynamic plugin interfaces)
+- `communication/` - Message bus and communication bindings (includes service contracts)
+- `security/` - Security manager bindings (includes all security components)
 - `utils/` - Utility class bindings
-- `managers/` - Manager class bindings
+- `managers/` - Manager class bindings (includes version management)
+- `orchestration/` - Plugin orchestration and workflow bindings
+- `monitoring/` - Hot reload and metrics collection bindings
+- `transactions/` - Transaction management bindings
+- `composition/` - Plugin composition bindings
+- `marketplace/` - Plugin marketplace bindings
+- `threading/` - Threading and concurrency bindings
 
 ## Building
 
@@ -24,6 +30,32 @@ cmake -DQTFORGE_BUILD_PYTHON_BINDINGS=ON ..
 - Python 3.8 or later
 - pybind11
 - Qt6 Core (and optional components)
+
+## New Features in v3.2.0
+
+### Enhanced Core Bindings
+- **Advanced Plugin Interface**: Support for service contracts and advanced communication
+- **Dynamic Plugin Interface**: Runtime interface adaptation and capability negotiation
+- **Plugin Type System**: Support for Native, Python, Lua, Remote, and Composite plugins
+- **Lifecycle Management**: Complete plugin lifecycle with health monitoring and auto-restart
+
+### Service Contracts
+- **Service Discovery**: Automatic service registration and discovery
+- **Version Compatibility**: Service version negotiation and compatibility checking
+- **Method Descriptors**: Detailed service method specifications with input/output schemas
+- **Capability Flags**: Fine-grained service capability declarations
+
+### Enhanced Security
+- **Permission System**: Granular permission management (FileSystem, Network, Registry, etc.)
+- **Trust Levels**: Multi-level trust system (Untrusted, Limited, Trusted, FullyTrusted)
+- **Security Components**: Complete coverage of all security validation components
+- **Policy Engine**: Configurable security policy evaluation and enforcement
+
+### Manager Enhancements
+- **Version Management**: Multi-version plugin support with migration and rollback
+- **Configuration Scoping**: Global, Plugin, User, Session, and Runtime configuration scopes
+- **Resource Management**: Advanced resource allocation and monitoring
+- **Logging Integration**: Comprehensive logging with multiple levels and file output
 
 ## Building Python Bindings
 

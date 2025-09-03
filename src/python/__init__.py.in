@@ -26,6 +26,13 @@ try:
         'PluginLoader',
         'PluginRegistry',
         'PluginMetadata',
+        'PluginDependencyResolver',
+        'IPluginDependencyResolver',
+        'DependencyNode',
+        'PluginLifecycleManager',
+        'PluginLifecycleConfig',
+        'PluginLifecycleEventData',
+        'PluginHealthStatus',
 
         # Communication
         'MessageBus',
@@ -49,6 +56,7 @@ try:
         'PluginState',
         'PluginCapability',
         'PluginPriority',
+        'PluginLifecycleEvent',
         'StepStatus',
         'ExecutionMode',
 
@@ -60,6 +68,8 @@ try:
         'create_plugin_manager',
         'create_plugin_loader',
         'create_plugin_registry',
+        'create_plugin_dependency_resolver',
+        'create_plugin_lifecycle_manager',
 
         # Communication functions
         'create_message_bus',

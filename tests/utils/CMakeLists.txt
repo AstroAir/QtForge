@@ -16,10 +16,13 @@ target_link_libraries(test_version PRIVATE
     QtForgeCore
 )
 
-add_test(NAME UtilsVersionTests COMMAND test_version)
+add_test(NAME UtilsVersionTests
+    COMMAND powershell -ExecutionPolicy Bypass -File ${CMAKE_SOURCE_DIR}/run_test.ps1
+    -TestExecutable ${CMAKE_CURRENT_BINARY_DIR}/test_version.exe
+    -WorkingDirectory ${CMAKE_CURRENT_BINARY_DIR}
+)
 set_tests_properties(UtilsVersionTests PROPERTIES
     TIMEOUT 60
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 # Comprehensive Version Tests - temporarily disabled due to linking errors
@@ -42,7 +45,8 @@ set_tests_properties(UtilsVersionTests PROPERTIES
 #     set_tests_properties(UtilsVersionComprehensiveTests PROPERTIES
 #         TIMEOUT 90
 #         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-#     )
+#     ENVIRONMENT "PATH=${CMAKE_CURRENT_BINARY_DIR};${CMAKE_BINARY_DIR};D:/msys64/mingw64/bin;$ENV{PATH}"
+# )
 # endif()
 
 # Error Handling Tests
@@ -60,10 +64,13 @@ target_link_libraries(test_error_handling PRIVATE
     QtForgeCore
 )
 
-add_test(NAME UtilsErrorHandlingTests COMMAND test_error_handling)
+add_test(NAME UtilsErrorHandlingTests
+    COMMAND powershell -ExecutionPolicy Bypass -File ${CMAKE_SOURCE_DIR}/run_test.ps1
+    -TestExecutable ${CMAKE_CURRENT_BINARY_DIR}/test_error_handling.exe
+    -WorkingDirectory ${CMAKE_CURRENT_BINARY_DIR}
+)
 set_tests_properties(UtilsErrorHandlingTests PROPERTIES
     TIMEOUT 60
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 # Comprehensive Error Handling Tests
@@ -86,7 +93,8 @@ set_tests_properties(UtilsErrorHandlingTests PROPERTIES
 #     set_tests_properties(UtilsErrorHandlingComprehensiveTests PROPERTIES
 #         TIMEOUT 90
 #         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-#     )
+#     ENVIRONMENT "PATH=${CMAKE_CURRENT_BINARY_DIR};${CMAKE_BINARY_DIR};D:/msys64/mingw64/bin;$ENV{PATH}"
+# )
 # endif()
 
 # Expected<T,E> Comprehensive Tests - temporarily disabled due to linking errors
@@ -109,7 +117,8 @@ set_tests_properties(UtilsErrorHandlingTests PROPERTIES
 #     set_tests_properties(UtilsExpectedComprehensiveTests PROPERTIES
 #         TIMEOUT 60
 #         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-#     )
+#     ENVIRONMENT "PATH=${CMAKE_CURRENT_BINARY_DIR};${CMAKE_BINARY_DIR};D:/msys64/mingw64/bin;$ENV{PATH}"
+# )
 # endif()
 
 # Install test executables

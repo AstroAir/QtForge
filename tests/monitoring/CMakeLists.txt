@@ -17,10 +17,13 @@ if(QTFORGE_BUILD_PERFORMANCE_TESTS)
         QtForgeCore
     )
 
-    add_test(NAME MonitoringPerformanceTests COMMAND test_performance)
+    add_test(NAME MonitoringPerformanceTests
+        COMMAND powershell -ExecutionPolicy Bypass -File ${CMAKE_SOURCE_DIR}/run_test.ps1
+        -TestExecutable ${CMAKE_CURRENT_BINARY_DIR}/test_performance.exe
+        -WorkingDirectory ${CMAKE_CURRENT_BINARY_DIR}
+    )
     set_tests_properties(MonitoringPerformanceTests PROPERTIES
         TIMEOUT 600
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
 endif()
 
@@ -41,10 +44,13 @@ if(QTFORGE_BUILD_PERFORMANCE_TESTS)
         QtForgeCore
     )
 
-    add_test(NAME MonitoringComponentPerformanceTests COMMAND test_component_performance)
+    add_test(NAME MonitoringComponentPerformanceTests
+        COMMAND powershell -ExecutionPolicy Bypass -File ${CMAKE_SOURCE_DIR}/run_test.ps1
+        -TestExecutable ${CMAKE_CURRENT_BINARY_DIR}/test_component_performance.exe
+        -WorkingDirectory ${CMAKE_CURRENT_BINARY_DIR}
+    )
     set_tests_properties(MonitoringComponentPerformanceTests PROPERTIES
         TIMEOUT 600
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
 endif()
 

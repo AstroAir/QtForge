@@ -173,30 +173,30 @@ QtPlugin is built with modern C++20 principles and enterprise-grade architecture
 
 ### Plugin System
 
-- **[Plugin Interface](api/README.md#plugin-interface)**: Base interface for all plugins
-- **[Plugin Manager](api/README.md#plugin-manager)**: Central plugin management
-- **[Plugin Loader](api/README.md#plugin-loader)**: Dynamic plugin loading
+- **[Plugin Interface](api/readme.md#plugin-interface)**: Base interface for all plugins
+- **[Plugin Manager](api/readme.md#plugin-manager)**: Central plugin management
+- **[Plugin Loader](api/readme.md#plugin-loader)**: Dynamic plugin loading
 
 ### Communication
 
-- **[Message Bus](api/README.md#message-bus)**: Inter-plugin communication
-- **[Message Types](api/README.md#message-types)**: Type-safe messaging
+- **[Message Bus](api/readme.md#message-bus)**: Inter-plugin communication
+- **[Message Types](api/readme.md#message-types)**: Type-safe messaging
 
 ### Resource Management
 
-- **[Resource Manager](api/README.md#resource-manager)**: Resource lifecycle tracking
-- **[Lifecycle Manager](api/README.md#lifecycle-manager)**: Plugin lifecycle management
+- **[Resource Manager](api/readme.md#resource-manager)**: Resource lifecycle tracking
+- **[Lifecycle Manager](api/readme.md#lifecycle-manager)**: Plugin lifecycle management
 
 ### Security
 
-- **[Security Manager](api/README.md#security-manager)**: Plugin validation and trust
-- **[Validation System](api/README.md#validation-system)**: Multi-layer security
+- **[Security Manager](api/readme.md#security-manager)**: Plugin validation and trust
+- **[Validation System](api/readme.md#validation-system)**: Multi-layer security
 
 ### Utilities
 
-- **[Error Handling](api/README.md#error-handling)**: Modern expected<T,E> pattern
-- **[Version Management](api/README.md#version-information)**: Version compatibility
-- **[Concepts](api/README.md#concepts)**: C++20 type validation
+- **[Error Handling](api/readme.md#error-handling)**: Modern expected<T,E> pattern
+- **[Version Management](api/readme.md#version-information)**: Version compatibility
+- **[Concepts](api/readme.md#concepts)**: C++20 type validation
 
 ## 📖 Learning Path
 
@@ -209,36 +209,36 @@ QtPlugin is built with modern C++20 principles and enterprise-grade architecture
 ### 🚀 Intermediate
 
 4. **[Plugin Development Guide](guides/plugin-development.md)** - Comprehensive plugin creation
-5. **[API Reference](api/README.md)** - Detailed API documentation
-6. **[Advanced Examples](../examples/README.md)** - Service, network, UI plugins
+5. **[API Reference](api/readme.md)** - Detailed API documentation
+6. **[Advanced Examples](../examples/readme.md)** - Service, network, UI plugins
 
 ### 🏆 Advanced
 
 7. **[Architecture Guide](guides/architecture.md)** - System design and patterns
 8. **[Contributing Guide](../CONTRIBUTING.md)** - Contribute to the project
-9. **[Custom Applications](../examples/README.md#example-applications)** - Build plugin-based apps
+9. **[Custom Applications](../examples/readme.md#example-applications)** - Build plugin-based apps
 
 ## 🔍 Finding Information
 
 ### By Topic
 
 - **Plugin Creation**: [Plugin Development Guide](guides/plugin-development.md)
-- **API Usage**: [API Reference](api/README.md)
+- **API Usage**: [API Reference](api/readme.md)
 - **System Design**: [Architecture Guide](guides/architecture.md)
-- **Examples**: [Examples Directory](../examples/README.md)
-- **Troubleshooting**: [Examples Troubleshooting](../examples/README.md#troubleshooting)
+- **Examples**: [Examples Directory](../examples/readme.md)
+- **Troubleshooting**: [Examples Troubleshooting](../examples/readme.md#troubleshooting)
 
 ### By Component
 
-- **Core System**: [Plugin Interface](api/README.md#plugin-interface), [Plugin Manager](api/README.md#plugin-manager)
-- **Communication**: [Message Bus](api/README.md#message-bus), [Message Types](api/README.md#message-types)
-- **Security**: [Security Manager](api/README.md#security-manager), [Validation](api/README.md#validation-system)
-- **Resources**: [Resource Manager](api/README.md#resource-manager), [Lifecycle](api/README.md#lifecycle-manager)
+- **Core System**: [Plugin Interface](api/readme.md#plugin-interface), [Plugin Manager](api/readme.md#plugin-manager)
+- **Communication**: [Message Bus](api/readme.md#message-bus), [Message Types](api/readme.md#message-types)
+- **Security**: [Security Manager](api/readme.md#security-manager), [Validation](api/readme.md#validation-system)
+- **Resources**: [Resource Manager](api/readme.md#resource-manager), [Lifecycle](api/readme.md#lifecycle-manager)
 
 ### By Use Case
 
-- **Application Developer**: [Quick Start](../README.md#quick-start), [Examples](../examples/README.md)
-- **Plugin Developer**: [Plugin Guide](guides/plugin-development.md), [API Reference](api/README.md)
+- **Application Developer**: [Quick Start](../readme.md#quick-start), [Examples](../examples/readme.md)
+- **Plugin Developer**: [Plugin Guide](guides/plugin-development.md), [API Reference](api/readme.md)
 - **System Architect**: [Architecture Guide](guides/architecture.md), [Design Patterns](guides/architecture.md#design-patterns)
 - **Contributor**: [Contributing Guide](../CONTRIBUTING.md), [Development Setup](../CONTRIBUTING.md#development-setup)
 
@@ -248,7 +248,7 @@ QtPlugin is built with modern C++20 principles and enterprise-grade architecture
 
 - **Search**: Use your browser's search (Ctrl+F) to find specific topics
 - **Cross-References**: Follow links between related documentation sections
-- **Examples**: Check the [examples directory](../examples/README.md) for working code
+- **Examples**: Check the [examples directory](../examples/readme.md) for working code
 
 ### Community Support
 

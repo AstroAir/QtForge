@@ -17,10 +17,13 @@ if(QTFORGE_BUILD_CROSS_PLATFORM_TESTS)
         QtForgeCore
     )
 
-    add_test(NAME PlatformCrossPlatformTests COMMAND test_cross_platform)
+    add_test(NAME PlatformCrossPlatformTests
+        COMMAND powershell -ExecutionPolicy Bypass -File ${CMAKE_SOURCE_DIR}/run_test.ps1
+        -TestExecutable ${CMAKE_CURRENT_BINARY_DIR}/test_cross_platform.exe
+        -WorkingDirectory ${CMAKE_CURRENT_BINARY_DIR}
+    )
     set_tests_properties(PlatformCrossPlatformTests PROPERTIES
         TIMEOUT 300
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
 
     # Install test executables

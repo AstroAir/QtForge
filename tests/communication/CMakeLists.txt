@@ -16,10 +16,13 @@ target_link_libraries(test_message_bus PRIVATE
     QtForgeCore
 )
 
-add_test(NAME CommunicationMessageBusTests COMMAND test_message_bus)
+add_test(NAME CommunicationMessageBusTests
+    COMMAND powershell -ExecutionPolicy Bypass -File ${CMAKE_SOURCE_DIR}/run_test.ps1
+    -TestExecutable ${CMAKE_CURRENT_BINARY_DIR}/test_message_bus.exe
+    -WorkingDirectory ${CMAKE_CURRENT_BINARY_DIR}
+)
 set_tests_properties(CommunicationMessageBusTests PROPERTIES
     TIMEOUT 120
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 # Comprehensive Message Bus Tests - temporarily disabled due to API mismatch
@@ -42,6 +45,7 @@ set_tests_properties(CommunicationMessageBusTests PROPERTIES
 #     set_tests_properties(CommunicationMessageBusComprehensiveTests PROPERTIES
 #         TIMEOUT 180
 #         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+#         ENVIRONMENT "PATH=${CMAKE_CURRENT_BINARY_DIR};${CMAKE_BINARY_DIR};D:/msys64/mingw64/bin;$ENV{PATH}"
 #     )
 # endif()
 
@@ -61,10 +65,13 @@ if(QTFORGE_BUILD_COMPREHENSIVE_TESTS)
         QtForgeCore
     )
 
-    add_test(NAME CommunicationServiceContractsTests COMMAND test_service_contracts)
+    add_test(NAME CommunicationServiceContractsTests
+        COMMAND powershell -ExecutionPolicy Bypass -File ${CMAKE_SOURCE_DIR}/run_test.ps1
+        -TestExecutable ${CMAKE_CURRENT_BINARY_DIR}/test_service_contracts.exe
+        -WorkingDirectory ${CMAKE_CURRENT_BINARY_DIR}
+    )
     set_tests_properties(CommunicationServiceContractsTests PROPERTIES
         TIMEOUT 60
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
 endif()
 

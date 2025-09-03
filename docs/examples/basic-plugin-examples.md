@@ -765,3 +765,187 @@ PluginState ServiceProviderPlugin::state() const {
     return m_state;
 }
 ```
+
+## Configurable Plugin {#configurable-plugin}
+
+A plugin that demonstrates configuration management and persistence.
+
+### Features
+
+- Configuration loading and saving
+- Runtime configuration updates
+- Configuration validation
+- Default value handling
+
+### Source Code
+
+**configurable_plugin.hpp**
+
+```cpp
+#pragma once
+
+#include <qtplugin/core/plugin_interface.hpp>
+#include <QObject>
+#include <QJsonObject>
+#include <QSettings>
+
+class ConfigurablePlugin : public QObject, public IPlugin {
+    Q_OBJECT
+    Q_PLUGIN_METADATA(IID "org.qtforge.examples.ConfigurablePlugin" FILE "configurable_plugin.json")
+    Q_INTERFACES(IPlugin)
+
+public:
+    explicit ConfigurablePlugin(QObject* parent = nullptr);
+    ~ConfigurablePlugin() override = default;
+
+    // IPlugin interface
+    qtplugin::expected<void, PluginError> initialize() override;
+    void shutdown() noexcept override;
+    qtplugin::expected<QJsonObject, PluginError> execute_command(
+        std::string_view command,
+        const QJsonObject& params = {}) override;
+
+    qtplugin::expected<void, PluginError> configure(const QJsonObject& config) override;
+    QJsonObject current_configuration() const override;
+    std::vector<std::string> supported_commands() const override;
+    PluginMetadata metadata() const override;
+    PluginState state() const override;
+
+private:
+    void loadConfiguration();
+    void saveConfiguration();
+    bool validateConfiguration(const QJsonObject& config);
+
+    PluginState m_state = PluginState::Unloaded;
+    QJsonObject m_config;
+    std::unique_ptr<QSettings> m_settings;
+};
+```
+
+## Async Plugin {#async-plugin}
+
+A plugin that demonstrates asynchronous operations and threading.
+
+### Features
+
+- Asynchronous task execution
+- Thread pool management
+- Progress reporting
+- Cancellation support
+
+### Source Code
+
+**async_plugin.hpp**
+
+```cpp
+#pragma once
+
+#include <qtplugin/core/plugin_interface.hpp>
+#include <QObject>
+#include <QThreadPool>
+#include <QFuture>
+#include <QFutureWatcher>
+
+class AsyncPlugin : public QObject, public IPlugin {
+    Q_OBJECT
+    Q_PLUGIN_METADATA(IID "org.qtforge.examples.AsyncPlugin" FILE "async_plugin.json")
+    Q_INTERFACES(IPlugin)
+
+public:
+    explicit AsyncPlugin(QObject* parent = nullptr);
+    ~AsyncPlugin() override = default;
+
+    // IPlugin interface
+    qtplugin::expected<void, PluginError> initialize() override;
+    void shutdown() noexcept override;
+    qtplugin::expected<QJsonObject, PluginError> execute_command(
+        std::string_view command,
+        const QJsonObject& params = {}) override;
+
+    std::vector<std::string> supported_commands() const override;
+    PluginMetadata metadata() const override;
+    PluginState state() const override;
+
+private slots:
+    void onTaskFinished();
+    void onTaskProgress(int progress);
+
+private:
+    void startAsyncTask(const QJsonObject& params);
+    void cancelAllTasks();
+
+    PluginState m_state = PluginState::Unloaded;
+    QThreadPool* m_threadPool;
+    QList<QFutureWatcher<QJsonObject>*> m_watchers;
+};
+```
+
+## Transaction-Aware Plugin {#transaction-aware-plugin}
+
+A plugin that demonstrates ACID transaction support.
+
+### Features
+
+- Transaction management
+- Rollback capabilities
+- Nested transactions
+- Data consistency
+
+### Source Code
+
+**transaction_plugin.hpp**
+
+```cpp
+#pragma once
+
+#include <qtplugin/core/plugin_interface.hpp>
+#include <qtplugin/transactions/transaction_manager.hpp>
+#include <QObject>
+#include <QJsonObject>
+
+class TransactionAwarePlugin : public QObject, public IPlugin {
+    Q_OBJECT
+    Q_PLUGIN_METADATA(IID "org.qtforge.examples.TransactionAwarePlugin" FILE "transaction_plugin.json")
+    Q_INTERFACES(IPlugin)
+
+public:
+    explicit TransactionAwarePlugin(QObject* parent = nullptr);
+    ~TransactionAwarePlugin() override = default;
+
+    // IPlugin interface
+    qtplugin::expected<void, PluginError> initialize() override;
+    void shutdown() noexcept override;
+    qtplugin::expected<QJsonObject, PluginError> execute_command(
+        std::string_view command,
+        const QJsonObject& params = {}) override;
+
+    std::vector<std::string> supported_commands() const override;
+    PluginMetadata metadata() const override;
+    PluginState state() const override;
+
+private:
+    qtplugin::expected<QJsonObject, PluginError> beginTransaction(const QJsonObject& params);
+    qtplugin::expected<QJsonObject, PluginError> commitTransaction(const QJsonObject& params);
+    qtplugin::expected<QJsonObject, PluginError> rollbackTransaction(const QJsonObject& params);
+
+    PluginState m_state = PluginState::Unloaded;
+    std::shared_ptr<qtplugin::TransactionManager> m_transactionManager;
+    std::map<std::string, std::any> m_transactionData;
+};
+```
+
+## Building the Examples
+
+All examples can be built using the provided CMake configuration:
+
+```bash
+mkdir build && cd build
+cmake .. -DBUILD_EXAMPLES=ON
+cmake --build .
+```
+
+## Next Steps
+
+- **[Advanced Examples](advanced.md)**: More complex plugin patterns
+- **[Plugin Development Guide](../user-guide/plugin-development.md)**: Comprehensive development guide
+- **[API Reference](../api/index.md)**: Detailed API documentation

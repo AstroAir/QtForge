@@ -198,6 +198,17 @@ else
   message('Python bindings disabled or dependencies not found')
 endif
 
+# Lua bindings
+lua_dep = dependency('lua', version: '>=5.4', required: get_option('lua_bindings'))
+sol2_dep = dependency('sol2', required: get_option('lua_bindings'))
+
+if get_option('lua_bindings') and lua_dep.found() and sol2_dep.found()
+  message('Building Lua bindings')
+  # Lua bindings will be handled in src/lua/meson.build
+else
+  message('Lua bindings disabled or dependencies not found')
+endif
+
 # Documentation
 doxygen = find_program('doxygen', required: get_option('build_docs'))
 if get_option('build_docs') and doxygen.found()
@@ -406,6 +417,7 @@ summary({
   'Build Examples': get_option('build_examples'),
   'Build Tests': get_option('build_tests'),
   'Python Bindings': get_option('python_bindings') and python3_dep.found() and pybind11_dep.found(),
+  'Lua Bindings': get_option('lua_bindings') and lua_dep.found() and sol2_dep.found(),
   'Documentation': get_option('build_docs') and doxygen.found(),
   'Library Type': get_option('default_library'),
 }, section: 'QtForge Configuration')

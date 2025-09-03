@@ -1,11 +1,11 @@
 # QtForge Python Module Tests
 cmake_minimum_required(VERSION 3.21)
 
-# Python tests require Python development headers and pybind11
+# Python tests require Python development headers, pybind11, and Python bindings to be enabled
 find_package(Python3 COMPONENTS Interpreter Development QUIET)
 find_package(pybind11 QUIET)
 
-if(Python3_FOUND)
+if(QTFORGE_BUILD_PYTHON_BINDINGS AND Python3_FOUND AND pybind11_FOUND)
     # Python Binding Tests
     add_executable(test_python_bindings
         test_python_bindings.cpp
@@ -21,10 +21,13 @@ if(Python3_FOUND)
         QtForgeCore
     )
 
-    add_test(NAME PythonBindingTests COMMAND test_python_bindings)
+    add_test(NAME PythonBindingTests
+        COMMAND powershell -ExecutionPolicy Bypass -File ${CMAKE_SOURCE_DIR}/run_test.ps1
+        -TestExecutable ${CMAKE_CURRENT_BINARY_DIR}/test_python_bindings.exe
+        -WorkingDirectory ${CMAKE_CURRENT_BINARY_DIR}
+    )
     set_tests_properties(PythonBindingTests PROPERTIES
         TIMEOUT 120
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
 
     # Install test executables
@@ -33,5 +36,5 @@ if(Python3_FOUND)
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}/tests/python
     )
 else()
-    message(STATUS "Python3 not found - Python tests disabled")
+    message(STATUS "Python binding tests disabled - requires QTFORGE_BUILD_PYTHON_BINDINGS=ON, Python3, and pybind11")
 endif()

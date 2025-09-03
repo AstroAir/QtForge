@@ -21,6 +21,56 @@
 
 Start your QtForge journey with these foundational examples.
 
+### 🐍 python/ - Python Binding Examples
+
+**Comprehensive Python API demonstrations** - Learn QtForge through Python
+
+#### Legacy Examples
+- ✅ **[01_basic_plugin_management.py](python/01_basic_plugin_management.py)** - Plugin managers, loading, lifecycle
+- ✅ **[02_communication_and_messaging.py](python/02_communication_and_messaging.py)** - Message buses, pub/sub, services
+- ✅ **[03_security_and_validation.py](python/03_security_and_validation.py)** - Security systems, permissions, validation
+- ✅ **[04_orchestration_and_workflows.py](python/04_orchestration_and_workflows.py)** - Workflows, steps, execution modes
+- ✅ **[README.md](python/README.md)** - Detailed Python binding documentation
+
+#### New Comprehensive Examples
+- 🆕 **[comprehensive/01_basic_plugin_management.py](python/comprehensive/01_basic_plugin_management.py)** - Complete plugin management walkthrough
+  - PluginManager, PluginRegistry, PluginLoader creation and configuration
+  - Plugin loading, unloading, and querying operations
+  - Plugin states, capabilities, and priorities demonstration
+  - Dependency management and lifecycle configuration
+  - Comprehensive error handling and resource cleanup
+- 🆕 **[comprehensive/02_communication_system.py](python/comprehensive/02_communication_system.py)** - Full communication system demo
+  - MessageBus creation and configuration
+  - Message publishing and subscription patterns
+  - Request/Response communication protocols
+  - Service contracts and communication utilities
+  - Threading safety and performance testing
+
+### 🌙 lua/ - Lua Binding Examples
+
+**Comprehensive Lua API demonstrations** - Learn QtForge through Lua
+
+#### Legacy Examples
+- ✅ **[01_basic_plugin_management.lua](lua/01_basic_plugin_management.lua)** - Plugin managers, loading, lifecycle
+- ✅ **[02_communication_and_messaging.lua](lua/02_communication_and_messaging.lua)** - Message buses, pub/sub, services
+- ✅ **[03_comprehensive_features.lua](lua/03_comprehensive_features.lua)** - Security, orchestration, monitoring, utilities
+- ✅ **[README.md](lua/README.md)** - Detailed Lua binding documentation
+
+#### New Comprehensive Examples
+- 🆕 **[comprehensive/01_basic_plugin_management.lua](lua/comprehensive/01_basic_plugin_management.lua)** - Complete plugin management in Lua
+  - Core plugin system operations with Lua-specific patterns
+  - Plugin manager creation, configuration, and lifecycle management
+  - Plugin loading, querying, and state management
+  - Dependency resolution and error handling with pcall
+  - Resource management and cleanup patterns
+- 🆕 **[comprehensive/02_utilities_showcase.lua](lua/comprehensive/02_utilities_showcase.lua)** - Comprehensive utilities demo
+  - JSON parsing, validation, and manipulation
+  - String utilities (trim, case conversion, pattern matching)
+  - File system operations (existence checks, path manipulation)
+  - Logging functionality with different levels
+  - Time and date utilities with formatting
+  - Error handling utilities and edge case testing
+
 #### [hello-world/](01-fundamentals/hello-world/)
 
 **The simplest possible plugin** - Perfect for absolute beginners
@@ -247,7 +297,55 @@ cmake --build .
 
 ## 🚀 Running Examples
 
-### 🌱 Start with Fundamentals
+### Prerequisites
+
+```bash
+# Build QtForge with C++ examples
+cmake -DQTFORGE_BUILD_EXAMPLES=ON ..
+make -j$(nproc)
+
+# For Python binding examples
+cmake -DQTFORGE_BUILD_PYTHON_BINDINGS=ON ..
+make -j$(nproc)
+pip install pytest  # Optional, for enhanced testing
+
+# For Lua binding examples
+cmake -DQTFORGE_BUILD_LUA_BINDINGS=ON ..
+make -j$(nproc)
+
+# For all examples (C++, Python, and Lua)
+cmake -DQTFORGE_BUILD_EXAMPLES=ON -DQTFORGE_BUILD_PYTHON_BINDINGS=ON -DQTFORGE_BUILD_LUA_BINDINGS=ON ..
+make -j$(nproc)
+```
+
+### 🐍 Python Binding Examples
+
+```bash
+# Run all Python examples
+python examples/python/01_basic_plugin_management.py
+python examples/python/02_communication_and_messaging.py
+python examples/python/03_security_and_validation.py
+python examples/python/04_orchestration_and_workflows.py
+
+# Or run specific examples
+cd examples/python
+python 01_basic_plugin_management.py
+```
+
+### 🌙 Lua Binding Examples
+
+```bash
+# Run all Lua examples
+lua examples/lua/01_basic_plugin_management.lua
+lua examples/lua/02_communication_and_messaging.lua
+lua examples/lua/03_comprehensive_features.lua
+
+# Or run specific examples
+cd examples/lua
+lua 01_basic_plugin_management.lua
+```
+
+### 🌱 Start with C++ Fundamentals
 
 ```bash
 # 1. Hello World - Your first plugin
@@ -355,6 +453,29 @@ cd 06-comprehensive/full-application
 
 **Production Deployment?**
 → [Monitoring](04-specialized/monitoring/) → [Performance Optimized](06-comprehensive/performance-optimized/)
+
+## 🧪 Comprehensive Testing and Examples
+
+The QtForge project includes extensive testing and example coverage:
+
+### 📊 Test Coverage
+
+- **C++ Core Tests** - Complete API coverage with unit, integration, and performance tests
+- **Python Binding Tests** - 100% Python API coverage with comprehensive error handling
+- **Lua Binding Tests** - 100% Lua API coverage with comprehensive error handling
+- **Cross-Language Consistency** - Verification that all bindings behave consistently
+
+### 📚 Example Coverage
+
+- **C++ Examples** - Traditional plugin development patterns and advanced techniques
+- **Python Examples** - Pythonic patterns and integration with Python ecosystem
+- **Lua Examples** - Lightweight scripting patterns and embedded system integration
+
+### 🔗 Related Resources
+
+- **[tests/](../tests/)** - Comprehensive test suites for all languages
+- **[tests/python/](../tests/python/)** - Python binding test documentation
+- **[tests/lua/](../tests/lua/)** - Lua binding test documentation
 
 ### 🎯 By Experience Level
 

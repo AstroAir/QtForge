@@ -30,6 +30,18 @@ option('python_bindings',
   description: 'Build Python bindings using pybind11'
 )
 
+option('lua_bindings',
+  type: 'boolean',
+  value: false,
+  description: 'Build Lua bindings using sol2'
+)
+
+option('lua_enable_sandbox',
+  type: 'boolean',
+  value: true,
+  description: 'Enable Lua script sandboxing for security'
+)
+
 # Qt component options (auto-detected but can be forced)
 option('force_qt_network',
   type: 'boolean',

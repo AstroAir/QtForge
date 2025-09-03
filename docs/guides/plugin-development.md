@@ -1,6 +1,6 @@
 # Plugin Development Guide
 
-This guide covers everything you need to know to develop plugins for the QtPlugin system.
+This guide covers everything you need to know to develop plugins for the QtForge system.
 
 ## Getting Started
 
@@ -8,8 +8,8 @@ This guide covers everything you need to know to develop plugins for the QtPlugi
 
 - Qt 6.0 or later
 - C++20 compatible compiler
-- CMake 3.20 or later
-- QtPlugin library installed
+- CMake 3.21 or later
+- QtForge library installed
 
 ### Plugin Structure
 

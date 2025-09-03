@@ -1,10 +1,10 @@
-# Getting Started with QtPlugin
+# Getting Started with QtForge
 
-Welcome to QtPlugin! This guide will help you understand what QtPlugin is, why you should use it, and how to get started quickly.
+Welcome to QtForge! This guide will help you understand what QtForge is, why you should use it, and how to get started quickly.
 
-## What is QtPlugin?
+## What is QtForge?
 
-QtPlugin is a **modern, enterprise-grade C++ plugin system** designed specifically for Qt applications. It provides a robust, type-safe, and performant way to add extensibility to your applications through dynamic plugin loading.
+QtForge is a **modern, enterprise-grade C++ plugin system** designed specifically for Qt applications. It provides a robust, type-safe, and performant way to add extensibility to your applications through dynamic plugin loading.
 
 ### Key Characteristics
 
@@ -15,7 +15,7 @@ QtPlugin is a **modern, enterprise-grade C++ plugin system** designed specifical
 - **🏗️ Modular**: Optional components for network, UI, and security
 - **⚡ High Performance**: Optimized for speed and memory efficiency
 
-## Why Choose QtPlugin?
+## Why Choose QtForge?
 
 ### 🎯 For Application Developers
 

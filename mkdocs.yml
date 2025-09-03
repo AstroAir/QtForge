@@ -78,13 +78,8 @@ plugins:
       separator: '[\s\-,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
   - minify:
       minify_html: true
-  - git-revision-date-localized:
-      enable_creation_date: true
-      type: timeago
-  - git-committers:
-      repository: QtForge/QtPlugin
-      branch: main
-  - tags
+
+
 
 # Customization
 extra:
@@ -95,12 +90,7 @@ extra:
       link: https://github.com/QtForge/QtPlugin
     - icon: fontawesome/brands/twitter
       link: https://twitter.com/QtForge
-  tags:
-    API: api
-    Guide: guide
-    Tutorial: tutorial
-    Example: example
-    Advanced: advanced
+
 
 # Extensions
 markdown_extensions:
@@ -156,30 +146,34 @@ markdown_extensions:
 # Page tree
 nav:
   - Home: index.md
+  - Installation: installation.md
   - Getting Started:
     - Overview: getting-started/overview.md
-    - Installation: getting-started/installation.md
     - Quick Start: getting-started/quick-start.md
     - First Plugin: getting-started/first-plugin.md
   - User Guide:
     - Plugin Management: user-guide/plugin-management.md
+    - Plugin Development: user-guide/plugin-development.md
+    - Plugin Architecture: user-guide/plugin-architecture.md
+    - Python Integration: user-guide/python-integration.md
+    - Security Configuration: user-guide/security-configuration.md
     - Configuration: user-guide/configuration.md
-    - Security: user-guide/security.md
-    - Performance: user-guide/performance.md
+    - Advanced Plugin Development: user-guide/advanced-plugin-development.md
+    - Marketplace Integration: user-guide/marketplace-integration.md
+    - Workflow Orchestration: user-guide/workflow-orchestration.md
     - Troubleshooting: user-guide/troubleshooting.md
-  - Developer Guide:
-    - Plugin Development: developer-guide/plugin-development.md
-    - Advanced Patterns: developer-guide/advanced-patterns.md
-    - Testing: developer-guide/testing.md
-    - Best Practices: developer-guide/best-practices.md
-    - Migration: developer-guide/migration.md
+  - Guides:
+    - readme.md: guides/readme.md
+    - Architecture: guides/architecture.md
+    - Plugin Development: guides/plugin-development.md
   - API Reference:
     - Overview: api/index.md
+    - API Overview: api/overview.md
     - Core:
+      - API Reference: api/readme.md
       - Plugin Interface: api/core/plugin-interface.md
       - Plugin Manager: api/core/plugin-manager.md
       - Plugin Loader: api/core/plugin-loader.md
-      - Plugin Registry: api/core/plugin-registry.md
     - Communication:
       - Message Bus: api/communication/message-bus.md
       - Message Types: api/communication/message-types.md
@@ -188,35 +182,76 @@ nav:
       - Plugin Validator: api/security/plugin-validator.md
     - Utils:
       - Error Handling: api/utils/error-handling.md
-      - Version: api/utils/version.md
-      - Concepts: api/utils/concepts.md
-      - Helpers: api/utils/helpers.md
-    - Optional Components:
-      - Network: api/optional/network.md
-      - UI: api/optional/ui.md
+      - Serialization: api/utils/serialization.md
+    - Composition:
+      - Composite Plugin: api/composition/composite-plugin.md
+    - Lua:
+      - Overview: api/lua/overview.md
+    - Marketplace:
+      - Plugin Marketplace: api/marketplace/plugin-marketplace.md
+    - Monitoring:
+      - Plugin Hot Reload Manager: api/monitoring/plugin-hot-reload-manager.md
+      - Plugin Metrics Collector: api/monitoring/plugin-metrics-collector.md
+    - Orchestration:
+      - Advanced Orchestrator: api/orchestration/advanced-orchestrator.md
+      - Plugin Orchestrator: api/orchestration/plugin-orchestrator.md
+    - Python:
+      - Overview: api/python/overview.md
+      - Core:
+        - Plugin Manager: api/python/core/plugin-manager.md
+      - Orchestration:
+        - Plugin Orchestrator: api/python/orchestration/plugin-orchestrator.md
+    - Transactions:
+      - Plugin Transaction Manager: api/transactions/plugin-transaction-manager.md
+  - Tutorials:
+    - Advanced Plugin Tutorial: tutorials/advanced-plugin-tutorial.md
+    - Orchestration Tutorial: tutorials/orchestration-tutorial.md
+    - Python Integration Tutorial: tutorials/python-integration-tutorial.md
   - Examples:
     - Overview: examples/index.md
     - Basic Plugin: examples/basic-plugin.md
     - Service Plugin: examples/service-plugin.md
     - Network Plugin: examples/network-plugin.md
     - UI Plugin: examples/ui-plugin.md
+    - Python Examples: examples/python-examples.md
+    - Orchestration Examples: examples/orchestration-examples.md
+    - Marketplace Examples: examples/marketplace-examples.md
     - Advanced Examples: examples/advanced.md
+    - Basic Plugin Examples: examples/basic-plugin-examples.md
+    - Multilingual Examples: examples/multilingual-examples.md
+  - Developer Guide:
+    - Plugin Development: developer-guide/plugin-development.md
+    - Best Practices: developer-guide/best-practices.md
+    - Advanced Patterns: developer-guide/advanced-patterns.md
   - Architecture:
     - System Design: architecture/system-design.md
-    - Component Architecture: architecture/components.md
-    - Design Patterns: architecture/patterns.md
-    - Performance: architecture/performance.md
-    - Security Model: architecture/security.md
+  - User Guide:
+    - Plugin Architecture: user-guide/plugin-architecture.md
+    - Plugin Development: user-guide/plugin-development.md
+    - Plugin Management: user-guide/plugin-management.md
+    - Configuration: user-guide/configuration.md
+    - Security Configuration: user-guide/security-configuration.md
+    - Workflow Orchestration: user-guide/workflow-orchestration.md
+    - Marketplace Integration: user-guide/marketplace-integration.md
+    - Python Integration: user-guide/python-integration.md
+    - Advanced Plugin Development: user-guide/advanced-plugin-development.md
+    - Performance Optimization: user-guide/performance-optimization.md
+    - Monitoring: user-guide/monitoring.md
+    - Troubleshooting: user-guide/troubleshooting.md
+  - Bindings:
+    - Multilingual Bindings Guide: bindings/multilingual-bindings-guide.md
+    - Binding Consistency Report: bindings/binding-consistency-report.md
+    - Binding Updates Summary: bindings/binding-updates-summary.md
+    - Binding Updates v3.2: bindings/binding-updates-v3-2.md
+    - Multilingual Bindings Update Report: bindings/multilingual-bindings-update-report.md
   - Contributing:
     - Overview: contributing/index.md
-    - Development Setup: contributing/development-setup.md
-    - Coding Standards: contributing/coding-standards.md
-    - Testing Guidelines: contributing/testing.md
-    - Documentation: contributing/documentation.md
-    - Release Process: contributing/release-process.md
+    - Testing: contributing/testing.md
   - Appendix:
     - FAQ: appendix/faq.md
-    - Glossary: appendix/glossary.md
-    - Changelog: appendix/changelog.md
     - License: appendix/license.md
-    - Tags: tags.md
+  - Additional Resources:
+    - readme.md: readme.md
+    - Security: security.md
+    - Documentation Update Report: documentation-update-report.md
+    - Version Management: version-management.md

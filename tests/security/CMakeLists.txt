@@ -17,10 +17,13 @@ target_link_libraries(test_security_manager PRIVATE
     QtForgeSecurity
 )
 
-add_test(NAME SecurityManagerTests COMMAND test_security_manager)
+add_test(NAME SecurityManagerTests
+    COMMAND powershell -ExecutionPolicy Bypass -File ${CMAKE_SOURCE_DIR}/run_test.ps1
+    -TestExecutable ${CMAKE_CURRENT_BINARY_DIR}/test_security_manager.exe
+    -WorkingDirectory ${CMAKE_CURRENT_BINARY_DIR}
+)
 set_tests_properties(SecurityManagerTests PROPERTIES
     TIMEOUT 120
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 # Comprehensive Security Manager Tests - temporarily disabled due to linking errors
@@ -44,6 +47,7 @@ set_tests_properties(SecurityManagerTests PROPERTIES
 #     set_tests_properties(SecurityManagerComprehensiveTests PROPERTIES
 #         TIMEOUT 180
 #         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+#         ENVIRONMENT "PATH=${CMAKE_CURRENT_BINARY_DIR};${CMAKE_BINARY_DIR};D:/msys64/mingw64/bin;$ENV{PATH}"
 #     )
 # endif()
 

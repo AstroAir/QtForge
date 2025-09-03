@@ -9,8 +9,8 @@
 #include <vector>
 
 #ifdef _WIN32
-#include <psapi.h>
 #include <windows.h>
+#include <psapi.h>
 #elif defined(__APPLE__)
 #include <mach/mach.h>
 #endif
@@ -301,7 +301,7 @@ void PerformanceTests::logPerformanceResult(const QString& testName,
 size_t PerformanceTests::getCurrentMemoryUsage() const {
 #ifdef _WIN32
     PROCESS_MEMORY_COUNTERS pmc;
-    if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc))) {
+    if (K32GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc))) {
         return pmc.WorkingSetSize;
     }
     return 0;

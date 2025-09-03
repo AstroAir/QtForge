@@ -216,6 +216,6 @@ connect(manager, &PluginManager::pluginLoadFailed,
 ## See Also
 
 - [Configuration Guide](configuration.md)
-- [Security Guidelines](security.md)
+- [Security Guidelines](../security.md)
 - [Troubleshooting](troubleshooting.md)
 - [Plugin Development Guide](../developer-guide/plugin-development.md)

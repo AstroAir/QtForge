@@ -65,6 +65,12 @@ function(qtforge_define_options)
     option(QTFORGE_PYTHON_BINDINGS_INSTALL "Install Python bindings" ON)
     option(QTFORGE_PYTHON_BINDINGS_TESTS "Build Python binding tests" OFF)
 
+    # Lua binding options
+    option(QTFORGE_BUILD_LUA_BINDINGS "Build Lua bindings using sol2" OFF)
+    option(QTFORGE_LUA_BINDINGS_INSTALL "Install Lua bindings" ON)
+    option(QTFORGE_LUA_BINDINGS_TESTS "Build Lua binding tests" OFF)
+    option(QTFORGE_LUA_ENABLE_SANDBOX "Enable Lua script sandboxing" ON)
+
     # Advanced options
     option(QTFORGE_BUILD_COMPONENT_TESTS "Build component-specific tests" OFF)
     option(QTFORGE_ENABLE_COMPONENT_LOGGING "Enable detailed component logging" OFF)
@@ -126,6 +132,14 @@ function(qtforge_define_options)
         set(QTFORGE_PYTHON_INSTALL_DIR "" CACHE STRING "Python module installation directory (auto-detected if empty)")
         set(QTFORGE_PYTHON_MIN_VERSION "3.8" CACHE STRING "Minimum required Python version")
         set(QTFORGE_PYTHON_MAX_VERSION "3.12" CACHE STRING "Maximum supported Python version")
+    endif()
+
+    # Lua binding installation options
+    if(QTFORGE_BUILD_LUA_BINDINGS)
+        set(QTFORGE_LUA_INSTALL_DIR "" CACHE STRING "Lua module installation directory (auto-detected if empty)")
+        set(QTFORGE_LUA_MIN_VERSION "5.4" CACHE STRING "Minimum required Lua version")
+        set(QTFORGE_LUA_MAX_VERSION "5.4" CACHE STRING "Maximum supported Lua version")
+        set(QTFORGE_SOL2_MIN_VERSION "3.3.0" CACHE STRING "Minimum required sol2 version")
     endif()
 
     # Print configuration summary
@@ -215,6 +229,15 @@ function(qtforge_print_configuration_summary)
     message(STATUS "  Tests: ${QTFORGE_BUILD_TESTS}")
     message(STATUS "  Benchmarks: ${QTFORGE_BUILD_BENCHMARKS}")
     message(STATUS "  Documentation: ${QTFORGE_BUILD_DOCS}")
+    message(STATUS "")
+
+    # Scripting bindings
+    message(STATUS "Scripting Bindings:")
+    message(STATUS "  Python Bindings: ${QTFORGE_BUILD_PYTHON_BINDINGS}")
+    message(STATUS "  Lua Bindings: ${QTFORGE_BUILD_LUA_BINDINGS}")
+    if(QTFORGE_BUILD_LUA_BINDINGS)
+        message(STATUS "  Lua Sandboxing: ${QTFORGE_LUA_ENABLE_SANDBOX}")
+    endif()
     message(STATUS "")
 
     # Compiler options

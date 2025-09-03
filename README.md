@@ -301,7 +301,7 @@ See [CHANGELOG.md](../CHANGELOG.md) for a list of changes and version history.
 
 ## ✅ Implementation Status
 
-QtForge v1.0.0 — Completed & fully functional
+QtForge v3.0.0 — Completed & fully functional
 
 ### Build Status: ✅ SUCCESS
 

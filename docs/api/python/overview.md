@@ -48,6 +48,49 @@ qtforge.managers      # Configuration, logging, and resource management
 
 ### Prerequisites
 
+- **Python 3.8+** with development headers
+- **Qt6** (6.0 or later) with Python bindings (PyQt6 or PySide6)
+- **QtForge C++ library** (v3.0.0 or later)
+- **pybind11** (automatically handled by build system)
+
+### Installation Methods
+
+#### Using pip (Recommended)
+
+```bash
+# Install from PyPI (when available)
+pip install qtforge
+
+# Install with optional dependencies
+pip install qtforge[qt,examples]
+```
+
+#### Using conda
+
+```bash
+# Install from conda-forge
+conda install -c conda-forge qtforge
+
+# Or create environment with all dependencies
+conda env create -f environment.yml
+```
+
+#### Building from Source
+
+```bash
+# Clone the repository
+git clone https://github.com/AstroAir/QtForge.git
+cd QtForge
+
+# Build Python bindings
+mkdir build && cd build
+cmake .. -DQTFORGE_BUILD_PYTHON=ON -DPYTHON_EXECUTABLE=$(which python)
+cmake --build . --target qtforge_python
+
+# Install
+pip install .
+```
+
 - Python 3.8 or later
 - Qt6 Core (and optional components)
 - Compatible C++ compiler

@@ -261,6 +261,79 @@ function(qtforge_find_python_dependencies)
 endfunction()
 
 #[=======================================================================[.rst:
+qtforge_find_lua_dependencies
+------------------------------
+
+Finds Lua interpreter and sol2 for Lua bindings.
+#]=======================================================================]
+function(qtforge_find_lua_dependencies)
+    if(NOT QTFORGE_BUILD_LUA_BINDINGS)
+        return()
+    endif()
+
+    message(STATUS "QtForge: Finding Lua dependencies...")
+
+    # Find Lua interpreter
+    find_package(Lua QUIET)
+
+    if(Lua_FOUND)
+        message(STATUS "QtForge: Found Lua ${LUA_VERSION_STRING}")
+
+        # Check Lua version requirements
+        if(LUA_VERSION_STRING VERSION_LESS ${QTFORGE_LUA_MIN_VERSION})
+            message(WARNING "QtForge: Lua ${LUA_VERSION_STRING} is below minimum required version ${QTFORGE_LUA_MIN_VERSION}")
+            set(QTFORGE_LUA_FOUND FALSE PARENT_SCOPE)
+            return()
+        endif()
+
+        if(LUA_VERSION_STRING VERSION_GREATER ${QTFORGE_LUA_MAX_VERSION})
+            message(WARNING "QtForge: Lua ${LUA_VERSION_STRING} is above maximum supported version ${QTFORGE_LUA_MAX_VERSION}")
+        endif()
+
+        # Find sol2 (header-only library)
+        find_package(sol2 QUIET)
+        if(sol2_FOUND)
+            message(STATUS "QtForge: Found sol2 ${sol2_VERSION}")
+            set(QTFORGE_SOL2_FOUND TRUE PARENT_SCOPE)
+            set(QTFORGE_LUA_FOUND TRUE PARENT_SCOPE)
+            set(QTFORGE_LUA_VERSION ${LUA_VERSION_STRING} PARENT_SCOPE)
+            set(QTFORGE_LUA_INCLUDE_DIR ${LUA_INCLUDE_DIR} PARENT_SCOPE)
+            set(QTFORGE_LUA_LIBRARIES ${LUA_LIBRARIES} PARENT_SCOPE)
+        else()
+            # Try to find sol2 manually as it's header-only
+            find_path(SOL2_INCLUDE_DIR
+                NAMES sol/sol.hpp
+                PATHS
+                    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/sol2/include
+                    ${CMAKE_CURRENT_SOURCE_DIR}/external/sol2/include
+                    /usr/include
+                    /usr/local/include
+                    ${CMAKE_INSTALL_PREFIX}/include
+                PATH_SUFFIXES sol2
+            )
+
+            if(SOL2_INCLUDE_DIR)
+                message(STATUS "QtForge: Found sol2 headers at ${SOL2_INCLUDE_DIR}")
+                set(QTFORGE_SOL2_FOUND TRUE PARENT_SCOPE)
+                set(QTFORGE_LUA_FOUND TRUE PARENT_SCOPE)
+                set(QTFORGE_LUA_VERSION ${LUA_VERSION_STRING} PARENT_SCOPE)
+                set(QTFORGE_LUA_INCLUDE_DIR ${LUA_INCLUDE_DIR} PARENT_SCOPE)
+                set(QTFORGE_LUA_LIBRARIES ${LUA_LIBRARIES} PARENT_SCOPE)
+                set(QTFORGE_SOL2_INCLUDE_DIR ${SOL2_INCLUDE_DIR} PARENT_SCOPE)
+            else()
+                message(WARNING "QtForge: sol2 not found, Lua bindings will not be built")
+                set(QTFORGE_LUA_FOUND FALSE PARENT_SCOPE)
+                set(QTFORGE_SOL2_FOUND FALSE PARENT_SCOPE)
+            endif()
+        endif()
+    else()
+        message(WARNING "QtForge: Lua interpreter not found, Lua bindings will not be built")
+        set(QTFORGE_LUA_FOUND FALSE PARENT_SCOPE)
+        set(QTFORGE_SOL2_FOUND FALSE PARENT_SCOPE)
+    endif()
+endfunction()
+
+#[=======================================================================[.rst:
 qtforge_configure_qt_features
 -----------------------------
 
@@ -355,6 +428,9 @@ function(qtforge_setup_dependencies)
     # Find Python dependencies
     qtforge_find_python_dependencies()
 
+    # Find Lua dependencies
+    qtforge_find_lua_dependencies()
+
     # Configure Qt features
     qtforge_configure_qt_features()
 
@@ -377,6 +453,14 @@ function(qtforge_setup_dependencies)
     set(QTFORGE_PYBIND11_FOUND ${QTFORGE_PYBIND11_FOUND} PARENT_SCOPE)
     set(QTFORGE_PYTHON_VERSION ${QTFORGE_PYTHON_VERSION} PARENT_SCOPE)
     set(QTFORGE_PYTHON_EXECUTABLE ${QTFORGE_PYTHON_EXECUTABLE} PARENT_SCOPE)
+
+    # Propagate Lua variables to parent scope
+    set(QTFORGE_LUA_FOUND ${QTFORGE_LUA_FOUND} PARENT_SCOPE)
+    set(QTFORGE_SOL2_FOUND ${QTFORGE_SOL2_FOUND} PARENT_SCOPE)
+    set(QTFORGE_LUA_VERSION ${QTFORGE_LUA_VERSION} PARENT_SCOPE)
+    set(QTFORGE_LUA_INCLUDE_DIR ${QTFORGE_LUA_INCLUDE_DIR} PARENT_SCOPE)
+    set(QTFORGE_LUA_LIBRARIES ${QTFORGE_LUA_LIBRARIES} PARENT_SCOPE)
+    set(QTFORGE_SOL2_INCLUDE_DIR ${QTFORGE_SOL2_INCLUDE_DIR} PARENT_SCOPE)
 
     message(STATUS "QtForge: Dependency setup complete")
 endfunction()

@@ -314,6 +314,6 @@ for (const auto& source : sources) {
 ## See Also
 
 - [Plugin Management](plugin-management.md)
-- [Security Guidelines](security.md)
+- [Security Guidelines](../security.md)
 - [Performance Optimization](performance.md)
 - [Troubleshooting Guide](troubleshooting.md)

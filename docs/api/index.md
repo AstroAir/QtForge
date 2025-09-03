@@ -1,16 +1,16 @@
 # API Reference
 
-Welcome to the comprehensive QtPlugin API reference. This documentation covers all public APIs, classes, and functions available in the QtPlugin library.
+Welcome to the comprehensive QtForge API reference. This documentation covers all public APIs, classes, and functions available in the QtForge library.
 
 ## Overview
 
-QtPlugin provides a modern, type-safe C++ plugin system with the following key components:
+QtForge provides a modern, type-safe C++ plugin system with the following key components:
 
 - **[Core](#core-components)**: Essential plugin management functionality
-- **[Communication](#communication-system)**: Inter-plugin messaging and events
-- **[Security](#security-system)**: Plugin validation and trust management
-- **[Utils](#utility-classes)**: Helper classes and error handling
-- **[Optional Components](#optional-components)**: Network and UI extensions
+- **[Orchestration](#orchestration-system)**: Plugin workflow and orchestration
+- **[Monitoring](#monitoring-system)**: Plugin monitoring and metrics
+- **[Python Integration](#python-integration)**: Python binding support
+- **[Language Bindings](#language-bindings)**: Multi-language support
 
 ## Quick Reference
 
@@ -19,10 +19,10 @@ QtPlugin provides a modern, type-safe C++ plugin system with the following key c
 | Class                                             | Purpose                    | Header                                   |
 | ------------------------------------------------- | -------------------------- | ---------------------------------------- |
 | [`IPlugin`](core/plugin-interface.md)             | Base plugin interface      | `qtplugin/core/plugin_interface.hpp`     |
-| [`PluginManager`](core/plugin-manager.md)         | Central plugin management  | `qtplugin/core/plugin_manager.hpp`       |
-| [`PluginLoader`](core/plugin-loader.md)           | Dynamic plugin loading     | `qtplugin/core/plugin_loader.hpp`        |
-| [`MessageBus`](communication/message-bus.md)      | Inter-plugin communication | `qtplugin/communication/message_bus.hpp` |
-| [`SecurityManager`](security/security-manager.md) | Plugin security            | `qtplugin/security/security_manager.hpp` |
+| [`CompositePlugin`](composition/composite-plugin.md) | Plugin composition system | `qtplugin/composition/composite_plugin.hpp` |
+| [`PluginMarketplace`](marketplace/plugin-marketplace.md) | Plugin marketplace | `qtplugin/marketplace/plugin_marketplace.hpp` |
+| [`PluginOrchestrator`](orchestration/plugin-orchestrator.md) | Plugin orchestration | `qtplugin/orchestration/plugin_orchestrator.hpp` |
+| [`PluginTransactionManager`](transactions/plugin-transaction-manager.md) | Transaction management | `qtplugin/transactions/plugin_transaction_manager.hpp` |
 
 ### Key Types
 
@@ -54,209 +54,180 @@ The core plugin system provides the fundamental functionality for plugin managem
   - Command execution
   - Configuration management
 
-- :material-cog: **[Plugin Manager](core/plugin-manager.md)**
+- :material-cog: **[Composite Plugin](composition/composite-plugin.md)**
 
   ***
 
-  Central component for managing plugins
+  Advanced plugin composition system
 
   **Key Features:**
 
-  - Plugin loading and unloading
-  - Plugin discovery and registration
-  - Lifecycle management
+  - Plugin composition patterns
+  - Hierarchical plugin structures
+  - Component orchestration
+  - Advanced lifecycle management
+
+- :material-download: **[Plugin Marketplace](marketplace/plugin-marketplace.md)**
+
+  ***
+
+  Plugin marketplace and distribution system
+
+  **Key Features:**
+
+  - Plugin discovery and installation
+  - Version management
+  - Security validation
+  - Marketplace integration
+
+- :material-database: **[Transaction Manager](transactions/plugin-transaction-manager.md)**
+
+  ***
+
+  Transaction management for plugin operations
+
+  **Key Features:**
+
+  - ACID transaction support
+  - Rollback capabilities
+  - State management
+  - Error recovery
+
+</div>
+
+## Orchestration System
+
+Plugin orchestration and workflow management:
+
+<div class="grid cards" markdown>
+
+- :material-message: **[Plugin Orchestrator](orchestration/plugin-orchestrator.md)**
+
+  ***
+
+  Plugin workflow orchestration system
+
+  **Key Features:**
+
+  - Workflow definition and execution
+  - Plugin coordination
+  - Event-driven orchestration
   - Error handling and recovery
 
-- :material-download: **[Plugin Loader](core/plugin-loader.md)**
+- :material-format-list-bulleted-type: **[Advanced Orchestrator](orchestration/advanced-orchestrator.md)**
 
   ***
 
-  Handles dynamic loading of plugin libraries
+  Advanced orchestration patterns and features
 
   **Key Features:**
 
-  - Cross-platform library loading
-  - Symbol resolution
+  - Complex workflow patterns
+  - Conditional execution
+  - Parallel processing
+  - Advanced error handling
+
+</div>
+
+## Monitoring System
+
+Plugin monitoring and performance tracking:
+
+<div class="grid cards" markdown>
+
+- :material-shield-check: **[Hot Reload Manager](monitoring/plugin-hot-reload-manager.md)**
+
+  ***
+
+  Dynamic plugin hot-reloading system
+
+  **Key Features:**
+
+  - Runtime plugin reloading
+  - State preservation
   - Dependency management
-  - Error reporting
+  - Development workflow support
 
-- :material-database: **[Plugin Registry](core/plugin-registry.md)**
+- :material-certificate: **[Metrics Collector](monitoring/plugin-metrics-collector.md)**
 
   ***
 
-  Maintains registry of available and loaded plugins
+  Plugin performance monitoring and metrics
 
   **Key Features:**
 
-  - Plugin metadata storage
-  - Dependency tracking
-  - Version management
-  - Query interface
+  - Performance metrics collection
+  - Resource usage tracking
+  - Runtime statistics
+  - Monitoring dashboards
 
 </div>
 
-## Communication System
+## Python Integration
 
-Inter-plugin communication and messaging:
+Python bindings and integration support:
 
 <div class="grid cards" markdown>
 
-- :material-message: **[Message Bus](communication/message-bus.md)**
+- :material-alert-circle: **[Python Overview](python/overview.md)**
 
   ***
 
-  Central message routing and delivery system
+  Python integration overview and capabilities
 
   **Key Features:**
 
-  - Type-safe messaging
-  - Publish-subscribe pattern
-  - Request-response communication
-  - Event broadcasting
+  - Python plugin support
+  - Bidirectional communication
+  - Type conversion
+  - Error handling integration
 
-- :material-format-list-bulleted-type: **[Message Types](communication/message-types.md)**
+- :material-tag: **[Python Plugin Manager](python/core/plugin-manager.md)**
 
   ***
 
-  Predefined message types and structures
+  Python-specific plugin management
 
   **Key Features:**
 
-  - Standard message formats
-  - Custom message support
-  - Serialization helpers
-  - Type validation
+  - Python plugin loading
+  - Virtual environment support
+  - Dependency management
+  - Python-C++ interop
+
+- :material-check-circle: **[Python Orchestrator](python/orchestration/plugin-orchestrator.md)**
+
+  ***
+
+  Python workflow orchestration
+
+  **Key Features:**
+
+  - Python workflow definition
+  - Mixed C++/Python workflows
+  - Async/await support
+  - Error propagation
+
+## Language Bindings
+
+Multi-language support and bindings:
+
+<div class="grid cards" markdown>
+
+- :material-network: **[Lua Integration](lua/overview.md)**
+
+  ***
+
+  Lua scripting support for plugins
+
+  **Key Features:**
+
+  - Lua plugin development
+  - C++ to Lua bindings
+  - Script execution environment
+  - Dynamic scripting support
 
 </div>
-
-## Security System
-
-Plugin validation and security management:
-
-<div class="grid cards" markdown>
-
-- :material-shield-check: **[Security Manager](security/security-manager.md)**
-
-  ***
-
-  Comprehensive plugin security management
-
-  **Key Features:**
-
-  - Multi-layer validation
-  - Trust management
-  - Permission system
-  - Security policies
-
-- :material-certificate: **[Plugin Validator](security/plugin-validator.md)**
-
-  ***
-
-  Plugin validation and verification
-
-  **Key Features:**
-
-  - File integrity checking
-  - Digital signature verification
-  - Runtime validation
-  - Security scanning
-
-</div>
-
-## Utility Classes
-
-Helper classes and common functionality:
-
-<div class="grid cards" markdown>
-
-- :material-alert-circle: **[Error Handling](utils/error-handling.md)**
-
-  ***
-
-  Modern error handling with `expected<T, E>`
-
-  **Key Features:**
-
-  - Type-safe error handling
-  - No exceptions
-  - Composable error types
-  - Rich error information
-
-- :material-tag: **[Version](utils/version.md)**
-
-  ***
-
-  Version information and comparison
-
-  **Key Features:**
-
-  - Semantic versioning
-  - Version comparison
-  - Compatibility checking
-  - Version ranges
-
-- :material-check-circle: **[Concepts](utils/concepts.md)**
-
-  ***
-
-  C++20 concepts for type validation
-
-  **Key Features:**
-
-  - Compile-time validation
-  - Plugin type concepts
-  - Interface concepts
-  - Constraint checking
-
-- :material-tools: **[Helpers](utils/helpers.md)**
-
-  ***
-
-  Utility functions and helpers
-
-  **Key Features:**
-
-  - Plugin creation helpers
-  - CMake integration
-  - Development utilities
-  - Testing support
-
-</div>
-
-## Optional Components
-
-Extended functionality for specific use cases:
-
-<div class="grid cards" markdown>
-
-- :material-network: **[Network](optional/network.md)**
-
-  ***
-
-  Network-enabled plugin interfaces
-
-  **Requirements:** Qt6::Network
-
-  **Key Features:**
-
-  - HTTP client/server plugins
-  - WebSocket support
-  - REST API integration
-  - Network discovery
-
-- :material-monitor: **[UI](optional/ui.md)**
-
-  ***
-
-  User interface plugin support
-
-  **Requirements:** Qt6::Widgets
-
-  **Key Features:**
-
-  - Widget-based plugins
-  - Dialog integration
-  - Custom UI components
   - Theme support
 
 </div>

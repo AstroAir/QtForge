@@ -16,10 +16,13 @@ target_link_libraries(test_configuration_manager PRIVATE
     QtForgeCore
 )
 
-add_test(NAME ManagersConfigurationTests COMMAND test_configuration_manager)
+add_test(NAME ManagersConfigurationTests
+    COMMAND powershell -ExecutionPolicy Bypass -File ${CMAKE_SOURCE_DIR}/run_test.ps1
+    -TestExecutable ${CMAKE_CURRENT_BINARY_DIR}/test_configuration_manager.exe
+    -WorkingDirectory ${CMAKE_CURRENT_BINARY_DIR}
+)
 set_tests_properties(ManagersConfigurationTests PROPERTIES
     TIMEOUT 60
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 # Plugin Version Manager Tests
@@ -38,10 +41,13 @@ if(QTFORGE_BUILD_COMPREHENSIVE_TESTS)
         QtForgeCore
     )
 
-    add_test(NAME ManagersPluginVersionTests COMMAND test_plugin_version_manager)
+    add_test(NAME ManagersPluginVersionTests
+        COMMAND powershell -ExecutionPolicy Bypass -File ${CMAKE_SOURCE_DIR}/run_test.ps1
+        -TestExecutable ${CMAKE_CURRENT_BINARY_DIR}/test_plugin_version_manager.exe
+        -WorkingDirectory ${CMAKE_CURRENT_BINARY_DIR}
+    )
     set_tests_properties(ManagersPluginVersionTests PROPERTIES
         TIMEOUT 120
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
 endif()
 
@@ -66,6 +72,7 @@ endif()
 # set_tests_properties(ManagersResourceTests PROPERTIES
 #     TIMEOUT 120
 #     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+#     ENVIRONMENT "PATH=${CMAKE_CURRENT_BINARY_DIR};${CMAKE_BINARY_DIR};D:/msys64/mingw64/bin;$ENV{PATH}"
 # )
 
 # Manager-Component Integration Tests - temporarily disabled due to compiler warnings
@@ -88,6 +95,7 @@ endif()
 # set_tests_properties(ManagersComponentIntegrationTests PROPERTIES
 #     TIMEOUT 240
 #     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+#     ENVIRONMENT "PATH=${CMAKE_CURRENT_BINARY_DIR};${CMAKE_BINARY_DIR};D:/msys64/mingw64/bin;$ENV{PATH}"
 # )
 
 # Install test executables

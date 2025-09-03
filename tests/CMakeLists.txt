@@ -26,6 +26,46 @@ option(QTFORGE_BUILD_CROSS_PLATFORM_TESTS "Build cross-platform tests" ON)
 # Enable testing
 enable_testing()
 
+# Function to configure test environment
+function(configure_test_environment test_name)
+    # Set PATH to include build directory and Qt bin directory for DLL loading on Windows
+    if(WIN32)
+        # Get Qt bin directory
+        get_target_property(QT_QMAKE_EXECUTABLE Qt6::qmake IMPORTED_LOCATION)
+        get_filename_component(QT_BIN_DIR ${QT_QMAKE_EXECUTABLE} DIRECTORY)
+
+        set_tests_properties(${test_name} PROPERTIES
+            ENVIRONMENT "PATH=${CMAKE_BINARY_DIR};${QT_BIN_DIR};$ENV{PATH}"
+        )
+    endif()
+endfunction()
+
+# Add custom target to copy DLLs to test directories for Windows
+if(WIN32)
+    # Find Qt installation directory
+    get_target_property(QT_QMAKE_EXECUTABLE Qt6::qmake IMPORTED_LOCATION)
+    get_filename_component(QT_WINDEPLOYQT_EXECUTABLE ${QT_QMAKE_EXECUTABLE} PATH)
+    set(QT_WINDEPLOYQT_EXECUTABLE "${QT_WINDEPLOYQT_EXECUTABLE}/windeployqt.exe")
+
+    # Define test directories
+    set(TEST_DIRS core communication security managers monitoring orchestration utils platform python)
+
+    add_custom_target(copy_dlls_to_tests ALL
+        COMMENT "Copying DLLs to test directories"
+    )
+
+    # Copy QtForge DLLs to each test directory
+    foreach(TEST_DIR ${TEST_DIRS})
+        add_custom_command(TARGET copy_dlls_to_tests POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:QtForgeCore> ${CMAKE_CURRENT_BINARY_DIR}/${TEST_DIR}/
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:QtForgeSecurity> ${CMAKE_CURRENT_BINARY_DIR}/${TEST_DIR}/
+            COMMENT "Copying QtForge DLLs to ${TEST_DIR}"
+        )
+    endforeach()
+
+    add_dependencies(copy_dlls_to_tests QtForgeCore QtForgeSecurity)
+endif()
+
 # Include modular test directories
 add_subdirectory(core)
 add_subdirectory(communication)
@@ -42,6 +82,11 @@ add_subdirectory(composition)
 add_subdirectory(marketplace)
 add_subdirectory(transactions)
 add_subdirectory(python)
+
+# Lua tests (conditional)
+if(QTFORGE_LUA_BINDINGS)
+    add_subdirectory(lua)
+endif()
 
 # Memory leak detection tests (if Valgrind is available)
 if(QTFORGE_BUILD_MEMORY_TESTS)
@@ -105,6 +150,14 @@ add_custom_target(run_integration_tests
     COMMAND ${CMAKE_CTEST_COMMAND} -R "Integration" --verbose
     COMMENT "Running QtForge integration tests"
 )
+
+# Lua tests (if enabled)
+if(QTFORGE_LUA_BINDINGS)
+    add_custom_target(run_lua_tests
+        COMMAND ${CMAKE_CTEST_COMMAND} -L "Lua" --verbose
+        COMMENT "Running QtForge Lua tests"
+    )
+endif()
 
 # Run all tests
 add_custom_target(run_all_tests

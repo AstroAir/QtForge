@@ -317,6 +317,6 @@ if (!result) {
 ## See Also
 
 - [Plugin Development Guide](plugin_development.md)
-- [API Reference](api/README.md)
+- [API Reference](api/readme.md)
 - [Examples](../examples/version_management/)
 - [Testing Guide](testing.md)

@@ -21,6 +21,7 @@ cmake_minimum_required(VERSION 3.21)
 # set_tests_properties(MarketplacePluginTests PROPERTIES
 #     TIMEOUT 180
 #     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+#     ENVIRONMENT "PATH=${CMAKE_CURRENT_BINARY_DIR};${CMAKE_BINARY_DIR};D:/msys64/mingw64/bin;$ENV{PATH}"
 # )
 
 # Install test executables

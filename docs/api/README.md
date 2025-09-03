@@ -6,7 +6,7 @@ Complete API documentation for the QtPlugin library.
 
 ### Plugin Interface
 
-#### `qtplugin::IPlugin`
+#### `qtplugin::IPlugin` {#plugin-interface}
 
 Base interface that all plugins must implement.
 
@@ -74,7 +74,7 @@ struct PluginMetadata {
 
 ### Plugin Manager
 
-#### `qtplugin::PluginManager`
+#### `qtplugin::PluginManager` {#plugin-manager}
 
 Central component for managing plugins.
 
@@ -86,7 +86,7 @@ public:
     // Factory method
     static std::unique_ptr<PluginManager> create();
 
-    // Plugin loading/unloading
+    // Plugin loading/unloading {#plugin-loader}
     expected<std::string, PluginError> load_plugin(
         const std::string& path,
         const PluginLoadOptions& options = {}
@@ -271,7 +271,7 @@ enum class MessagePriority {
 
 #### `qtplugin::ResourceManager`
 
-Manages plugin resources and lifecycle.
+Manages plugin resources and lifecycle. {#lifecycle-manager}
 
 ```cpp
 class ResourceManager {
@@ -294,7 +294,7 @@ public:
 };
 ```
 
-## Security System
+## Security System {#validation-system}
 
 ### Security Manager
 

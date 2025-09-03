@@ -103,6 +103,12 @@ if has_config("python_bindings") then
     add_requires("pybind11", {optional = true})
 end
 
+-- Lua bindings dependencies
+if has_config("lua_bindings") then
+    add_requires("lua", {optional = true, configs = {version = "5.4"}})
+    add_requires("sol2", {optional = true})
+end
+
 -- Global compiler configuration
 set_languages("c++20")
 set_warnings("all")
@@ -552,6 +558,58 @@ if has_config("python_bindings") and has_package("python3") and has_package("pyb
         -- Set properties
         set_symbols("hidden")
         add_defines("QTFORGE_PYTHON_BINDINGS")
+
+        -- Version definitions
+        add_defines("QTPLUGIN_VERSION_MAJOR=3")
+        add_defines("QTPLUGIN_VERSION_MINOR=0")
+        add_defines("QTPLUGIN_VERSION_PATCH=0")
+    target_end()
+end
+
+-- Lua bindings target
+if has_config("lua_bindings") and has_package("lua") and has_package("sol2") then
+    target("qtforge_lua")
+        set_kind("shared")
+        set_basename("qtforge_lua")
+
+        -- Lua binding sources (will be created in next phase)
+        add_files("src/lua/qtforge_lua.cpp")
+        add_files("src/lua/qt_conversions.cpp")
+        add_files("src/lua/core/core_bindings.cpp")
+        add_files("src/lua/utils/utils_bindings.cpp")
+        add_files("src/lua/security/security_bindings.cpp")
+        add_files("src/lua/managers/managers_bindings.cpp")
+        add_files("src/lua/orchestration/orchestration_bindings.cpp")
+        add_files("src/lua/monitoring/monitoring_bindings.cpp")
+        add_files("src/lua/transactions/transaction_bindings.cpp")
+        add_files("src/lua/composition/composition_bindings.cpp")
+        add_files("src/lua/marketplace/marketplace_bindings.cpp")
+        add_files("src/lua/threading/threading_bindings.cpp")
+
+        -- Communication bindings (if Qt6Network available)
+        if has_package("qt6network") then
+            add_files("src/lua/communication/communication_bindings.cpp")
+        end
+
+        -- Add packages
+        add_packages("lua", "sol2")
+        add_packages("qt6core")
+        if has_package("qt6network") then
+            add_packages("qt6network")
+        end
+        if has_package("qt6widgets") then
+            add_packages("qt6widgets")
+        end
+        if has_package("qt6sql") then
+            add_packages("qt6sql")
+        end
+
+        -- Add dependencies
+        add_deps("QtForgeCore")
+
+        -- Set properties
+        set_symbols("hidden")
+        add_defines("QTFORGE_LUA_BINDINGS")
 
         -- Version definitions
         add_defines("QTPLUGIN_VERSION_MAJOR=3")
