@@ -52,12 +52,16 @@
 #define QTPLUGIN_VERSION "3.0.0"
 
 // Core components
-#include "core/plugin_capability_discovery.hpp"
 #include "core/plugin_interface.hpp"
 #include "core/plugin_loader.hpp"
-#include "core/plugin_manager.hpp"
+#include "core/plugin_manager.hpp"  // Re-enabled after fixing MOC issues
 #include "core/service_plugin_interface.hpp"
 #include "core/plugin_lifecycle_manager.hpp"  // Re-enabled with custom state machine
+
+// Qt-dependent components (conditionally included)
+#ifdef QT_CORE_LIB
+#include "core/plugin_capability_discovery.hpp"
+#endif
 
 // Enhanced plugin interfaces
 #include "interfaces/data_processor_plugin_interface.hpp"

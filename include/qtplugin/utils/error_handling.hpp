@@ -337,6 +337,15 @@ struct PluginError {
     std::string to_string() const { return formatted_message(); }
 
     /**
+     * @brief Get error message (for exception compatibility)
+     */
+    const char* what() const noexcept {
+        static thread_local std::string msg;
+        msg = message;
+        return msg.c_str();
+    }
+
+    /**
      * @brief Equality comparison
      */
     bool operator==(const PluginError& other) const {

@@ -5,14 +5,18 @@
  */
 
 #include "qtplugin/qtplugin.hpp"
+
+#ifdef QT_CORE_LIB
 #include <QCoreApplication>
 #include <QLoggingCategory>
 
 Q_LOGGING_CATEGORY(qtpluginLog, "qtplugin")
+#endif
 
 namespace qtplugin {
 
 bool initialize() {
+#ifdef QT_CORE_LIB
     // Register Qt types for the plugin system
     qRegisterMetaType<PluginState>("PluginState");
     qRegisterMetaType<PluginCapability>("PluginCapability");
@@ -24,10 +28,14 @@ bool initialize() {
 
     qCDebug(qtpluginLog) << "QtPlugin library initialized, version"
                          << version();
-
+#endif
     return true;
 }
 
-void cleanup() { qCDebug(qtpluginLog) << "QtPlugin library cleanup completed"; }
+void cleanup() {
+#ifdef QT_CORE_LIB
+    qCDebug(qtpluginLog) << "QtPlugin library cleanup completed";
+#endif
+}
 
 }  // namespace qtplugin

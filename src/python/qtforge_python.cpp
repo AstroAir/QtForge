@@ -19,9 +19,9 @@
 namespace qtforge_python {
 void bind_core(pybind11::module& m);
 void bind_utils(pybind11::module& m);
+void bind_security(pybind11::module& m);
 // Temporarily disabled to focus on core bindings
 // void bind_communication(pybind11::module& m);
-// void bind_security(pybind11::module& m);
 // void bind_managers(pybind11::module& m);
 // void bind_orchestration(pybind11::module& m);
 // void bind_monitoring(pybind11::module& m);
@@ -57,11 +57,11 @@ PYBIND11_MODULE(qtforge, m) {
     auto core_module = m.def_submodule("core", "Core plugin system components");
     auto utils_module =
         m.def_submodule("utils", "Utility classes and functions");
+    auto security_module =
+        m.def_submodule("security", "Security and validation components");
     // Temporarily disabled to focus on core bindings
     // auto communication_module =
     //     m.def_submodule("communication", "Inter-plugin communication system");
-    // auto security_module =
-    //     m.def_submodule("security", "Security and validation components");
     // auto managers_module = m.def_submodule(
     //     "managers", "Configuration, logging, and resource management");
     // auto orchestration_module = m.def_submodule(
@@ -80,9 +80,9 @@ PYBIND11_MODULE(qtforge, m) {
     // Bind all components
     qtforge_python::bind_core(core_module);
     qtforge_python::bind_utils(utils_module);
+    qtforge_python::bind_security(security_module);
     // Temporarily disabled to focus on core bindings
     // qtforge_python::bind_communication(communication_module);
-    // qtforge_python::bind_security(security_module);
     // qtforge_python::bind_managers(managers_module);
     // qtforge_python::bind_orchestration(orchestration_module);
     // qtforge_python::bind_monitoring(monitoring_module);

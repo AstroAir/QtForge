@@ -149,6 +149,7 @@ nav:
   - Installation: installation.md
   - Getting Started:
     - Overview: getting-started/overview.md
+    - Installation: getting-started/installation.md
     - Quick Start: getting-started/quick-start.md
     - First Plugin: getting-started/first-plugin.md
   - User Guide:
@@ -174,12 +175,15 @@ nav:
       - Plugin Interface: api/core/plugin-interface.md
       - Plugin Manager: api/core/plugin-manager.md
       - Plugin Loader: api/core/plugin-loader.md
+      - Plugin Registry: api/core/plugin-registry.md
     - Communication:
       - Message Bus: api/communication/message-bus.md
       - Message Types: api/communication/message-types.md
     - Security:
       - Security Manager: api/security/security-manager.md
       - Plugin Validator: api/security/plugin-validator.md
+      - Permission Manager: api/security/permission-manager.md
+      - Threat Detector: api/security/threat-detector.md
     - Utils:
       - Error Handling: api/utils/error-handling.md
       - Serialization: api/utils/serialization.md
@@ -192,18 +196,23 @@ nav:
     - Monitoring:
       - Plugin Hot Reload Manager: api/monitoring/plugin-hot-reload-manager.md
       - Plugin Metrics Collector: api/monitoring/plugin-metrics-collector.md
+      - Resource Monitor: api/monitoring/resource-monitor.md
     - Orchestration:
       - Advanced Orchestrator: api/orchestration/advanced-orchestrator.md
       - Plugin Orchestrator: api/orchestration/plugin-orchestrator.md
     - Python:
       - Overview: api/python/overview.md
       - Core:
+        - Plugin Interface: api/python/core/plugin-interface.md
+        - Plugin Loader: api/python/core/plugin-loader.md
         - Plugin Manager: api/python/core/plugin-manager.md
       - Orchestration:
         - Plugin Orchestrator: api/python/orchestration/plugin-orchestrator.md
     - Transactions:
       - Plugin Transaction Manager: api/transactions/plugin-transaction-manager.md
+      - Transaction Manager: api/transactions/transaction-manager.md
   - Tutorials:
+    - Getting Started Tutorial: tutorials/getting-started-tutorial.md
     - Advanced Plugin Tutorial: tutorials/advanced-plugin-tutorial.md
     - Orchestration Tutorial: tutorials/orchestration-tutorial.md
     - Python Integration Tutorial: tutorials/python-integration-tutorial.md
@@ -218,9 +227,14 @@ nav:
     - Marketplace Examples: examples/marketplace-examples.md
     - Advanced Examples: examples/advanced.md
     - Basic Plugin Examples: examples/basic-plugin-examples.md
+    - Advanced Plugin Examples: examples/advanced-plugin-examples.md
+    - Composition Examples: examples/composition-examples.md
+    - Hot Reload Examples: examples/hot-reload-examples.md
+    - Metrics Examples: examples/metrics-examples.md
     - Multilingual Examples: examples/multilingual-examples.md
   - Developer Guide:
     - Plugin Development: developer-guide/plugin-development.md
+    - Plugin Distribution: developer-guide/plugin-distribution.md
     - Best Practices: developer-guide/best-practices.md
     - Advanced Patterns: developer-guide/advanced-patterns.md
   - Architecture:
@@ -235,8 +249,14 @@ nav:
     - Marketplace Integration: user-guide/marketplace-integration.md
     - Python Integration: user-guide/python-integration.md
     - Advanced Plugin Development: user-guide/advanced-plugin-development.md
+    - Plugin Composition: user-guide/plugin-composition.md
+    - Advanced Security: user-guide/advanced-security.md
+    - Advanced Orchestration: user-guide/advanced-orchestration.md
+    - Transaction Management: user-guide/transaction-management.md
+    - Performance: user-guide/performance.md
     - Performance Optimization: user-guide/performance-optimization.md
     - Monitoring: user-guide/monitoring.md
+    - Threading: user-guide/threading.md
     - Troubleshooting: user-guide/troubleshooting.md
   - Bindings:
     - Multilingual Bindings Guide: bindings/multilingual-bindings-guide.md
@@ -252,6 +272,8 @@ nav:
     - License: appendix/license.md
   - Additional Resources:
     - readme.md: readme.md
+    - Project README: project-readme.md
+    - Project Contributing: project-contributing.md
     - Security: security.md
     - Documentation Update Report: documentation-update-report.md
     - Version Management: version-management.md

@@ -4,8 +4,8 @@
  * @version 3.2.0
  */
 
-#include <QSignalSpy>
 #include <QtTest/QtTest>
+#include <QtTest/QSignalSpy>
 #include <memory>
 
 #include "qtplugin/composition/plugin_composition.hpp"

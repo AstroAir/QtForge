@@ -60,6 +60,7 @@ endif
 # Compiler-specific flags
 cpp_compiler = meson.get_compiler('cpp')
 cpp_args = []
+link_args = []
 
 if cpp_compiler.get_id() == 'msvc'
   cpp_args += [
@@ -68,6 +69,12 @@ if cpp_compiler.get_id() == 'msvc'
   ]
   if get_option('enable_warnings')
     cpp_args += ['/W4']
+  endif
+  if get_option('enable_werror')
+    cpp_args += ['/WX']
+  endif
+  if get_option('enable_fast_math')
+    cpp_args += ['/fp:fast']
   endif
 else
   # GCC/Clang flags
@@ -81,11 +88,69 @@ else
       '-Wpedantic'
     ]
   endif
+  if get_option('enable_werror')
+    cpp_args += ['-Werror']
+  endif
+  if get_option('enable_fast_math')
+    cpp_args += ['-ffast-math']
+  endif
+
+  # Sanitizers (debug builds only)
+  if get_option('enable_sanitizers') and get_option('buildtype').startswith('debug')
+    cpp_args += [
+      '-fsanitize=address',
+      '-fsanitize=undefined',
+      '-fno-omit-frame-pointer'
+    ]
+    link_args += [
+      '-fsanitize=address',
+      '-fsanitize=undefined'
+    ]
+  endif
+endif
+
+# Link Time Optimization (release builds)
+if get_option('enable_lto') and get_option('buildtype') == 'release'
+  if cpp_compiler.get_id() == 'msvc'
+    cpp_args += ['/GL']
+    link_args += ['/LTCG']
+  else
+    cpp_args += ['-flto']
+    link_args += ['-flto']
+  endif
+endif
+
+# Build type specific definitions
+buildtype_definitions = []
+if get_option('buildtype').startswith('debug')
+  buildtype_definitions += [
+    '-DQTFORGE_DEBUG=1'
+  ]
+  if get_option('enable_component_logging')
+    buildtype_definitions += ['-DQTFORGE_ENABLE_LOGGING=1']
+  endif
+else
+  buildtype_definitions += [
+    '-DQTFORGE_RELEASE=1',
+    '-DNDEBUG=1'
+  ]
+endif
+
+# Security hardening definitions
+if get_option('enable_security_hardening')
+  buildtype_definitions += ['-DQTFORGE_ENABLE_SECURITY_HARDENING=1']
+endif
+
+# Plugin profiling
+if get_option('enable_plugin_profiling')
+  buildtype_definitions += ['-DQTFORGE_ENABLE_PLUGIN_PROFILING=1']
 endif
 
 # Add global arguments
 add_project_arguments(global_definitions, language: 'cpp')
+add_project_arguments(buildtype_definitions, language: 'cpp')
 add_project_arguments(cpp_args, language: 'cpp')
+add_project_link_arguments(link_args, language: 'cpp')
 
 # Qt6 dependency detection with method selection
 qt_method = get_option('qt_method')
@@ -175,6 +240,37 @@ endif
 inc_dir = include_directories('include')
 src_inc_dir = include_directories('src')
 
+# Python bindings with version checking
+python3_dep = dependency('python3', version: '>=' + get_option('python_min_version'), required: get_option('python_bindings'))
+pybind11_dep = dependency('pybind11', required: get_option('python_bindings'))
+
+# Check Python version constraints
+python_version_ok = true
+if get_option('python_bindings') and python3_dep.found()
+  python_version = python3_dep.version()
+  if python_version.version_compare('>' + get_option('python_max_version'))
+    warning('Python @0@ is above maximum supported version @1@'.format(python_version, get_option('python_max_version')))
+  endif
+endif
+
+# Lua bindings with version checking
+lua_dep = dependency('lua', version: '>=' + get_option('lua_min_version'), required: get_option('lua_bindings'))
+sol2_dep = dependency('sol2', version: '>=' + get_option('sol2_min_version'), required: get_option('lua_bindings'))
+
+# Manual sol2 detection if not found via pkg-config
+if get_option('lua_bindings') and lua_dep.found() and not sol2_dep.found()
+  sol2_include_dir = cpp_compiler.find_library('sol2', required: false)
+  if not sol2_include_dir.found()
+    # Try to find sol2 headers manually
+    sol2_header = cpp_compiler.has_header('sol/sol.hpp',
+      args: ['-I' + get_option('prefix') / 'include', '-I/usr/include', '-I/usr/local/include'])
+    if sol2_header
+      message('Found sol2 headers manually')
+      sol2_dep = declare_dependency()
+    endif
+  endif
+endif
+
 # Build subdirectories
 subdir('src')
 
@@ -187,26 +283,42 @@ if get_option('build_tests')
   subdir('tests')
 endif
 
-# Python bindings
-python3_dep = dependency('python3', required: get_option('python_bindings'))
-pybind11_dep = dependency('pybind11', required: get_option('python_bindings'))
-
-if get_option('python_bindings') and python3_dep.found() and pybind11_dep.found()
+# Check if bindings should be built (temporarily disabled)
+if false  # get_option('python_bindings') and python3_dep.found() and pybind11_dep.found() and python_version_ok
   message('Building Python bindings')
   # Python bindings will be handled in src/python/meson.build
 else
   message('Python bindings disabled or dependencies not found')
 endif
 
-# Lua bindings
-lua_dep = dependency('lua', version: '>=5.4', required: get_option('lua_bindings'))
-sol2_dep = dependency('sol2', required: get_option('lua_bindings'))
-
 if get_option('lua_bindings') and lua_dep.found() and sol2_dep.found()
   message('Building Lua bindings')
   # Lua bindings will be handled in src/lua/meson.build
 else
   message('Lua bindings disabled or dependencies not found')
+endif
+
+# Benchmarking support
+benchmark_dep = dependency('benchmark', required: get_option('build_benchmarks'))
+if get_option('build_benchmarks') and benchmark_dep.found()
+  message('Building benchmarks')
+else
+  if get_option('build_benchmarks')
+    message('Benchmarks requested but Google Benchmark not found')
+  endif
+endif
+
+# Testing framework detection
+gtest_dep = dependency('gtest', required: false)
+if get_option('build_tests') and not gtest_dep.found()
+  # Fallback to Qt Test if GTest not available
+  if qt6_test_dep.found()
+    message('Using Qt6 Test framework')
+  else
+    message('No suitable test framework found')
+  endif
+elif gtest_dep.found()
+  message('Found Google Test')
 endif
 
 # Documentation
@@ -416,8 +528,25 @@ summary({
   'Qt6 StateMachine': qt6_statemachine_dep.found(),
   'Build Examples': get_option('build_examples'),
   'Build Tests': get_option('build_tests'),
+  'Build Benchmarks': get_option('build_benchmarks'),
+  'Build Component Tests': get_option('build_component_tests'),
   'Python Bindings': get_option('python_bindings') and python3_dep.found() and pybind11_dep.found(),
   'Lua Bindings': get_option('lua_bindings') and lua_dep.found() and sol2_dep.found(),
   'Documentation': get_option('build_docs') and doxygen.found(),
   'Library Type': get_option('default_library'),
+  'Warnings': get_option('enable_warnings'),
+  'Warnings as Errors': get_option('enable_werror'),
+  'Sanitizers': get_option('enable_sanitizers'),
+  'LTO': get_option('enable_lto'),
+  'Fast Math': get_option('enable_fast_math'),
+  'Security Hardening': get_option('enable_security_hardening'),
+  'Component Logging': get_option('enable_component_logging'),
+  'Plugin Profiling': get_option('enable_plugin_profiling'),
+  'Hot Reload': get_option('enable_hot_reload'),
+  'Metrics': get_option('enable_metrics'),
+  'Transactions': get_option('enable_transactions'),
+  'Orchestration': get_option('enable_orchestration'),
+  'Composition': get_option('enable_composition'),
+  'Marketplace': get_option('enable_marketplace'),
+  'Plugin Sandbox': get_option('enable_plugin_sandbox'),
 }, section: 'QtForge Configuration')

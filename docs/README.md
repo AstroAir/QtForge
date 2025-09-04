@@ -202,21 +202,21 @@ QtPlugin is built with modern C++20 principles and enterprise-grade architecture
 
 ### 🎯 Beginner (Start Here)
 
-1. **[Library Overview](../README.md)** - Understand what QtPlugin is
-2. **[Quick Start](../README.md#quick-start)** - Basic usage example
-3. **[Basic Plugin Example](../examples/README.md#basic-plugin)** - Create your first plugin
+1. **[Library Overview](project-readme.md)** - Understand what QtPlugin is
+2. **[Quick Start](project-readme.md#quick-start)** - Basic usage example
+3. **[Basic Plugin Example](examples/basic-plugin.md)** - Create your first plugin
 
 ### 🚀 Intermediate
 
 4. **[Plugin Development Guide](guides/plugin-development.md)** - Comprehensive plugin creation
 5. **[API Reference](api/readme.md)** - Detailed API documentation
-6. **[Advanced Examples](../examples/readme.md)** - Service, network, UI plugins
+6. **[Advanced Examples](examples/advanced.md)** - Service, network, UI plugins
 
 ### 🏆 Advanced
 
 7. **[Architecture Guide](guides/architecture.md)** - System design and patterns
-8. **[Contributing Guide](../CONTRIBUTING.md)** - Contribute to the project
-9. **[Custom Applications](../examples/readme.md#example-applications)** - Build plugin-based apps
+8. **[Contributing Guide](project-contributing.md)** - Contribute to the project
+9. **[Custom Applications](examples/index.md)** - Build plugin-based apps
 
 ## 🔍 Finding Information
 
@@ -237,10 +237,10 @@ QtPlugin is built with modern C++20 principles and enterprise-grade architecture
 
 ### By Use Case
 
-- **Application Developer**: [Quick Start](../readme.md#quick-start), [Examples](../examples/readme.md)
+- **Application Developer**: [Quick Start](project-readme.md#quick-start), [Examples](examples/index.md)
 - **Plugin Developer**: [Plugin Guide](guides/plugin-development.md), [API Reference](api/readme.md)
 - **System Architect**: [Architecture Guide](guides/architecture.md), [Design Patterns](guides/architecture.md#design-patterns)
-- **Contributor**: [Contributing Guide](../CONTRIBUTING.md), [Development Setup](../CONTRIBUTING.md#development-setup)
+- **Contributor**: [Contributing Guide](project-contributing.md), [Development Setup](project-contributing.md#development-setup)
 
 ## 🆘 Getting Help
 
@@ -264,14 +264,14 @@ For enterprise support and consulting, contact the maintainers through GitHub.
 
 ### Release Information
 
-- **[Changelog](../CHANGELOG.md)**: Detailed version history
-- **[Releases](https://github.com/your-repo/releases)**: Download latest versions
-- **[Migration Guides](../CHANGELOG.md#upgrade-guide)**: Upgrade between versions
+- **[Changelog](version-management.md)**: Detailed version history
+- **[Releases](https://github.com/AstroAir/QtForge/releases)**: Download latest versions
+- **[Migration Guides](version-management.md#upgrade-guide)**: Upgrade between versions
 
 ### Development
 
-- **[Contributing](../CONTRIBUTING.md)**: How to contribute
-- **[Roadmap](../CHANGELOG.md#future-roadmap)**: Planned features
+- **[Contributing](project-contributing.md)**: How to contribute
+- **[Roadmap](version-management.md#future-roadmap)**: Planned features
 - **[Issues](https://github.com/your-repo/issues)**: Current development status
 
 ## 📄 License
