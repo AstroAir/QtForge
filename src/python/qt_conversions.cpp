@@ -83,20 +83,60 @@ void register_qt_conversions(pybind11::module& m) {
                    ", '" + err.message + "')";
         });
 
-    // Register PluginErrorCode enum
+    // Register PluginErrorCode enum (complete)
     py::enum_<qtplugin::PluginErrorCode>(m, "PluginErrorCode")
-        .value("None", qtplugin::PluginErrorCode::None)
+        .value("Success", qtplugin::PluginErrorCode::Success)
+
+        // Loading errors
         .value("FileNotFound", qtplugin::PluginErrorCode::FileNotFound)
         .value("InvalidFormat", qtplugin::PluginErrorCode::InvalidFormat)
-        .value("LoadingFailed", qtplugin::PluginErrorCode::LoadingFailed)
-        .value("InitializationFailed",
-               qtplugin::PluginErrorCode::InitializationFailed)
-        .value("DependencyMissing",
-               qtplugin::PluginErrorCode::DependencyMissing)
-        .value("SecurityViolation",
-               qtplugin::PluginErrorCode::SecurityViolation)
+        .value("LoadFailed", qtplugin::PluginErrorCode::LoadFailed)
+        .value("UnloadFailed", qtplugin::PluginErrorCode::UnloadFailed)
+        .value("SymbolNotFound", qtplugin::PluginErrorCode::SymbolNotFound)
+        .value("AlreadyLoaded", qtplugin::PluginErrorCode::AlreadyLoaded)
+        .value("NotLoaded", qtplugin::PluginErrorCode::NotLoaded)
+        .value("PluginNotFound", qtplugin::PluginErrorCode::PluginNotFound)
+
+        // Initialization errors
+        .value("InitializationFailed", qtplugin::PluginErrorCode::InitializationFailed)
+        .value("ConfigurationError", qtplugin::PluginErrorCode::ConfigurationError)
+        .value("DependencyMissing", qtplugin::PluginErrorCode::DependencyMissing)
+        .value("VersionMismatch", qtplugin::PluginErrorCode::VersionMismatch)
+
+        // Runtime errors
+        .value("ExecutionFailed", qtplugin::PluginErrorCode::ExecutionFailed)
+        .value("CommandNotFound", qtplugin::PluginErrorCode::CommandNotFound)
+        .value("InvalidParameters", qtplugin::PluginErrorCode::InvalidParameters)
+        .value("StateError", qtplugin::PluginErrorCode::StateError)
+        .value("InvalidArgument", qtplugin::PluginErrorCode::InvalidArgument)
+        .value("NotFound", qtplugin::PluginErrorCode::NotFound)
+        .value("ResourceUnavailable", qtplugin::PluginErrorCode::ResourceUnavailable)
+        .value("AlreadyExists", qtplugin::PluginErrorCode::AlreadyExists)
+        .value("NotImplemented", qtplugin::PluginErrorCode::NotImplemented)
         .value("InvalidState", qtplugin::PluginErrorCode::InvalidState)
+        .value("InvalidConfiguration", qtplugin::PluginErrorCode::InvalidConfiguration)
+        .value("DuplicatePlugin", qtplugin::PluginErrorCode::DuplicatePlugin)
+        .value("CircularDependency", qtplugin::PluginErrorCode::CircularDependency)
+        .value("OperationCancelled", qtplugin::PluginErrorCode::OperationCancelled)
+        .value("NotSupported", qtplugin::PluginErrorCode::NotSupported)
+        .value("IncompatibleVersion", qtplugin::PluginErrorCode::IncompatibleVersion)
+        .value("SystemError", qtplugin::PluginErrorCode::SystemError)
+
+        // Security errors
+        .value("SecurityViolation", qtplugin::PluginErrorCode::SecurityViolation)
+        .value("PermissionDenied", qtplugin::PluginErrorCode::PermissionDenied)
+        .value("SignatureInvalid", qtplugin::PluginErrorCode::SignatureInvalid)
+        .value("UntrustedSource", qtplugin::PluginErrorCode::UntrustedSource)
+
+        // System errors
+        .value("OutOfMemory", qtplugin::PluginErrorCode::OutOfMemory)
+        .value("ResourceExhausted", qtplugin::PluginErrorCode::ResourceExhausted)
+        .value("NetworkError", qtplugin::PluginErrorCode::NetworkError)
+        .value("FileSystemError", qtplugin::PluginErrorCode::FileSystemError)
+        .value("ThreadingError", qtplugin::PluginErrorCode::ThreadingError)
         .value("TimeoutError", qtplugin::PluginErrorCode::TimeoutError)
+
+        // Generic errors
         .value("UnknownError", qtplugin::PluginErrorCode::UnknownError)
         .export_values();
 

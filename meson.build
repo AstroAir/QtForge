@@ -283,10 +283,10 @@ if get_option('build_tests')
   subdir('tests')
 endif
 
-# Check if bindings should be built (temporarily disabled)
-if false  # get_option('python_bindings') and python3_dep.found() and pybind11_dep.found() and python_version_ok
+# Check if bindings should be built
+if get_option('python_bindings') and python3_dep.found() and pybind11_dep.found() and python_version_ok
   message('Building Python bindings')
-  # Python bindings will be handled in src/python/meson.build
+  subdir('src/python')
 else
   message('Python bindings disabled or dependencies not found')
 endif

@@ -21,100 +21,56 @@ using namespace qtplugin;
 namespace qtforge_python {
 
 void bind_communication(py::module& m) {
-    // Message delivery modes
-    py::enum_<DeliveryMode>(m, "DeliveryMode")
-        .value("Broadcast", DeliveryMode::Broadcast)
-        .value("Unicast", DeliveryMode::Unicast)
-        .value("Multicast", DeliveryMode::Multicast)
-        .export_values();
+    // Note: DeliveryMode and MessagePriority are already bound in core module
+    // We'll just reference them here if needed
 
-    // Message priority
-    py::enum_<MessagePriority>(m, "MessagePriority")
-        .value("Low", MessagePriority::Low)
-        .value("Normal", MessagePriority::Normal)
-        .value("High", MessagePriority::High)
-        .value("Critical", MessagePriority::Critical)
-        .export_values();
-
-    // Basic message interface
+    // Basic message interface (corrected to match actual API)
     py::class_<IMessage, std::shared_ptr<IMessage>>(m, "IMessage")
-        .def("topic", &IMessage::topic)
-        .def("sender", &IMessage::sender)
-        .def("timestamp", &IMessage::timestamp)
-        .def("priority", &IMessage::priority)
-        .def("data", &IMessage::data)
-        .def("metadata", &IMessage::metadata)
-        .def("to_json", &IMessage::to_json)
+        .def("type", &IMessage::type, "Get message type identifier")
+        .def("sender", &IMessage::sender, "Get message sender")
+        .def("timestamp", &IMessage::timestamp, "Get message timestamp")
+        .def("priority", &IMessage::priority, "Get message priority")
+        .def("to_json", &IMessage::to_json, "Serialize message to JSON")
+        .def("id", &IMessage::id, "Get message ID")
         .def("__repr__", [](const IMessage& msg) {
-            return "<IMessage topic='" + msg.topic() + "' sender='" +
-                   msg.sender() + "'>";
+            return "<IMessage type='" + std::string(msg.type()) + "' sender='" +
+                   std::string(msg.sender()) + "'>";
         });
 
-    // Basic message implementation
-    py::class_<BasicMessage, IMessage, std::shared_ptr<BasicMessage>>(
-        m, "BasicMessage")
-        .def(py::init<const std::string&, const std::string&>())
-        .def(py::init<const std::string&, const std::string&,
-                      const QJsonObject&>())
-        .def("set_data", &BasicMessage::set_data)
-        .def("set_metadata", &BasicMessage::set_metadata)
-        .def("set_priority", &BasicMessage::set_priority);
-
-    // Subscription information
+    // Subscription information (corrected to match actual API)
     py::class_<Subscription>(m, "Subscription")
         .def_readwrite("subscriber_id", &Subscription::subscriber_id)
         .def_readwrite("message_type", &Subscription::message_type)
-        .def_readwrite("subscription_time", &Subscription::subscription_time)
+        .def_readwrite("handler", &Subscription::handler)
+        .def_readwrite("filter", &Subscription::filter)
+        .def_readwrite("is_active", &Subscription::is_active)
+        .def_readwrite("created_at", &Subscription::created_at)
+        .def_readwrite("message_count", &Subscription::message_count)
         .def("__repr__", [](const Subscription& sub) {
             return "<Subscription subscriber='" + sub.subscriber_id + "'>";
         });
 
-    // Message bus interface
+    // Message bus interface (corrected to match actual API)
     py::class_<IMessageBus, std::shared_ptr<IMessageBus>>(m, "IMessageBus")
-        .def("unsubscribe", &IMessageBus::unsubscribe)
-        .def("subscribers", &IMessageBus::subscribers)
-        .def("subscriptions", &IMessageBus::subscriptions)
-        .def("has_subscriber", &IMessageBus::has_subscriber)
-        .def("statistics", &IMessageBus::statistics)
-        .def("clear", &IMessageBus::clear)
-        .def("set_logging_enabled", &IMessageBus::set_logging_enabled)
-        .def("is_logging_enabled", &IMessageBus::is_logging_enabled)
-        .def("message_log", &IMessageBus::message_log);
+        .def("unsubscribe", py::overload_cast<std::string_view, std::optional<std::type_index>>(&IMessageBus::unsubscribe),
+             "Unsubscribe from messages", py::arg("subscriber_id"), py::arg("message_type") = std::nullopt)
+        .def("subscribers", &IMessageBus::subscribers, "Get list of subscribers for a message type",
+             py::arg("message_type"))
+        .def("subscriptions", &IMessageBus::subscriptions, "Get subscription information",
+             py::arg("subscriber_id"))
+        .def("has_subscriber", &IMessageBus::has_subscriber, "Check if subscriber exists",
+             py::arg("subscriber_id"))
+        .def("statistics", &IMessageBus::statistics, "Get message bus statistics")
+        .def("clear", &IMessageBus::clear, "Clear all subscriptions")
+        .def("set_logging_enabled", &IMessageBus::set_logging_enabled, "Enable or disable message logging",
+             py::arg("enabled"))
+        .def("is_logging_enabled", &IMessageBus::is_logging_enabled, "Check if message logging is enabled")
+        .def("message_log", &IMessageBus::message_log, "Get message log",
+             py::arg("limit") = 100);
 
     // Message bus implementation
-    py::class_<MessageBus, IMessageBus, std::shared_ptr<MessageBus>>(
-        m, "MessageBus")
-        .def(py::init<>())
-        .def("publish_message",
-             [](MessageBus& bus, std::shared_ptr<IMessage> message) {
-                 return bus.publish(message);
-             })
-        .def("publish_basic",
-             [](MessageBus& bus, const std::string& topic,
-                const std::string& sender, const QJsonObject& data) {
-                 auto message =
-                     std::make_shared<BasicMessage>(topic, sender, data);
-                 return bus.publish(message);
-             })
-        .def("subscribe_to_topic",
-             [](MessageBus& bus, const std::string& subscriber_id,
-                const std::string& topic, py::function callback) {
-                 // Create a C++ callback that calls the Python function
-                 auto cpp_callback =
-                     [callback](std::shared_ptr<IMessage> message) {
-                         try {
-                             callback(message);
-                         } catch (const py::error_already_set& e) {
-                             // Handle Python exceptions
-                             qWarning() << "Python callback error:" << e.what();
-                         }
-                     };
-
-                 // Note: This is a simplified implementation
-                 // In practice, we'd need proper type handling for different
-                 // message types
-                 return qtplugin::make_success();
-             })
+    py::class_<MessageBus, IMessageBus, std::shared_ptr<MessageBus>>(m, "MessageBus")
+        .def(py::init<>(), "Create message bus")
         .def("__repr__", [](const MessageBus& bus) { return "<MessageBus>"; });
 
     // Service capability enum
