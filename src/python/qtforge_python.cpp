@@ -24,11 +24,10 @@ void bind_communication(pybind11::module& m);
 void bind_managers(pybind11::module& m);
 void bind_orchestration(pybind11::module& m);
 void bind_threading(pybind11::module& m);
-// Temporarily disabled due to compilation issues:
-// void bind_monitoring(pybind11::module& m);
-// void bind_transactions(pybind11::module& m);
-// void bind_composition(pybind11::module& m);
-// void bind_marketplace(pybind11::module& m);
+void bind_monitoring(pybind11::module& m);
+void bind_transactions(pybind11::module& m);
+void bind_composition(pybind11::module& m);
+void bind_marketplace(pybind11::module& m);
 }  // namespace qtforge_python
 
 namespace py = pybind11;
@@ -67,15 +66,14 @@ PYBIND11_MODULE(qtforge, m) {
         "orchestration", "Plugin orchestration and workflow management");
     auto threading_module = m.def_submodule(
         "threading", "Plugin threading and concurrency management");
-    // Temporarily disabled due to compilation issues:
-    // auto monitoring_module = m.def_submodule(
-    //     "monitoring", "Plugin monitoring, hot reload, and metrics collection");
-    // auto transactions_module = m.def_submodule(
-    //     "transactions", "Plugin transaction management and atomic operations");
-    // auto composition_module = m.def_submodule(
-    //     "composition", "Plugin composition and aggregation patterns");
-    // auto marketplace_module = m.def_submodule(
-    //     "marketplace", "Plugin marketplace and distribution system");
+    auto monitoring_module = m.def_submodule(
+        "monitoring", "Plugin monitoring, hot reload, and metrics collection");
+    auto transactions_module = m.def_submodule(
+        "transactions", "Plugin transaction management and atomic operations");
+    auto composition_module = m.def_submodule(
+        "composition", "Plugin composition and aggregation patterns");
+    auto marketplace_module = m.def_submodule(
+        "marketplace", "Plugin marketplace and distribution system");
 
     // Bind all components
     qtforge_python::bind_core(core_module);
@@ -85,11 +83,10 @@ PYBIND11_MODULE(qtforge, m) {
     qtforge_python::bind_managers(managers_module);
     qtforge_python::bind_orchestration(orchestration_module);
     qtforge_python::bind_threading(threading_module);
-    // Temporarily disabled due to compilation issues:
-    // qtforge_python::bind_monitoring(monitoring_module);
-    // qtforge_python::bind_transactions(transactions_module);
-    // qtforge_python::bind_composition(composition_module);
-    // qtforge_python::bind_marketplace(marketplace_module);
+    qtforge_python::bind_monitoring(monitoring_module);
+    qtforge_python::bind_transactions(transactions_module);
+    qtforge_python::bind_composition(composition_module);
+    qtforge_python::bind_marketplace(marketplace_module);
 
     // Convenience imports at module level
     // Import commonly used functions to the main module namespace

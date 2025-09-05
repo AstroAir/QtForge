@@ -845,6 +845,144 @@ def create_plugin():
     return WebScrapingPlugin()
 ```
 
+## Advanced Interface Examples (v3.2.0+)
+
+### Service Plugin Example
+
+```python
+# service_plugin.py
+import qtforge.core as core
+import threading
+import time
+import queue
+
+class BackgroundServicePlugin(core.IServicePlugin):
+    def __init__(self):
+        super().__init__()
+        self._state = core.ServiceState.Stopped
+        self._health = core.ServiceHealth.Unknown
+        self._priority = core.ServicePriority.Normal
+        self._execution_mode = core.ServiceExecutionMode.WorkerThread
+        self._worker_thread = None
+        self._stop_event = threading.Event()
+        self._task_queue = queue.Queue()
+
+    def name(self) -> str:
+        return "BackgroundServicePlugin"
+
+    def version(self) -> str:
+        return "1.0.0"
+
+    def description(self) -> str:
+        return "Background service plugin with worker thread"
+
+    # Service lifecycle methods
+    def start_service(self):
+        if self._state != core.ServiceState.Stopped:
+            return
+
+        self._state = core.ServiceState.Starting
+        self._stop_event.clear()
+
+        # Start worker thread
+        self._worker_thread = threading.Thread(target=self._worker_loop)
+        self._worker_thread.daemon = True
+        self._worker_thread.start()
+
+        self._state = core.ServiceState.Running
+        self._health = core.ServiceHealth.Healthy
+        print(f"Service {self.name()} started successfully")
+
+    def stop_service(self):
+        if self._state != core.ServiceState.Running:
+            return
+
+        self._state = core.ServiceState.Stopping
+        self._stop_event.set()
+
+        # Wait for worker thread to finish
+        if self._worker_thread and self._worker_thread.is_alive():
+            self._worker_thread.join(timeout=5.0)
+
+        self._state = core.ServiceState.Stopped
+        self._health = core.ServiceHealth.Unknown
+        print(f"Service {self.name()} stopped")
+
+    def service_state(self) -> core.ServiceState:
+        return self._state
+
+    def service_health(self) -> core.ServiceHealth:
+        return self._health
+
+    def _worker_loop(self):
+        while not self._stop_event.is_set():
+            try:
+                # Process tasks from queue
+                if not self._task_queue.empty():
+                    task = self._task_queue.get(timeout=1.0)
+                    print(f"Processing task: {task}")
+                    time.sleep(0.5)  # Simulate work
+                else:
+                    time.sleep(0.1)
+            except queue.Empty:
+                continue
+            except Exception as e:
+                print(f"Error in worker loop: {e}")
+                self._health = core.ServiceHealth.Warning
+
+# Usage example
+service = BackgroundServicePlugin()
+service.start_service()
+# ... use service
+service.stop_service()
+```
+
+### Transaction Management Example
+
+```python
+# transaction_plugin.py
+import qtforge.transactions as tx
+
+class TransactionalPlugin:
+    def __init__(self):
+        self._transaction_manager = tx.get_transaction_manager()
+        self._data_store = {}
+
+    def perform_atomic_operation(self, operations: list):
+        """Perform multiple operations atomically."""
+        # Begin transaction
+        tx_id = self._transaction_manager.begin_transaction(tx.IsolationLevel.ReadCommitted)
+
+        try:
+            # Perform all operations
+            for op in operations:
+                if op['type'] == 'create':
+                    self._data_store[op['key']] = op['value']
+                elif op['type'] == 'update':
+                    if op['key'] in self._data_store:
+                        self._data_store[op['key']] = op['value']
+                    else:
+                        raise KeyError(f"Key {op['key']} not found")
+
+            # Commit transaction
+            result = self._transaction_manager.commit_transaction(tx_id)
+            return result is not None
+
+        except Exception as e:
+            # Rollback on error
+            self._transaction_manager.rollback_transaction(tx_id)
+            print(f"Transaction rolled back due to error: {e}")
+            return False
+
+# Usage example
+plugin = TransactionalPlugin()
+operations = [
+    {'type': 'create', 'key': 'user1', 'value': {'name': 'Alice', 'age': 30}},
+    {'type': 'update', 'key': 'user1', 'value': {'name': 'Alice Smith', 'age': 31}}
+]
+success = plugin.perform_atomic_operation(operations)
+```
+
 ## Key Features Demonstrated
 
 1. **Scientific Computing**: NumPy, Pandas, SciPy integration
@@ -854,6 +992,9 @@ def create_plugin():
 5. **Async Operations**: Asynchronous data processing
 6. **Error Handling**: Comprehensive error handling and logging
 7. **Message Integration**: Full integration with QtForge message bus
+8. **Service Plugins**: Background service lifecycle management (v3.2.0+)
+9. **Transaction Management**: Atomic operations with rollback support (v3.2.0+)
+10. **Advanced Interfaces**: Enhanced plugin capabilities and composition (v3.2.0+)
 
 ## Best Practices
 

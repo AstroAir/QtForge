@@ -240,17 +240,18 @@ function(qtforge_find_python_dependencies)
             message(WARNING "QtForge: Python ${Python_VERSION} is above maximum supported version ${QTFORGE_PYTHON_MAX_VERSION}")
         endif()
 
+        # Set Python as found since interpreter was located
+        set(QTFORGE_PYTHON_FOUND TRUE PARENT_SCOPE)
+        set(QTFORGE_PYTHON_VERSION ${Python_VERSION} PARENT_SCOPE)
+        set(QTFORGE_PYTHON_EXECUTABLE ${Python_EXECUTABLE} PARENT_SCOPE)
+
         # Find pybind11
         find_package(pybind11 QUIET)
         if(pybind11_FOUND)
             message(STATUS "QtForge: Found pybind11 ${pybind11_VERSION}")
             set(QTFORGE_PYBIND11_FOUND TRUE PARENT_SCOPE)
-            set(QTFORGE_PYTHON_FOUND TRUE PARENT_SCOPE)
-            set(QTFORGE_PYTHON_VERSION ${Python_VERSION} PARENT_SCOPE)
-            set(QTFORGE_PYTHON_EXECUTABLE ${Python_EXECUTABLE} PARENT_SCOPE)
         else()
             message(WARNING "QtForge: pybind11 not found, Python bindings will not be built")
-            set(QTFORGE_PYTHON_FOUND FALSE PARENT_SCOPE)
             set(QTFORGE_PYBIND11_FOUND FALSE PARENT_SCOPE)
         endif()
     else()

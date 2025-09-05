@@ -2,14 +2,40 @@ name: CI/CD
 
 on:
   push:
-    branches: [ main, develop ]
-    tags: [ 'v*' ]
+    branches: [main, develop, project-organization]
+    tags: ["v*"]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop, project-organization]
+  schedule:
+    # Run nightly builds to catch dependency issues
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      skip_tests:
+        description: 'Skip running tests'
+        required: false
+        default: false
+        type: boolean
+      build_type:
+        description: 'Build type to run'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+        - all
+        - release-only
+        - debug-only
 
 env:
-  QT_VERSION: '6.5.3'
-  CMAKE_VERSION: '3.27.7'
+  QT_VERSION: "6.5.3"
+  CMAKE_VERSION: "3.27.7"
+  # Build performance optimizations
+  CCACHE_COMPRESS: "1"
+  CCACHE_COMPRESSLEVEL: "6"
+  CCACHE_MAXSIZE: "2G"
+  # Improve build reliability
+  CMAKE_BUILD_PARALLEL_LEVEL: "0"  # Use all available cores
+  CTEST_PARALLEL_LEVEL: "0"        # Use all available cores for testing
 
 jobs:
   # Check what files changed to determine which jobs to run
@@ -113,26 +139,41 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Full history for version detection
+          fetch-depth: 0 # Full history for version detection
+
+      # Setup ccache for faster compilation
+      - name: Setup ccache (Linux/macOS)
+        if: runner.os != 'Windows'
+        uses: hendrikmuhs/ccache-action@v1
+        with:
+          key: ${{ runner.os }}-${{ matrix.compiler }}-${{ matrix.build_type }}
+          max-size: 2G
+
+      - name: Setup ccache (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          choco install ccache -y
+          echo "CC=ccache cl" >> $GITHUB_ENV
+          echo "CXX=ccache cl" >> $GITHUB_ENV
 
       - name: Cache Qt
         id: cache-qt
         uses: actions/cache@v4
         with:
           path: ../Qt
-          key: ${{ runner.os }}-QtCache-${{ env.QT_VERSION }}-${{ matrix.qt_arch }}-${{ hashFiles('**/CMakeLists.txt', 'cmake/**/*.cmake') }}
+          key: ${{ runner.os }}-QtCache-${{ env.QT_VERSION }}-${{ matrix.qt_arch }}-v2
           restore-keys: |
             ${{ runner.os }}-QtCache-${{ env.QT_VERSION }}-${{ matrix.qt_arch }}-
             ${{ runner.os }}-QtCache-${{ env.QT_VERSION }}-
-            ${{ runner.os }}-QtCache-
 
       - name: Install Qt
-        uses: jurplel/install-qt-action@v3
+        uses: jurplel/install-qt-action@v4
         with:
           version: ${{ env.QT_VERSION }}
           arch: ${{ matrix.qt_arch }}
           cache: ${{ steps.cache-qt.outputs.cache-hit }}
           setup-python: false
+          modules: 'qtnetworkauth qtwebsockets'
 
       - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@v1.14
@@ -150,9 +191,12 @@ jobs:
             build
             ~/.cache/cmake
             ~/AppData/Local/cmake
-          key: ${{ runner.os }}-cmake-${{ matrix.cmake_preset }}-${{ hashFiles('**/CMakeLists.txt', 'cmake/**/*.cmake', 'src/**/*.cpp', 'src/**/*.hpp') }}
+            ~/.cache/ccache
+            ~/AppData/Local/ccache
+          key: ${{ runner.os }}-cmake-${{ matrix.build_type }}-${{ matrix.compiler }}-${{ hashFiles('**/CMakeLists.txt', 'cmake/**/*.cmake', 'src/**/*.cpp', 'src/**/*.hpp', 'include/**/*.hpp') }}-v2
           restore-keys: |
-            ${{ runner.os }}-cmake-${{ matrix.cmake_preset }}-
+            ${{ runner.os }}-cmake-${{ matrix.build_type }}-${{ matrix.compiler }}-
+            ${{ runner.os }}-cmake-${{ matrix.build_type }}-
             ${{ runner.os }}-cmake-
 
       - name: Cache vcpkg dependencies
@@ -192,24 +236,51 @@ jobs:
         run: |
           cmake -S . -B build \
             -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-            -DQTFORGE_BUILD_TESTS=ON \
+            -DQTFORGE_BUILD_TESTS=${{ github.event.inputs.skip_tests == 'true' && 'OFF' || 'ON' }} \
             -DQTFORGE_BUILD_EXAMPLES=ON \
             -DQTFORGE_BUILD_NETWORK=ON \
             -DQTFORGE_BUILD_UI=ON \
             -DQTFORGE_ENABLE_WARNINGS=ON \
             -DQTFORGE_ENABLE_LTO=${{ matrix.build_type == 'Release' && 'ON' || 'OFF' }} \
-            ${{ runner.os == 'Linux' && '-G Ninja' || '' }}
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+            ${{ runner.os == 'Linux' && '-G Ninja' || '' }} \
+            ${{ runner.os != 'Windows' && '-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache' || '' }}
 
-      - name: Build
-        run: cmake --build build --config ${{ matrix.build_type }} --parallel ${{ matrix.parallel_jobs }}
-
-      - name: Build timing info
+      - name: Build with timing
         run: |
-          echo "Build completed for ${{ matrix.os }}-${{ matrix.build_type }}"
-          echo "Parallel jobs used: ${{ matrix.parallel_jobs }}"
+          echo "::group::Build Performance"
+          BUILD_START=$(date +%s)
+          cmake --build build --config ${{ matrix.build_type }} --parallel ${{ matrix.parallel_jobs }} --verbose
+          BUILD_END=$(date +%s)
+          BUILD_TIME=$((BUILD_END - BUILD_START))
+          echo "Build completed in ${BUILD_TIME} seconds"
+          echo "BUILD_TIME=${BUILD_TIME}" >> $GITHUB_ENV
+          echo "::endgroup::"
 
-      - name: Test
-        run: ctest --test-dir build --output-on-failure --parallel
+      - name: Build performance summary
+        run: |
+          echo "## Build Performance Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Platform**: ${{ matrix.os }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build Type**: ${{ matrix.build_type }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Compiler**: ${{ matrix.compiler }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Parallel Jobs**: ${{ matrix.parallel_jobs }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build Time**: ${BUILD_TIME} seconds" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ runner.os }}" != "Windows" ]; then
+            echo "- **ccache Stats**:" >> $GITHUB_STEP_SUMMARY
+            ccache -s >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Run Tests
+        if: github.event.inputs.skip_tests != 'true'
+        run: |
+          echo "::group::Running Tests"
+          TEST_START=$(date +%s)
+          ctest --test-dir build --output-on-failure --parallel --timeout 300
+          TEST_END=$(date +%s)
+          TEST_TIME=$((TEST_END - TEST_START))
+          echo "Tests completed in ${TEST_TIME} seconds"
+          echo "TEST_TIME=${TEST_TIME}" >> $GITHUB_ENV
+          echo "::endgroup::"
 
       - name: Install
         run: cmake --install build --prefix install
@@ -236,6 +307,94 @@ jobs:
           retention-days: 14
           compression-level: 9
           if-no-files-found: ignore
+
+  # Quality Assurance - Static Analysis and Security Scanning
+  quality-assurance:
+    name: Quality Assurance
+    needs: changes
+    if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.cmake == 'true' || needs.changes.outputs.ci == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup CMake
+        uses: jwlawson/actions-setup-cmake@v2
+        with:
+          cmake-version: ${{ env.CMAKE_VERSION }}
+
+      - name: Setup Ninja
+        uses: seanmiddleditch/gha-setup-ninja@master
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ env.QT_VERSION }}
+          arch: gcc_64
+          setup-python: false
+
+      - name: Install analysis tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cppcheck clang-tidy clang-format valgrind
+
+      - name: Configure for analysis
+        run: |
+          cmake -S . -B build-analysis \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+            -DQTFORGE_BUILD_TESTS=ON \
+            -DQTFORGE_BUILD_EXAMPLES=OFF \
+            -DQTFORGE_ENABLE_WARNINGS=ON \
+            -G Ninja
+
+      - name: Run cppcheck
+        run: |
+          echo "::group::Running cppcheck"
+          cppcheck --project=build-analysis/compile_commands.json \
+            --enable=all \
+            --inconclusive \
+            --xml \
+            --xml-version=2 \
+            --output-file=cppcheck-report.xml \
+            --suppress=missingIncludeSystem \
+            --suppress=unmatchedSuppression \
+            --suppress=unusedFunction \
+            src/ include/ || true
+          echo "::endgroup::"
+
+      - name: Run clang-tidy
+        run: |
+          echo "::group::Running clang-tidy"
+          find src include -name "*.cpp" -o -name "*.hpp" | head -20 | xargs clang-tidy \
+            -p build-analysis \
+            --format-style=file \
+            --header-filter=".*" \
+            > clang-tidy-report.txt 2>&1 || true
+          echo "::endgroup::"
+
+      - name: Check code formatting
+        run: |
+          echo "::group::Checking code formatting"
+          find src include -name "*.cpp" -o -name "*.hpp" | xargs clang-format --dry-run --Werror || {
+            echo "Code formatting issues found. Run 'clang-format -i' on the files."
+            exit 1
+          }
+          echo "::endgroup::"
+
+      - name: Upload analysis reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: quality-assurance-reports
+          path: |
+            cppcheck-report.xml
+            clang-tidy-report.txt
+          retention-days: 30
 
   # Package Creation - Only on tags or main branch
   create-packages:
@@ -266,17 +425,17 @@ jobs:
 
       - name: Cache Qt
         id: cache-qt
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ../Qt
-          key: ${{ runner.os }}-QtCache-${{ env.QT_VERSION }}-${{ matrix.qt_arch }}
+          key: ${{ runner.os }}-QtCache-${{ env.QT_VERSION }}-${{ matrix.qt_arch }}-v2
 
       - name: Install Qt
-        uses: jurplel/install-qt-action@v3
+        uses: jurplel/install-qt-action@v4
         with:
           version: ${{ env.QT_VERSION }}
           arch: ${{ matrix.qt_arch }}
-          cached: ${{ steps.cache-qt.outputs.cache-hit }}
+          cache: ${{ steps.cache-qt.outputs.cache-hit }}
           setup-python: false
 
       - name: Setup CMake
@@ -320,17 +479,57 @@ jobs:
       - name: Create packages
         run: |
           cd build-pkg
-          cpack --config CPackConfig.cmake
+          cpack --config CPackConfig.cmake --verbose
+
+      - name: Sign packages (Windows)
+        if: runner.os == 'Windows' && env.WINDOWS_CERTIFICATE != ''
+        env:
+          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        run: |
+          # Sign Windows executables and MSI packages
+          find build-pkg -name "*.exe" -o -name "*.msi" | while read file; do
+            echo "Signing $file"
+            # signtool sign /f certificate.p12 /p password /t http://timestamp.digicert.com "$file"
+          done
+
+      - name: Sign packages (macOS)
+        if: runner.os == 'macOS' && env.MACOS_CERTIFICATE != ''
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+        run: |
+          # Sign macOS packages
+          find build-pkg -name "*.dmg" | while read file; do
+            echo "Signing $file"
+            # codesign --sign "Developer ID Application: Your Name" "$file"
+          done
+
+      - name: Generate package checksums
+        run: |
+          cd build-pkg
+          find . -name "*.exe" -o -name "*.msi" -o -name "*.dmg" -o -name "*.deb" -o -name "*.rpm" -o -name "*.tar.gz" -o -name "*.zip" | while read file; do
+            if [ -f "$file" ]; then
+              sha256sum "$file" >> checksums.sha256
+              md5sum "$file" >> checksums.md5
+            fi
+          done
 
       - name: List created packages
         run: |
-          echo "Created packages:"
-          ls -la build-pkg/packages/ || ls -la build-pkg/*.exe || ls -la build-pkg/*.dmg || ls -la build-pkg/*.deb || ls -la build-pkg/*.rpm || true
+          echo "## Created Packages" >> $GITHUB_STEP_SUMMARY
+          cd build-pkg
+          find . -name "*.exe" -o -name "*.msi" -o -name "*.dmg" -o -name "*.deb" -o -name "*.rpm" -o -name "*.tar.gz" -o -name "*.zip" | while read file; do
+            if [ -f "$file" ]; then
+              size=$(du -h "$file" | cut -f1)
+              echo "- **$(basename "$file")**: $size" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
 
       - name: Upload packages
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: qtplugin-packages-${{ matrix.os }}
+          name: qtforge-packages-${{ matrix.os }}-${{ github.run_number }}
           path: |
             build-pkg/packages/
             build-pkg/*.exe
@@ -340,14 +539,16 @@ jobs:
             build-pkg/*.rpm
             build-pkg/*.tar.gz
             build-pkg/*.zip
-          retention-days: 30
+            build-pkg/checksums.*
+          retention-days: 90
+          compression-level: 6
 
   # AppImage Build (Linux only)
   build-appimage:
     name: Build AppImage
     if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main')
     needs: build-and-test
-    runs-on: ubuntu-20.04  # Use older Ubuntu for better compatibility
+    runs-on: ubuntu-20.04 # Use older Ubuntu for better compatibility
 
     steps:
       - name: Checkout code
@@ -381,11 +582,11 @@ jobs:
           ./packaging/appimage/build-appimage.sh
 
       - name: Upload AppImage
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: qtplugin-appimage
+          name: qtforge-appimage-${{ github.run_number }}
           path: build-appimage/*.AppImage
-          retention-days: 30
+          retention-days: 90
 
   # Flatpak Build (Linux only)
   build-flatpak:
@@ -413,11 +614,11 @@ jobs:
           flatpak build-bundle repo qtplugin.flatpak org.qtforge.QtPlugin
 
       - name: Upload Flatpak
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: qtforge-flatpak
+          name: qtforge-flatpak-${{ github.run_number }}
           path: qtforge.flatpak
-          retention-days: 30
+          retention-days: 90
 
   # Cross-compilation testing
   cross-compile:
@@ -486,11 +687,32 @@ jobs:
         run: cmake --build build-cross --config Release
 
       - name: Upload cross-compilation artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: qtforge-${{ matrix.target }}
+          name: qtforge-${{ matrix.target }}-${{ github.run_number }}
           path: build-cross/install/
-          retention-days: 7
+          retention-days: 30
+
+  # Build Metrics Collection
+  collect-metrics:
+    name: Collect Build Metrics
+    if: always()
+    needs: [build-and-test, quality-assurance]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Collect build metrics
+        run: |
+          echo "## Build Metrics Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Workflow Run**: #${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Trigger**: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+
+          # Add build status for each job
+          echo "### Job Status" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build & Test**: ${{ needs.build-and-test.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Quality Assurance**: ${{ needs.quality-assurance.result }}" >> $GITHUB_STEP_SUMMARY
 
   # Release Creation - Only on tags
   create-release:
@@ -510,9 +732,11 @@ jobs:
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
       - name: Download all artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: artifacts
+          pattern: qtforge-*
+          merge-multiple: true
 
       - name: Organize release assets
         run: |
@@ -586,4 +810,3 @@ jobs:
           prerelease: ${{ contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'rc') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-

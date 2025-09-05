@@ -37,7 +37,7 @@ SandboxResourceMonitor::SandboxResourceMonitor(QObject* parent) : QObject(parent
 
 SandboxResourceMonitor::~SandboxResourceMonitor() = default;
 
-bool ResourceMonitor::initialize() {
+bool SandboxResourceMonitor::initialize() {
     #ifdef Q_OS_WIN
     return initialize_windows();
     #elif defined(Q_OS_LINUX)
@@ -50,7 +50,7 @@ bool ResourceMonitor::initialize() {
     #endif
 }
 
-void ResourceMonitor::shutdown() {
+void SandboxResourceMonitor::shutdown() {
     #ifdef Q_OS_WIN
     shutdown_windows();
     #elif defined(Q_OS_LINUX)
@@ -60,7 +60,7 @@ void ResourceMonitor::shutdown() {
     #endif
 }
 
-ResourceUsage ResourceMonitor::get_process_usage(qint64 pid) {
+ResourceUsage SandboxResourceMonitor::get_process_usage(qint64 pid) {
     ResourceUsage usage;
     usage.start_time = std::chrono::steady_clock::now();
 
@@ -78,7 +78,7 @@ ResourceUsage ResourceMonitor::get_process_usage(qint64 pid) {
     return usage;
 }
 
-ResourceUsage ResourceMonitor::get_system_usage() {
+ResourceUsage SandboxResourceMonitor::get_system_usage() {
     ResourceUsage usage;
     usage.start_time = std::chrono::steady_clock::now();
 
@@ -95,8 +95,20 @@ ResourceUsage ResourceMonitor::get_system_usage() {
     return usage;
 }
 
+bool SandboxResourceMonitor::is_supported() {
+    #ifdef Q_OS_WIN
+    return true;
+    #elif defined(Q_OS_LINUX)
+    return true;
+    #elif defined(Q_OS_MACOS)
+    return true;
+    #else
+    return false;
+    #endif
+}
+
 #ifdef Q_OS_WIN
-bool ResourceMonitor::initialize_windows() {
+bool SandboxResourceMonitor::initialize_windows() {
     // Initialize Windows Performance Data Helper (PDH) for CPU monitoring
     if (PdhOpenQuery(nullptr, 0, &m_pdh_query) != ERROR_SUCCESS) {
         qCWarning(resourceMonitorLog) << "Failed to initialize PDH query";
@@ -114,14 +126,14 @@ bool ResourceMonitor::initialize_windows() {
     return true;
 }
 
-void ResourceMonitor::shutdown_windows() {
+void SandboxResourceMonitor::shutdown_windows() {
     if (m_pdh_query) {
         PdhCloseQuery(m_pdh_query);
         m_pdh_query = nullptr;
     }
 }
 
-void ResourceMonitor::get_windows_process_usage(qint64 pid, ResourceUsage& usage) {
+void SandboxResourceMonitor::get_windows_process_usage(qint64 pid, ResourceUsage& usage) {
     HANDLE process = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, static_cast<DWORD>(pid));
     if (!process) {
         qCWarning(resourceMonitorLog) << "Failed to open process" << pid;
@@ -157,7 +169,7 @@ void ResourceMonitor::get_windows_process_usage(qint64 pid, ResourceUsage& usage
     CloseHandle(process);
 }
 
-void ResourceMonitor::get_windows_system_usage(ResourceUsage& usage) {
+void SandboxResourceMonitor::get_windows_system_usage(ResourceUsage& usage) {
     // Get system memory info
     MEMORYSTATUSEX mem_status;
     mem_status.dwLength = sizeof(mem_status);

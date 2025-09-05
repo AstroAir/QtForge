@@ -44,14 +44,12 @@ void register_hot_reload_manager_bindings(sol::state& lua) {
 void register_metrics_collector_bindings(sol::state& lua) {
     auto metrics_type = lua.new_usertype<qtplugin::IPluginMetricsCollector>("IPluginMetricsCollector");
 
-    metrics_type["start_collection"] = &qtplugin::IPluginMetricsCollector::start_collection;
-    metrics_type["stop_collection"] = &qtplugin::IPluginMetricsCollector::stop_collection;
-    metrics_type["is_collecting"] = &qtplugin::IPluginMetricsCollector::is_collecting;
-    metrics_type["get_plugin_metrics"] = &qtplugin::IPluginMetricsCollector::get_plugin_metrics;
-    metrics_type["get_system_metrics"] = &qtplugin::IPluginMetricsCollector::get_system_metrics;
+    metrics_type["start_monitoring"] = &qtplugin::IPluginMetricsCollector::start_monitoring;
+    metrics_type["stop_monitoring"] = &qtplugin::IPluginMetricsCollector::stop_monitoring;
+    metrics_type["is_monitoring_active"] = &qtplugin::IPluginMetricsCollector::is_monitoring_active;
     metrics_type["clear_metrics"] = &qtplugin::IPluginMetricsCollector::clear_metrics;
-    metrics_type["set_collection_interval"] = &qtplugin::IPluginMetricsCollector::set_collection_interval;
-    metrics_type["get_collection_interval"] = &qtplugin::IPluginMetricsCollector::get_collection_interval;
+    metrics_type["set_monitoring_interval"] = &qtplugin::IPluginMetricsCollector::set_monitoring_interval;
+    metrics_type["get_monitoring_interval"] = &qtplugin::IPluginMetricsCollector::get_monitoring_interval;
 
     qCDebug(monitoringBindingsLog) << "IPluginMetricsCollector bindings registered";
 }
@@ -69,11 +67,11 @@ void register_monitoring_bindings(sol::state& lua) {
 
     // Factory functions
     monitoring["create_hot_reload_manager"] = []() {
-        return qtplugin::PluginHotReloadManager::create();
+        return std::make_shared<qtplugin::PluginHotReloadManager>();
     };
 
     monitoring["create_metrics_collector"] = []() {
-        return qtplugin::PluginMetricsCollector::create();
+        return std::make_shared<qtplugin::PluginMetricsCollector>();
     };
 
     qCDebug(monitoringBindingsLog) << "Monitoring bindings registered successfully";

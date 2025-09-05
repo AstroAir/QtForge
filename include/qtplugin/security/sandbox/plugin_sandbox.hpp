@@ -229,7 +229,7 @@ private:
     bool m_active{false};
     mutable QMutex m_mutex;
 
-    std::unique_ptr<class ResourceMonitor> m_resource_monitor;
+    std::unique_ptr<class SandboxResourceMonitor> m_resource_monitor;
     std::unique_ptr<class SecurityEnforcer> m_security_enforcer;
 
     qtplugin::expected<void, PluginError> setup_process_environment();

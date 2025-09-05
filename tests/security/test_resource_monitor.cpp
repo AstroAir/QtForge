@@ -56,7 +56,7 @@ private slots:
     void testResourceMonitorUtils();
 
 private:
-    std::unique_ptr<ResourceMonitor> m_monitor;
+    std::unique_ptr<SandboxResourceMonitor> m_monitor;
     QProcess* m_test_process;
 
     void createTestProcess();
@@ -78,7 +78,7 @@ void TestResourceMonitor::initTestCase() {
 void TestResourceMonitor::cleanupTestCase() { cleanupTestProcess(); }
 
 void TestResourceMonitor::init() {
-    m_monitor = std::make_unique<ResourceMonitor>();
+    m_monitor = std::make_unique<SandboxResourceMonitor>();
 }
 
 void TestResourceMonitor::cleanup() {
@@ -119,7 +119,7 @@ void TestResourceMonitor::testResourceMonitorShutdown() {
 }
 
 void TestResourceMonitor::testPlatformSupport() {
-    bool is_supported = ResourceMonitor::is_supported();
+    bool is_supported = SandboxResourceMonitor::is_supported();
 
 #ifdef Q_OS_WIN
     QVERIFY(is_supported);
@@ -152,7 +152,7 @@ void TestResourceMonitor::testProcessResourceUsage() {
 
     // Verify that we got some meaningful data
     QVERIFY(usage.cpu_time_used >= std::chrono::milliseconds(0));
-    QVERIFY(usage.memory_used_mb >= 0);
+    // memory_used_mb is size_t (unsigned), so always >= 0
     QVERIFY(usage.file_handles_used >= 0);
     QVERIFY(usage.network_connections_used >= 0);
 
@@ -211,7 +211,7 @@ void TestResourceMonitor::testWindowsResourceMonitoring() {
     ResourceUsage usage = m_monitor->get_process_usage(pid);
 
     // On Windows, we should get memory and handle information
-    QVERIFY(usage.memory_used_mb >= 0);
+    // memory_used_mb is size_t (unsigned), so always >= 0
     QVERIFY(usage.file_handles_used >= 0);
 
     // CPU time should be tracked

@@ -10,7 +10,7 @@ message('Building QtForge Python bindings')
 # Python installation
 python3 = import('python').find_installation('python3')
 
-# Python binding sources - working modules only
+# Python binding sources - all modules now working
 python_binding_sources = [
   'qtforge_python.cpp',
   'qt_conversions.cpp',
@@ -20,12 +20,11 @@ python_binding_sources = [
   'security/security_bindings.cpp',
   'managers/managers_bindings.cpp',
   'orchestration/orchestration_bindings.cpp',
-  'threading/threading_bindings.cpp'
-  # Temporarily disabled due to compilation issues:
-  # 'monitoring/monitoring_bindings.cpp',      # Missing create methods, incomplete types
-  # 'transactions/transaction_bindings.cpp',   # Private constructors, missing methods
-  # 'composition/composition_bindings.cpp',    # Missing PluginCompositionManager class
-  # 'marketplace/marketplace_bindings.cpp',    # Missing methods
+  'threading/threading_bindings.cpp',
+  'monitoring/monitoring_bindings.cpp',
+  'transactions/transaction_bindings.cpp',
+  'composition/composition_bindings.cpp',
+  'marketplace/marketplace_bindings.cpp'
 ]
 
 # Communication bindings (conditional on Qt Network)

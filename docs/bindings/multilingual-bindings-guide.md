@@ -1,8 +1,9 @@
 # QtForge Multi-Language Bindings Guide
 
 !!! info "Multi-Language Support"
-**Languages**: Python, Lua, JavaScript (planned)  
- **Since**: QtForge v3.0.0  
+**Languages**: Python, Lua, JavaScript (planned)
+ **Since**: QtForge v3.0.0
+ **Updated**: QtForge v3.2.0 - Complete API coverage with advanced interfaces
  **Status**: Production Ready
 
 ## Overview
@@ -241,6 +242,89 @@ end)
 3. **Use Native Types**: Prefer language-native data structures
 4. **Profile Code**: Use language-specific profiling tools
 
+## Advanced Features (v3.2.0+)
+
+### Service Plugin Interface
+
+The new `IServicePlugin` interface enables long-running background services:
+
+```python
+# Python service plugin
+import qtforge.core as core
+
+class MyService(core.IServicePlugin):
+    def start_service(self):
+        print("Service starting...")
+        # Start background processing
+
+    def stop_service(self):
+        print("Service stopping...")
+        # Clean shutdown
+
+    def service_state(self):
+        return core.ServiceState.Running
+```
+
+```lua
+-- Lua service plugin
+local qtforge = require('qtforge')
+
+local service = qtforge.core.IServicePlugin()
+service:start_service()
+print("Service state:", service:service_state())
+service:stop_service()
+```
+
+### Advanced Plugin Interfaces
+
+New interfaces provide enhanced plugin capabilities:
+
+- **`IAdvancedPlugin`**: Capability negotiation and interface descriptors
+- **`IDynamicPlugin`**: Runtime plugin type detection and context management
+- **`IServicePlugin`**: Background service lifecycle management
+
+### Transaction Management
+
+Complete transaction support across all languages:
+
+```python
+# Python transactions
+import qtforge.transactions as tx
+
+manager = tx.get_transaction_manager()
+tx_id = manager.begin_transaction()
+# ... perform operations
+manager.commit_transaction(tx_id)
+```
+
+```lua
+-- Lua transactions
+local qtforge = require('qtforge')
+local manager = qtforge.transactions.get_transaction_manager()
+local tx_id = manager:begin_transaction()
+-- ... perform operations
+manager:commit_transaction(tx_id)
+```
+
+### Plugin Composition
+
+Advanced composition patterns for complex plugin architectures:
+
+```python
+# Python composition
+import qtforge.composition as comp
+
+manager = comp.get_composition_manager()
+composition = manager.create_composite_plugin("my-composite", comp.CompositionStrategy.Pipeline)
+```
+
+```lua
+-- Lua composition
+local qtforge = require('qtforge')
+local manager = qtforge.composition.get_composition_manager()
+local composition = manager:create_composite_plugin("my-composite", CompositionStrategy.Pipeline)
+```
+
 ## Development Guidelines
 
 ### API Design Consistency
@@ -369,4 +453,4 @@ We welcome contributions to all language bindings:
 
 ---
 
-_Last updated: September 2024 | QtForge v3.0.0_
+**Last updated: September 2024 | QtForge v3.2.0 - Complete API Coverage**

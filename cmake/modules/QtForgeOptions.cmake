@@ -54,6 +54,30 @@ function(qtforge_define_options)
         OFF
     )
 
+    # Security component option
+    option(QTFORGE_BUILD_SECURITY "Build security component" ON)
+
+    # Sandbox options
+    option(QTFORGE_ENABLE_SANDBOX "Enable plugin sandboxing functionality" ON)
+    cmake_dependent_option(QTFORGE_SANDBOX_PROCESS_ISOLATION
+        "Enable process isolation for sandboxed plugins"
+        ON
+        "QTFORGE_ENABLE_SANDBOX"
+        OFF
+    )
+    cmake_dependent_option(QTFORGE_SANDBOX_RESOURCE_MONITORING
+        "Enable resource monitoring for sandboxed plugins"
+        ON
+        "QTFORGE_ENABLE_SANDBOX"
+        OFF
+    )
+    cmake_dependent_option(QTFORGE_SANDBOX_SECURITY_ENFORCEMENT
+        "Enable security policy enforcement for sandboxed plugins"
+        ON
+        "QTFORGE_ENABLE_SANDBOX"
+        OFF
+    )
+
     # Development options
     option(QTFORGE_BUILD_EXAMPLES "Build example plugins" ON)
     option(QTFORGE_BUILD_TESTS "Build unit tests" OFF)
@@ -61,12 +85,12 @@ function(qtforge_define_options)
     option(QTFORGE_BUILD_DOCS "Build documentation" OFF)
 
     # Python binding options
-    option(QTFORGE_BUILD_PYTHON_BINDINGS "Build Python bindings using pybind11" OFF)
+    option(QTFORGE_BUILD_PYTHON_BINDINGS "Build Python bindings using pybind11" ON)
     option(QTFORGE_PYTHON_BINDINGS_INSTALL "Install Python bindings" ON)
     option(QTFORGE_PYTHON_BINDINGS_TESTS "Build Python binding tests" OFF)
 
     # Lua binding options
-    option(QTFORGE_BUILD_LUA_BINDINGS "Build Lua bindings using sol2" OFF)
+    option(QTFORGE_BUILD_LUA_BINDINGS "Build Lua bindings using sol2" ON)
     option(QTFORGE_LUA_BINDINGS_INSTALL "Install Lua bindings" ON)
     option(QTFORGE_LUA_BINDINGS_TESTS "Build Lua binding tests" OFF)
     option(QTFORGE_LUA_ENABLE_SANDBOX "Enable Lua script sandboxing" ON)
@@ -215,11 +239,22 @@ function(qtforge_print_configuration_summary)
     message(STATUS "Components:")
     message(STATUS "  Network Support: ${QTFORGE_BUILD_NETWORK}")
     message(STATUS "  UI Support: ${QTFORGE_BUILD_UI}")
+    message(STATUS "  Security Support: ${QTFORGE_BUILD_SECURITY}")
     if(DEFINED QTFORGE_BUILD_SQL)
         message(STATUS "  SQL Support: ${QTFORGE_BUILD_SQL}")
     endif()
     if(DEFINED QTFORGE_BUILD_CONCURRENT)
         message(STATUS "  Concurrent Support: ${QTFORGE_BUILD_CONCURRENT}")
+    endif()
+    message(STATUS "")
+
+    # Sandbox features
+    message(STATUS "Sandbox Features:")
+    message(STATUS "  Sandbox Support: ${QTFORGE_ENABLE_SANDBOX}")
+    if(QTFORGE_ENABLE_SANDBOX)
+        message(STATUS "  Process Isolation: ${QTFORGE_SANDBOX_PROCESS_ISOLATION}")
+        message(STATUS "  Resource Monitoring: ${QTFORGE_SANDBOX_RESOURCE_MONITORING}")
+        message(STATUS "  Security Enforcement: ${QTFORGE_SANDBOX_SECURITY_ENFORCEMENT}")
     endif()
     message(STATUS "")
 

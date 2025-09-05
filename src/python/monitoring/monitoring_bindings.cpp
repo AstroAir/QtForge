@@ -46,8 +46,7 @@ void bind_monitoring(py::module& m) {
     py::class_<PluginHotReloadManager, IPluginHotReloadManager,
                std::shared_ptr<PluginHotReloadManager>>(
         m, "PluginHotReloadManager")
-        .def(py::init<>())
-        .def_static("create", &PluginHotReloadManager::create)
+        .def(py::init<QObject*>(), py::arg("parent") = nullptr)
         .def("__repr__", [](const PluginHotReloadManager& manager) {
             auto plugins = manager.get_hot_reload_plugins();
             return "<PluginHotReloadManager plugins=" +
@@ -81,8 +80,7 @@ void bind_monitoring(py::module& m) {
     py::class_<PluginMetricsCollector, IPluginMetricsCollector,
                std::shared_ptr<PluginMetricsCollector>>(
         m, "PluginMetricsCollector")
-        .def(py::init<>())
-        .def_static("create", &PluginMetricsCollector::create)
+        .def(py::init<QObject*>(), py::arg("parent") = nullptr)
         .def("__repr__", [](const PluginMetricsCollector& collector) {
             return "<PluginMetricsCollector active=" +
                    std::string(collector.is_monitoring_active() ? "true"
@@ -94,14 +92,14 @@ void bind_monitoring(py::module& m) {
     m.def(
         "create_hot_reload_manager",
         []() -> std::shared_ptr<PluginHotReloadManager> {
-            return PluginHotReloadManager::create();
+            return std::make_shared<PluginHotReloadManager>();
         },
         "Create a new PluginHotReloadManager instance");
 
     m.def(
         "create_metrics_collector",
         []() -> std::shared_ptr<PluginMetricsCollector> {
-            return PluginMetricsCollector::create();
+            return std::make_shared<PluginMetricsCollector>();
         },
         "Create a new PluginMetricsCollector instance");
 
@@ -147,8 +145,8 @@ void bind_monitoring(py::module& m) {
         "setup_monitoring_system",
         [](std::chrono::milliseconds metrics_interval =
                std::chrono::milliseconds(5000)) -> py::tuple {
-            auto hot_reload = PluginHotReloadManager::create();
-            auto metrics = PluginMetricsCollector::create();
+            auto hot_reload = std::make_shared<PluginHotReloadManager>();
+            auto metrics = std::make_shared<PluginMetricsCollector>();
 
             // Configure metrics collection
             metrics->start_monitoring(metrics_interval);

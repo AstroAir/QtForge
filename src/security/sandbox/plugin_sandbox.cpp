@@ -315,7 +315,7 @@ PluginSandbox::PluginSandbox(const SecurityPolicy& policy, QObject* parent)
     m_execution_timer = std::make_unique<QTimer>(this);
 
     // Initialize resource monitor and security enforcer
-    m_resource_monitor = std::make_unique<ResourceMonitor>(this);
+    m_resource_monitor = std::make_unique<SandboxResourceMonitor>(this);
     m_security_enforcer = std::make_unique<SecurityEnforcer>(policy, this);
 
     // Connect signals

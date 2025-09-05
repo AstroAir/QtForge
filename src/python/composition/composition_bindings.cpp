@@ -14,7 +14,7 @@
 #include "../qt_conversions.hpp"
 
 namespace py = pybind11;
-using namespace qtplugin::composition;
+using namespace qtplugin;
 
 namespace qtforge_python {
 
@@ -97,44 +97,38 @@ void bind_composition(py::module& m) {
                    "' plugins=" + std::to_string(comp.plugins().size()) + ">";
         });
 
-    // Plugin composition manager
-    py::class_<PluginCompositionManager,
-               std::shared_ptr<PluginCompositionManager>>(
-        m, "PluginCompositionManager")
-        .def(py::init<>())
-        .def_static("create", &PluginCompositionManager::create)
+    // Plugin composition manager (singleton)
+    py::class_<CompositionManager>(m, "CompositionManager")
+        .def_static("instance", &CompositionManager::instance,
+                    py::return_value_policy::reference)
         .def("register_composition",
-             &PluginCompositionManager::register_composition)
+             &CompositionManager::register_composition)
         .def("unregister_composition",
-             &PluginCompositionManager::unregister_composition)
-        .def("get_composition", &PluginCompositionManager::get_composition)
-        .def("has_composition", &PluginCompositionManager::has_composition)
-        .def("list_compositions", &PluginCompositionManager::list_compositions)
-        .def("activate_composition",
-             &PluginCompositionManager::activate_composition)
-        .def("deactivate_composition",
-             &PluginCompositionManager::deactivate_composition)
-        .def("is_composition_active",
-             &PluginCompositionManager::is_composition_active)
-        .def("get_active_compositions",
-             &PluginCompositionManager::get_active_compositions)
-        .def("execute_composition",
-             &PluginCompositionManager::execute_composition)
-        .def("clear_compositions",
-             &PluginCompositionManager::clear_compositions)
-        .def("__repr__", [](const PluginCompositionManager& manager) {
+             &CompositionManager::unregister_composition)
+        .def("get_composition", &CompositionManager::get_composition)
+        .def("list_compositions", &CompositionManager::list_compositions)
+        .def("create_composite_plugin",
+             &CompositionManager::create_composite_plugin)
+        .def("destroy_composite_plugin",
+             &CompositionManager::destroy_composite_plugin)
+        .def("list_composite_plugins",
+             &CompositionManager::list_composite_plugins)
+        .def("get_composite_plugin",
+             &CompositionManager::get_composite_plugin)
+        .def("__repr__", [](const CompositionManager& manager) {
             auto compositions = manager.list_compositions();
-            return "<PluginCompositionManager compositions=" +
+            return "<CompositionManager compositions=" +
                    std::to_string(compositions.size()) + ">";
         });
 
     // Utility functions
     m.def(
-        "create_composition_manager",
-        []() -> std::shared_ptr<PluginCompositionManager> {
-            return PluginCompositionManager::create();
+        "get_composition_manager",
+        []() -> CompositionManager& {
+            return CompositionManager::instance();
         },
-        "Create a new PluginCompositionManager instance");
+        py::return_value_policy::reference,
+        "Get the CompositionManager singleton instance");
 
     m.def(
         "create_composition",

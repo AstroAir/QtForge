@@ -1,0 +1,242 @@
+name: Security and Quality Checks
+
+on:
+  push:
+    branches: [main, develop, project-organization]
+  pull_request:
+    branches: [main, develop, project-organization]
+  schedule:
+    # Run security scans weekly
+    - cron: '0 6 * * 1'
+
+jobs:
+  # Dependency vulnerability scanning
+  dependency-scan:
+    name: Dependency Vulnerability Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # CodeQL security analysis
+  codeql-analysis:
+    name: CodeQL Security Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+      
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ['cpp']
+        
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          
+      - name: Setup Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.5.3'
+          arch: gcc_64
+          
+      - name: Setup CMake
+        uses: jwlawson/actions-setup-cmake@v2
+        with:
+          cmake-version: '3.27.7'
+          
+      - name: Configure and build
+        run: |
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DQTFORGE_BUILD_TESTS=OFF \
+            -DQTFORGE_BUILD_EXAMPLES=OFF
+          cmake --build build --parallel
+          
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{matrix.language}}"
+
+  # License compliance check
+  license-check:
+    name: License Compliance Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: FOSSA Scan
+        uses: fossas/fossa-action@main
+        with:
+          api-key: ${{ secrets.FOSSA_API_KEY }}
+          
+      - name: FOSSA Test
+        uses: fossas/fossa-action@main
+        with:
+          api-key: ${{ secrets.FOSSA_API_KEY }}
+          run-tests: true
+
+  # Documentation quality check
+  docs-quality:
+    name: Documentation Quality Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          
+      - name: Install documentation tools
+        run: |
+          pip install mkdocs mkdocs-material mkdocs-mermaid2-plugin
+          pip install -r docs/requirements.txt
+          
+      - name: Check documentation links
+        run: |
+          # Install markdown-link-check
+          npm install -g markdown-link-check
+          
+          # Check all markdown files for broken links
+          find . -name "*.md" -not -path "./node_modules/*" -not -path "./.git/*" | \
+            xargs markdown-link-check --config .github/markdown-link-check.json || true
+            
+      - name: Build documentation
+        run: |
+          cd docs
+          mkdocs build --strict
+          
+      - name: Upload documentation
+        uses: actions/upload-artifact@v4
+        with:
+          name: documentation-site
+          path: docs/site/
+          retention-days: 30
+
+  # Performance benchmarking
+  performance-benchmark:
+    name: Performance Benchmarking
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.5.3'
+          arch: gcc_64
+          
+      - name: Setup CMake
+        uses: jwlawson/actions-setup-cmake@v2
+        with:
+          cmake-version: '3.27.7'
+          
+      - name: Build with benchmarks
+        run: |
+          cmake -S . -B build-bench \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DQTFORGE_BUILD_BENCHMARKS=ON \
+            -DQTFORGE_BUILD_TESTS=OFF
+          cmake --build build-bench --parallel
+          
+      - name: Run benchmarks
+        run: |
+          cd build-bench
+          # Run performance benchmarks and save results
+          ./benchmarks/qtforge_benchmarks --benchmark_format=json > benchmark_results.json
+          
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: build-bench/benchmark_results.json
+          retention-days: 90
+
+  # Container security scanning
+  container-scan:
+    name: Container Security Scan
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Build Docker image
+        run: |
+          if [ -f "Dockerfile" ]; then
+            docker build -t qtforge:latest .
+          else
+            echo "No Dockerfile found, skipping container scan"
+            exit 0
+          fi
+          
+      - name: Run Trivy container scan
+        if: hashFiles('Dockerfile') != ''
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'qtforge:latest'
+          format: 'sarif'
+          output: 'trivy-container-results.sarif'
+          
+      - name: Upload container scan results
+        if: hashFiles('Dockerfile') != ''
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-container-results.sarif'
+
+  # Supply chain security
+  supply-chain-security:
+    name: Supply Chain Security
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: SLSA Provenance
+        uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.9.0
+        with:
+          base64-subjects: ${{ needs.build.outputs.hashes }}
+          
+      - name: Scorecard analysis
+        uses: ossf/scorecard-action@v2.3.1
+        with:
+          results_file: results.sarif
+          results_format: sarif
+          repo_token: ${{ secrets.SCORECARD_TOKEN }}
+          
+      - name: Upload Scorecard results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: results.sarif

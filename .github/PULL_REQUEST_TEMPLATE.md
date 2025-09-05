@@ -1,7 +1,9 @@
 ## Description
+
 Please include a summary of the changes and the related issue. Please also include relevant motivation and context.
 
 ## Type of Change
+
 - [ ] Bug fix
 - [ ] New feature
 - [ ] Breaking change
@@ -9,11 +11,13 @@ Please include a summary of the changes and the related issue. Please also inclu
 - [ ] Chore/Refactor
 
 ## How Has This Been Tested?
+
 - [ ] Unit tests
 - [ ] Integration tests
 - [ ] Manual testing
 
 ## Checklist
+
 - [ ] My code follows the style guidelines of this project
 - [ ] I have performed a self-review of my own code
 - [ ] I have commented my code, particularly in hard-to-understand areas
@@ -23,5 +27,5 @@ Please include a summary of the changes and the related issue. Please also inclu
 - [ ] Any dependent changes have been merged and published in downstream modules
 
 ## Screenshots (if applicable)
-If your changes affect UI or behavior, consider adding screenshots or logs.
 
+If your changes affect UI or behavior, consider adding screenshots or logs.

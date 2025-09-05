@@ -15,7 +15,7 @@
 #include "../qt_conversions.hpp"
 
 namespace py = pybind11;
-using namespace qtplugin::transactions;
+using namespace qtplugin;
 
 namespace qtforge_python {
 
@@ -106,16 +106,14 @@ void bind_transactions(py::module& m) {
                    ">";
         });
 
-    // Plugin transaction manager
-    py::class_<PluginTransactionManager,
-               std::shared_ptr<PluginTransactionManager>>(
-        m, "PluginTransactionManager")
-        .def(py::init<>())
-        .def_static("create", &PluginTransactionManager::create)
+    // Plugin transaction manager (singleton)
+    py::class_<PluginTransactionManager>(m, "PluginTransactionManager")
+        .def_static("instance", &PluginTransactionManager::instance,
+                    py::return_value_policy::reference)
         .def("begin_transaction", &PluginTransactionManager::begin_transaction)
         .def("commit_transaction",
              &PluginTransactionManager::commit_transaction)
-        .def("abort_transaction", &PluginTransactionManager::abort_transaction)
+        .def("rollback_transaction", &PluginTransactionManager::rollback_transaction)
         .def("add_operation", &PluginTransactionManager::add_operation)
         .def("register_participant",
              &PluginTransactionManager::register_participant)
@@ -139,11 +137,12 @@ void bind_transactions(py::module& m) {
 
     // Utility functions
     m.def(
-        "create_transaction_manager",
-        []() -> std::shared_ptr<PluginTransactionManager> {
-            return PluginTransactionManager::create();
+        "get_transaction_manager",
+        []() -> PluginTransactionManager& {
+            return PluginTransactionManager::instance();
         },
-        "Create a new PluginTransactionManager instance");
+        py::return_value_policy::reference,
+        "Get the PluginTransactionManager singleton instance");
 
     m.def(
         "create_transaction_operation",
@@ -171,12 +170,13 @@ void bind_transactions(py::module& m) {
     // Helper functions for common transaction patterns
     m.def(
         "execute_atomic_operation",
-        [](std::shared_ptr<PluginTransactionManager> manager,
-           const std::vector<TransactionOperation>& operations,
+        [](const std::vector<TransactionOperation>& operations,
            IsolationLevel isolation = IsolationLevel::ReadCommitted) -> bool {
             try {
+                auto& manager = PluginTransactionManager::instance();
+
                 // Begin transaction
-                auto tx_result = manager->begin_transaction(isolation);
+                auto tx_result = manager.begin_transaction(isolation);
                 if (!tx_result) {
                     return false;
                 }
@@ -185,22 +185,22 @@ void bind_transactions(py::module& m) {
 
                 // Add all operations
                 for (const auto& op : operations) {
-                    auto add_result = manager->add_operation(tx_id, op);
+                    auto add_result = manager.add_operation(tx_id, op);
                     if (!add_result) {
-                        manager->abort_transaction(tx_id);
+                        manager.rollback_transaction(tx_id);
                         return false;
                     }
                 }
 
                 // Commit transaction
-                auto commit_result = manager->commit_transaction(tx_id);
+                auto commit_result = manager.commit_transaction(tx_id);
                 return commit_result.has_value();
 
             } catch (...) {
                 return false;
             }
         },
-        py::arg("manager"), py::arg("operations"),
+        py::arg("operations"),
         py::arg("isolation") = IsolationLevel::ReadCommitted,
         "Execute multiple operations atomically within a single transaction");
 }

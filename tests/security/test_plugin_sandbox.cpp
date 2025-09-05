@@ -259,7 +259,7 @@ void TestPluginSandbox::testSandboxResourceMonitoring() {
     // Get initial resource usage
     ResourceUsage usage = sandbox->get_resource_usage();
     QVERIFY(usage.cpu_time_used >= std::chrono::milliseconds(0));
-    QVERIFY(usage.memory_used_mb >= 0);
+    // memory_used_mb is size_t (unsigned), so always >= 0
 
     sandbox->shutdown();
 }
