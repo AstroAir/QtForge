@@ -4,14 +4,14 @@
  * @version 3.0.0
  */
 
-#include "../../../include/qtplugin/security/components/signature_verifier.hpp"
+#include "../qtplugin/security/components/signature_verifier.hpp"
 #include <QCryptographicHash>
 #include <QDebug>
 #include <QFile>
 #include <QLoggingCategory>
 #include <QProcess>
 #include <algorithm>
-#include "../../../include/qtplugin/security/security_manager.hpp"
+#include "../qtplugin/security/security_manager.hpp"
 
 Q_LOGGING_CATEGORY(signatureVerifierLog, "qtplugin.security.signature")
 

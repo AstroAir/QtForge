@@ -11,7 +11,7 @@
 #include <QTemporaryDir>
 #include <QTemporaryFile>
 
-#include "../../include/qtplugin/bridges/lua_plugin_bridge.hpp"
+#include "qtplugin/bridges/lua_plugin_bridge.hpp"
 
 class TestLuaPluginBridge : public QObject
 {
@@ -28,25 +28,25 @@ private slots:
     void testBridgeInitialization();
     void testBridgeShutdown();
     void testBridgeState();
-    
+
     // Plugin interface tests
     void testPluginMetadata();
     void testPluginCapabilities();
     void testPluginCommands();
     void testPluginConfiguration();
-    
+
     // Lua execution tests
     void testLuaCodeExecution();
     void testLuaScriptLoading();
     void testLuaErrorHandling();
     void testLuaSandboxing();
-    
+
     // Dynamic plugin interface tests
     void testMethodInvocation();
     void testPropertyAccess();
     void testMethodListing();
     void testPropertyListing();
-    
+
     // Integration tests
     void testPluginLifecycle();
     void testPluginCommunication();
@@ -54,7 +54,7 @@ private slots:
 
 private:
     void createTestLuaPlugin(const QString& filename, const QString& content);
-    
+
     QTemporaryDir m_temp_dir;
     std::unique_ptr<qtplugin::LuaPluginBridge> m_bridge;
 };
@@ -111,7 +111,7 @@ void TestLuaPluginBridge::testBridgeShutdown()
 #ifdef QTFORGE_LUA_BINDINGS
     QVERIFY(m_bridge->initialize().has_value());
     QCOMPARE(m_bridge->state(), qtplugin::PluginState::Running);
-    
+
     m_bridge->shutdown();
     QCOMPARE(m_bridge->state(), qtplugin::PluginState::Unloaded);
     QVERIFY(!m_bridge->is_initialized());
@@ -124,23 +124,23 @@ void TestLuaPluginBridge::testLuaCodeExecution()
 {
 #ifdef QTFORGE_LUA_BINDINGS
     QVERIFY(m_bridge->initialize().has_value());
-    
+
     // Test simple code execution
     QString code = "return 42";
     auto result = m_bridge->execute_code(code);
     QVERIFY(result.has_value());
-    
+
     QVariant value = result.value();
     QVERIFY(value.isValid());
-    
+
     // Test code with context
     QJsonObject context;
     context["input"] = 10;
-    
+
     code = "return context.input * 2";
     result = m_bridge->execute_code(code, context);
     QVERIFY(result.has_value());
-    
+
     // Test error handling
     code = "error('Test error')";
     result = m_bridge->execute_code(code);
@@ -155,7 +155,7 @@ void TestLuaPluginBridge::testLuaScriptLoading()
 {
 #ifdef QTFORGE_LUA_BINDINGS
     QVERIFY(m_bridge->initialize().has_value());
-    
+
     // Create test Lua plugin
     QString plugin_content = R"(
 --[[
@@ -194,17 +194,17 @@ end
 
 return plugin
 )";
-    
+
     createTestLuaPlugin("test_plugin.lua", plugin_content);
     QString plugin_path = m_temp_dir.filePath("test_plugin.lua");
-    
+
     auto result = m_bridge->load_lua_plugin(plugin_path);
     QVERIFY(result.has_value());
-    
+
     // Test plugin execution
     QJsonObject params;
     params["test"] = true;
-    
+
     auto exec_result = m_bridge->execute_command("execute_lua", {{"code", "return plugin.get_info()"}});
     QVERIFY(exec_result.has_value());
 #else
@@ -216,23 +216,23 @@ void TestLuaPluginBridge::testPluginCommands()
 {
 #ifdef QTFORGE_LUA_BINDINGS
     QVERIFY(m_bridge->initialize().has_value());
-    
+
     // Test available commands
     auto commands = m_bridge->available_commands();
     QVERIFY(!commands.empty());
     QVERIFY(std::find(commands.begin(), commands.end(), "execute_lua") != commands.end());
     QVERIFY(std::find(commands.begin(), commands.end(), "load_script") != commands.end());
-    
+
     // Test execute_lua command
     QJsonObject params;
     params["code"] = "return 'Hello from Lua'";
-    
+
     auto result = m_bridge->execute_command("execute_lua", params);
     QVERIFY(result.has_value());
-    
+
     QJsonObject response = result.value();
     QVERIFY(response["success"].toBool());
-    
+
     // Test invalid command
     result = m_bridge->execute_command("invalid_command", {});
     QVERIFY(!result.has_value());
@@ -246,20 +246,20 @@ void TestLuaPluginBridge::testLuaErrorHandling()
 {
 #ifdef QTFORGE_LUA_BINDINGS
     QVERIFY(m_bridge->initialize().has_value());
-    
+
     // Test syntax error
     QString code = "invalid lua syntax !!!";
     auto result = m_bridge->execute_code(code);
     QVERIFY(!result.has_value());
     QCOMPARE(result.error().code, qtplugin::PluginErrorCode::ExecutionFailed);
-    
+
     // Test runtime error
     code = "error('Runtime error test')";
     result = m_bridge->execute_code(code);
     QVERIFY(!result.has_value());
     QCOMPARE(result.error().code, qtplugin::PluginErrorCode::ExecutionFailed);
     QVERIFY(result.error().message.find("Runtime error test") != std::string::npos);
-    
+
     // Test nil access error
     code = "return nil_variable.property";
     result = m_bridge->execute_code(code);
@@ -273,24 +273,24 @@ void TestLuaPluginBridge::testLuaSandboxing()
 {
 #ifdef QTFORGE_LUA_BINDINGS
     QVERIFY(m_bridge->initialize().has_value());
-    
+
     // Test that dangerous functions are disabled in sandbox mode
     auto env = m_bridge->execution_environment();
     QVERIFY(env != nullptr);
-    
+
     if (env->is_sandbox_enabled()) {
         // Test that os.execute is disabled
         QString code = "return os.execute";
         auto result = m_bridge->execute_code(code);
         QVERIFY(result.has_value());
         // Should return nil since os.execute is disabled
-        
+
         // Test that io.open is disabled
         code = "return io.open";
         result = m_bridge->execute_code(code);
         QVERIFY(result.has_value());
         // Should return nil since io.open is disabled
-        
+
         // Test that require is disabled
         code = "return require";
         result = m_bridge->execute_code(code);
@@ -307,12 +307,12 @@ void TestLuaPluginBridge::testPluginLifecycle()
 #ifdef QTFORGE_LUA_BINDINGS
     // Test complete plugin lifecycle
     QCOMPARE(m_bridge->state(), qtplugin::PluginState::Unloaded);
-    
+
     // Initialize
     auto result = m_bridge->initialize();
     QVERIFY(result.has_value());
     QCOMPARE(m_bridge->state(), qtplugin::PluginState::Running);
-    
+
     // Load plugin
     QString plugin_content = R"(
 plugin = {
@@ -330,17 +330,17 @@ end
 
 return plugin
 )";
-    
+
     createTestLuaPlugin("lifecycle_plugin.lua", plugin_content);
     QString plugin_path = m_temp_dir.filePath("lifecycle_plugin.lua");
-    
+
     auto load_result = m_bridge->load_lua_plugin(plugin_path);
     QVERIFY(load_result.has_value());
-    
+
     // Test plugin is loaded and functional
     auto exec_result = m_bridge->execute_code("return plugin.initialized");
     QVERIFY(exec_result.has_value());
-    
+
     // Shutdown
     m_bridge->shutdown();
     QCOMPARE(m_bridge->state(), qtplugin::PluginState::Unloaded);

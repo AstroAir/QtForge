@@ -8,7 +8,7 @@
 
 #include <QObject>
 #include <chrono>
-#include "../../../include/qtplugin/security/sandbox/plugin_sandbox.hpp"
+#include "../qtplugin/security/sandbox/plugin_sandbox.hpp"
 
 #ifdef Q_OS_WIN
 #include <windows.h>

@@ -4,13 +4,13 @@
  * @version 3.0.0
  */
 
-#include "../../../include/qtplugin/security/components/security_validator.hpp"
+#include "../qtplugin/security/components/security_validator.hpp"
 #include <QDebug>
 #include <QFileInfo>
 #include <QLoggingCategory>
 #include <algorithm>
 #include <fstream>
-#include "../../../include/qtplugin/security/security_manager.hpp"
+#include "../qtplugin/security/security_manager.hpp"
 
 Q_LOGGING_CATEGORY(securityValidatorLog, "qtplugin.security.validator")
 

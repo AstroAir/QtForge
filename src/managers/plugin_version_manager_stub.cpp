@@ -5,10 +5,10 @@
  * @author QtPlugin Development Team
  */
 
-#include "../../include/qtplugin/managers/plugin_version_manager.hpp"
-#include "../../include/qtplugin/core/plugin_registry.hpp"
-#include "../../include/qtplugin/managers/configuration_manager.hpp"
-#include "../../include/qtplugin/managers/logging_manager.hpp"
+#include "qtplugin/managers/plugin_version_manager.hpp"
+#include "qtplugin/core/plugin_registry.hpp"
+#include "qtplugin/managers/configuration_manager.hpp"
+#include "qtplugin/managers/logging_manager.hpp"
 
 #include <QObject>
 

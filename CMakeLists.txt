@@ -22,6 +22,8 @@ project(QtForge
     LANGUAGES CXX
 )
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # ============================================================================
 # PROJECT SETUP AND BASIC CONFIGURATION
 # ============================================================================
@@ -743,6 +745,40 @@ install(DIRECTORY "${CMAKE_SOURCE_DIR}/docs/"
     COMPONENT Documentation
     PATTERN "*.md"
 )
+
+# ============================================================================
+# COMPILE COMMANDS COPY FOR CLANGD SUPPORT
+# ============================================================================
+# Copy compile_commands.json from preset build directory to build/ for clangd
+
+# Only set up the copy mechanism if compile commands are being exported
+if(CMAKE_EXPORT_COMPILE_COMMANDS)
+    # Create build directory if it doesn't exist
+    file(MAKE_DIRECTORY "${CMAKE_SOURCE_DIR}/build")
+
+    # Add post-build command to automatically copy compile_commands.json after QtForgeCore is built
+    add_custom_command(TARGET QtForgeCore POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${CMAKE_BINARY_DIR}/compile_commands.json"
+            "${CMAKE_SOURCE_DIR}/build/compile_commands.json"
+        COMMENT "Copying compile_commands.json to build/ directory for clangd support"
+        VERBATIM
+    )
+
+    # Add a standalone target for manual invocation
+    add_custom_target(update_clangd_db
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${CMAKE_BINARY_DIR}/compile_commands.json"
+            "${CMAKE_SOURCE_DIR}/build/compile_commands.json"
+        COMMENT "Manually updating compile_commands.json for clangd"
+        VERBATIM
+    )
+
+    message(STATUS "QtForge: compile_commands.json will be automatically copied to build/ directory after building QtForgeCore")
+    message(STATUS "QtForge: Use 'cmake --build . --target update_clangd_db' to manually update clangd database")
+else()
+    message(STATUS "QtForge: CMAKE_EXPORT_COMPILE_COMMANDS is OFF, skipping compile_commands.json copy setup")
+endif()
 
 # ============================================================================
 # BUILD CONFIGURATION SUMMARY

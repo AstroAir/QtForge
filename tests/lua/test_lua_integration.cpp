@@ -11,9 +11,9 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 
-#include "../../include/qtplugin/core/plugin_manager.hpp"
-#include "../../include/qtplugin/core/lua_plugin_loader.hpp"
-#include "../../include/qtplugin/bridges/lua_plugin_bridge.hpp"
+#include "qtplugin/core/plugin_manager.hpp"
+#include "qtplugin/core/lua_plugin_loader.hpp"
+#include "qtplugin/bridges/lua_plugin_bridge.hpp"
 
 class TestLuaIntegration : public QObject
 {
@@ -29,27 +29,27 @@ private slots:
     void testCompletePluginLifecycle();
     void testPluginManagerIntegration();
     void testMultiplePluginManagement();
-    
+
     // Plugin communication tests
     void testInterPluginCommunication();
     void testMessageBusIntegration();
     void testRequestResponseIntegration();
-    
+
     // Security integration tests
     void testPluginSecurity();
     void testSandboxEnforcement();
     void testPermissionManagement();
-    
+
     // Error handling integration tests
     void testErrorPropagation();
     void testRecoveryMechanisms();
     void testResourceCleanup();
-    
+
     // Performance integration tests
     void testPluginPerformance();
     void testMemoryManagement();
     void testConcurrentExecution();
-    
+
     // Real-world scenario tests
     void testDataProcessingPlugin();
     void testServicePlugin();
@@ -61,7 +61,7 @@ private:
     void createDataProcessingPlugin();
     void createServicePlugin();
     void createConfigurationPlugin();
-    
+
     QTemporaryDir m_temp_dir;
     std::unique_ptr<qtplugin::PluginManager> m_plugin_manager;
 };
@@ -70,7 +70,7 @@ void TestLuaIntegration::initTestCase()
 {
     qDebug() << "Starting Lua integration test suite";
     QVERIFY(m_temp_dir.isValid());
-    
+
     if (!qtplugin::LuaPluginLoader::is_lua_available()) {
         QSKIP("Lua bindings not available for integration tests");
     }
@@ -85,7 +85,7 @@ void TestLuaIntegration::init()
 {
     if (qtplugin::LuaPluginLoader::is_lua_available()) {
         m_plugin_manager = std::make_unique<qtplugin::PluginManager>();
-        
+
         // Register Lua plugin loader
         qtplugin::LuaPluginLoaderFactory::register_with_factory();
     }
@@ -104,7 +104,7 @@ void TestLuaIntegration::testCompletePluginLifecycle()
     if (!qtplugin::LuaPluginLoader::is_lua_available()) {
         QSKIP("Lua bindings not available");
     }
-    
+
     QString plugin_content = R"(
 --[[
 @plugin_name: Lifecycle Test Plugin
@@ -139,10 +139,10 @@ function plugin.execute_command(command, params)
     if not state.initialized then
         return {success = false, error = "Plugin not initialized"}
     end
-    
+
     state.command_count = state.command_count + 1
     state.last_command = command
-    
+
     if command == "ping" then
         return {success = true, result = "pong"}
     elseif command == "echo" then
@@ -163,32 +163,32 @@ end
 
 return plugin
 )";
-    
+
     createComplexLuaPlugin("lifecycle_plugin.lua", plugin_content);
     std::filesystem::path plugin_path(m_temp_dir.filePath("lifecycle_plugin.lua").toStdString());
-    
+
     // Load plugin through plugin manager
     qtplugin::PluginLoadOptions options;
     options.initialize_immediately = true;
-    
+
     auto load_result = m_plugin_manager->load_plugin(plugin_path, options);
     QVERIFY(load_result.has_value());
-    
+
     std::string plugin_id = load_result.value();
     QVERIFY(!plugin_id.empty());
-    
+
     // Verify plugin is loaded and running
     auto plugin = m_plugin_manager->get_plugin(plugin_id);
     QVERIFY(plugin != nullptr);
     QCOMPARE(plugin->state(), qtplugin::PluginState::Running);
-    
+
     // Test plugin commands
     QJsonObject ping_params;
     auto ping_result = plugin->execute_command("ping", ping_params);
     QVERIFY(ping_result.has_value());
     QVERIFY(ping_result.value()["success"].toBool());
     QCOMPARE(ping_result.value()["result"].toString(), QString("pong"));
-    
+
     // Test echo command
     QJsonObject echo_params;
     echo_params["message"] = "Hello, World!";
@@ -196,21 +196,21 @@ return plugin
     QVERIFY(echo_result.has_value());
     QVERIFY(echo_result.value()["success"].toBool());
     QCOMPARE(echo_result.value()["result"].toString(), QString("Hello, World!"));
-    
+
     // Test stats command
     auto stats_result = plugin->execute_command("get_stats", {});
     QVERIFY(stats_result.has_value());
     QVERIFY(stats_result.value()["success"].toBool());
-    
+
     QJsonObject stats = stats_result.value()["result"].toObject();
     QCOMPARE(stats["command_count"].toInt(), 3); // ping, echo, get_stats
     QCOMPARE(stats["last_command"].toString(), QString("get_stats"));
     QVERIFY(stats["initialized"].toBool());
-    
+
     // Unload plugin
     auto unload_result = m_plugin_manager->unload_plugin(plugin_id, false);
     QVERIFY(unload_result.has_value());
-    
+
     // Verify plugin is unloaded
     QVERIFY(!m_plugin_manager->has_plugin(plugin_id));
 }
@@ -220,39 +220,39 @@ void TestLuaIntegration::testPluginManagerIntegration()
     if (!qtplugin::LuaPluginLoader::is_lua_available()) {
         QSKIP("Lua bindings not available");
     }
-    
+
     // Create multiple test plugins
     createDataProcessingPlugin();
     createServicePlugin();
     createConfigurationPlugin();
-    
+
     // Load all plugins
     auto data_path = std::filesystem::path(m_temp_dir.filePath("data_processor.lua").toStdString());
     auto service_path = std::filesystem::path(m_temp_dir.filePath("service_plugin.lua").toStdString());
     auto config_path = std::filesystem::path(m_temp_dir.filePath("config_plugin.lua").toStdString());
-    
+
     qtplugin::PluginLoadOptions options;
     options.initialize_immediately = true;
-    
+
     auto data_result = m_plugin_manager->load_plugin(data_path, options);
     auto service_result = m_plugin_manager->load_plugin(service_path, options);
     auto config_result = m_plugin_manager->load_plugin(config_path, options);
-    
+
     QVERIFY(data_result.has_value());
     QVERIFY(service_result.has_value());
     QVERIFY(config_result.has_value());
-    
+
     // Verify all plugins are loaded
     QCOMPARE(m_plugin_manager->get_plugin_count(), 3u);
-    
+
     auto plugin_ids = m_plugin_manager->get_plugin_ids();
     QCOMPARE(plugin_ids.size(), 3u);
-    
+
     // Test plugin discovery
     auto discovered = m_plugin_manager->discover_plugins(
         std::filesystem::path(m_temp_dir.path().toStdString()), false);
     QVERIFY(discovered.size() >= 3);
-    
+
     // Test system metrics
     auto metrics = m_plugin_manager->system_metrics();
     QVERIFY(metrics.contains("plugin_count"));
@@ -264,7 +264,7 @@ void TestLuaIntegration::testInterPluginCommunication()
     if (!qtplugin::LuaPluginLoader::is_lua_available()) {
         QSKIP("Lua bindings not available");
     }
-    
+
     QString sender_plugin = R"(
 local plugin = {}
 
@@ -280,7 +280,7 @@ end
 
 return plugin
 )";
-    
+
     QString receiver_plugin = R"(
 local plugin = {}
 local received_messages = {}
@@ -302,36 +302,36 @@ end
 
 return plugin
 )";
-    
+
     createComplexLuaPlugin("sender.lua", sender_plugin);
     createComplexLuaPlugin("receiver.lua", receiver_plugin);
-    
+
     // Load both plugins
     qtplugin::PluginLoadOptions options;
     options.initialize_immediately = true;
-    
+
     auto sender_path = std::filesystem::path(m_temp_dir.filePath("sender.lua").toStdString());
     auto receiver_path = std::filesystem::path(m_temp_dir.filePath("receiver.lua").toStdString());
-    
+
     auto sender_result = m_plugin_manager->load_plugin(sender_path, options);
     auto receiver_result = m_plugin_manager->load_plugin(receiver_path, options);
-    
+
     QVERIFY(sender_result.has_value());
     QVERIFY(receiver_result.has_value());
-    
+
     // Test communication between plugins
     auto sender = m_plugin_manager->get_plugin(sender_result.value());
     auto receiver = m_plugin_manager->get_plugin(receiver_result.value());
-    
+
     QVERIFY(sender != nullptr);
     QVERIFY(receiver != nullptr);
-    
+
     // This test would require actual message bus implementation
     // For now, just verify plugins are loaded and can execute commands
     QJsonObject send_params;
     send_params["topic"] = "test_topic";
     send_params["message"] = "Hello from sender!";
-    
+
     auto send_result = sender->execute_command("send_message", send_params);
     // Would verify message was sent and received in full implementation
 }
@@ -371,7 +371,7 @@ end
 
 return plugin
 )";
-    
+
     createComplexLuaPlugin("data_processor.lua", content);
 }
 
@@ -407,7 +407,7 @@ function plugin.handle_request(request)
     if not service_state.running then
         return {success = false, error = "Service not running"}
     end
-    
+
     service_state.requests = service_state.requests + 1
     return {
         success = true,
@@ -418,7 +418,7 @@ end
 
 return plugin
 )";
-    
+
     createComplexLuaPlugin("service_plugin.lua", content);
 }
 
@@ -469,7 +469,7 @@ end
 
 return plugin
 )";
-    
+
     createComplexLuaPlugin("config_plugin.lua", content);
 }
 

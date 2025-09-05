@@ -4,12 +4,12 @@
  * @version 3.0.0
  */
 
-#include "../../include/qtplugin/monitoring/plugin_metrics_collector.hpp"
+#include "qtplugin/monitoring/plugin_metrics_collector.hpp"
+#include "qtplugin/core/plugin_manager.hpp"
+#include "qtplugin/core/plugin_registry.hpp"
+
 #include <QDebug>
 #include <QLoggingCategory>
-#include <algorithm>
-#include "../../include/qtplugin/core/plugin_manager.hpp"
-#include "../../include/qtplugin/core/plugin_registry.hpp"
 
 Q_LOGGING_CATEGORY(metricsCollectorLog, "qtplugin.metrics")
 

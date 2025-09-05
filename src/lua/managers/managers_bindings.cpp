@@ -14,12 +14,12 @@
 #include <sol/sol.hpp>
 #endif
 
-#include "../../../include/qtplugin/core/plugin_manager.hpp"
-#include "../../../include/qtplugin/core/plugin_interface.hpp"
-#include "../../../include/qtplugin/managers/configuration_manager.hpp"
-#include "../../../include/qtplugin/managers/logging_manager.hpp"
-#include "../../../include/qtplugin/managers/resource_manager.hpp"
-#include "../../../include/qtplugin/managers/plugin_version_manager.hpp"
+#include "../qtplugin/core/plugin_manager.hpp"
+#include "../qtplugin/core/plugin_interface.hpp"
+#include "../qtplugin/managers/configuration_manager.hpp"
+#include "../qtplugin/managers/logging_manager.hpp"
+#include "../qtplugin/managers/resource_manager.hpp"
+#include "../qtplugin/managers/plugin_version_manager.hpp"
 #include "../qt_conversions.cpp"
 
 Q_LOGGING_CATEGORY(managersBindingsLog, "qtforge.lua.managers");

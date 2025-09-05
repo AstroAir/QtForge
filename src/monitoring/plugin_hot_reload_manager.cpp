@@ -4,10 +4,11 @@
  * @version 3.0.0
  */
 
-#include "../../include/qtplugin/monitoring/plugin_hot_reload_manager.hpp"
+#include "qtplugin/monitoring/plugin_hot_reload_manager.hpp"
+
 #include <QDebug>
 #include <QLoggingCategory>
-#include <algorithm>
+
 #include <future>
 
 Q_LOGGING_CATEGORY(hotReloadLog, "qtplugin.hotreload")

@@ -11,7 +11,7 @@
 #include <sol/sol.hpp>
 #endif
 
-#include "../../../include/qtplugin/marketplace/plugin_marketplace.hpp"
+#include "../qtplugin/marketplace/plugin_marketplace.hpp"
 #include "../qt_conversions.cpp"
 
 Q_LOGGING_CATEGORY(marketplaceBindingsLog, "qtforge.lua.marketplace");

@@ -14,8 +14,8 @@
 #include <sol/sol.hpp>
 #endif
 
-#include "../../../include/qtplugin/utils/error_handling.hpp"
-#include "../../../include/qtplugin/core/plugin_interface.hpp"
+#include "../qtplugin/utils/error_handling.hpp"
+#include "../qtplugin/core/plugin_interface.hpp"
 #include "../qt_conversions.cpp"
 
 Q_LOGGING_CATEGORY(errorHandlingBindingsLog, "qtforge.lua.error");
@@ -32,10 +32,10 @@ struct LuaResult {
     bool has_value;
     T value;
     qtplugin::PluginError error;
-    
+
     LuaResult(const T& val) : has_value(true), value(val) {}
     LuaResult(const qtplugin::PluginError& err) : has_value(false), error(err) {}
-    
+
     template<typename U>
     LuaResult(const qtplugin::expected<U, qtplugin::PluginError>& expected) {
         if (expected) {
@@ -58,16 +58,16 @@ struct LuaResult {
 void register_error_handling_bindings(sol::state& lua) {
     sol::table qtforge = lua["qtforge"];
     sol::table error_ns = qtforge.get_or_create<sol::table>("error");
-    
+
     // Error creation functions
     error_ns["create"] = [](qtplugin::PluginErrorCode code, const std::string& message) {
         return qtplugin::PluginError{code, message};
     };
-    
+
     error_ns["create_simple"] = [](const std::string& message) {
         return qtplugin::PluginError{qtplugin::PluginErrorCode::UnknownError, message};
     };
-    
+
     // Error code utilities
     error_ns["code_to_string"] = [](qtplugin::PluginErrorCode code) -> std::string {
         switch (code) {
@@ -95,7 +95,7 @@ void register_error_handling_bindings(sol::state& lua) {
             default: return "Unknown";
         }
     };
-    
+
     error_ns["string_to_code"] = [](const std::string& code_str) -> qtplugin::PluginErrorCode {
         if (code_str == "None") return qtplugin::PluginErrorCode::None;
         if (code_str == "UnknownError") return qtplugin::PluginErrorCode::UnknownError;
@@ -120,7 +120,7 @@ void register_error_handling_bindings(sol::state& lua) {
         if (code_str == "CommandNotFound") return qtplugin::PluginErrorCode::CommandNotFound;
         return qtplugin::PluginErrorCode::UnknownError;
     };
-    
+
     // Result wrapper types
     auto bool_result_type = lua.new_usertype<LuaResult<bool>>("BoolResult");
     bool_result_type["has_value"] = &LuaResult<bool>::has_value;
@@ -136,7 +136,7 @@ void register_error_handling_bindings(sol::state& lua) {
     bool_result_type["is_error"] = [](const LuaResult<bool>& result) -> bool {
         return !result.has_value;
     };
-    
+
     auto string_result_type = lua.new_usertype<LuaResult<std::string>>("StringResult");
     string_result_type["has_value"] = &LuaResult<std::string>::has_value;
     string_result_type["value"] = sol::property([](const LuaResult<std::string>& result) -> std::string {
@@ -151,7 +151,7 @@ void register_error_handling_bindings(sol::state& lua) {
     string_result_type["is_error"] = [](const LuaResult<std::string>& result) -> bool {
         return !result.has_value;
     };
-    
+
     auto json_result_type = lua.new_usertype<LuaResult<QJsonObject>>("JsonResult");
     json_result_type["has_value"] = &LuaResult<QJsonObject>::has_value;
     json_result_type["value"] = sol::property([&lua](const LuaResult<QJsonObject>& result) -> sol::object {
@@ -170,16 +170,16 @@ void register_error_handling_bindings(sol::state& lua) {
     json_result_type["is_error"] = [](const LuaResult<QJsonObject>& result) -> bool {
         return !result.has_value;
     };
-    
+
     // Result creation functions
     error_ns["ok_bool"] = [](bool value) {
         return LuaResult<bool>(value);
     };
-    
+
     error_ns["ok_string"] = [](const std::string& value) {
         return LuaResult<std::string>(value);
     };
-    
+
     error_ns["ok_json"] = [](const sol::object& value) {
         QJsonObject json_obj;
         if (value.get_type() == sol::type::table) {
@@ -190,19 +190,19 @@ void register_error_handling_bindings(sol::state& lua) {
         }
         return LuaResult<QJsonObject>(json_obj);
     };
-    
+
     error_ns["error_bool"] = [](const qtplugin::PluginError& error) {
         return LuaResult<bool>(error);
     };
-    
+
     error_ns["error_string"] = [](const qtplugin::PluginError& error) {
         return LuaResult<std::string>(error);
     };
-    
+
     error_ns["error_json"] = [](const qtplugin::PluginError& error) {
         return LuaResult<QJsonObject>(error);
     };
-    
+
     // Error handling utilities
     error_ns["try_call"] = [&lua](const sol::function& func) -> sol::object {
         try {
@@ -223,7 +223,7 @@ void register_error_handling_bindings(sol::state& lua) {
             return error_result;
         }
     };
-    
+
     error_ns["assert_ok"] = [](const sol::object& result, const std::string& message) {
         if (result.get_type() == sol::type::table) {
             sol::table table = result.as<sol::table>();
@@ -234,7 +234,7 @@ void register_error_handling_bindings(sol::state& lua) {
             }
         }
     };
-    
+
     qCDebug(errorHandlingBindingsLog) << "Error handling bindings registered";
 }
 
@@ -243,9 +243,9 @@ void register_error_handling_bindings(sol::state& lua) {
  */
 void register_error_bindings(sol::state& lua) {
     qCDebug(errorHandlingBindingsLog) << "Registering error handling bindings...";
-    
+
     register_error_handling_bindings(lua);
-    
+
     qCDebug(errorHandlingBindingsLog) << "Error handling bindings registered successfully";
 }
 

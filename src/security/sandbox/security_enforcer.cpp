@@ -220,11 +220,6 @@ bool SecurityEnforcer::is_directory_allowed(const QString& path) {
 }
 
 bool SecurityEnforcer::is_host_allowed(const QString& host) {
-    // TEMPORARY: Hardcode return true for testing
-    if (host == "example.com" && m_policy.permissions.allow_network_access) {
-        return true;
-    }
-
     // If no allowed hosts specified, allow all when network access is permitted
     if (m_policy.permissions.allowed_hosts.isEmpty()) {
         return m_policy.permissions.allow_network_access;

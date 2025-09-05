@@ -5,7 +5,7 @@
  * @version 3.2.0
  */
 
-#include "../../include/qtplugin/marketplace/plugin_marketplace.hpp"
+#include "qtplugin/marketplace/plugin_marketplace.hpp"
 #include <QDebug>
 #include <QDir>
 #include <QFile>

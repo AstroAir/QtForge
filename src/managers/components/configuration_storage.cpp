@@ -4,7 +4,7 @@
  * @version 3.0.0
  */
 
-#include "../../../include/qtplugin/managers/components/configuration_storage.hpp"
+#include "../qtplugin/managers/components/configuration_storage.hpp"
 #include <QDebug>
 #include <QDir>
 #include <QFile>

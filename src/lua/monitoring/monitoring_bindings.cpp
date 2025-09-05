@@ -11,8 +11,8 @@
 #include <sol/sol.hpp>
 #endif
 
-#include "../../../include/qtplugin/monitoring/plugin_hot_reload_manager.hpp"
-#include "../../../include/qtplugin/monitoring/plugin_metrics_collector.hpp"
+#include "../qtplugin/monitoring/plugin_hot_reload_manager.hpp"
+#include "../qtplugin/monitoring/plugin_metrics_collector.hpp"
 #include "../qt_conversions.cpp"
 
 Q_LOGGING_CATEGORY(monitoringBindingsLog, "qtforge.lua.monitoring");

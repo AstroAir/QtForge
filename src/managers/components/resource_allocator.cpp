@@ -4,13 +4,13 @@
  * @version 3.0.0
  */
 
-#include "../../../include/qtplugin/managers/components/resource_allocator.hpp"
+#include "../qtplugin/managers/components/resource_allocator.hpp"
 #include <QDebug>
 #include <QLoggingCategory>
 #include <QUuid>
 #include <algorithm>
 #include <random>
-#include "../../../include/qtplugin/managers/components/resource_pool.hpp"
+#include "../qtplugin/managers/components/resource_pool.hpp"
 
 Q_LOGGING_CATEGORY(resourceAllocatorLog, "qtplugin.resource.allocator")
 

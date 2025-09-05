@@ -120,10 +120,10 @@ void TestSandboxIntegration::testCompletePluginExecution() {
 
     // Connect to signals for monitoring
     QSignalSpy execution_spy(sandbox.get(),
-                             &PluginSandbox::execution_completed);
+                             SIGNAL(execution_completed(int, QJsonObject)));
     QSignalSpy resource_spy(sandbox.get(),
-                            &PluginSandbox::resource_usage_updated);
-    QSignalSpy violation_spy(sandbox.get(), &PluginSandbox::security_violation);
+                            SIGNAL(resource_usage_updated(ResourceUsage)));
+    QSignalSpy violation_spy(sandbox.get(), SIGNAL(security_violation(QString, QJsonObject)));
 
     // Create a simple test plugin
     QString plugin_content = R"(
@@ -245,7 +245,7 @@ void TestSandboxIntegration::testSecurityViolationHandling() {
     auto sandbox = sandbox_result.value();
 
     // Connect to security violation signal
-    QSignalSpy violation_spy(sandbox.get(), &PluginSandbox::security_violation);
+    QSignalSpy violation_spy(sandbox.get(), SIGNAL(security_violation(QString, QJsonObject)));
 
     // Create a plugin that attempts unauthorized operations
     QString plugin_content = R"(
@@ -323,7 +323,7 @@ void TestSandboxIntegration::testMultiSandboxWorkflow() {
 
         // Create spy for each sandbox
         auto spy =
-            new QSignalSpy(sandbox.get(), &PluginSandbox::execution_completed);
+            new QSignalSpy(sandbox.get(), SIGNAL(execution_completed(int, QJsonObject)));
         spies.append(spy);
     }
 
@@ -381,7 +381,7 @@ void TestSandboxIntegration::testResourceMonitoringIntegration() {
     auto sandbox = sandbox_result.value();
 
     // Connect to resource monitoring signals
-    QSignalSpy usage_spy(sandbox.get(), &PluginSandbox::resource_usage_updated);
+    QSignalSpy usage_spy(sandbox.get(), SIGNAL(resource_usage_updated(ResourceUsage)));
 
     // Create a plugin that does some work
     QString plugin_content = R"(
@@ -442,8 +442,8 @@ void TestSandboxIntegration::testPluginTimeout() {
 
     // Connect to signals
     QSignalSpy execution_spy(sandbox.get(),
-                             &PluginSandbox::execution_completed);
-    QSignalSpy violation_spy(sandbox.get(), &PluginSandbox::security_violation);
+                             SIGNAL(execution_completed(int, QJsonObject)));
+    QSignalSpy violation_spy(sandbox.get(), SIGNAL(security_violation(QString, QJsonObject)));
 
     // Create a long-running plugin
     QString plugin_content = R"(
@@ -498,7 +498,7 @@ void TestSandboxIntegration::testConcurrentPluginExecution() {
         sandboxes.append(sandbox);
 
         auto spy =
-            new QSignalSpy(sandbox.get(), &PluginSandbox::execution_completed);
+            new QSignalSpy(sandbox.get(), SIGNAL(execution_completed(int, QJsonObject)));
         spies.append(spy);
     }
 

@@ -14,11 +14,11 @@
 #include <sol/sol.hpp>
 #endif
 
-#include "../../../include/qtplugin/security/security_manager.hpp"
-#include "../../../include/qtplugin/security/components/security_validator.hpp"
-#include "../../../include/qtplugin/security/components/signature_verifier.hpp"
-#include "../../../include/qtplugin/security/components/permission_manager.hpp"
-#include "../../../include/qtplugin/security/components/security_policy_engine.hpp"
+#include "../qtplugin/security/security_manager.hpp"
+#include "../qtplugin/security/components/security_validator.hpp"
+#include "../qtplugin/security/components/signature_verifier.hpp"
+#include "../qtplugin/security/components/permission_manager.hpp"
+#include "../qtplugin/security/components/security_policy_engine.hpp"
 #include "../qt_conversions.cpp"
 
 Q_LOGGING_CATEGORY(securityBindingsLog, "qtforge.lua.security");

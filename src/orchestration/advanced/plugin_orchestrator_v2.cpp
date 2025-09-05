@@ -4,7 +4,7 @@
  * @version 3.2.0
  */
 
-#include "../../../include/qtplugin/orchestration/advanced/plugin_orchestrator_v2.hpp"
+#include "../qtplugin/orchestration/advanced/plugin_orchestrator_v2.hpp"
 #include <QDebug>
 #include <QJsonDocument>
 #include <QLoggingCategory>

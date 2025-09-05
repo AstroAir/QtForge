@@ -11,7 +11,7 @@
 #include <sol/sol.hpp>
 #endif
 
-#include "../../../include/qtplugin/orchestration/plugin_orchestrator.hpp"
+#include "../qtplugin/orchestration/plugin_orchestrator.hpp"
 #include "../qt_conversions.cpp"
 
 Q_LOGGING_CATEGORY(orchestrationBindingsLog, "qtforge.lua.orchestration");

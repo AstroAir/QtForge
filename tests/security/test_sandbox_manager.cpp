@@ -138,7 +138,7 @@ void TestSandboxManager::testCreateSandbox() {
     QString sandbox_id = generateUniqueSandboxId();
     SecurityPolicy policy = createTestPolicy("test_create");
 
-    QSignalSpy spy(m_manager, &SandboxManager::sandbox_created);
+    QSignalSpy spy(m_manager, SIGNAL(sandbox_created(const QString&)));
 
     auto result = m_manager->create_sandbox(sandbox_id, policy);
     QVERIFY(result.has_value());
@@ -179,7 +179,7 @@ void TestSandboxManager::testRemoveSandbox() {
     auto create_result = m_manager->create_sandbox(sandbox_id, policy);
     QVERIFY(create_result.has_value());
 
-    QSignalSpy spy(m_manager, &SandboxManager::sandbox_removed);
+    QSignalSpy spy(m_manager, SIGNAL(sandbox_removed(const QString&)));
 
     // Remove sandbox
     m_manager->remove_sandbox(sandbox_id);
@@ -451,7 +451,7 @@ void TestSandboxManager::testShutdownAll() {
     auto active_before = m_manager->get_active_sandboxes();
     QVERIFY(active_before.size() >= sandbox_count);
 
-    QSignalSpy spy(m_manager, &SandboxManager::sandbox_removed);
+    QSignalSpy spy(m_manager, SIGNAL(sandbox_removed(const QString&)));
 
     // Shutdown all
     m_manager->shutdown_all();
@@ -558,7 +558,7 @@ void TestSandboxManager::testManagerReinitialization() {
 }
 
 void TestSandboxManager::testSandboxCreatedSignal() {
-    QSignalSpy spy(m_manager, &SandboxManager::sandbox_created);
+    QSignalSpy spy(m_manager, SIGNAL(sandbox_created(const QString&)));
     QVERIFY(spy.isValid());
 
     QString sandbox_id = generateUniqueSandboxId();
@@ -583,7 +583,7 @@ void TestSandboxManager::testSandboxRemovedSignal() {
     QVERIFY(result.has_value());
 
     // Set up signal spy
-    QSignalSpy spy(m_manager, &SandboxManager::sandbox_removed);
+    QSignalSpy spy(m_manager, SIGNAL(sandbox_removed(const QString&)));
     QVERIFY(spy.isValid());
 
     // Remove sandbox
@@ -596,7 +596,7 @@ void TestSandboxManager::testSandboxRemovedSignal() {
 }
 
 void TestSandboxManager::testSecurityEventSignal() {
-    QSignalSpy spy(m_manager, &SandboxManager::security_event);
+    QSignalSpy spy(m_manager, SIGNAL(security_event(const QString&, const QString&, const QJsonObject&)));
     QVERIFY(spy.isValid());
 
     // This test verifies the signal exists and can be connected

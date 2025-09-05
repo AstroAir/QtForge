@@ -4,7 +4,7 @@
  * @version 3.0.0
  */
 
-#include "../../../include/qtplugin/managers/components/configuration_watcher.hpp"
+#include "../qtplugin/managers/components/configuration_watcher.hpp"
 #include <QDebug>
 #include <QDir>
 #include <QFileInfo>

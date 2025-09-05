@@ -4,7 +4,7 @@
  * @version 3.2.0
  */
 
-#include "../../include/qtplugin/bridges/lua_plugin_bridge.hpp"
+#include "qtplugin/bridges/lua_plugin_bridge.hpp"
 #include <QCoreApplication>
 #include <QDebug>
 #include <QDir>

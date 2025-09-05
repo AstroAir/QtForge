@@ -15,6 +15,9 @@
 #include <QProcess>
 #include <QTimer>
 #include <QJsonObject>
+#include <QStringList>
+#include <chrono>
+#include <QJsonObject>
 #include <QJsonArray>
 #include <QLoggingCategory>
 #include <QString>
@@ -316,7 +319,7 @@ signals:
     void security_event(const QString& sandbox_id, const QString& event, const QJsonObject& details);
 
 private:
-    SandboxManager() = default;
+    SandboxManager() : QObject(nullptr) {}
     std::unordered_map<QString, std::shared_ptr<PluginSandbox>> m_sandboxes;
     std::unordered_map<QString, SecurityPolicy> m_policies;
     mutable QMutex m_mutex;

@@ -68,6 +68,12 @@ function(qtforge_find_qt)
         message(STATUS "QtForge: Found Qt6 ${Qt6_VERSION}")
         message(STATUS "QtForge: Qt6 components: ${FOUND_COMPONENTS}")
 
+        # Enable automatic moc generation for Qt classes with Q_OBJECT
+        set(CMAKE_AUTOMOC ON PARENT_SCOPE)
+        set(CMAKE_AUTORCC ON PARENT_SCOPE)
+        set(CMAKE_AUTOUIC ON PARENT_SCOPE)
+        message(STATUS "QtForge: Enabled Qt AUTOMOC, AUTORCC, and AUTOUIC")
+
     else()
         # Fallback to Qt5
         find_package(Qt5 QUIET COMPONENTS ${QT_COMPONENTS})
@@ -94,6 +100,12 @@ function(qtforge_find_qt)
 
             message(STATUS "QtForge: Found Qt5 ${Qt5_VERSION}")
             message(STATUS "QtForge: Qt5 components: ${FOUND_COMPONENTS}")
+
+            # Enable automatic moc generation for Qt classes with Q_OBJECT
+            set(CMAKE_AUTOMOC ON PARENT_SCOPE)
+            set(CMAKE_AUTORCC ON PARENT_SCOPE)
+            set(CMAKE_AUTOUIC ON PARENT_SCOPE)
+            message(STATUS "QtForge: Enabled Qt AUTOMOC, AUTORCC, and AUTOUIC")
 
         else()
             set(QTFORGE_QT_FOUND FALSE PARENT_SCOPE)

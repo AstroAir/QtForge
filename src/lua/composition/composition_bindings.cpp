@@ -11,7 +11,7 @@
 #include <sol/sol.hpp>
 #endif
 
-#include "../../../include/qtplugin/composition/plugin_composition.hpp"
+#include "../qtplugin/composition/plugin_composition.hpp"
 #include "../qt_conversions.cpp"
 
 Q_LOGGING_CATEGORY(compositionBindingsLog, "qtforge.lua.composition");

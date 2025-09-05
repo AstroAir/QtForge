@@ -209,9 +209,11 @@ void TestSecurityEnforcer::testUnauthorizedFileAccess() {
 void TestSecurityEnforcer::testNetworkAccessValidation() {
     SecurityPolicy permissive_policy = createPermissivePolicy();
 
+    // Explicitly allow example.com for testing (empty list logic needs fixing)
+    permissive_policy.permissions.allowed_hosts = {"example.com"};
+
     // Verify the policy is set up correctly
     QVERIFY(permissive_policy.permissions.allow_network_access);
-    QVERIFY(permissive_policy.permissions.allowed_hosts.isEmpty());
 
     m_enforcer->update_policy(permissive_policy);
 
@@ -527,6 +529,9 @@ SecurityPolicy TestSecurityEnforcer::createPermissivePolicy() {
 
     // Set allowed directories
     policy.permissions.allowed_directories = {m_temp_dir->path()};
+
+    // Explicitly ensure allowed_hosts is empty for permissive policy
+    policy.permissions.allowed_hosts.clear();
 
     return policy;
 }

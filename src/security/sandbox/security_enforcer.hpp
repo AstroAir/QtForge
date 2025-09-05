@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "../../../include/qtplugin/security/sandbox/plugin_sandbox.hpp"
+#include "../qtplugin/security/sandbox/plugin_sandbox.hpp"
 #include <QObject>
 #include <QProcess>
 #include <QFileSystemWatcher>
