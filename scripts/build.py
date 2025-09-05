@@ -315,14 +315,14 @@ def main():
                        default='Release', help='Build type')
     parser.add_argument('--jobs', '-j', type=int, default=0,
                        help='Number of parallel jobs (default: auto-detect)')
-    parser.add_argument('--tests', action='store_true',
-                       help='Build and run tests')
+    parser.add_argument('--tests', action='store_true', default=True,
+                       help='Build and run tests (default: enabled)')
     parser.add_argument('--examples', action='store_true', default=True,
                        help='Build examples (default: enabled)')
-    parser.add_argument('--network', action='store_true',
-                       help='Build network support')
-    parser.add_argument('--ui', action='store_true',
-                       help='Build UI support')
+    parser.add_argument('--network', action='store_true', default=True,
+                       help='Build network support (default: enabled)')
+    parser.add_argument('--ui', action='store_true', default=True,
+                       help='Build UI support (default: enabled)')
     parser.add_argument('--package', action='store_true',
                        help='Create packages after build')
     parser.add_argument('--install', action='store_true',

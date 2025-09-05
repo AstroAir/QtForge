@@ -11,6 +11,9 @@
 #include <QTimer>
 #include <QtTest/QtTest>
 #include <memory>
+#include <thread>
+#include <atomic>
+#include <vector>
 
 // Include the resource monitor header (would need to be accessible)
 // For testing, we'll create a mock or use the actual implementation
@@ -420,6 +423,65 @@ bool TestResourceMonitor::isCurrentPlatformSupported() {
 #else
     return false;
 #endif
+}
+
+void TestResourceMonitor::testNetworkConnectionTracking() {
+    if (!SandboxResourceMonitor::is_supported()) {
+        QSKIP("Resource monitoring not supported on this platform");
+    }
+
+    SandboxResourceMonitor monitor;
+    QVERIFY(monitor.initialize());
+
+    // Test network connection tracking
+    ResourceUsage usage = monitor.get_system_usage();
+
+    // Network connections should be tracked (even if 0)
+    QVERIFY(usage.network_connections_used >= 0);
+
+    // Test with process usage (if we have a test process)
+    if (m_test_process && m_test_process->state() == QProcess::Running) {
+        ResourceUsage process_usage = monitor.get_process_usage(m_test_process->processId());
+        QVERIFY(process_usage.network_connections_used >= 0);
+    }
+
+    monitor.shutdown();
+}
+
+void TestResourceMonitor::testConcurrentMonitoring() {
+    if (!SandboxResourceMonitor::is_supported()) {
+        QSKIP("Resource monitoring not supported on this platform");
+    }
+
+    // Test concurrent access to resource monitoring
+    const int thread_count = 3;
+    const int iterations_per_thread = 5;
+    std::vector<std::thread> threads;
+    std::atomic<int> success_count{0};
+
+    for (int t = 0; t < thread_count; ++t) {
+        threads.emplace_back([this, iterations_per_thread, &success_count]() {
+            SandboxResourceMonitor monitor;
+            if (monitor.initialize()) {
+                for (int i = 0; i < iterations_per_thread; ++i) {
+                    ResourceUsage usage = monitor.get_system_usage();
+                    if (usage.memory_used_mb > 0) {
+                        success_count.fetch_add(1);
+                    }
+                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                }
+                monitor.shutdown();
+            }
+        });
+    }
+
+    // Wait for all threads to complete
+    for (auto& thread : threads) {
+        thread.join();
+    }
+
+    // Verify that most monitoring operations succeeded
+    QVERIFY(success_count.load() > (thread_count * iterations_per_thread) / 2);
 }
 
 QTEST_MAIN(TestResourceMonitor)

@@ -17,17 +17,18 @@
 
 // Forward declarations for binding functions
 namespace qtforge_python {
-void bind_core(pybind11::module& m);
+void bind_core_minimal(pybind11::module& m);  // Using minimal core bindings
 void bind_utils(pybind11::module& m);
-void bind_security(pybind11::module& m);
-void bind_communication(pybind11::module& m);
-void bind_managers(pybind11::module& m);
-void bind_orchestration(pybind11::module& m);
-void bind_threading(pybind11::module& m);
-void bind_monitoring(pybind11::module& m);
-void bind_transactions(pybind11::module& m);
-void bind_composition(pybind11::module& m);
-void bind_marketplace(pybind11::module& m);
+// Temporarily disabled binding functions:
+// void bind_security(pybind11::module& m);
+// void bind_communication(pybind11::module& m);
+// void bind_managers(pybind11::module& m);
+// void bind_orchestration(pybind11::module& m);
+// void bind_threading(pybind11::module& m);
+// void bind_monitoring(pybind11::module& m);
+// void bind_transactions(pybind11::module& m);
+// void bind_composition(pybind11::module& m);
+// void bind_marketplace(pybind11::module& m);
 }  // namespace qtforge_python
 
 namespace py = pybind11;
@@ -75,18 +76,20 @@ PYBIND11_MODULE(qtforge, m) {
     auto marketplace_module = m.def_submodule(
         "marketplace", "Plugin marketplace and distribution system");
 
-    // Bind all components
-    qtforge_python::bind_core(core_module);
+    // Bind available components (minimal set for now)
+    qtforge_python::bind_core_minimal(core_module);
     qtforge_python::bind_utils(utils_module);
-    qtforge_python::bind_security(security_module);
-    qtforge_python::bind_communication(communication_module);
-    qtforge_python::bind_managers(managers_module);
-    qtforge_python::bind_orchestration(orchestration_module);
-    qtforge_python::bind_threading(threading_module);
-    qtforge_python::bind_monitoring(monitoring_module);
-    qtforge_python::bind_transactions(transactions_module);
-    qtforge_python::bind_composition(composition_module);
-    qtforge_python::bind_marketplace(marketplace_module);
+
+    // Temporarily disabled until C++ implementations are complete:
+    // qtforge_python::bind_security(security_module);
+    // qtforge_python::bind_communication(communication_module);
+    // qtforge_python::bind_managers(managers_module);
+    // qtforge_python::bind_orchestration(orchestration_module);
+    // qtforge_python::bind_threading(threading_module);
+    // qtforge_python::bind_monitoring(monitoring_module);
+    // qtforge_python::bind_transactions(transactions_module);
+    // qtforge_python::bind_composition(composition_module);
+    // qtforge_python::bind_marketplace(marketplace_module);
 
     // Convenience imports at module level
     // Import commonly used functions to the main module namespace

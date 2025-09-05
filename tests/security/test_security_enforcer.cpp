@@ -190,7 +190,7 @@ void TestSecurityEnforcer::testUnauthorizedFileAccess() {
     QVERIFY(init_result);
 
     QSignalSpy spy(m_enforcer.get(),
-                   &SecurityEnforcer::security_violation_detected);
+                   SIGNAL(security_violation_detected(const SecurityEvent&)));
 
     QString test_path = m_temp_dir->path() + "/test_file.txt";
 
@@ -208,6 +208,11 @@ void TestSecurityEnforcer::testUnauthorizedFileAccess() {
 
 void TestSecurityEnforcer::testNetworkAccessValidation() {
     SecurityPolicy permissive_policy = createPermissivePolicy();
+
+    // Verify the policy is set up correctly
+    QVERIFY(permissive_policy.permissions.allow_network_access);
+    QVERIFY(permissive_policy.permissions.allowed_hosts.isEmpty());
+
     m_enforcer->update_policy(permissive_policy);
 
     bool init_result = m_enforcer->initialize();
@@ -251,7 +256,7 @@ void TestSecurityEnforcer::testUnauthorizedNetworkAccess() {
     QVERIFY(init_result);
 
     QSignalSpy spy(m_enforcer.get(),
-                   &SecurityEnforcer::security_violation_detected);
+                   SIGNAL(security_violation_detected(const SecurityEvent&)));
 
     // Attempt unauthorized network access
     bool network_result =
@@ -282,7 +287,7 @@ void TestSecurityEnforcer::testUnauthorizedProcessCreation() {
     QVERIFY(init_result);
 
     QSignalSpy spy(m_enforcer.get(),
-                   &SecurityEnforcer::security_violation_detected);
+                   SIGNAL(security_violation_detected(const SecurityEvent&)));
 
     // Attempt unauthorized process creation
     bool process_result = m_enforcer->validate_process_creation("/bin/sh");
@@ -312,7 +317,7 @@ void TestSecurityEnforcer::testUnauthorizedSystemCall() {
     QVERIFY(init_result);
 
     QSignalSpy spy(m_enforcer.get(),
-                   &SecurityEnforcer::security_violation_detected);
+                   SIGNAL(security_violation_detected(const SecurityEvent&)));
 
     // Attempt unauthorized system call
     bool syscall_result = m_enforcer->validate_system_call("execve");
@@ -348,7 +353,7 @@ void TestSecurityEnforcer::testBlockedApiCall() {
     QVERIFY(init_result);
 
     QSignalSpy spy(m_enforcer.get(),
-                   &SecurityEnforcer::security_violation_detected);
+                   SIGNAL(security_violation_detected(const SecurityEvent&)));
 
     // Attempt blocked API call
     bool api_result = m_enforcer->validate_api_call("dangerous_api");
@@ -387,9 +392,9 @@ void TestSecurityEnforcer::testSecurityEventSignals() {
     QVERIFY(init_result);
 
     QSignalSpy violation_spy(m_enforcer.get(),
-                             &SecurityEnforcer::security_violation_detected);
+                             SIGNAL(security_violation_detected(const SecurityEvent&)));
     QSignalSpy activity_spy(m_enforcer.get(),
-                            &SecurityEnforcer::suspicious_activity_detected);
+                            SIGNAL(suspicious_activity_detected(const QString&, const QJsonObject&)));
 
     // Trigger security violations
     m_enforcer->validate_file_access("/unauthorized/file", false);
@@ -540,6 +545,44 @@ void TestSecurityEnforcer::createTestFiles() {
         sub_file.write("Sub content");
         sub_file.close();
     }
+}
+
+void TestSecurityEnforcer::testIsolatedEnvironment() {
+    SecurityPolicy policy = createRestrictivePolicy();
+
+    // Test isolated environment creation
+    QProcessEnvironment env = ProcessIsolationUtils::create_isolated_environment(policy);
+
+    // Verify sandbox markers are present
+    QVERIFY(env.contains("QTPLUGIN_SANDBOX"));
+    QCOMPARE(env.value("QTPLUGIN_SANDBOX"), QString("1"));
+
+    // Verify security level is set
+    QVERIFY(env.contains("QTPLUGIN_SECURITY_LEVEL"));
+    QCOMPARE(env.value("QTPLUGIN_SECURITY_LEVEL"), QString::number(static_cast<int>(policy.level)));
+
+    // Verify dangerous variables are removed
+    QVERIFY(!env.contains("LD_PRELOAD"));
+    QVERIFY(!env.contains("DYLD_INSERT_LIBRARIES"));
+}
+
+void TestSecurityEnforcer::testIsolatedDirectory() {
+    QString base_path = m_temp_dir->path();
+
+    // Test isolated directory setup
+    QString isolated_dir = ProcessIsolationUtils::setup_isolated_directory(base_path);
+
+    QVERIFY(!isolated_dir.isEmpty());
+    QVERIFY(QDir(isolated_dir).exists());
+    QVERIFY(isolated_dir.startsWith(base_path));
+    QVERIFY(isolated_dir.contains("qtplugin_isolated_"));
+
+    // Test cleanup
+    ProcessIsolationUtils::cleanup_isolated_resources(isolated_dir);
+    QVERIFY(!QDir(isolated_dir).exists());
+
+    // Test cleanup of non-existent directory (should not crash)
+    ProcessIsolationUtils::cleanup_isolated_resources("/non/existent/path");
 }
 
 QTEST_MAIN(TestSecurityEnforcer)

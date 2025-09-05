@@ -314,4 +314,62 @@ void ResourceMonitor::get_linux_system_usage(ResourceUsage& usage) {
 
 #endif
 
+// ============================================================================
+// ResourceMonitorUtils Implementation
+// ============================================================================
+
+QString ResourceMonitorUtils::format_usage(const ResourceUsage& usage) {
+    return QString("CPU: %1ms, Memory: %2MB, Handles: %3, Network: %4")
+        .arg(usage.cpu_time_used.count())
+        .arg(usage.memory_used_mb)
+        .arg(usage.file_handles_used)
+        .arg(usage.network_connections_used);
+}
+
+bool ResourceMonitorUtils::exceeds_threshold(const ResourceUsage& usage,
+                                           const ResourceLimits& limits,
+                                           double threshold_percentage) {
+    // Check memory usage threshold
+    if (limits.memory_limit_mb > 0) {
+        double memory_percentage = (static_cast<double>(usage.memory_used_mb) / limits.memory_limit_mb) * 100.0;
+        if (memory_percentage >= threshold_percentage) {
+            return true;
+        }
+    }
+
+    // Check CPU time threshold
+    if (limits.cpu_time_limit.count() > 0) {
+        double cpu_percentage = (static_cast<double>(usage.cpu_time_used.count()) / limits.cpu_time_limit.count()) * 100.0;
+        if (cpu_percentage >= threshold_percentage) {
+            return true;
+        }
+    }
+
+    // Check disk space threshold
+    if (limits.disk_space_limit_mb > 0) {
+        double disk_percentage = (static_cast<double>(usage.disk_space_used_mb) / limits.disk_space_limit_mb) * 100.0;
+        if (disk_percentage >= threshold_percentage) {
+            return true;
+        }
+    }
+
+    // Check file handles threshold
+    if (limits.max_file_handles > 0) {
+        double handles_percentage = (static_cast<double>(usage.file_handles_used) / limits.max_file_handles) * 100.0;
+        if (handles_percentage >= threshold_percentage) {
+            return true;
+        }
+    }
+
+    // Check network connections threshold
+    if (limits.max_network_connections > 0) {
+        double network_percentage = (static_cast<double>(usage.network_connections_used) / limits.max_network_connections) * 100.0;
+        if (network_percentage >= threshold_percentage) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 } // namespace qtplugin

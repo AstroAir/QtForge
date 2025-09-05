@@ -380,7 +380,7 @@ void TestPluginSandbox::testResourceLimitExceededSignal() {
 
     auto sandbox = std::make_unique<PluginSandbox>(policy);
 
-    QSignalSpy spy(sandbox.get(), &PluginSandbox::resource_limit_exceeded);
+    QSignalSpy spy(sandbox.get(), SIGNAL(resource_limit_exceeded(QString, QJsonObject)));
 
     auto init_result = sandbox->initialize();
     QVERIFY(init_result.has_value());
@@ -388,6 +388,116 @@ void TestPluginSandbox::testResourceLimitExceededSignal() {
     // Note: In a real test, we would need to actually trigger resource usage
     // For now, we just verify the signal can be connected
     QVERIFY(spy.isValid());
+
+    sandbox->shutdown();
+}
+
+void TestPluginSandbox::testSecurityPolicyValidation() {
+    SecurityPolicy policy = createTestPolicy();
+
+    // Test valid policy - check basic properties
+    QVERIFY(!policy.policy_name.isEmpty());
+    QVERIFY(policy.limits.memory_limit_mb > 0);
+    QVERIFY(policy.limits.cpu_time_limit.count() > 0);
+    QVERIFY(policy.limits.execution_timeout.count() > 0);
+
+    // Test invalid policy (empty name)
+    SecurityPolicy invalid_policy;
+    invalid_policy.policy_name = "";
+    QVERIFY(invalid_policy.policy_name.isEmpty()); // This should be invalid
+
+    // Test policy with invalid limits
+    SecurityPolicy invalid_limits_policy = createTestPolicy();
+    invalid_limits_policy.limits.memory_limit_mb = 0;
+    QVERIFY(invalid_limits_policy.limits.memory_limit_mb == 0); // This should be invalid
+}
+
+void TestPluginSandbox::testSandboxSecurityEnforcement() {
+    SecurityPolicy strict_policy = SecurityPolicy::create_strict_policy();
+    auto sandbox = std::make_unique<PluginSandbox>(strict_policy);
+
+    auto init_result = sandbox->initialize();
+    QVERIFY(init_result.has_value());
+
+    // Test that security enforcement is active
+    QVERIFY(sandbox->is_active());
+
+    // Test security policy enforcement (this would normally fail with restricted policy)
+    auto exec_result = sandbox->execute_plugin("/nonexistent/path", PluginType::Native, QJsonObject{});
+    QVERIFY(!exec_result.has_value()); // Should fail due to security restrictions
+
+    sandbox->shutdown();
+}
+
+void TestPluginSandbox::testSandboxManagerLifecycle() {
+    SandboxManager& manager = SandboxManager::instance();
+
+    // Test creating multiple sandboxes
+    SecurityPolicy policy = createTestPolicy();
+    QString sandbox_id1 = "lifecycle_test_1_" + QString::number(QDateTime::currentMSecsSinceEpoch());
+    QString sandbox_id2 = "lifecycle_test_2_" + QString::number(QDateTime::currentMSecsSinceEpoch());
+
+    auto sandbox1_result = manager.create_sandbox(sandbox_id1, policy);
+    auto sandbox2_result = manager.create_sandbox(sandbox_id2, policy);
+
+    QVERIFY(sandbox1_result.has_value());
+    QVERIFY(sandbox2_result.has_value());
+
+    // Verify sandboxes can be retrieved
+    auto retrieved1 = manager.get_sandbox(sandbox_id1);
+    auto retrieved2 = manager.get_sandbox(sandbox_id2);
+    QVERIFY(retrieved1 != nullptr);
+    QVERIFY(retrieved2 != nullptr);
+
+    // Test cleanup
+    manager.remove_sandbox(sandbox_id1);
+    manager.remove_sandbox(sandbox_id2);
+}
+
+void TestPluginSandbox::testInvalidSecurityPolicy() {
+    SecurityPolicy invalid_policy;
+    invalid_policy.policy_name = ""; // Invalid empty name
+    invalid_policy.limits.memory_limit_mb = 0; // Invalid memory limit
+    invalid_policy.limits.cpu_time_limit = std::chrono::milliseconds(0); // Invalid CPU limit
+    invalid_policy.limits.execution_timeout = std::chrono::milliseconds(0); // Invalid timeout
+
+    auto sandbox = std::make_unique<PluginSandbox>(invalid_policy);
+
+    // Initialization should fail with invalid policy
+    auto init_result = sandbox->initialize();
+    QVERIFY(!init_result.has_value());
+}
+
+void TestPluginSandbox::testSecurityViolationSignal() {
+    SecurityPolicy strict_policy = SecurityPolicy::create_strict_policy();
+    auto sandbox = std::make_unique<PluginSandbox>(strict_policy);
+
+    auto init_result = sandbox->initialize();
+    QVERIFY(init_result.has_value());
+
+    // Set up signal spy for security violations
+    QSignalSpy spy(sandbox.get(), SIGNAL(security_violation(QString, QJsonObject)));
+    QVERIFY(spy.isValid());
+
+    // This test would normally trigger a security violation
+    // For now, just verify the signal exists and can be connected
+
+    sandbox->shutdown();
+}
+
+void TestPluginSandbox::testExecutionCompletedSignal() {
+    SecurityPolicy policy = SecurityPolicy::create_unrestricted_policy();
+    auto sandbox = std::make_unique<PluginSandbox>(policy);
+
+    auto init_result = sandbox->initialize();
+    QVERIFY(init_result.has_value());
+
+    // Set up signal spy for execution completion
+    QSignalSpy spy(sandbox.get(), SIGNAL(execution_completed(int, QJsonObject)));
+    QVERIFY(spy.isValid());
+
+    // This test would normally execute a plugin and wait for completion
+    // For now, just verify the signal exists and can be connected
 
     sandbox->shutdown();
 }

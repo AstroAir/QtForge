@@ -336,12 +336,45 @@ PluginSandbox::~PluginSandbox() {
 }
 
 qtplugin::expected<void, PluginError> PluginSandbox::initialize() {
+    qCWarning(sandboxLog) << "INITIALIZE: PluginSandbox::initialize() called";
     QMutexLocker locker(&m_mutex);
 
     if (m_active) {
+        qCWarning(sandboxLog) << "INITIALIZE: Already active, returning error";
         return qtplugin::unexpected(PluginError{
             PluginErrorCode::InvalidState,
             "Sandbox is already initialized"
+        });
+    }
+
+    // Validate security policy
+    qCWarning(sandboxLog) << "VALIDATION: Checking policy with name:" << m_policy.policy_name << "isEmpty:" << m_policy.policy_name.isEmpty();
+    if (m_policy.policy_name.isEmpty()) {
+        qCWarning(sandboxLog) << "VALIDATION: Policy validation failed: empty name";
+        return qtplugin::unexpected(PluginError{
+            PluginErrorCode::InvalidConfiguration,
+            "Security policy name cannot be empty"
+        });
+    }
+
+    if (m_policy.limits.memory_limit_mb == 0) {
+        return qtplugin::unexpected(PluginError{
+            PluginErrorCode::InvalidConfiguration,
+            "Memory limit must be greater than 0"
+        });
+    }
+
+    if (m_policy.limits.cpu_time_limit.count() <= 0) {
+        return qtplugin::unexpected(PluginError{
+            PluginErrorCode::InvalidConfiguration,
+            "CPU time limit must be positive"
+        });
+    }
+
+    if (m_policy.limits.execution_timeout.count() <= 0) {
+        return qtplugin::unexpected(PluginError{
+            PluginErrorCode::InvalidConfiguration,
+            "Execution timeout must be positive"
         });
     }
 

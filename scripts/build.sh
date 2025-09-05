@@ -10,10 +10,10 @@ BUILD_DIR="$(dirname "$0")/../build"
 INSTALL_DIR="$(dirname "$0")/../install"
 SOURCE_DIR="$(dirname "$0")/.."
 PARALLEL_JOBS=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)
-BUILD_TESTS="OFF"
+BUILD_TESTS="ON"
 BUILD_EXAMPLES="ON"
-BUILD_NETWORK="OFF"
-BUILD_UI="OFF"
+BUILD_NETWORK="ON"
+BUILD_UI="ON"
 CREATE_PACKAGE="OFF"
 CLEAN_BUILD="OFF"
 

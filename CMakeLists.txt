@@ -446,26 +446,27 @@ if(QTFORGE_BUILD_PYTHON_BINDINGS AND QTFORGE_PYTHON_FOUND AND QTFORGE_PYBIND11_F
     # Python binding sources - core components (always included)
     set(QTFORGE_PYTHON_SOURCES
         src/python/qtforge_python.cpp
-        # src/python/qt_conversions.cpp  # Temporarily disabled due to compilation issues
-        src/python/core/core_bindings.cpp
+        # src/python/qt_conversions.cpp  # Temporarily disabled - pybind11 API compatibility issues
+        src/python/core/core_bindings_minimal.cpp  # Using minimal version to avoid missing method errors
         src/python/utils/utils_bindings.cpp
     )
 
     # Add optional binding sources based on available Qt components
-    # Temporarily disabled to focus on core bindings
+    # Temporarily disabled all optional bindings until pybind11 and C++ API issues are resolved
     # list(APPEND QTFORGE_PYTHON_SOURCES
-    #     src/python/security/security_bindings.cpp
-    #     src/python/managers/managers_bindings.cpp
-    #     src/python/orchestration/orchestration_bindings.cpp
-    #     src/python/monitoring/monitoring_bindings.cpp
-    #     src/python/transactions/transaction_bindings.cpp
-    #     src/python/composition/composition_bindings.cpp
-    #     src/python/marketplace/marketplace_bindings.cpp
-    #     src/python/threading/threading_bindings.cpp
+    #     src/python/security/security_bindings.cpp      # Basic security enums and interfaces
+    #     # Temporarily disabled due to compilation issues:
+    #     # src/python/monitoring/monitoring_bindings.cpp  # Uses incomplete IPluginRegistry type
+    #     # src/python/managers/managers_bindings.cpp      # Missing concrete manager classes
+    #     # src/python/orchestration/orchestration_bindings.cpp  # Missing orchestrator methods
+    #     # src/python/transactions/transaction_bindings.cpp     # Missing transaction classes
+    #     # src/python/composition/composition_bindings.cpp      # Missing composition classes
+    #     # src/python/marketplace/marketplace_bindings.cpp      # Missing marketplace classes
+    #     # src/python/threading/threading_bindings.cpp          # Missing PluginTask struct and interfaces
     # )
 
     # Communication bindings (requires Qt6::Network for some features)
-    # Temporarily disabled to focus on core bindings
+    # Temporarily disabled due to missing C++ service contract implementations
     # if(Qt6Network_FOUND OR NOT QTFORGE_REQUIRE_NETWORK_FOR_COMMUNICATION)
     #     list(APPEND QTFORGE_PYTHON_SOURCES
     #         src/python/communication/communication_bindings.cpp
@@ -474,6 +475,7 @@ if(QTFORGE_BUILD_PYTHON_BINDINGS AND QTFORGE_PYTHON_FOUND AND QTFORGE_PYBIND11_F
     # else()
     #     message(STATUS "QtForge: Skipping communication bindings (Qt6::Network not found)")
     # endif()
+    message(STATUS "QtForge: Communication bindings temporarily disabled - missing ServiceMethodDescriptor and related classes")
 
     # Create Python module (minimal version without Qt dependencies for now)
     pybind11_add_module(qtforge_python ${QTFORGE_PYTHON_SOURCES})
@@ -491,29 +493,29 @@ if(QTFORGE_BUILD_PYTHON_BINDINGS AND QTFORGE_PYTHON_FOUND AND QTFORGE_PYBIND11_F
         ${CMAKE_CURRENT_SOURCE_DIR}/src/python
     )
 
-    # Ultra-minimal bindings - no Qt or QtForge dependencies for now
-    # target_link_libraries(qtforge_python PRIVATE
-    #     Qt6::Core
-    # )
+    # Link Qt Core library (required for Qt type conversions and bindings)
+    target_link_libraries(qtforge_python PRIVATE
+        Qt6::Core
+    )
 
-    # # Link optional Qt components if available
-    # if(Qt6Network_FOUND)
-    #     target_link_libraries(qtforge_python PRIVATE Qt6::Network)
-    #     target_compile_definitions(qtforge_python PRIVATE QTFORGE_NETWORK_AVAILABLE)
-    # endif()
+    # Link optional Qt components if available
+    if(Qt6Network_FOUND)
+        target_link_libraries(qtforge_python PRIVATE Qt6::Network)
+        target_compile_definitions(qtforge_python PRIVATE QTFORGE_NETWORK_AVAILABLE)
+    endif()
 
-    # if(Qt6Widgets_FOUND)
-    #     target_link_libraries(qtforge_python PRIVATE Qt6::Widgets)
-    #     target_compile_definitions(qtforge_python PRIVATE QTFORGE_WIDGETS_AVAILABLE)
-    # endif()
+    if(Qt6Widgets_FOUND)
+        target_link_libraries(qtforge_python PRIVATE Qt6::Widgets)
+        target_compile_definitions(qtforge_python PRIVATE QTFORGE_WIDGETS_AVAILABLE)
+    endif()
 
-    # if(Qt6Sql_FOUND)
-    #     target_link_libraries(qtforge_python PRIVATE Qt6::Sql)
-    #     target_compile_definitions(qtforge_python PRIVATE QTFORGE_SQL_AVAILABLE)
-    # endif()
+    if(Qt6Sql_FOUND)
+        target_link_libraries(qtforge_python PRIVATE Qt6::Sql)
+        target_compile_definitions(qtforge_python PRIVATE QTFORGE_SQL_AVAILABLE)
+    endif()
 
-    # # Link QtForge core library
-    # target_link_libraries(qtforge_python PRIVATE QtForgeCore)
+    # Link QtForge core library
+    target_link_libraries(qtforge_python PRIVATE QtForgeCore)
 
     # Add compile definitions
     target_compile_definitions(qtforge_python PRIVATE

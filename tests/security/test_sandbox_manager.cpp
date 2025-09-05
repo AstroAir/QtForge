@@ -507,6 +507,203 @@ void TestSandboxManager::testLargeSandboxCount() {
              << "ms";
 }
 
+void TestSandboxManager::testShutdownWithActiveSandboxes() {
+    // Create some active sandboxes
+    const int sandbox_count = 3;
+    QStringList sandbox_ids;
+
+    for (int i = 0; i < sandbox_count; ++i) {
+        QString sandbox_id = generateUniqueSandboxId();
+        SecurityPolicy policy = createTestPolicy(QString("shutdown_test_%1").arg(i));
+
+        auto result = m_manager->create_sandbox(sandbox_id, policy);
+        QVERIFY(result.has_value());
+        sandbox_ids.append(sandbox_id);
+        m_created_sandboxes.append(sandbox_id);
+    }
+
+    // Verify sandboxes are active
+    auto active_before = m_manager->get_active_sandboxes();
+    QVERIFY(active_before.size() >= sandbox_count);
+
+    // Shutdown all
+    m_manager->shutdown_all();
+
+    // Verify all are shutdown
+    auto active_after = m_manager->get_active_sandboxes();
+    QVERIFY(active_after.size() == 0);
+
+    m_created_sandboxes.clear(); // Already removed by shutdown_all
+}
+
+void TestSandboxManager::testManagerReinitialization() {
+    // Test that manager is functional (no explicit is_initialized method)
+    // Create a sandbox to test functionality
+    QString sandbox_id = generateUniqueSandboxId();
+    SecurityPolicy policy = createTestPolicy("reinit_test");
+
+    auto result = m_manager->create_sandbox(sandbox_id, policy);
+    QVERIFY(result.has_value());
+    m_created_sandboxes.append(sandbox_id);
+
+    // Manager should still be functional
+    auto retrieved = m_manager->get_sandbox(sandbox_id);
+    QVERIFY(retrieved != nullptr);
+
+    // Test that we can create another sandbox (manager is still working)
+    QString sandbox_id2 = generateUniqueSandboxId();
+    auto result2 = m_manager->create_sandbox(sandbox_id2, policy);
+    QVERIFY(result2.has_value());
+    m_created_sandboxes.append(sandbox_id2);
+}
+
+void TestSandboxManager::testSandboxCreatedSignal() {
+    QSignalSpy spy(m_manager, &SandboxManager::sandbox_created);
+    QVERIFY(spy.isValid());
+
+    QString sandbox_id = generateUniqueSandboxId();
+    SecurityPolicy policy = createTestPolicy("signal_test");
+
+    auto result = m_manager->create_sandbox(sandbox_id, policy);
+    QVERIFY(result.has_value());
+    m_created_sandboxes.append(sandbox_id);
+
+    // Verify signal was emitted
+    QCOMPARE(spy.count(), 1);
+    QList<QVariant> arguments = spy.takeFirst();
+    QCOMPARE(arguments.at(0).toString(), sandbox_id);
+}
+
+void TestSandboxManager::testSandboxRemovedSignal() {
+    QString sandbox_id = generateUniqueSandboxId();
+    SecurityPolicy policy = createTestPolicy("remove_signal_test");
+
+    // Create sandbox first
+    auto result = m_manager->create_sandbox(sandbox_id, policy);
+    QVERIFY(result.has_value());
+
+    // Set up signal spy
+    QSignalSpy spy(m_manager, &SandboxManager::sandbox_removed);
+    QVERIFY(spy.isValid());
+
+    // Remove sandbox
+    m_manager->remove_sandbox(sandbox_id);
+
+    // Verify signal was emitted
+    QCOMPARE(spy.count(), 1);
+    QList<QVariant> arguments = spy.takeFirst();
+    QCOMPARE(arguments.at(0).toString(), sandbox_id);
+}
+
+void TestSandboxManager::testSecurityEventSignal() {
+    QSignalSpy spy(m_manager, &SandboxManager::security_event);
+    QVERIFY(spy.isValid());
+
+    // This test verifies the signal exists and can be connected
+    // In a real scenario, security events would be triggered by sandbox violations
+
+    QString sandbox_id = generateUniqueSandboxId();
+    SecurityPolicy policy = createTestPolicy("security_event_test");
+
+    auto result = m_manager->create_sandbox(sandbox_id, policy);
+    QVERIFY(result.has_value());
+    m_created_sandboxes.append(sandbox_id);
+}
+
+void TestSandboxManager::testConcurrentAccess() {
+    const int thread_count = 4;
+    const int operations_per_thread = 5;
+    std::vector<std::thread> threads;
+    std::atomic<int> success_count{0};
+
+    for (int t = 0; t < thread_count; ++t) {
+        threads.emplace_back([this, t, operations_per_thread, &success_count]() {
+            for (int i = 0; i < operations_per_thread; ++i) {
+                QString sandbox_id = QString("concurrent_%1_%2").arg(t).arg(i);
+                SecurityPolicy policy = createTestPolicy(QString("concurrent_test_%1_%2").arg(t).arg(i));
+
+                auto result = m_manager->create_sandbox(sandbox_id, policy);
+                if (result.has_value()) {
+                    success_count.fetch_add(1);
+                    // Clean up immediately to avoid conflicts
+                    m_manager->remove_sandbox(sandbox_id);
+                }
+            }
+        });
+    }
+
+    // Wait for all threads to complete
+    for (auto& thread : threads) {
+        thread.join();
+    }
+
+    // Verify that most operations succeeded (some may fail due to timing)
+    QVERIFY(success_count.load() > (thread_count * operations_per_thread) / 2);
+}
+
+void TestSandboxManager::testThreadSafePolicyManagement() {
+    const int thread_count = 3;
+    const int policies_per_thread = 5;
+    std::vector<std::thread> threads;
+    std::atomic<int> success_count{0};
+
+    for (int t = 0; t < thread_count; ++t) {
+        threads.emplace_back([this, t, policies_per_thread, &success_count]() {
+            for (int i = 0; i < policies_per_thread; ++i) {
+                QString policy_name = QString("thread_policy_%1_%2").arg(t).arg(i);
+                SecurityPolicy policy = createTestPolicy(policy_name);
+
+                m_manager->register_policy(policy_name, policy);
+
+                auto retrieved = m_manager->get_policy(policy_name);
+                if (retrieved.has_value()) {
+                    success_count.fetch_add(1);
+                }
+            }
+        });
+    }
+
+    // Wait for all threads to complete
+    for (auto& thread : threads) {
+        thread.join();
+    }
+
+    // Verify that all policy operations succeeded
+    QCOMPARE(success_count.load(), thread_count * policies_per_thread);
+}
+
+void TestSandboxManager::testRapidCreateRemoveCycle() {
+    const int cycle_count = 20;
+    QElapsedTimer timer;
+    timer.start();
+
+    for (int i = 0; i < cycle_count; ++i) {
+        QString sandbox_id = QString("rapid_cycle_%1").arg(i);
+        SecurityPolicy policy = createTestPolicy(QString("rapid_test_%1").arg(i));
+
+        // Create
+        auto create_result = m_manager->create_sandbox(sandbox_id, policy);
+        QVERIFY(create_result.has_value());
+
+        // Verify exists
+        auto retrieved = m_manager->get_sandbox(sandbox_id);
+        QVERIFY(retrieved != nullptr);
+
+        // Remove
+        m_manager->remove_sandbox(sandbox_id);
+
+        // Verify removed
+        auto after_removal = m_manager->get_sandbox(sandbox_id);
+        QVERIFY(after_removal == nullptr);
+    }
+
+    qint64 elapsed = timer.elapsed();
+    qDebug() << "Rapid create/remove cycle completed in" << elapsed << "ms";
+
+    // Verify reasonable performance (should complete in under 5 seconds)
+    QVERIFY(elapsed < 5000);
+}
+
 SecurityPolicy TestSandboxManager::createTestPolicy(const QString& name) {
     SecurityPolicy policy;
     policy.level = SandboxSecurityLevel::Limited;

@@ -80,33 +80,33 @@ function(qtforge_define_options)
 
     # Development options
     option(QTFORGE_BUILD_EXAMPLES "Build example plugins" ON)
-    option(QTFORGE_BUILD_TESTS "Build unit tests" OFF)
-    option(QTFORGE_BUILD_BENCHMARKS "Build performance benchmarks" OFF)
-    option(QTFORGE_BUILD_DOCS "Build documentation" OFF)
+    option(QTFORGE_BUILD_TESTS "Build unit tests" ON)
+    option(QTFORGE_BUILD_BENCHMARKS "Build performance benchmarks" ON)
+    option(QTFORGE_BUILD_DOCS "Build documentation" ON)
 
     # Python binding options
     option(QTFORGE_BUILD_PYTHON_BINDINGS "Build Python bindings using pybind11" ON)
     option(QTFORGE_PYTHON_BINDINGS_INSTALL "Install Python bindings" ON)
-    option(QTFORGE_PYTHON_BINDINGS_TESTS "Build Python binding tests" OFF)
+    option(QTFORGE_PYTHON_BINDINGS_TESTS "Build Python binding tests" ON)
 
-    # Lua binding options
-    option(QTFORGE_BUILD_LUA_BINDINGS "Build Lua bindings using sol2" ON)
+    # Lua binding options (temporarily disabled due to compilation issues)
+    option(QTFORGE_BUILD_LUA_BINDINGS "Build Lua bindings using sol2" OFF)
     option(QTFORGE_LUA_BINDINGS_INSTALL "Install Lua bindings" ON)
     option(QTFORGE_LUA_BINDINGS_TESTS "Build Lua binding tests" OFF)
     option(QTFORGE_LUA_ENABLE_SANDBOX "Enable Lua script sandboxing" ON)
 
     # Advanced options
-    option(QTFORGE_BUILD_COMPONENT_TESTS "Build component-specific tests" OFF)
-    option(QTFORGE_ENABLE_COMPONENT_LOGGING "Enable detailed component logging" OFF)
-    option(QTFORGE_ENABLE_PLUGIN_PROFILING "Enable plugin performance profiling" OFF)
+    option(QTFORGE_BUILD_COMPONENT_TESTS "Build component-specific tests" ON)
+    option(QTFORGE_ENABLE_COMPONENT_LOGGING "Enable detailed component logging" ON)
+    option(QTFORGE_ENABLE_PLUGIN_PROFILING "Enable plugin performance profiling" ON)
     option(QTFORGE_ENABLE_SECURITY_HARDENING "Enable security hardening features" ON)
 
     # Compiler options
     option(QTFORGE_ENABLE_WARNINGS "Enable comprehensive compiler warnings" ON)
-    option(QTFORGE_ENABLE_WERROR "Treat warnings as errors" OFF)
-    option(QTFORGE_ENABLE_SANITIZERS "Enable sanitizers in debug builds" OFF)
-    option(QTFORGE_ENABLE_LTO "Enable Link Time Optimization" OFF)
-    option(QTFORGE_ENABLE_FAST_MATH "Enable fast math optimizations" OFF)
+    option(QTFORGE_ENABLE_WERROR "Treat warnings as errors" OFF)  # Keep OFF to avoid build failures
+    option(QTFORGE_ENABLE_SANITIZERS "Enable sanitizers in debug builds" OFF)  # Disable for Release builds
+    option(QTFORGE_ENABLE_LTO "Enable Link Time Optimization" OFF)  # Disable to avoid build issues
+    option(QTFORGE_ENABLE_FAST_MATH "Enable fast math optimizations" OFF)  # Disable to avoid precision issues
 
     # Platform-specific options
     if(QTFORGE_IS_WINDOWS)

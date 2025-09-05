@@ -15,7 +15,11 @@
             "cacheVariables": {
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "QTFORGE_BUILD_EXAMPLES": "ON",
-                "QTFORGE_BUILD_TESTS": "OFF"
+                "QTFORGE_BUILD_TESTS": "ON",
+                "QTFORGE_BUILD_NETWORK": "ON",
+                "QTFORGE_BUILD_UI": "ON",
+                "QTFORGE_BUILD_BENCHMARKS": "ON",
+                "QTFORGE_BUILD_DOCS": "ON"
             }
         },
         {

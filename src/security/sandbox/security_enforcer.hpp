@@ -41,7 +41,7 @@ struct SecurityEvent {
     QString resource_path;
     QJsonObject details;
     std::chrono::steady_clock::time_point timestamp;
-    
+
     QJsonObject to_json() const;
 };
 
@@ -158,7 +158,7 @@ private:
 
     void setup_file_monitoring();
     void setup_process_monitoring();
-    void record_security_event(SecurityViolationType type, const QString& description, 
+    void record_security_event(SecurityViolationType type, const QString& description,
                               const QString& resource = QString(), const QJsonObject& details = QJsonObject{});
     bool is_path_allowed(const QString& path, const QStringList& allowed_paths);
     QString normalize_path(const QString& path);
@@ -231,3 +231,6 @@ private:
 };
 
 } // namespace qtplugin
+
+// Register SecurityEvent as a Qt metatype for use in signals/slots
+Q_DECLARE_METATYPE(qtplugin::SecurityEvent)

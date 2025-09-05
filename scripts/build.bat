@@ -50,10 +50,10 @@ REM Validate project structure
 call :validate_directory "%SOURCE_DIR%"
 call :validate_file "%SOURCE_DIR%\CMakeLists.txt"
 set PARALLEL_JOBS=%NUMBER_OF_PROCESSORS%
-set BUILD_TESTS=OFF
+set BUILD_TESTS=ON
 set BUILD_EXAMPLES=ON
-set BUILD_NETWORK=OFF
-set BUILD_UI=OFF
+set BUILD_NETWORK=ON
+set BUILD_UI=ON
 set CREATE_PACKAGE=OFF
 set CLEAN_BUILD=OFF
 

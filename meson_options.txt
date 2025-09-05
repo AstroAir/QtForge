@@ -13,25 +13,25 @@ option('build_examples',
 
 option('build_tests',
   type: 'boolean',
-  value: false,
+  value: true,
   description: 'Build unit tests and integration tests'
 )
 
 option('build_benchmarks',
   type: 'boolean',
-  value: false,
+  value: true,
   description: 'Build performance benchmarks'
 )
 
 option('build_docs',
   type: 'boolean',
-  value: false,
+  value: true,
   description: 'Build documentation using Doxygen'
 )
 
 option('build_component_tests',
   type: 'boolean',
-  value: false,
+  value: true,
   description: 'Build component-specific tests'
 )
 
