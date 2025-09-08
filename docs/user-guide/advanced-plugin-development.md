@@ -1,24 +1,27 @@
 # Advanced Plugin Development Guide
 
 !!! info "Guide Information"
-**Difficulty**: Advanced  
- **Prerequisites**: Basic plugin development, C++ knowledge, Qt framework familiarity  
- **Estimated Time**: 2-3 hours  
- **QtForge Version**: v3.0+
+**Difficulty**: Advanced
+ **Prerequisites**: Basic plugin development, C++ knowledge, Qt framework familiarity
+ **Estimated Time**: 2-3 hours
+ **QtForge Version**: v3.2.0+
 
 ## Overview
 
-This guide covers advanced plugin development techniques using QtForge's latest features including orchestration, transactions, composition, monitoring, and marketplace integration. You'll learn how to create sophisticated, production-ready plugins that leverage the full power of the QtForge ecosystem.
+This guide covers advanced plugin development techniques using QtForge v3.2.0's latest features including multilingual support, advanced plugin interfaces, enhanced security, orchestration, transactions, composition, monitoring, and marketplace integration. You'll learn how to create sophisticated, production-ready plugins that leverage the full power of the QtForge ecosystem.
 
 ### What You'll Learn
 
-- [ ] Advanced plugin architecture patterns
+- [ ] Advanced plugin architecture patterns (IAdvancedPlugin, IDynamicPlugin)
+- [ ] Multilingual plugin development (Python, Lua integration)
+- [ ] Service contract system and advanced communication
+- [ ] Enhanced security features and sandboxing
 - [ ] Integration with orchestration workflows
 - [ ] Transaction-aware plugin operations
 - [ ] Plugin composition and aggregation
 - [ ] Performance monitoring and optimization
 - [ ] Marketplace preparation and distribution
-- [ ] Security best practices for advanced plugins
+- [ ] Cross-language plugin interoperability
 
 ### Prerequisites
 
@@ -656,7 +659,7 @@ After completing this guide, you might want to:
 
 ---
 
-_Last updated: December 2024 | QtForge v3.0.0_
+_Last updated: September 2024 | QtForge v3.2.0_
 
 ## Performance Monitoring Integration
 

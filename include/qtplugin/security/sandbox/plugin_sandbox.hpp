@@ -10,26 +10,23 @@
 
 #pragma once
 
-#include "../../core/dynamic_plugin_interface.hpp"
+#include <QFileSystemWatcher>
+#include <QJsonArray>
+#include <QJsonObject>
+#include <QLoggingCategory>
+#include <QMutex>
 #include <QObject>
 #include <QProcess>
-#include <QTimer>
-#include <QJsonObject>
-#include <QStringList>
-#include <chrono>
-#include <QJsonObject>
-#include <QJsonArray>
-#include <QLoggingCategory>
 #include <QString>
 #include <QStringList>
-#include <QMutex>
 #include <QThread>
-#include <QFileSystemWatcher>
+#include <QTimer>
 #include <chrono>
+#include <functional>
 #include <memory>
 #include <unordered_map>
 #include <unordered_set>
-#include <functional>
+#include "../../core/dynamic_plugin_interface.hpp"
 
 namespace qtplugin {
 
@@ -37,22 +34,22 @@ namespace qtplugin {
  * @brief Sandbox security policy levels
  */
 enum class SandboxSecurityLevel {
-    Unrestricted,   ///< No restrictions (native plugins)
-    Limited,        ///< Basic restrictions (file system, network)
-    Sandboxed,      ///< Full sandboxing (process isolation)
-    Strict          ///< Maximum security (minimal permissions)
+    Unrestricted,  ///< No restrictions (native plugins)
+    Limited,       ///< Basic restrictions (file system, network)
+    Sandboxed,     ///< Full sandboxing (process isolation)
+    Strict         ///< Maximum security (minimal permissions)
 };
 
 /**
  * @brief Resource limits for plugin execution
  */
 struct ResourceLimits {
-    std::chrono::milliseconds cpu_time_limit{30000};    ///< CPU time limit
-    size_t memory_limit_mb{256};                        ///< Memory limit in MB
-    size_t disk_space_limit_mb{100};                    ///< Disk space limit in MB
-    int max_file_handles{50};                           ///< Maximum file handles
-    int max_network_connections{10};                    ///< Maximum network connections
-    std::chrono::milliseconds execution_timeout{60000}; ///< Execution timeout
+    std::chrono::milliseconds cpu_time_limit{30000};  ///< CPU time limit
+    size_t memory_limit_mb{256};                      ///< Memory limit in MB
+    size_t disk_space_limit_mb{100};  ///< Disk space limit in MB
+    int max_file_handles{50};         ///< Maximum file handles
+    int max_network_connections{10};  ///< Maximum network connections
+    std::chrono::milliseconds execution_timeout{60000};  ///< Execution timeout
 
     /**
      * @brief Convert to JSON representation
@@ -62,23 +59,25 @@ struct ResourceLimits {
     /**
      * @brief Create from JSON representation
      */
-    static qtplugin::expected<ResourceLimits, PluginError> from_json(const QJsonObject& json);
+    static qtplugin::expected<ResourceLimits, PluginError> from_json(
+        const QJsonObject& json);
 };
 
 /**
  * @brief Security permissions for plugins
  */
 struct SecurityPermissions {
-    bool allow_file_system_read{false};      ///< Allow file system read access
-    bool allow_file_system_write{false};     ///< Allow file system write access
-    bool allow_network_access{false};        ///< Allow network access
-    bool allow_process_creation{false};      ///< Allow creating new processes
-    bool allow_system_calls{false};          ///< Allow system calls
-    bool allow_registry_access{false};       ///< Allow registry access (Windows)
-    bool allow_environment_access{false};    ///< Allow environment variable access
-    QStringList allowed_directories;         ///< Allowed directory paths
-    QStringList allowed_hosts;               ///< Allowed network hosts
-    QStringList blocked_apis;                ///< Blocked API calls
+    bool allow_file_system_read{false};   ///< Allow file system read access
+    bool allow_file_system_write{false};  ///< Allow file system write access
+    bool allow_network_access{false};     ///< Allow network access
+    bool allow_process_creation{false};   ///< Allow creating new processes
+    bool allow_system_calls{false};       ///< Allow system calls
+    bool allow_registry_access{false};    ///< Allow registry access (Windows)
+    bool allow_environment_access{
+        false};                       ///< Allow environment variable access
+    QStringList allowed_directories;  ///< Allowed directory paths
+    QStringList allowed_hosts;        ///< Allowed network hosts
+    QStringList blocked_apis;         ///< Blocked API calls
 
     /**
      * @brief Convert to JSON representation
@@ -88,7 +87,8 @@ struct SecurityPermissions {
     /**
      * @brief Create from JSON representation
      */
-    static qtplugin::expected<SecurityPermissions, PluginError> from_json(const QJsonObject& json);
+    static qtplugin::expected<SecurityPermissions, PluginError> from_json(
+        const QJsonObject& json);
 };
 
 /**
@@ -109,7 +109,8 @@ struct SecurityPolicy {
     /**
      * @brief Create from JSON representation
      */
-    static qtplugin::expected<SecurityPolicy, PluginError> from_json(const QJsonObject& json);
+    static qtplugin::expected<SecurityPolicy, PluginError> from_json(
+        const QJsonObject& json);
 
     /**
      * @brief Create predefined security policies
@@ -149,7 +150,8 @@ class PluginSandbox : public QObject {
     Q_OBJECT
 
 public:
-    explicit PluginSandbox(const SecurityPolicy& policy, QObject* parent = nullptr);
+    explicit PluginSandbox(const SecurityPolicy& policy,
+                           QObject* parent = nullptr);
     ~PluginSandbox() override;
 
     /**
@@ -170,7 +172,8 @@ public:
      * @return Execution result
      */
     qtplugin::expected<QJsonObject, PluginError> execute_plugin(
-        const QString& plugin_path, PluginType plugin_type, const QJsonObject& arguments = {});
+        const QString& plugin_path, PluginType plugin_type,
+        const QJsonObject& arguments = {});
 
     /**
      * @brief Get current resource usage
@@ -180,7 +183,8 @@ public:
     /**
      * @brief Update security policy
      */
-    qtplugin::expected<void, PluginError> update_policy(const SecurityPolicy& policy);
+    qtplugin::expected<void, PluginError> update_policy(
+        const SecurityPolicy& policy);
 
     /**
      * @brief Get current security policy
@@ -201,12 +205,14 @@ signals:
     /**
      * @brief Emitted when resource limits are exceeded
      */
-    void resource_limit_exceeded(const QString& resource, const QJsonObject& usage);
+    void resource_limit_exceeded(const QString& resource,
+                                 const QJsonObject& usage);
 
     /**
      * @brief Emitted when security violation is detected
      */
-    void security_violation(const QString& violation, const QJsonObject& details);
+    void security_violation(const QString& violation,
+                            const QJsonObject& details);
 
     /**
      * @brief Emitted when plugin execution completes
@@ -220,7 +226,8 @@ signals:
 
 private slots:
     void monitor_resources();
-    void handle_process_finished(int exit_code, QProcess::ExitStatus exit_status);
+    void handle_process_finished(int exit_code,
+                                 QProcess::ExitStatus exit_status);
     void handle_process_error(QProcess::ProcessError error);
 
 private:
@@ -237,9 +244,11 @@ private:
 
     qtplugin::expected<void, PluginError> setup_process_environment();
     qtplugin::expected<void, PluginError> apply_resource_limits();
-    qtplugin::expected<void, PluginError> validate_permissions(const QString& operation);
+    qtplugin::expected<void, PluginError> validate_permissions(
+        const QString& operation);
     void update_resource_usage();
-    QString create_sandbox_script(PluginType plugin_type, const QString& plugin_path);
+    QString create_sandbox_script(PluginType plugin_type,
+                                  const QString& plugin_path);
 };
 
 /**
@@ -257,8 +266,8 @@ public:
      * @param policy Security policy
      * @return Sandbox instance or error
      */
-    qtplugin::expected<std::shared_ptr<PluginSandbox>, PluginError> create_sandbox(
-        const QString& sandbox_id, const SecurityPolicy& policy);
+    qtplugin::expected<std::shared_ptr<PluginSandbox>, PluginError>
+    create_sandbox(const QString& sandbox_id, const SecurityPolicy& policy);
 
     /**
      * @brief Get existing sandbox
@@ -283,14 +292,16 @@ public:
      * @param policy_name Policy name
      * @param policy Security policy
      */
-    void register_policy(const QString& policy_name, const SecurityPolicy& policy);
+    void register_policy(const QString& policy_name,
+                         const SecurityPolicy& policy);
 
     /**
      * @brief Get registered policy
      * @param policy_name Policy name
      * @return Security policy or error
      */
-    qtplugin::expected<SecurityPolicy, PluginError> get_policy(const QString& policy_name);
+    qtplugin::expected<SecurityPolicy, PluginError> get_policy(
+        const QString& policy_name);
 
     /**
      * @brief Get all registered policies
@@ -316,7 +327,8 @@ signals:
     /**
      * @brief Emitted when a security event occurs
      */
-    void security_event(const QString& sandbox_id, const QString& event, const QJsonObject& details);
+    void security_event(const QString& sandbox_id, const QString& event,
+                        const QJsonObject& details);
 
 private:
     SandboxManager() : QObject(nullptr) {}
@@ -327,4 +339,4 @@ private:
     void setup_default_policies();
 };
 
-} // namespace qtplugin
+}  // namespace qtplugin

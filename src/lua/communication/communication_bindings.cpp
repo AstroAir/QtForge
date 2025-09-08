@@ -14,9 +14,9 @@
 #include <sol/sol.hpp>
 #endif
 
-#include "../qtplugin/communication/message_bus.hpp"
-#include "../qtplugin/communication/request_response.hpp"
-#include "../qtplugin/communication/plugin_communication.hpp"
+#include <qtplugin/communication/message_bus.hpp>
+#include <qtplugin/communication/request_response.hpp>
+#include <qtplugin/communication/plugin_communication.hpp>
 #include "../qt_conversions.cpp"
 
 Q_LOGGING_CATEGORY(communicationBindingsLog, "qtforge.lua.communication");

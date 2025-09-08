@@ -12,8 +12,6 @@
 #include <QObject>
 #include <QString>
 #include <QStringList>
-#include <QString>
-#include <QStringList>
 #include <chrono>
 #include <functional>
 #include <memory>
@@ -146,7 +144,8 @@ struct ErrorRecoveryConfig {
 /**
  * @brief Error handler callback function type
  */
-using PlatformErrorHandlerCallback = std::function<bool(const PlatformErrorInfo&)>;
+using PlatformErrorHandlerCallback =
+    std::function<bool(const PlatformErrorInfo&)>;
 
 /**
  * @brief Error recovery callback

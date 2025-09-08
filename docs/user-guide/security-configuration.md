@@ -1,16 +1,20 @@
 # Security Configuration
 
-QtForge provides comprehensive security features to protect your application from malicious plugins and ensure safe plugin execution.
+QtForge v3.2.0 provides comprehensive security features to protect your application from malicious plugins and ensure safe plugin execution, with enhanced sandboxing and policy validation capabilities.
 
 ## Overview
 
-QtForge security system includes:
-- Plugin signature verification
-- Sandboxed execution environments
-- Permission-based access control
-- Trust management and publisher verification
-- Resource usage limits
-- Secure communication channels
+QtForge v3.2.0 security system includes:
+
+- **Enhanced Plugin Sandbox**: Advanced sandboxing with detailed policy validation
+- **Security Policy Validator**: Comprehensive security policy integrity validation
+- **Resource Monitor Utils**: Advanced resource monitoring and threshold management
+- **Security Enforcer**: Enhanced policy management with signal handling
+- **Plugin signature verification**: Cryptographic verification of plugin authenticity
+- **Permission-based access control**: Fine-grained permission system with trust levels
+- **Trust management and publisher verification**: Enhanced trust level system
+- **Secure communication channels**: Encrypted inter-plugin communication
+- **Cross-language security**: Consistent security across C++, Python, and Lua plugins
 
 ## Security Levels
 
@@ -239,6 +243,131 @@ sandboxConfig.allowedSystemCalls = {
 sandboxConfig.blockedSystemCalls = {
     "exec", "fork", "kill", "ptrace"
 };
+```
+
+## Enhanced Security Features (v3.2.0)
+
+QtForge v3.2.0 introduces several enhanced security features for improved plugin protection and validation.
+
+### Security Policy Validator
+
+The new SecurityPolicyValidator ensures security policy integrity:
+
+```cpp
+#include <qtforge/security/security_policy_validator.hpp>
+
+qtforge::SecurityPolicyValidator validator;
+
+// Create a security policy
+qtforge::SecurityPolicy policy;
+policy.name = "ProductionPolicy";
+policy.description = "Production environment security policy";
+policy.allowedPermissions = {
+    qtforge::PluginPermission::FileSystemRead,
+    qtforge::PluginPermission::NetworkAccess
+};
+policy.minimumTrustLevel = qtforge::TrustLevel::Medium;
+
+// Validate the policy
+auto validationResult = validator.validatePolicy(policy);
+if (validationResult.isValid) {
+    std::cout << "Security policy is valid" << std::endl;
+} else {
+    std::cerr << "Policy validation failed: " << validationResult.errorMessage << std::endl;
+}
+```
+
+### Enhanced Plugin Sandbox
+
+The enhanced plugin sandbox provides detailed validation and monitoring:
+
+```cpp
+#include <qtforge/security/plugin_sandbox.hpp>
+
+qtforge::PluginSandbox sandbox;
+
+// Configure sandbox with policy validation
+sandbox.setPolicy(policy);
+sandbox.enableResourceMonitoring(true);
+sandbox.setMaxMemoryUsage(100 * 1024 * 1024); // 100MB
+sandbox.setMaxCpuTime(30.0); // 30 seconds
+
+// Initialize sandbox with validation
+auto initResult = sandbox.initialize();
+if (initResult.success) {
+    std::cout << "Sandbox initialized successfully" << std::endl;
+} else {
+    std::cerr << "Sandbox initialization failed: " << initResult.errorMessage << std::endl;
+}
+```
+
+### Resource Monitor Utils
+
+Advanced resource monitoring and threshold checking:
+
+```cpp
+#include <qtforge/security/resource_monitor_utils.hpp>
+
+qtforge::ResourceMonitorUtils monitor;
+
+// Set resource thresholds
+monitor.setMemoryThreshold(50 * 1024 * 1024); // 50MB
+monitor.setCpuThreshold(80.0); // 80% CPU usage
+monitor.setDiskThreshold(1024 * 1024 * 1024); // 1GB disk usage
+
+// Monitor plugin resource usage
+auto usage = monitor.getResourceUsage(pluginId);
+std::cout << "Memory usage: " << monitor.formatMemoryUsage(usage.memoryUsage) << std::endl;
+std::cout << "CPU usage: " << usage.cpuUsage << "%" << std::endl;
+
+// Check thresholds
+if (monitor.checkMemoryThreshold(usage.memoryUsage)) {
+    std::cout << "Memory threshold exceeded!" << std::endl;
+}
+```
+
+### Security Enforcer
+
+Enhanced policy management with signal handling:
+
+```cpp
+#include <qtforge/security/security_enforcer.hpp>
+
+qtforge::SecurityEnforcer enforcer;
+
+// Set up policy enforcement
+enforcer.setPolicy(policy);
+enforcer.enableSignalHandling(true);
+
+// Register violation handler
+enforcer.onPolicyViolation([](const qtforge::PolicyViolation& violation) {
+    std::cerr << "Policy violation detected: " << violation.description << std::endl;
+    std::cerr << "Plugin: " << violation.pluginId << std::endl;
+    std::cerr << "Severity: " << violation.severity << std::endl;
+});
+
+// Start enforcement
+enforcer.startEnforcement();
+```
+
+### Trust Level System
+
+Enhanced trust level management:
+
+```cpp
+enum class TrustLevel {
+    Untrusted = 0,  // No trust, maximum restrictions
+    Low = 1,        // Minimal trust, high restrictions
+    Medium = 2,     // Moderate trust, standard restrictions
+    High = 3,       // High trust, minimal restrictions
+    Trusted = 4     // Full trust, no restrictions
+};
+
+// Configure trust-based security
+qtforge::SecurityConfig config;
+config.minimumTrustLevel = qtforge::TrustLevel::Medium;
+config.trustBasedPermissions = true;
+config.dynamicTrustAdjustment = true;
 ```
 
 ## Permission System

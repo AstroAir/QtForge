@@ -38,7 +38,7 @@ void bind_monitoring(py::module& m) {
              &IPluginHotReloadManager::set_global_hot_reload_enabled)
         .def("is_global_hot_reload_enabled",
              &IPluginHotReloadManager::is_global_hot_reload_enabled)
-        .def("__repr__", [](const IPluginHotReloadManager& manager) {
+        .def("__repr__", [](const IPluginHotReloadManager&) {
             return "<IPluginHotReloadManager>";
         });
 
@@ -156,6 +156,26 @@ void bind_monitoring(py::module& m) {
         py::arg("metrics_interval") = std::chrono::milliseconds(5000),
         "Set up a complete monitoring system with hot reload and metrics "
         "collection");
+
+    // === Additional Utility Functions ===
+    m.def("test_monitoring", []() -> std::string {
+        return "Monitoring module working!";
+    }, "Test function for monitoring module");
+
+    m.def("get_available_monitoring_features", []() -> py::list {
+        py::list features;
+        features.append("hot_reload_manager");
+        features.append("metrics_collector");
+        features.append("plugin_monitoring");
+        features.append("system_metrics");
+        return features;
+    }, "Get list of available monitoring features");
+
+    m.def("create_monitoring_system", []() -> py::tuple {
+        auto hot_reload = std::make_shared<PluginHotReloadManager>();
+        auto metrics = std::make_shared<PluginMetricsCollector>();
+        return py::make_tuple(hot_reload, metrics);
+    }, "Create a basic monitoring system");
 }
 
 }  // namespace qtforge_python

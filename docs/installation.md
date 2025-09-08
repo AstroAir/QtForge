@@ -1,13 +1,13 @@
 # Installation Guide
 
-This guide covers the installation and setup of QtForge, a modern C++ plugin framework built on Qt.
+This guide covers the installation and setup of QtForge v3.2.0, a modern C++ plugin framework built on Qt with comprehensive multilingual support.
 
 ## Prerequisites
 
 ### System Requirements
 
 - **Operating System**: Windows 10/11, macOS 10.15+, or Linux (Ubuntu 20.04+)
-- **Compiler**: 
+- **Compiler**:
   - GCC 10+ (Linux)
   - Clang 12+ (macOS)
   - MSVC 2019+ (Windows)
@@ -17,8 +17,16 @@ This guide covers the installation and setup of QtForge, a modern C++ plugin fra
 ### Development Tools
 
 - **Git**: For version control and dependency management
-- **Python**: 3.8+ (for build scripts and optional Python bindings)
+- **Python**: 3.8+ (for build scripts and Python bindings)
+- **Lua**: 5.4+ (for Lua plugin support)
 - **pkg-config**: For dependency resolution (Linux/macOS)
+
+### New in v3.2.0
+
+- **Enhanced Python Bindings**: Complete API coverage with type stubs
+- **Lua Plugin Bridge**: Full Lua plugin support with sol2 integration
+- **Advanced Security**: Enhanced sandboxing and policy validation
+- **Hot Reload**: Dynamic plugin reloading capabilities
 
 ## Installation Methods
 
@@ -76,13 +84,13 @@ cmake .. -DCMAKE_BUILD_TYPE=Release \
 
 #### Build Options
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `QTFORGE_BUILD_EXAMPLES` | `OFF` | Build example plugins |
-| `QTFORGE_BUILD_TESTS` | `OFF` | Build unit tests |
-| `QTFORGE_ENABLE_PYTHON` | `OFF` | Enable Python bindings |
-| `QTFORGE_ENABLE_LUA` | `OFF` | Enable Lua scripting |
-| `QTFORGE_BUILD_DOCS` | `OFF` | Build documentation |
+| Option                   | Default | Description            |
+| ------------------------ | ------- | ---------------------- |
+| `QTFORGE_BUILD_EXAMPLES` | `OFF`   | Build example plugins  |
+| `QTFORGE_BUILD_TESTS`    | `OFF`   | Build unit tests       |
+| `QTFORGE_ENABLE_PYTHON`  | `OFF`   | Enable Python bindings |
+| `QTFORGE_ENABLE_LUA`     | `OFF`   | Enable Lua scripting   |
+| `QTFORGE_BUILD_DOCS`     | `OFF`   | Build documentation    |
 
 #### Compile
 
@@ -160,6 +168,7 @@ $env:PATH = "$env:QTFORGE_ROOT\bin;$env:PATH"
 #### Visual Studio Code
 
 Install the recommended extensions:
+
 - C/C++ Extension Pack
 - CMake Tools
 - Qt tools
@@ -177,12 +186,14 @@ Add QtForge as a custom kit in Tools → Options → Kits.
 ### Common Issues
 
 **Qt not found**
+
 ```bash
 # Ensure Qt is in PATH or set Qt6_DIR
 export Qt6_DIR=/path/to/qt6/lib/cmake/Qt6
 ```
 
 **Missing dependencies**
+
 ```bash
 # Ubuntu/Debian
 sudo apt-get install build-essential cmake qt6-base-dev
@@ -195,6 +206,7 @@ brew install cmake qt6
 ```
 
 **Python bindings not working**
+
 ```bash
 # Ensure Python development headers are installed
 sudo apt-get install python3-dev  # Ubuntu

@@ -46,6 +46,20 @@ Start your QtForge journey with these foundational examples.
   - Service contracts and communication utilities
   - Threading safety and performance testing
 
+#### Latest Python Binding Examples (2024)
+- 🔥 **[basic_usage.py](basic_usage.py)** - Essential QtForge Python bindings demonstration
+  - Connection testing and version information
+  - Module availability and build information
+  - Basic object creation and manipulation
+  - All module functionality testing
+  - Perfect starting point for new users
+- 🔥 **[plugin_management.py](plugin_management.py)** - Advanced plugin management features
+  - Comprehensive PluginManager operations
+  - Plugin metadata and version handling
+  - Plugin capabilities, priorities, and states
+  - Load options and system information
+  - Real-world plugin management scenarios
+
 ### 🌙 lua/ - Lua Binding Examples
 
 **Comprehensive Lua API demonstrations** - Learn QtForge through Lua

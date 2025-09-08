@@ -13,14 +13,18 @@ namespace py = pybind11;
 
 namespace qtforge_python {
 
-void bind_utils(py::module& m) {
+void bind_utils(py::module& module) {
     // Simple utility functions
-    m.def(
+    module.def(
         "utils_test", []() { return std::string("Utils module working!"); },
         "Test function for utils module");
 
+    module.def(
+        "test_utils", []() { return std::string("Utils module working!"); },
+        "Test function for utils module (alias)");
+
     // Version-related functions
-    m.def(
+    module.def(
         "create_version",
         [](int major, int minor, int patch) {
             return std::string("Version ") + std::to_string(major) + "." +
@@ -29,7 +33,7 @@ void bind_utils(py::module& m) {
         py::arg("major"), py::arg("minor"), py::arg("patch"),
         "Create a version string");
 
-    m.def(
+    module.def(
         "parse_version",
         [](const std::string& version_str) {
             return std::string("Parsed version: ") + version_str;
@@ -37,7 +41,7 @@ void bind_utils(py::module& m) {
         py::arg("version_string"), "Parse a version string");
 
     // Error handling functions
-    m.def(
+    module.def(
         "create_error",
         [](int code, const std::string& message) {
             return std::string("Error ") + std::to_string(code) + ": " +
@@ -46,7 +50,7 @@ void bind_utils(py::module& m) {
         py::arg("code"), py::arg("message"), "Create an error message");
 
     // Register Qt conversions placeholder
-    m.def(
+    module.def(
         "register_qt_conversions",
         []() {
             // Placeholder for Qt type conversions

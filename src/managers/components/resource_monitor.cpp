@@ -4,13 +4,13 @@
  * @version 3.0.0
  */
 
-#include "../qtplugin/managers/components/resource_monitor.hpp"
+#include <qtplugin/managers/components/resource_monitor.hpp>
 #include <QDebug>
 #include <QLoggingCategory>
 #include <algorithm>
 #include <numeric>
-#include "../qtplugin/managers/components/resource_allocator.hpp"
-#include "../qtplugin/managers/components/resource_pool.hpp"
+#include <qtplugin/managers/components/resource_allocator.hpp>
+#include <qtplugin/managers/components/resource_pool.hpp>
 
 Q_LOGGING_CATEGORY(resourceMonitorLog, "qtplugin.resource.monitor")
 

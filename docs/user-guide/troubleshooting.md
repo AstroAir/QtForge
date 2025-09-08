@@ -1,15 +1,15 @@
 # Troubleshooting Guide
 
-This comprehensive guide helps you diagnose and resolve common issues with QtPlugin. For quick answers to common questions, see the [FAQ](../appendix/faq.md).
+This comprehensive guide helps you diagnose and resolve common issues with QtForge v3.2.0, including new multilingual plugin support and enhanced security features. For quick answers to common questions, see the [FAQ](../appendix/faq.md).
 
 ## Quick Diagnostics
 
 ### System Check
 
-Run this diagnostic code to check your QtPlugin installation:
+Run this diagnostic code to check your QtForge installation:
 
 ```cpp
-#include <qtplugin/qtplugin.hpp>
+#include <qtforge/qtforge.hpp>
 #include <iostream>
 
 void run_diagnostics() {
@@ -815,5 +815,262 @@ instruments -t "Time Profiler" ./your_app
 # Windows - Visual Studio Profiler
 # Use built-in profiler in Visual Studio
 ```
+
+## QtForge v3.2.0 Specific Issues
+
+### Python Plugin Issues
+
+#### Python Plugin Not Loading
+
+**Symptoms**:
+```
+Error: Failed to load Python plugin: ModuleNotFoundError
+```
+
+**Solutions**:
+
+1. **Check Python Installation**:
+   ```bash
+   python3 --version  # Should be 3.8+
+   python3 -c "import qtforge"  # Should not error
+   ```
+
+2. **Install QtForge Python Bindings**:
+   ```bash
+   pip install qtforge
+   # Or from source
+   cd bindings/python && pip install .
+   ```
+
+3. **Check Python Path**:
+   ```python
+   import sys
+   print(sys.path)  # Ensure qtforge is in path
+   ```
+
+#### Python Type Stub Issues
+
+**Symptoms**:
+```
+IDE shows "Cannot find module 'qtforge'" despite working code
+```
+
+**Solutions**:
+
+1. **Install Type Stubs**:
+   ```bash
+   pip install qtforge[stubs]
+   ```
+
+2. **IDE Configuration**:
+   - **PyCharm**: Mark qtforge as source root
+   - **VSCode**: Update python.analysis.extraPaths
+
+### Lua Plugin Issues
+
+#### Lua Plugin Bridge Not Available
+
+**Symptoms**:
+```
+Error: Lua plugin bridge not initialized
+```
+
+**Solutions**:
+
+1. **Check Lua Installation**:
+   ```bash
+   lua -v  # Should be 5.4+
+   ```
+
+2. **Enable Lua Bridge in Build**:
+   ```cmake
+   set(QTFORGE_ENABLE_LUA_BRIDGE ON)
+   ```
+
+3. **Check Sol2 Dependency**:
+   ```cpp
+   #include <sol/sol.hpp>  // Should compile
+   ```
+
+#### Lua Plugin Loading Errors
+
+**Symptoms**:
+```
+Error: Lua plugin syntax error or runtime error
+```
+
+**Solutions**:
+
+1. **Check Lua Syntax**:
+   ```bash
+   lua -c your_plugin.lua  # Check syntax
+   ```
+
+2. **Debug Lua Plugin**:
+   ```lua
+   -- Add debug prints
+   print("Plugin loading...")
+   qtforge.utils.log_debug("Debug message")
+   ```
+
+### Configuration API Migration Issues
+
+#### Configuration Manager Compilation Errors
+
+**Symptoms**:
+```cpp
+error: 'getValue' is not a member of 'qtforge::ConfigurationManager'
+```
+
+**Solutions**:
+
+1. **Update to Factory Pattern**:
+   ```cpp
+   // Old v3.0.0
+   qtforge::ConfigurationManager config;
+
+   // New v3.2.0
+   auto config = qtforge::managers::create_configuration_manager();
+   ```
+
+2. **Update Method Names**:
+   ```cpp
+   // Old
+   config.getValue("key")
+
+   // New
+   config->get_value("key", qtforge::managers::ConfigurationScope::Global)
+   ```
+
+### Security Policy Issues
+
+#### Security Policy Validation Failures
+
+**Symptoms**:
+```
+Error: Security policy validation failed
+```
+
+**Solutions**:
+
+1. **Use Policy Validator**:
+   ```cpp
+   qtforge::SecurityPolicyValidator validator;
+   auto result = validator.validatePolicy(policy);
+   if (!result.isValid) {
+       std::cout << "Error: " << result.errorMessage << std::endl;
+   }
+   ```
+
+2. **Check Policy Structure**:
+   ```cpp
+   qtforge::SecurityPolicy policy;
+   policy.name = "ValidPolicy";  // Required
+   policy.minimumTrustLevel = qtforge::TrustLevel::Medium;  // Required
+   policy.allowedPermissions = {  // At least one required
+       qtforge::PluginPermission::FileSystemRead
+   };
+   ```
+
+### Advanced Plugin Interface Issues
+
+#### IAdvancedPlugin Compilation Errors
+
+**Symptoms**:
+```cpp
+error: cannot declare variable 'plugin' to be of abstract type 'MyAdvancedPlugin'
+```
+
+**Solutions**:
+
+1. **Implement All Pure Virtual Methods**:
+   ```cpp
+   class MyAdvancedPlugin : public qtforge::IAdvancedPlugin {
+   public:
+       // Must implement all IPlugin methods
+       std::string name() const override { return "MyPlugin"; }
+       std::string version() const override { return "1.0.0"; }
+       // ... other IPlugin methods
+
+       // Must implement IAdvancedPlugin methods
+       std::vector<qtforge::ServiceContract> getServiceContracts() override {
+           return {};  // Return empty if no contracts
+       }
+   };
+   ```
+
+### Cross-Language Communication Issues
+
+#### Message Bus Communication Failures
+
+**Symptoms**:
+```
+Warning: Message not delivered to target plugin
+```
+
+**Solutions**:
+
+1. **Check Message Format**:
+   ```cpp
+   // Ensure consistent message format across languages
+   auto message = qtforge::communication::create_message(
+       "service.command",
+       {{"param1", "value1"}, {"param2", "value2"}}
+   );
+   ```
+
+2. **Verify Subscription**:
+   ```python
+   # Python subscriber
+   def handle_message(message):
+       print(f"Received: {message}")
+
+   message_bus.subscribe("service.command", handle_message)
+   ```
+
+### Build System Issues
+
+#### CMake Configuration Errors with v3.2.0
+
+**Symptoms**:
+```
+CMake Error: Could not find QtForge 3.2
+```
+
+**Solutions**:
+
+1. **Update CMake Version Requirement**:
+   ```cmake
+   find_package(QtForge 3.2 REQUIRED)
+   ```
+
+2. **Enable New Features**:
+   ```cmake
+   set(QTFORGE_ENABLE_PYTHON_BINDINGS ON)
+   set(QTFORGE_ENABLE_LUA_BRIDGE ON)
+   ```
+
+### Performance Issues with v3.2.0
+
+#### Slow Plugin Loading
+
+**Symptoms**:
+Plugin loading takes significantly longer than expected.
+
+**Solutions**:
+
+1. **Check Resource Monitoring**:
+   ```cpp
+   // Disable resource monitoring if not needed
+   sandbox.enableResourceMonitoring(false);
+   ```
+
+2. **Optimize Security Policies**:
+   ```cpp
+   // Use minimal required permissions
+   policy.allowedPermissions = {
+       qtforge::PluginPermission::FileSystemRead  // Only what's needed
+   };
+   ```
 
 Remember: Most issues have simple solutions. Check the [FAQ](../appendix/faq.md) first, then use the debugging techniques in this guide to narrow down the problem.

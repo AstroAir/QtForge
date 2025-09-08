@@ -18,9 +18,9 @@
 #include <QTimer>
 #include <deque>
 #include <queue>
+#include "components/resource_pool.hpp"
 #include "resource_manager.hpp"
 #include "resource_manager_impl.hpp"
-#include "components/resource_pool.hpp"
 
 namespace qtplugin {
 
@@ -380,7 +380,8 @@ public:
 class NetworkConnectionPool : public ResourcePool<NetworkConnection> {
 public:
     explicit NetworkConnectionPool(const ResourceQuota& quota = {})
-        : ResourcePool<NetworkConnection>("network_pool", ResourceType::NetworkConnection) {
+        : ResourcePool<NetworkConnection>("network_pool",
+                                          ResourceType::NetworkConnection) {
         // Set reasonable defaults for network pool
         ResourceQuota default_quota;
         default_quota.max_instances = 100;  // Reasonable connection limit
@@ -435,6 +436,6 @@ private:
     }
 };
 
-#endif // QTFORGE_HAS_NETWORK
+#endif  // QTFORGE_HAS_NETWORK
 
 }  // namespace qtplugin

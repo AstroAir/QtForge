@@ -16,6 +16,21 @@
 // Include sol2 only in implementation
 #ifdef QTFORGE_LUA_BINDINGS
 #include <sol/sol.hpp>
+
+// Forward declarations for qtforge_lua bindings
+namespace qtforge_lua {
+    void register_core_bindings(sol::state& lua);
+    void register_utils_bindings(sol::state& lua);
+    void register_security_bindings(sol::state& lua);
+    void register_communication_bindings(sol::state& lua);
+    void register_managers_bindings(sol::state& lua);
+    void register_orchestration_bindings(sol::state& lua);
+    void register_monitoring_bindings(sol::state& lua);
+    void register_threading_bindings(sol::state& lua);
+    void register_transaction_bindings(sol::state& lua);
+    void register_composition_bindings(sol::state& lua);
+    void register_marketplace_bindings(sol::state& lua);
+}
 #endif
 
 Q_LOGGING_CATEGORY(luaBridgeLog, "qtplugin.lua");
@@ -246,15 +261,46 @@ void LuaExecutionEnvironment::setup_sandbox() {
 
 void LuaExecutionEnvironment::register_qt_bindings() {
 #ifdef QTFORGE_LUA_BINDINGS
-    // Register basic Qt types and functions
-    // This will be expanded in the next implementation phase
+    // Initialize the full QtForge Lua binding system
+    try {
+        // Set up QtForge module table
+        sol::table qtforge = m_lua_state->create_table();
+        (*m_lua_state)["qtforge"] = qtforge;
 
-    // Register logging function
-    (*m_lua_state)["qtforge_log"] = [](const std::string& message) {
-        qCDebug(luaBridgeLog) << "Lua:" << QString::fromStdString(message);
-    };
+        // Add version information
+        qtforge["version"] = "3.2.0";
+        qtforge["version_major"] = 3;
+        qtforge["version_minor"] = 2;
+        qtforge["version_patch"] = 0;
 
-    qCDebug(luaBridgeLog) << "Qt bindings registered";
+        // Add logging function
+        qtforge["log"] = [](const std::string& message) {
+            qCDebug(luaBridgeLog) << "Lua:" << QString::fromStdString(message);
+        };
+
+        // Register all QtForge bindings using the qtforge_lua system
+        qtforge_lua::register_core_bindings(*m_lua_state);
+        qtforge_lua::register_utils_bindings(*m_lua_state);
+        qtforge_lua::register_security_bindings(*m_lua_state);
+        qtforge_lua::register_communication_bindings(*m_lua_state);
+        qtforge_lua::register_managers_bindings(*m_lua_state);
+        qtforge_lua::register_orchestration_bindings(*m_lua_state);
+        qtforge_lua::register_monitoring_bindings(*m_lua_state);
+        qtforge_lua::register_threading_bindings(*m_lua_state);
+        qtforge_lua::register_transaction_bindings(*m_lua_state);
+        qtforge_lua::register_composition_bindings(*m_lua_state);
+        qtforge_lua::register_marketplace_bindings(*m_lua_state);
+
+        qCDebug(luaBridgeLog) << "Full QtForge Lua bindings registered";
+
+    } catch (const std::exception& e) {
+        qCWarning(luaBridgeLog) << "Failed to register QtForge bindings:" << e.what();
+
+        // Fallback to basic logging function
+        (*m_lua_state)["qtforge_log"] = [](const std::string& message) {
+            qCDebug(luaBridgeLog) << "Lua:" << QString::fromStdString(message);
+        };
+    }
 #endif
 }
 
@@ -417,14 +463,14 @@ qtplugin::expected<QJsonObject, PluginError> LuaPluginBridge::execute_command(
     if (cmd == "execute_lua") {
         QString code = params.value("code").toString();
         if (code.isEmpty()) {
-            return make_error<QJsonObject>(PluginErrorCode::InvalidParameter, "Missing 'code' parameter");
+            return make_error<QJsonObject>(PluginErrorCode::InvalidParameters, "Missing 'code' parameter");
         }
         return m_environment->execute_code(code, params.value("context").toObject());
     }
     else if (cmd == "load_script") {
         QString script_path = params.value("path").toString();
         if (script_path.isEmpty()) {
-            return make_error<QJsonObject>(PluginErrorCode::InvalidParameter, "Missing 'path' parameter");
+            return make_error<QJsonObject>(PluginErrorCode::InvalidParameters, "Missing 'path' parameter");
         }
 
         auto load_result = load_lua_plugin(script_path);
@@ -450,24 +496,192 @@ std::vector<std::string> LuaPluginBridge::available_commands() const {
 qtplugin::expected<QVariant, PluginError> LuaPluginBridge::invoke_method(
     const QString& method_name, const QList<QVariant>& arguments) {
 
+#ifndef QTFORGE_LUA_BINDINGS
     Q_UNUSED(method_name)
     Q_UNUSED(arguments)
-    return make_error<QVariant>(PluginErrorCode::NotImplemented, "Method invocation not yet implemented");
+    return make_error<QVariant>(PluginErrorCode::NotSupported, "Lua bindings not compiled in this build");
+#else
+    QMutexLocker locker(&m_mutex);
+
+    if (m_state != PluginState::Running) {
+        return make_error<QVariant>(PluginErrorCode::InvalidState, "Plugin not running");
+    }
+
+    if (m_plugin_id.isEmpty()) {
+        return make_error<QVariant>(PluginErrorCode::InvalidState, "No plugin loaded");
+    }
+
+    try {
+        // Check if plugin table exists
+        auto plugin_it = m_environment->m_loaded_plugins.find(m_plugin_id);
+        if (plugin_it == m_environment->m_loaded_plugins.end()) {
+            return make_error<QVariant>(PluginErrorCode::InvalidState, "Plugin table not found");
+        }
+
+        sol::table plugin_table = plugin_it->second;
+
+        // Check if method exists
+        sol::object method_obj = plugin_table[method_name.toStdString()];
+        if (method_obj.get_type() != sol::type::function) {
+            return make_error<QVariant>(PluginErrorCode::MethodNotFound,
+                                       "Method '" + method_name.toStdString() + "' not found or not a function");
+        }
+
+        sol::function method_func = method_obj.as<sol::function>();
+
+        // Convert arguments to Lua objects
+        std::vector<sol::object> lua_args;
+        for (const QVariant& arg : arguments) {
+            // Convert QVariant to QJsonValue first, then to Lua
+            QJsonValue json_val;
+            switch (arg.type()) {
+                case QVariant::Bool: json_val = arg.toBool(); break;
+                case QVariant::Int: json_val = arg.toInt(); break;
+                case QVariant::Double: json_val = arg.toDouble(); break;
+                case QVariant::String: json_val = arg.toString(); break;
+                default: json_val = arg.toString(); break;
+            }
+            lua_args.push_back(json_to_lua(json_val));
+        }
+
+        // Call the method
+        sol::protected_function_result result;
+        switch (lua_args.size()) {
+            case 0: result = method_func(); break;
+            case 1: result = method_func(lua_args[0]); break;
+            case 2: result = method_func(lua_args[0], lua_args[1]); break;
+            case 3: result = method_func(lua_args[0], lua_args[1], lua_args[2]); break;
+            case 4: result = method_func(lua_args[0], lua_args[1], lua_args[2], lua_args[3]); break;
+            case 5: result = method_func(lua_args[0], lua_args[1], lua_args[2], lua_args[3], lua_args[4]); break;
+            default:
+                return make_error<QVariant>(PluginErrorCode::InvalidParameters,
+                                           "Too many arguments (max 5 supported)");
+        }
+
+        if (!result.valid()) {
+            sol::error err = result;
+            return make_error<QVariant>(PluginErrorCode::ExecutionFailed,
+                                       std::string("Method execution failed: ") + err.what());
+        }
+
+        // Convert result back to QVariant
+        if (result.get_type() == sol::type::nil) {
+            return QVariant();
+        } else {
+            // Convert Lua result to QJsonValue first, then to QVariant
+            QJsonValue json_result = lua_to_json(result);
+            return json_result.toVariant();
+        }
+
+    } catch (const sol::error& e) {
+        return make_error<QVariant>(PluginErrorCode::ExecutionFailed,
+                                   std::string("Lua error: ") + e.what());
+    } catch (const std::exception& e) {
+        return make_error<QVariant>(PluginErrorCode::ExecutionFailed,
+                                   std::string("Method invocation error: ") + e.what());
+    }
+#endif
 }
 
 qtplugin::expected<QVariant, PluginError> LuaPluginBridge::get_property(
     const QString& property_name) {
 
+#ifndef QTFORGE_LUA_BINDINGS
     Q_UNUSED(property_name)
-    return make_error<QVariant>(PluginErrorCode::NotImplemented, "Property access not yet implemented");
+    return make_error<QVariant>(PluginErrorCode::NotSupported, "Lua bindings not compiled in this build");
+#else
+    QMutexLocker locker(&m_mutex);
+
+    if (m_state != PluginState::Running) {
+        return make_error<QVariant>(PluginErrorCode::InvalidState, "Plugin not running");
+    }
+
+    if (m_plugin_id.isEmpty()) {
+        return make_error<QVariant>(PluginErrorCode::InvalidState, "No plugin loaded");
+    }
+
+    try {
+        // Check if plugin table exists
+        auto plugin_it = m_environment->m_loaded_plugins.find(m_plugin_id);
+        if (plugin_it == m_environment->m_loaded_plugins.end()) {
+            return make_error<QVariant>(PluginErrorCode::InvalidState, "Plugin table not found");
+        }
+
+        sol::table plugin_table = plugin_it->second;
+
+        // Get property value
+        sol::object property_obj = plugin_table[property_name.toStdString()];
+        if (property_obj.get_type() == sol::type::nil) {
+            return make_error<QVariant>(PluginErrorCode::PropertyNotFound,
+                                       "Property '" + property_name.toStdString() + "' not found");
+        }
+
+        // Convert to QVariant
+        QJsonValue json_result = lua_to_json(property_obj);
+        return json_result.toVariant();
+
+    } catch (const sol::error& e) {
+        return make_error<QVariant>(PluginErrorCode::ExecutionFailed,
+                                   std::string("Lua error: ") + e.what());
+    } catch (const std::exception& e) {
+        return make_error<QVariant>(PluginErrorCode::ExecutionFailed,
+                                   std::string("Property access error: ") + e.what());
+    }
+#endif
 }
 
 qtplugin::expected<void, PluginError> LuaPluginBridge::set_property(
     const QString& property_name, const QVariant& value) {
 
+#ifndef QTFORGE_LUA_BINDINGS
     Q_UNUSED(property_name)
     Q_UNUSED(value)
-    return make_error<void>(PluginErrorCode::NotImplemented, "Property setting not yet implemented");
+    return make_error<void>(PluginErrorCode::NotSupported, "Lua bindings not compiled in this build");
+#else
+    QMutexLocker locker(&m_mutex);
+
+    if (m_state != PluginState::Running) {
+        return make_error<void>(PluginErrorCode::InvalidState, "Plugin not running");
+    }
+
+    if (m_plugin_id.isEmpty()) {
+        return make_error<void>(PluginErrorCode::InvalidState, "No plugin loaded");
+    }
+
+    try {
+        // Check if plugin table exists
+        auto plugin_it = m_environment->m_loaded_plugins.find(m_plugin_id);
+        if (plugin_it == m_environment->m_loaded_plugins.end()) {
+            return make_error<void>(PluginErrorCode::InvalidState, "Plugin table not found");
+        }
+
+        sol::table plugin_table = plugin_it->second;
+
+        // Convert QVariant to Lua object
+        QJsonValue json_val;
+        switch (value.type()) {
+            case QVariant::Bool: json_val = value.toBool(); break;
+            case QVariant::Int: json_val = value.toInt(); break;
+            case QVariant::Double: json_val = value.toDouble(); break;
+            case QVariant::String: json_val = value.toString(); break;
+            default: json_val = value.toString(); break;
+        }
+
+        sol::object lua_value = json_to_lua(json_val);
+
+        // Set property value
+        plugin_table[property_name.toStdString()] = lua_value;
+
+        return make_success();
+
+    } catch (const sol::error& e) {
+        return make_error<void>(PluginErrorCode::ExecutionFailed,
+                               std::string("Lua error: ") + e.what());
+    } catch (const std::exception& e) {
+        return make_error<void>(PluginErrorCode::ExecutionFailed,
+                               std::string("Property setting error: ") + e.what());
+    }
+#endif
 }
 
 qtplugin::expected<QStringList, PluginError> LuaPluginBridge::list_methods() const {
@@ -517,5 +731,3 @@ QString LuaPluginBridge::generate_plugin_id() const {
 }
 
 } // namespace qtplugin
-
-#include "lua_plugin_bridge.moc"

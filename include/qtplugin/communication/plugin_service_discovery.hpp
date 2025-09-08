@@ -493,4 +493,4 @@ Q_DECLARE_METATYPE(qtplugin::ServiceDiscoveryResult)
 Q_DECLARE_METATYPE(qtplugin::ServiceHealthCheck)
 Q_DECLARE_METATYPE(qtplugin::ServiceLoadBalancing)
 
-#endif // QTFORGE_HAS_NETWORK
+#endif  // QTFORGE_HAS_NETWORK

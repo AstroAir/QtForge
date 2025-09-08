@@ -1,6 +1,6 @@
-# Contributing to QtPlugin
+# Contributing to QtForge
 
-Thank you for your interest in contributing to QtPlugin! This document provides guidelines and information for contributors.
+Thank you for your interest in contributing to QtForge! This document provides guidelines and information for contributors.
 
 ## 🎯 How to Contribute
 
@@ -23,6 +23,8 @@ We welcome several types of contributions:
 - **C++20 compatible compiler** (GCC 10+, Clang 12+, MSVC 2019+)
 - **CMake 3.21+**
 - **Git** for version control
+- **Python 3.8+** (for Python bindings development)
+- **Lua 5.4+** (for Lua plugin bridge development)
 
 ### Development Setup
 

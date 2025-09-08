@@ -1,15 +1,17 @@
 # Quick Start Guide
 
-This guide will get you up and running with QtPlugin in just a few minutes. We'll create a simple application that loads and uses a plugin.
+This guide will get you up and running with QtForge v3.2.0 in just a few minutes. We'll create a simple application that loads and uses plugins, including the new multilingual support features.
 
 ## Prerequisites
 
 Before starting, make sure you have:
 
-- ✅ QtPlugin installed (see [Installation Guide](installation.md))
+- ✅ QtForge v3.2.0 installed (see [Installation Guide](installation.md))
 - ✅ Qt 6.0+ with Core module
 - ✅ C++20 compatible compiler
 - ✅ CMake 3.21+
+- ✅ Python 3.8+ (for Python bindings, optional)
+- ✅ Lua 5.4+ (for Lua plugin support, optional)
 
 ## Step 1: Create Your First Application
 
@@ -37,9 +39,9 @@ project(MyQtPluginApp VERSION 1.0.0 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Find Qt6 and QtPlugin
+# Find Qt6 and QtForge
 find_package(Qt6 REQUIRED COMPONENTS Core)
-find_package(QtPlugin REQUIRED COMPONENTS Core Security)
+find_package(QtForge REQUIRED COMPONENTS Core Security)
 
 # Create the executable
 add_executable(my_app main.cpp)
@@ -47,7 +49,7 @@ add_executable(my_app main.cpp)
 # Link libraries
 target_link_libraries(my_app
     Qt6::Core
-    QtPlugin::Core
+    QtForge::Core
     QtPlugin::Security
 )
 

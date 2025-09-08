@@ -88,8 +88,23 @@ function(qtforge_define_options)
     option(QTFORGE_BUILD_PYTHON_BINDINGS "Build Python bindings using pybind11" ON)
     option(QTFORGE_PYTHON_BINDINGS_INSTALL "Install Python bindings" ON)
     option(QTFORGE_PYTHON_BINDINGS_TESTS "Build Python binding tests" ON)
+    option(QTFORGE_PYTHON_BINDINGS_EXAMPLES "Build Python binding examples" ON)
+    option(QTFORGE_PYTHON_ENABLE_ALL_MODULES "Enable all Python binding modules" ON)
+    option(QTFORGE_PYTHON_ENABLE_TYPE_STUBS "Generate Python type stubs (.pyi files)" ON)
 
-    # Lua binding options (temporarily disabled due to compilation issues)
+    # Individual module controls for progressive enablement
+    option(QTFORGE_PYTHON_ENABLE_SECURITY_MODULE "Enable security module bindings" ON)
+    option(QTFORGE_PYTHON_ENABLE_MANAGERS_MODULE "Enable managers module bindings" ON)
+    option(QTFORGE_PYTHON_ENABLE_COMMUNICATION_MODULE "Enable communication module bindings" ON)
+    option(QTFORGE_PYTHON_ENABLE_ORCHESTRATION_MODULE "Enable orchestration module bindings" ON)
+    # Temporarily disabled due to compilation issues - see BUILD_OPTIMIZATION_REPORT.md
+    option(QTFORGE_PYTHON_ENABLE_MONITORING_MODULE "Enable monitoring module bindings" OFF)
+    option(QTFORGE_PYTHON_ENABLE_THREADING_MODULE "Enable threading module bindings" OFF)
+    option(QTFORGE_PYTHON_ENABLE_TRANSACTIONS_MODULE "Enable transactions module bindings" OFF)
+    option(QTFORGE_PYTHON_ENABLE_COMPOSITION_MODULE "Enable composition module bindings" ON)
+    option(QTFORGE_PYTHON_ENABLE_MARKETPLACE_MODULE "Enable marketplace module bindings" ON)
+
+    # Lua binding options
     option(QTFORGE_BUILD_LUA_BINDINGS "Build Lua bindings using sol2" OFF)
     option(QTFORGE_LUA_BINDINGS_INSTALL "Install Lua bindings" ON)
     option(QTFORGE_LUA_BINDINGS_TESTS "Build Lua binding tests" OFF)
@@ -155,7 +170,7 @@ function(qtforge_define_options)
     if(QTFORGE_BUILD_PYTHON_BINDINGS)
         set(QTFORGE_PYTHON_INSTALL_DIR "" CACHE STRING "Python module installation directory (auto-detected if empty)")
         set(QTFORGE_PYTHON_MIN_VERSION "3.8" CACHE STRING "Minimum required Python version")
-        set(QTFORGE_PYTHON_MAX_VERSION "3.12" CACHE STRING "Maximum supported Python version")
+        set(QTFORGE_PYTHON_MAX_VERSION "3.13" CACHE STRING "Maximum supported Python version")
     endif()
 
     # Lua binding installation options

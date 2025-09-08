@@ -234,9 +234,10 @@ function(qtforge_find_python_dependencies)
 
     message(STATUS "QtForge: Finding Python dependencies...")
 
-    # Find Python interpreter
-    set(Python_FIND_STRATEGY LOCATION)
-    find_package(Python COMPONENTS Interpreter Development QUIET)
+    # Find Python interpreter - prefer system Python
+    set(Python_FIND_STRATEGY VERSION)
+    set(Python_FIND_REGISTRY LAST)
+    find_package(Python 3.8 COMPONENTS Interpreter Development QUIET)
 
     if(Python_FOUND)
         message(STATUS "QtForge: Found Python ${Python_VERSION} at ${Python_EXECUTABLE}")

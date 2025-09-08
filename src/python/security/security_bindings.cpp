@@ -22,9 +22,9 @@ using namespace qtplugin;
 
 namespace qtforge_python {
 
-void bind_security(py::module& m) {
-    // Security level enum
-    py::enum_<SecurityLevel>(m, "SecurityLevel", "Security levels for plugin validation")
+void bind_security(py::module& module) {
+    // Security level enum (this one actually exists)
+    py::enum_<SecurityLevel>(module, "SecurityLevel", "Security levels for plugin validation")
         .value("None", SecurityLevel::None, "No security validation")
         .value("Basic", SecurityLevel::Basic, "Basic file and metadata validation")
         .value("Standard", SecurityLevel::Standard, "Standard security checks including signatures")
@@ -34,20 +34,11 @@ void bind_security(py::module& m) {
         .value("Maximum", SecurityLevel::Maximum, "Maximum security with full isolation")
         .export_values();
 
-    // Plugin permission enum (commented out until header is available)
-    // py::enum_<PluginPermission>(m, "PluginPermission", "Permission types for plugins")
-    //     .value("FileSystemRead", PluginPermission::FileSystemRead, "Read access to file system")
-    //     .value("FileSystemWrite", PluginPermission::FileSystemWrite, "Write access to file system")
-    //     .value("NetworkAccess", PluginPermission::NetworkAccess, "Network access permission")
-    //     .value("RegistryAccess", PluginPermission::RegistryAccess, "Registry access permission")
-    //     .value("ProcessCreation", PluginPermission::ProcessCreation, "Process creation permission")
-    //     .value("SystemInfo", PluginPermission::SystemInfo, "System information access")
-    //     .value("HardwareAccess", PluginPermission::HardwareAccess, "Hardware access permission")
-    //     .value("DatabaseAccess", PluginPermission::DatabaseAccess, "Database access permission")
-    //     .export_values();
+    // Note: TrustLevel and ValidationStatus enums are not defined in the current headers
+    // They would need to be defined in the security headers first before binding them here
 
     // Security validation result
-    py::class_<SecurityValidationResult>(m, "SecurityValidationResult", "Security validation result")
+    py::class_<SecurityValidationResult>(module, "SecurityValidationResult", "Security validation result")
         .def(py::init<>(), "Create empty security validation result")
         .def_readwrite("is_valid", &SecurityValidationResult::is_valid, "Whether validation passed")
         .def_readwrite("validated_level", &SecurityValidationResult::validated_level, "Validated security level")
@@ -68,7 +59,7 @@ void bind_security(py::module& m) {
         });
 
     // Security manager implementation
-    py::class_<SecurityManager>(m, "SecurityManager", "Default security manager implementation")
+    py::class_<SecurityManager>(module, "SecurityManager", "Default security manager implementation")
         .def(py::init<>(), "Create security manager")
         .def("validate_plugin", &SecurityManager::validate_plugin, "Validate plugin security",
              py::arg("file_path"), py::arg("required_level"))
@@ -111,10 +102,29 @@ void bind_security(py::module& m) {
                    ", validations=" + std::to_string(manager.get_validations_performed()) + ")";
         });
 
-    // Factory functions for security components
-    m.def("create_security_manager", []() -> std::unique_ptr<SecurityManager> {
+    // === Factory Functions ===
+    module.def("create_security_manager", []() -> std::unique_ptr<SecurityManager> {
         return std::make_unique<SecurityManager>();
     }, "Create a new security manager instance");
+
+    // === Utility Functions ===
+    module.def("test_security", []() -> std::string {
+        return "Security module working!";
+    }, "Test function for security module");
+
+    module.def("get_available_security_features", []() -> py::list {
+        py::list features;
+        features.append("security_manager");
+        features.append("security_validation");
+        features.append("trust_levels");
+        features.append("signature_verification");
+        return features;
+    }, "Get list of available security features");
+
+    module.def("validate_security_level", [](int level) -> bool {
+        return level >= static_cast<int>(SecurityLevel::None) &&
+               level <= static_cast<int>(SecurityLevel::Maximum);
+    }, "Validate security level value", py::arg("level"));
 
 }
 

@@ -15,6 +15,7 @@
 
 namespace py = pybind11;
 using namespace qtplugin;
+using namespace qtplugin::composition;
 
 namespace qtforge_python {
 
@@ -97,38 +98,38 @@ void bind_composition(py::module& m) {
                    "' plugins=" + std::to_string(comp.plugins().size()) + ">";
         });
 
-    // Plugin composition manager (singleton)
-    py::class_<CompositionManager>(m, "CompositionManager")
-        .def_static("instance", &CompositionManager::instance,
-                    py::return_value_policy::reference)
-        .def("register_composition",
-             &CompositionManager::register_composition)
-        .def("unregister_composition",
-             &CompositionManager::unregister_composition)
-        .def("get_composition", &CompositionManager::get_composition)
-        .def("list_compositions", &CompositionManager::list_compositions)
-        .def("create_composite_plugin",
-             &CompositionManager::create_composite_plugin)
-        .def("destroy_composite_plugin",
-             &CompositionManager::destroy_composite_plugin)
-        .def("list_composite_plugins",
-             &CompositionManager::list_composite_plugins)
-        .def("get_composite_plugin",
-             &CompositionManager::get_composite_plugin)
-        .def("__repr__", [](const CompositionManager& manager) {
-            auto compositions = manager.list_compositions();
-            return "<CompositionManager compositions=" +
-                   std::to_string(compositions.size()) + ">";
-        });
+    // Plugin composition manager (singleton) - DISABLED: Not implemented
+    // py::class_<CompositionManager>(m, "CompositionManager")
+    //     .def_static("instance", &CompositionManager::instance,
+    //                 py::return_value_policy::reference)
+    //     .def("register_composition",
+    //          &CompositionManager::register_composition)
+    //     .def("unregister_composition",
+    //          &CompositionManager::unregister_composition)
+    //     .def("get_composition", &CompositionManager::get_composition)
+    //     .def("list_compositions", &CompositionManager::list_compositions)
+    //     .def("create_composite_plugin",
+    //          &CompositionManager::create_composite_plugin)
+    //     .def("destroy_composite_plugin",
+    //          &CompositionManager::destroy_composite_plugin)
+    //     .def("list_composite_plugins",
+    //          &CompositionManager::list_composite_plugins)
+    //     .def("get_composite_plugin",
+    //          &CompositionManager::get_composite_plugin)
+    //     .def("__repr__", [](const CompositionManager& manager) {
+    //         auto compositions = manager.list_compositions();
+    //         return "<CompositionManager compositions=" +
+    //                std::to_string(compositions.size()) + ">";
+    //     });
 
     // Utility functions
-    m.def(
-        "get_composition_manager",
-        []() -> CompositionManager& {
-            return CompositionManager::instance();
-        },
-        py::return_value_policy::reference,
-        "Get the CompositionManager singleton instance");
+    // m.def(
+    //     "get_composition_manager",
+    //     []() -> CompositionManager& {
+    //         return CompositionManager::instance();
+    //     },
+    //     py::return_value_policy::reference,
+    //     "Get the CompositionManager singleton instance");
 
     m.def(
         "create_composition",
@@ -203,6 +204,30 @@ void bind_composition(py::module& m) {
         py::arg("backend_plugins"),
         "Create a facade composition with a primary facade plugin and backend "
         "plugins");
+
+    // === Additional Utility Functions ===
+    m.def("test_composition", []() -> std::string {
+        return "Composition module working!";
+    }, "Test function for composition module");
+
+    m.def("get_available_composition_features", []() -> py::list {
+        py::list features;
+        features.append("plugin_composition");
+        features.append("composition_strategies");
+        features.append("plugin_roles");
+        features.append("composition_bindings");
+        return features;
+    }, "Get list of available composition features");
+
+    m.def("validate_composition_strategy", [](int strategy) -> bool {
+        return strategy >= static_cast<int>(CompositionStrategy::Aggregation) &&
+               strategy <= static_cast<int>(CompositionStrategy::Bridge);
+    }, "Validate composition strategy value", py::arg("strategy"));
+
+    m.def("validate_plugin_role", [](int role) -> bool {
+        return role >= static_cast<int>(PluginRole::Primary) &&
+               role <= static_cast<int>(PluginRole::Bridge);
+    }, "Validate plugin role value", py::arg("role"));
 }
 
 }  // namespace qtforge_python

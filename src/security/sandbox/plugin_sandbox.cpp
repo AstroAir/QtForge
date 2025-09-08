@@ -4,7 +4,7 @@
  * @version 3.2.0
  */
 
-#include "../qtplugin/security/sandbox/plugin_sandbox.hpp"
+#include <qtplugin/security/sandbox/plugin_sandbox.hpp>
 #include "resource_monitor.hpp"
 #include "security_enforcer.hpp"
 #include <QCoreApplication>

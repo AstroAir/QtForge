@@ -1,13 +1,16 @@
 # System Design
 
-This document provides a comprehensive overview of QtForge's system architecture, design principles, and architectural patterns.
+This document provides a comprehensive overview of QtForge v3.2.0's system architecture, design principles, and architectural patterns, including the new multilingual plugin support and enhanced security features.
 
 ## Overview
 
-QtForge is designed as a modular, extensible plugin framework that enables the creation of sophisticated applications through composition of independent, reusable components. The architecture emphasizes:
+QtForge v3.2.0 is designed as a modular, extensible plugin framework that enables the creation of sophisticated applications through composition of independent, reusable components. The architecture emphasizes:
 
 - **Modularity**: Clear separation of concerns through plugin boundaries
 - **Extensibility**: Easy addition of new functionality without core changes
+- **Multilingual Support**: Native support for C++, Python, and Lua plugins
+- **Advanced Interfaces**: Support for IPlugin, IAdvancedPlugin, and IDynamicPlugin
+- **Enhanced Security**: Advanced sandboxing and policy validation
 - **Scalability**: Support for large numbers of plugins and complex workflows
 - **Reliability**: Robust error handling and fault isolation
 - **Performance**: Efficient resource utilization and communication
@@ -21,8 +24,14 @@ QtForge is designed as a modular, extensible plugin framework that enables the c
 │                    QtForge Application                      │
 ├─────────────────────────────────────────────────────────────┤
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐  │
-│  │   Plugin A  │  │   Plugin B  │  │      Plugin C       │  │
-│  │             │  │             │  │                     │  │
+│  │ C++ Plugin  │  │Python Plugin│  │    Lua Plugin       │  │
+│  │ (Native)    │  │ (Binding)   │  │   (Bridge)          │  │
+│  └─────────────┘  └─────────────┘  └─────────────────────┘  │
+├─────────────────────────────────────────────────────────────┤
+│                  Language Bridges                           │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐  │
+│  │   Native    │  │   Python    │  │    Lua Plugin       │  │
+│  │   C++ API   │  │  Bindings   │  │     Bridge          │  │
 │  └─────────────┘  └─────────────┘  └─────────────────────┘  │
 ├─────────────────────────────────────────────────────────────┤
 │                    Core Framework                           │
@@ -32,7 +41,7 @@ QtForge is designed as a modular, extensible plugin framework that enables the c
 │  └─────────────┘  └─────────────┘  └─────────────────────┘  │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐  │
 │  │  Security   │  │ Transaction │  │   Orchestration     │  │
-│  │  Manager    │  │  Manager    │  │     Engine          │  │
+│  │  Sandbox    │  │  Manager    │  │     Engine          │  │
 │  └─────────────┘  └─────────────┘  └─────────────────────┘  │
 ├─────────────────────────────────────────────────────────────┤
 │                   Platform Layer                            │
@@ -133,6 +142,56 @@ public:
     bool isServiceRegistered(const std::string& serviceId) const;
 };
 ```
+
+## Multilingual Plugin Architecture (v3.2.0)
+
+QtForge v3.2.0 introduces comprehensive multilingual plugin support, allowing plugins to be written in multiple programming languages while maintaining seamless interoperability.
+
+### Plugin Type System
+
+```cpp
+enum class PluginType {
+    Native,      // C++ plugins implementing IPlugin directly
+    Python,      // Python plugins using pybind11 bindings
+    Lua,         // Lua plugins using sol2 bridge
+    JavaScript,  // JavaScript plugins (planned)
+    Remote,      // Plugins running in separate processes
+    Composite    // Combinations of multiple plugin types
+};
+```
+
+### Language Bridge Architecture
+
+#### Python Bindings
+- **Technology**: pybind11 for seamless C++/Python integration
+- **Features**: Complete API coverage with type stubs for IDE support
+- **Performance**: Minimal overhead with direct C++ integration
+- **Type Safety**: Full Python type hints and runtime validation
+
+#### Lua Plugin Bridge
+- **Technology**: sol2 for C++/Lua integration
+- **Features**: Full QtForge API exposure to Lua scripts
+- **Sandboxing**: Secure execution environment for Lua plugins
+- **Hot Reload**: Dynamic plugin reloading capabilities
+
+#### Cross-Language Communication
+All plugin types can communicate seamlessly through the unified message bus and service contract system, regardless of their implementation language.
+
+### Advanced Plugin Interfaces
+
+#### IAdvancedPlugin
+Extends the basic IPlugin interface with:
+- Service contract support
+- Advanced communication capabilities
+- Dynamic capability negotiation
+- Enhanced metadata and versioning
+
+#### IDynamicPlugin
+Provides runtime interface adaptation:
+- Dynamic method and property access
+- Runtime capability discovery
+- Interface adaptation and proxying
+- Cross-language method invocation
 
 ## Design Principles
 

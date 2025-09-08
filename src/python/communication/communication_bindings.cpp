@@ -1,19 +1,19 @@
 /**
  * @file communication_bindings.cpp
  * @brief Communication system Python bindings
- * @version 3.0.0
+ * @version 3.2.0
  * @author QtForge Development Team
  */
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/chrono.h>
+#include <pybind11/functional.h>
 
 #include <qtplugin/communication/message_bus.hpp>
 #include <qtplugin/communication/message_types.hpp>
 #include <qtplugin/communication/plugin_service_contracts.hpp>
 #include <qtplugin/communication/request_response_system.hpp>
-
-#include "../qt_conversions.hpp"
 
 namespace py = pybind11;
 using namespace qtplugin;
@@ -21,11 +21,25 @@ using namespace qtplugin;
 namespace qtforge_python {
 
 void bind_communication(py::module& m) {
-    // Note: DeliveryMode and MessagePriority are already bound in core module
-    // We'll just reference them here if needed
+    // === Message Priority Enum ===
+    py::enum_<MessagePriority>(m, "MessagePriority", "Message priority levels")
+        .value("Low", MessagePriority::Low, "Low priority message")
+        .value("Normal", MessagePriority::Normal, "Normal priority message")
+        .value("High", MessagePriority::High, "High priority message")
+        .value("Critical", MessagePriority::Critical, "Critical priority message")
+        .export_values();
 
-    // Basic message interface (corrected to match actual API)
-    py::class_<IMessage, std::shared_ptr<IMessage>>(m, "IMessage")
+    // === Delivery Mode Enum ===
+    py::enum_<DeliveryMode>(m, "DeliveryMode", "Message delivery modes")
+        .value("Immediate", DeliveryMode::Immediate, "Deliver immediately (synchronous)")
+        .value("Queued", DeliveryMode::Queued, "Queue for later delivery (asynchronous)")
+        .value("Broadcast", DeliveryMode::Broadcast, "Broadcast to all subscribers")
+        .value("Unicast", DeliveryMode::Unicast, "Send to specific recipient")
+        .value("Multicast", DeliveryMode::Multicast, "Send to multiple recipients")
+        .export_values();
+
+    // === Basic Message Interface ===
+    py::class_<IMessage, std::shared_ptr<IMessage>>(m, "IMessage", "Base message interface")
         .def("type", &IMessage::type, "Get message type identifier")
         .def("sender", &IMessage::sender, "Get message sender")
         .def("timestamp", &IMessage::timestamp, "Get message timestamp")
@@ -68,9 +82,9 @@ void bind_communication(py::module& m) {
         .def("message_log", &IMessageBus::message_log, "Get message log",
              py::arg("limit") = 100);
 
-    // Message bus implementation
-    py::class_<MessageBus, IMessageBus, std::shared_ptr<MessageBus>>(m, "MessageBus")
-        .def(py::init<>(), "Create message bus")
+    // === Message Bus Implementation ===
+    py::class_<MessageBus, IMessageBus, std::shared_ptr<MessageBus>>(m, "MessageBus", "Message bus implementation")
+        .def(py::init<QObject*>(), "Create message bus", py::arg("parent") = nullptr)
         .def("__repr__", [](const MessageBus& bus) { return "<MessageBus>"; });
 
     // Service capability enum
@@ -138,13 +152,26 @@ void bind_communication(py::module& m) {
             return "<ServiceContract " + contract.service_name.toStdString() + ">";
         });
 
-    // Utility functions
-    m.def(
-        "create_message_bus",
-        []() -> std::shared_ptr<MessageBus> {
-            return std::make_shared<MessageBus>();
-        },
-        "Create a new MessageBus instance");
+    // === Utility Functions ===
+    m.def("create_message_bus", []() -> std::shared_ptr<MessageBus> {
+        return std::make_shared<MessageBus>();
+    }, "Create a new MessageBus instance");
+
+    m.def("test_communication", []() -> std::string {
+        return "Communication module working!";
+    }, "Test function for communication module");
+
+    m.def("create_service_contract", [](const std::string& service_name) -> contracts::ServiceContract {
+        return contracts::ServiceContract(QString::fromStdString(service_name));
+    }, "Create a new service contract", py::arg("service_name"));
+
+    m.def("get_available_features", []() -> py::list {
+        py::list features;
+        features.append("message_bus");
+        features.append("service_contracts");
+        features.append("message_types");
+        return features;
+    }, "Get list of available communication features");
 }
 
 }  // namespace qtforge_python

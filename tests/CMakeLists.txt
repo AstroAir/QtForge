@@ -159,6 +159,16 @@ if(QTFORGE_LUA_BINDINGS)
     )
 endif()
 
+# Python bridge tests (if enabled)
+if(QTFORGE_BUILD_PYTHON_BINDINGS AND QTFORGE_PYTHON_FOUND)
+    add_subdirectory(python_bridge)
+
+    add_custom_target(run_python_bridge_tests
+        COMMAND ${CMAKE_CTEST_COMMAND} -L "Python" --verbose
+        COMMENT "Running QtForge Python bridge tests"
+    )
+endif()
+
 # Run all tests
 add_custom_target(run_all_tests
     COMMAND ${CMAKE_CTEST_COMMAND} --verbose

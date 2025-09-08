@@ -1,17 +1,32 @@
 """
 QtForge Python Bindings
 
-A modern, type-safe plugin system for Qt applications with Python integration.
+A comprehensive, modern plugin system for Qt applications with full Python integration.
 
-This package provides Python bindings for the QtForge C++ library, enabling
-Python applications to use QtForge's plugin management, communication, and
-security features.
+This package provides complete Python bindings for the QtForge C++ library, enabling
+Python applications to leverage QtForge's advanced plugin management, inter-plugin
+communication, security, orchestration, monitoring, and marketplace features.
+
+Key Features:
+- Complete plugin lifecycle management
+- Inter-plugin communication system
+- Advanced security and validation
+- Plugin orchestration and workflows
+- Hot reloading and monitoring
+- Transaction management
+- Plugin composition patterns
+- Marketplace integration
+- Multi-threaded plugin execution
 
 Version: @PROJECT_VERSION@
+Build: @CMAKE_BUILD_TYPE@
 """
 
+from typing import Tuple, Optional, List, Dict, Any, Union
+
 __version__ = "@PROJECT_VERSION@"
-__version_info__ = (@PROJECT_VERSION_MAJOR@, @PROJECT_VERSION_MINOR@, @PROJECT_VERSION_PATCH@)
+__version_info__: Tuple[int, int, int] = (@PROJECT_VERSION_MAJOR@, @PROJECT_VERSION_MINOR@, @PROJECT_VERSION_PATCH@)
+__build_type__ = "@CMAKE_BUILD_TYPE@"
 
 # Import the compiled extension module
 try:
@@ -126,18 +141,74 @@ try:
         'threading',
     ]
 
-    # Module-level convenience functions
-    def create_plugin_manager():
-        """Create a new PluginManager instance with default settings."""
+    # Module-level convenience functions with type hints
+    def create_plugin_manager() -> 'PluginManager':
+        """
+        Create a new PluginManager instance with default settings.
+
+        Returns:
+            PluginManager: A new plugin manager instance ready for use
+
+        Example:
+            >>> import qtforge
+            >>> manager = qtforge.create_plugin_manager()
+            >>> print(manager.loaded_plugins())
+        """
         return PluginManager()
 
-    def get_version():
-        """Get the QtForge version string."""
-        return _qtforge_module.version()
+    def get_version() -> str:
+        """
+        Get the QtForge version string.
 
-    def get_version_info():
-        """Get the QtForge version as a tuple (major, minor, patch)."""
-        return _qtforge_module.version_info()
+        Returns:
+            str: Version string in format "major.minor.patch"
+        """
+        return _qtforge_module.get_version()
+
+    def get_version_info() -> Tuple[int, int, int]:
+        """
+        Get the QtForge version as a tuple.
+
+        Returns:
+            Tuple[int, int, int]: Version tuple (major, minor, patch)
+        """
+        return __version_info__
+
+    def get_build_info() -> Dict[str, Any]:
+        """
+        Get comprehensive build and system information.
+
+        Returns:
+            Dict[str, Any]: Build information including version, modules, and features
+        """
+        return _qtforge_module.get_build_info()
+
+    def list_available_modules() -> List[str]:
+        """
+        List all available QtForge modules.
+
+        Returns:
+            List[str]: List of available module names
+        """
+        return _qtforge_module.list_available_modules()
+
+    def test_connection() -> str:
+        """
+        Test the QtForge Python bindings connection.
+
+        Returns:
+            str: Test message confirming bindings are working
+        """
+        return _qtforge_module.test_connection()
+
+    def get_help() -> str:
+        """
+        Get comprehensive help information for QtForge Python bindings.
+
+        Returns:
+            str: Detailed help text with usage examples
+        """
+        return _qtforge_module.get_help()
 
 except ImportError as e:
     import sys

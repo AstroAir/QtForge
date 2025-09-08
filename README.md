@@ -22,16 +22,37 @@ QtForge is a comprehensive plugin management library designed for Qt application
 
 ## Features
 
+### Core System
 - **Modern C++ Implementation**: Built with C++20 standards and best practices
 - **Qt6 Integration**: Seamless integration with Qt6 framework and MOC system
 - **Type Safety**: Robust error handling with comprehensive validation
 - **Modular Design**: Core and security components with optional extensions
 - **Thread Safety**: Safe concurrent plugin operations and background tasks
+
+### Plugin Management
+- **Advanced Plugin Interfaces**: Support for `IAdvancedPlugin` and `IDynamicPlugin` with dynamic capabilities
 - **Plugin Lifecycle Management**: Complete plugin state management and monitoring
 - **Version Management**: Plugin versioning with storage and compatibility tracking
-- **Security**: Plugin validation, trust management, and secure loading
+- **Hot Reload**: Dynamic plugin reloading during runtime
+- **Plugin Types**: Support for Native, Python, JavaScript, Lua, Remote, and Composite plugins
+
+### Multilingual Support
+- **Python Bindings**: Complete Python API with type stubs for IDE support
+- **Lua Plugin Bridge**: Full Lua plugin support with sol2 integration
+- **JavaScript Support**: Planned JavaScript plugin support
+- **Cross-Language Communication**: Seamless communication between different plugin types
+
+### Security & Performance
+- **Enhanced Security Sandbox**: Advanced plugin sandboxing with policy validation
+- **Security Policy Engine**: Comprehensive security policy management and enforcement
+- **Resource Monitoring**: Advanced resource usage monitoring and threshold management
 - **Performance**: Efficient loading, communication, and resource management
+
+### Developer Experience
+- **Service Contract System**: Complete communication system with service discovery
 - **Background Services**: Support for background task processing and services
+- **Comprehensive Testing**: Full test coverage with automated validation
+- **Rich Documentation**: Complete API documentation with examples and guides
 
 ## Project Structure
 
@@ -84,8 +105,8 @@ QtForge/
 include(FetchContent)
 FetchContent_Declare(
     QtForge
-    GIT_REPOSITORY https://github.com/example/qtforge.git
-    GIT_TAG        v1.0.0
+    GIT_REPOSITORY https://github.com/AstroAir/QtForge.git
+    GIT_TAG        v3.2.0
 )
 FetchContent_MakeAvailable(QtForge)
 
@@ -135,7 +156,57 @@ int main(int argc, char *argv[]) {
 }
 ```
 
-### Creating a Plugin
+### Python Integration
+
+QtForge v3.2.0 includes comprehensive Python bindings:
+
+```python
+import qtforge
+
+# Create plugin manager
+manager = qtforge.core.create_plugin_manager()
+
+# Load a plugin
+result = manager.load_plugin("./plugins/example_plugin.qtplugin")
+if result.success:
+    plugin = manager.get_plugin(result.plugin_id)
+    print(f"Loaded plugin: {plugin.name}")
+
+    # Initialize the plugin
+    init_result = plugin.initialize()
+    if init_result.success:
+        print("Plugin initialized successfully")
+```
+
+### Lua Plugin Support
+
+Create Lua-based plugins with full QtForge integration:
+
+```lua
+-- example_plugin.lua
+local plugin = {}
+
+function plugin.initialize()
+    qtforge.utils.log_info("Lua plugin initializing...")
+    return true
+end
+
+function plugin.process_data(input)
+    local result = qtforge.utils.to_upper(input)
+    return {
+        success = true,
+        result = result
+    }
+end
+
+plugin.name = "Example Lua Plugin"
+plugin.version = "1.0.0"
+plugin.description = "A simple Lua plugin example"
+
+return plugin
+```
+
+### Creating a C++ Plugin
 
 ```cpp
 #include <qtplugin/qtplugin.hpp>
@@ -301,7 +372,7 @@ See [CHANGELOG.md](../CHANGELOG.md) for a list of changes and version history.
 
 ## ✅ Implementation Status
 
-QtForge v3.0.0 — Completed & fully functional
+QtForge v3.2.0 — Completed & fully functional
 
 ### Build Status: ✅ SUCCESS
 

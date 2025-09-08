@@ -1,9 +1,9 @@
 # QtForge Python API Overview
 
 !!! info "Python Integration"
-**Module**: `qtforge`  
- **Python Version**: 3.8+  
- **Since**: QtForge v3.0.0  
+**Module**: `qtforge`
+ **Python Version**: 3.8+
+ **Since**: QtForge v3.0.0, Enhanced in v3.2.0
  **Status**: Stable
 
 ## Overview
@@ -13,11 +13,14 @@ QtForge provides comprehensive Python bindings that expose the full C++ API to P
 ### Key Features
 
 - **Complete API Coverage**: All major QtForge components available in Python
-- **Type Safety**: Strong typing with proper error handling
+- **Enhanced Type Safety**: Full type stubs (.pyi files) for comprehensive IDE support
+- **Advanced Plugin Interfaces**: Support for `IAdvancedPlugin` and `IDynamicPlugin`
+- **Service Contract System**: Complete communication system with service discovery
 - **Performance**: Minimal overhead with direct C++ integration
 - **Pythonic Interface**: Natural Python syntax and conventions
 - **Cross-Platform**: Works on Windows, macOS, and Linux
 - **Qt Integration**: Seamless integration with PyQt/PySide applications
+- **Hot Reload Support**: Dynamic plugin reloading capabilities
 
 ### Module Structure
 
@@ -410,4 +413,4 @@ hot_reload.set_global_hot_reload_enabled(True)
 
 ---
 
-_Last updated: December 2024 | QtForge v3.0.0_
+_Last updated: September 2024 | QtForge v3.2.0_

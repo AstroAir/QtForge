@@ -1,24 +1,26 @@
 # Getting Started with QtForge - Complete Tutorial
 
 !!! info "Tutorial Information"
-**Difficulty**: Beginner  
- **Duration**: 45-60 minutes  
- **Prerequisites**: Basic C++ knowledge, Qt6 installed  
- **QtForge Version**: v3.0+
+**Difficulty**: Beginner
+ **Duration**: 45-60 minutes
+ **Prerequisites**: Basic C++ knowledge, Qt6 installed
+ **QtForge Version**: v3.2.0+
 
 ## Overview
 
-This comprehensive tutorial will guide you through creating your first QtForge plugin system from scratch. You'll learn how to set up the environment, create plugins, manage them, and build a simple application that uses the plugin system.
+This comprehensive tutorial will guide you through creating your first QtForge v3.2.0 plugin system from scratch. You'll learn how to set up the environment, create plugins (including Python and Lua plugins), manage them, and build a simple application that uses the enhanced plugin system.
 
 ### What You'll Build
 
 By the end of this tutorial, you'll have:
 
-- [x] A working QtForge development environment
-- [x] A simple calculator plugin
-- [x] A plugin manager application
+- [x] A working QtForge v3.2.0 development environment
+- [x] A simple C++ calculator plugin
+- [x] A Python plugin example (new in v3.2.0)
+- [x] A Lua plugin example (new in v3.2.0)
+- [x] A plugin manager application with multilingual support
 - [x] Understanding of plugin lifecycle management
-- [x] Knowledge of inter-plugin communication
+- [x] Knowledge of inter-plugin communication and service contracts
 
 ### Learning Objectives
 
@@ -405,6 +407,215 @@ make
 # Verify the plugin was built
 ls -la plugins/
 # Should show: calculator_plugin.so (or .dll on Windows) and calculator_plugin.json
+```
+
+## Step 2.5: Creating Multilingual Plugins (v3.2.0)
+
+QtForge v3.2.0 introduces support for Python and Lua plugins. Let's create examples of each.
+
+### 2.5.1 Python Plugin
+
+Create a Python calculator plugin:
+
+**calculator_plugin.py**
+
+```python
+#!/usr/bin/env python3
+"""
+QtForge Python Calculator Plugin
+Demonstrates basic arithmetic operations using Python bindings
+"""
+
+import qtforge
+from qtforge.core import IPlugin, PluginState, PluginCapability
+
+class PythonCalculatorPlugin(IPlugin):
+    def __init__(self):
+        super().__init__()
+        self._name = "Python Calculator Plugin"
+        self._version = "1.0.0"
+        self._description = "A simple calculator plugin written in Python"
+        self._state = PluginState.Unloaded
+
+    def name(self):
+        return self._name
+
+    def version(self):
+        return self._version
+
+    def description(self):
+        return self._description
+
+    def state(self):
+        return self._state
+
+    def capabilities(self):
+        return [PluginCapability.Service, PluginCapability.DataProcessing]
+
+    def initialize(self):
+        """Initialize the Python plugin"""
+        try:
+            print(f"Initializing {self._name}")
+            self._state = PluginState.Running
+            return {"success": True, "message": "Python plugin initialized successfully"}
+        except Exception as e:
+            self._state = PluginState.Error
+            return {"success": False, "message": f"Initialization failed: {str(e)}"}
+
+    def shutdown(self):
+        """Shutdown the plugin"""
+        print(f"Shutting down {self._name}")
+        self._state = PluginState.Stopped
+
+    def execute_command(self, command, params):
+        """Execute calculator commands"""
+        try:
+            if command == "add":
+                result = params.get("a", 0) + params.get("b", 0)
+                return {"success": True, "result": result}
+            elif command == "subtract":
+                result = params.get("a", 0) - params.get("b", 0)
+                return {"success": True, "result": result}
+            elif command == "multiply":
+                result = params.get("a", 0) * params.get("b", 0)
+                return {"success": True, "result": result}
+            elif command == "divide":
+                b = params.get("b", 1)
+                if b == 0:
+                    return {"success": False, "error": "Division by zero"}
+                result = params.get("a", 0) / b
+                return {"success": True, "result": result}
+            else:
+                return {"success": False, "error": f"Unknown command: {command}"}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+# Plugin factory function
+def create_plugin():
+    return PythonCalculatorPlugin()
+```
+
+### 2.5.2 Lua Plugin
+
+Create a Lua calculator plugin:
+
+**calculator_plugin.lua**
+
+```lua
+-- QtForge Lua Calculator Plugin
+-- Demonstrates basic arithmetic operations using Lua bridge
+
+local plugin = {}
+
+-- Plugin metadata
+plugin.name = "Lua Calculator Plugin"
+plugin.version = "1.0.0"
+plugin.description = "A simple calculator plugin written in Lua"
+plugin.state = qtforge.core.PluginState.Unloaded
+
+-- Plugin capabilities
+plugin.capabilities = {
+    qtforge.core.PluginCapability.Service,
+    qtforge.core.PluginCapability.DataProcessing
+}
+
+-- Initialize the plugin
+function plugin.initialize()
+    qtforge.utils.log_info("Initializing " .. plugin.name)
+    plugin.state = qtforge.core.PluginState.Running
+    return {
+        success = true,
+        message = "Lua plugin initialized successfully"
+    }
+end
+
+-- Shutdown the plugin
+function plugin.shutdown()
+    qtforge.utils.log_info("Shutting down " .. plugin.name)
+    plugin.state = qtforge.core.PluginState.Stopped
+end
+
+-- Execute calculator commands
+function plugin.execute_command(command, params)
+    local a = params.a or 0
+    local b = params.b or 0
+
+    if command == "add" then
+        return {
+            success = true,
+            result = a + b
+        }
+    elseif command == "subtract" then
+        return {
+            success = true,
+            result = a - b
+        }
+    elseif command == "multiply" then
+        return {
+            success = true,
+            result = a * b
+        }
+    elseif command == "divide" then
+        if b == 0 then
+            return {
+                success = false,
+                error = "Division by zero"
+            }
+        end
+        return {
+            success = true,
+            result = a / b
+        }
+    else
+        return {
+            success = false,
+            error = "Unknown command: " .. command
+        }
+    end
+end
+
+-- Available commands
+function plugin.available_commands()
+    return {"add", "subtract", "multiply", "divide"}
+end
+
+return plugin
+```
+
+### 2.5.3 Plugin Registration
+
+Create metadata files for the multilingual plugins:
+
+**python_calculator.json**
+
+```json
+{
+    "name": "Python Calculator Plugin",
+    "version": "1.0.0",
+    "description": "A simple calculator plugin written in Python",
+    "type": "python",
+    "entry_point": "calculator_plugin.py",
+    "dependencies": [],
+    "capabilities": ["service", "data_processing"],
+    "author": "QtForge Tutorial",
+    "license": "MIT"
+}
+```
+
+**lua_calculator.json**
+
+```json
+{
+    "name": "Lua Calculator Plugin",
+    "version": "1.0.0",
+    "description": "A simple calculator plugin written in Lua",
+    "type": "lua",
+    "entry_point": "calculator_plugin.lua",
+    "dependencies": [],
+    "capabilities": ["service", "data_processing"],
+    "author": "QtForge Tutorial",
+    "license": "MIT"
+}
 ```
 
 ## Step 3: Create a Plugin Manager Application

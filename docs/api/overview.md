@@ -1,16 +1,17 @@
 # API Overview
 
-QtForge provides a comprehensive C++ API for building modular, plugin-based applications. This overview introduces the key concepts and components of the framework.
+QtForge v3.2.0 provides a comprehensive C++ API for building modular, plugin-based applications with advanced multilingual support. This overview introduces the key concepts and components of the framework.
 
 ## Core Architecture
 
 QtForge is built around several key architectural principles:
 
-- **Plugin Interface**: Standardized interface for all plugins
-- **Plugin Manager**: Central orchestration of plugin lifecycle
-- **Message Bus**: Type-safe inter-plugin communication
-- **Security Model**: Multi-layer plugin validation and trust
-- **Resource Management**: Automatic resource lifecycle tracking
+- **Advanced Plugin Interfaces**: Support for `IPlugin`, `IAdvancedPlugin`, and `IDynamicPlugin`
+- **Plugin Manager**: Central orchestration of plugin lifecycle with hot reload support
+- **Service Contract System**: Type-safe inter-plugin communication with service discovery
+- **Enhanced Security Model**: Multi-layer plugin validation, sandboxing, and trust management
+- **Resource Management**: Automatic resource lifecycle tracking with monitoring
+- **Multilingual Support**: Native support for C++, Python, and Lua plugins
 
 ## API Organization
 
@@ -18,11 +19,14 @@ The QtForge API is organized into several modules:
 
 ### Core Module (`qtforge::core`)
 
-The foundation of the plugin system:
+The foundation of the plugin system with enhanced interfaces:
 
 - **[IPlugin](core/plugin-interface.md)**: Base interface for all plugins
-- **[PluginManager](core/plugin-manager.md)**: Central plugin management
-- **[PluginLoader](core/plugin-loader.md)**: Dynamic library loading
+- **[IAdvancedPlugin](core/advanced-plugin-interface.md)**: Advanced plugin interface with service contracts
+- **[IDynamicPlugin](core/dynamic-plugin-interface.md)**: Dynamic interface adaptation and capability negotiation
+- **[PluginManager](core/plugin-manager.md)**: Central plugin management with hot reload support
+- **[PluginLoader](core/plugin-loader.md)**: Dynamic library loading with multilingual support
+- **[PluginType](core/plugin-types.md)**: Support for Native, Python, Lua, JavaScript, Remote, and Composite plugins
 
 ### Communication Module (`qtforge::communication`)
 
@@ -33,10 +37,14 @@ Inter-plugin messaging and events:
 
 ### Security Module (`qtforge::security`)
 
-Plugin validation and trust management:
+Enhanced plugin validation, sandboxing, and trust management:
 
-- **[SecurityManager](security/security-manager.md)**: Security policy enforcement
-- **[PluginValidator](security/plugin-validator.md)**: Plugin verification
+- **[SecurityManager](security/security-manager.md)**: Security policy enforcement and management
+- **[PluginValidator](security/plugin-validator.md)**: Plugin verification and validation
+- **[PluginSandbox](security/plugin-sandbox.md)**: Advanced plugin sandboxing with policy validation
+- **[SecurityPolicyValidator](security/security-policy-validator.md)**: Security policy integrity validation
+- **[ResourceMonitor](security/resource-monitor.md)**: Resource usage monitoring and threshold management
+- **[SecurityEnforcer](security/security-enforcer.md)**: Policy enforcement with signal handling
 
 ### Orchestration Module (`qtforge::orchestration`)
 

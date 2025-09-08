@@ -246,20 +246,22 @@ void PerformanceTests::testMemoryUsageBaseline() {
     auto manager = std::make_unique<qtplugin::PluginManager>();
 
     size_t after_manager = getCurrentMemoryUsage();
-    size_t manager_overhead = after_manager - initial_memory;
+
+    // Calculate memory overhead safely (handle case where memory usage decreases)
+    qint64 manager_overhead = static_cast<qint64>(after_manager) - static_cast<qint64>(initial_memory);
 
     qDebug() << "Memory usage baseline:";
     qDebug() << "  Initial memory:" << initial_memory << "bytes";
     qDebug() << "  After PluginManager:" << after_manager << "bytes";
     qDebug() << "  Manager overhead:" << manager_overhead << "bytes";
 
-    // Manager should use less than 10MB baseline
-    QVERIFY2(manager_overhead < 10 * 1024 * 1024,
-             QString("PluginManager uses too much memory: %1 bytes")
+    // Manager should use less than 10MB baseline (allow negative values for memory fluctuation)
+    QVERIFY2(manager_overhead < 10 * 1024 * 1024 && manager_overhead > -10 * 1024 * 1024,
+             QString("PluginManager memory usage is unexpected: %1 bytes")
                  .arg(manager_overhead)
                  .toLocal8Bit());
 
-    logPerformanceResult("Memory Baseline", manager_overhead, "bytes");
+    logPerformanceResult("Memory Baseline", qAbs(manager_overhead), "bytes");
 }
 
 void PerformanceTests::testMemoryUsageWithPlugins() {

@@ -1,12 +1,12 @@
 # Examples
 
-This section provides comprehensive examples demonstrating QtPlugin's capabilities. Each example includes complete source code, detailed explanations, and practical use cases.
+This section provides comprehensive examples demonstrating QtForge v3.2.0's capabilities, including the new multilingual plugin support. Each example includes complete source code, detailed explanations, and practical use cases.
 
 ## 📚 Example Categories
 
 ### 🎯 Getting Started Examples
 
-Perfect for beginners learning QtPlugin fundamentals:
+Perfect for beginners learning QtForge fundamentals:
 
 <div class="grid cards" markdown>
 
@@ -75,6 +75,59 @@ For developers building production applications:
   - Custom dialogs
   - Event handling
   - Theme support
+
+  **Difficulty:** Advanced
+
+</div>
+
+### 🌐 Multilingual Examples (v3.2.0)
+
+Demonstrating QtForge's multilingual plugin support:
+
+<div class="grid cards" markdown>
+
+- :material-language-python: **[Python Examples](python-examples.md)**
+
+  ***
+
+  Complete Python plugin examples with bindings
+
+  **Features:**
+
+  - Python plugin development
+  - Type stubs and IDE support
+  - Cross-language communication
+  - Advanced plugin interfaces
+
+  **Difficulty:** Intermediate
+
+- :material-code-braces: **[Lua Examples](multilingual-examples.md#lua-plugins)**
+
+  ***
+
+  Lua plugin bridge demonstrations
+
+  **Features:**
+
+  - Lua plugin development
+  - Sol2 integration
+  - Sandboxed execution
+  - Hot reload capabilities
+
+  **Difficulty:** Intermediate
+
+- :material-translate: **[Cross-Language Communication](multilingual-examples.md#cross-language)**
+
+  ***
+
+  Plugins in different languages working together
+
+  **Features:**
+
+  - C++, Python, and Lua interoperability
+  - Service contract system
+  - Unified message bus
+  - Dynamic capability negotiation
 
   **Difficulty:** Advanced
 

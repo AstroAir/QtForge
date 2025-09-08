@@ -30,11 +30,11 @@ QtForge is a **modern, enterprise-grade C++ plugin system** built on Qt 6 that e
 - **📊 Version Management** - Multi-version plugin support with migration and rollback
 - **🛡️ Security** - Plugin validation and sandboxing capabilities
 - **⚡ Performance** - Efficient loading and communication mechanisms
-- **🌐 Multi-Language**: Python and Lua bindings with JavaScript planned
+- **🌐 Multi-Language**: Complete Python and Lua bindings with comprehensive API coverage
 
 ### 🎉 Production Ready
 
-**Latest Status**: QtForge v3.0.0 - All core libraries and comprehensive test suites are building and passing successfully!
+**Latest Status**: QtForge v3.2.0 - All core libraries and comprehensive test suites are building and passing successfully!
 
 - ✅ **Core Library**: `libqtforge-core.dll` (4.6MB) - Complete implementation
 - ✅ **Security Module**: `libqtforge-security.dll` (234KB) - Full security features

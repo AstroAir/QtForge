@@ -1,9 +1,9 @@
 # QtForge Lua API Overview
 
 !!! info "Lua Integration"
-**Module**: `qtforge`  
- **Lua Version**: 5.4+  
- **Since**: QtForge v3.0.0  
+**Module**: `qtforge`
+ **Lua Version**: 5.4+
+ **Since**: QtForge v3.0.0, Enhanced in v3.2.0
  **Status**: Stable
 
 ## Overview
@@ -334,4 +334,4 @@ end
 
 ---
 
-_Last updated: September 2024 | QtForge v3.0.0_
+_Last updated: September 2024 | QtForge v3.2.0_

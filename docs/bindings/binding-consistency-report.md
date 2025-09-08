@@ -1,4 +1,4 @@
-# QtForge Binding Consistency Report v3.0.0 v3.2.0
+# QtForge Binding Consistency Report v3.2.0
 
 This document verifies the consistency between Python and Lua bindings for QtForge v3.2.0.
 

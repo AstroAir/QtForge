@@ -14,22 +14,22 @@
 
 #pragma once
 
-#include "../../core/dynamic_plugin_interface.hpp"
-#include "../../composition/plugin_composition.hpp"
-#include <QObject>
-#include <QJsonObject>
+#include <QGraphicsScene>
+#include <QGraphicsView>
 #include <QJsonArray>
+#include <QJsonObject>
+#include <QMutex>
+#include <QObject>
 #include <QString>
 #include <QStringList>
 #include <QTimer>
-#include <QMutex>
-#include <QGraphicsScene>
-#include <QGraphicsView>
-#include <memory>
-#include <vector>
-#include <unordered_map>
-#include <functional>
 #include <chrono>
+#include <functional>
+#include <memory>
+#include <unordered_map>
+#include <vector>
+#include "../../composition/plugin_composition.hpp"
+#include "../../core/dynamic_plugin_interface.hpp"
 
 namespace qtplugin {
 
@@ -37,11 +37,11 @@ namespace qtplugin {
  * @brief Plugin workflow execution modes
  */
 enum class WorkflowExecutionMode {
-    Sequential,     ///< Execute plugins sequentially
-    Parallel,       ///< Execute plugins in parallel
-    Conditional,    ///< Execute based on conditions
-    EventDriven,    ///< Execute based on events
-    Streaming       ///< Execute in streaming mode
+    Sequential,   ///< Execute plugins sequentially
+    Parallel,     ///< Execute plugins in parallel
+    Conditional,  ///< Execute based on conditions
+    EventDriven,  ///< Execute based on events
+    Streaming     ///< Execute in streaming mode
 };
 
 /**
@@ -65,20 +65,21 @@ struct WorkflowNode {
     /**
      * @brief Create from JSON representation
      */
-    static qtplugin::expected<WorkflowNode, PluginError> from_json(const QJsonObject& json);
+    static qtplugin::expected<WorkflowNode, PluginError> from_json(
+        const QJsonObject& json);
 };
 
 /**
  * @brief Connection between workflow nodes
  */
 struct WorkflowConnection {
-    QString connection_id;              ///< Unique connection identifier
-    QString source_node_id;             ///< Source node identifier
-    QString source_port;                ///< Source port name
-    QString target_node_id;             ///< Target node identifier
-    QString target_port;                ///< Target port name
-    QJsonObject data_transformation;    ///< Data transformation rules
-    bool enabled{true};                 ///< Whether connection is enabled
+    QString connection_id;            ///< Unique connection identifier
+    QString source_node_id;           ///< Source node identifier
+    QString source_port;              ///< Source port name
+    QString target_node_id;           ///< Target node identifier
+    QString target_port;              ///< Target port name
+    QJsonObject data_transformation;  ///< Data transformation rules
+    bool enabled{true};               ///< Whether connection is enabled
 
     /**
      * @brief Convert to JSON representation
@@ -88,21 +89,22 @@ struct WorkflowConnection {
     /**
      * @brief Create from JSON representation
      */
-    static qtplugin::expected<WorkflowConnection, PluginError> from_json(const QJsonObject& json);
+    static qtplugin::expected<WorkflowConnection, PluginError> from_json(
+        const QJsonObject& json);
 };
 
 /**
  * @brief Plugin workflow definition
  */
 struct PluginWorkflow {
-    QString workflow_id;                        ///< Unique workflow identifier
-    QString name;                               ///< Workflow name
-    QString description;                        ///< Workflow description
+    QString workflow_id;  ///< Unique workflow identifier
+    QString name;         ///< Workflow name
+    QString description;  ///< Workflow description
     WorkflowExecutionMode execution_mode{WorkflowExecutionMode::Sequential};
-    std::vector<WorkflowNode> nodes;            ///< Workflow nodes
-    std::vector<WorkflowConnection> connections; ///< Node connections
-    QJsonObject global_configuration;          ///< Global workflow configuration
-    QJsonObject metadata;                       ///< Additional metadata
+    std::vector<WorkflowNode> nodes;              ///< Workflow nodes
+    std::vector<WorkflowConnection> connections;  ///< Node connections
+    QJsonObject global_configuration;  ///< Global workflow configuration
+    QJsonObject metadata;              ///< Additional metadata
 
     /**
      * @brief Convert to JSON representation
@@ -112,7 +114,8 @@ struct PluginWorkflow {
     /**
      * @brief Create from JSON representation
      */
-    static qtplugin::expected<PluginWorkflow, PluginError> from_json(const QJsonObject& json);
+    static qtplugin::expected<PluginWorkflow, PluginError> from_json(
+        const QJsonObject& json);
 
     /**
      * @brief Validate workflow structure
@@ -129,12 +132,14 @@ struct PluginWorkflow {
  * @brief Workflow execution context
  */
 struct WorkflowExecutionContext {
-    QString execution_id;                       ///< Unique execution identifier
+    QString execution_id;  ///< Unique execution identifier
     std::chrono::steady_clock::time_point start_time;
-    std::unordered_map<QString, QJsonObject> node_outputs; ///< Node output data
-    std::unordered_map<QString, QJsonObject> node_states;  ///< Node execution states
-    QJsonObject global_data;                    ///< Global workflow data
-    bool cancelled{false};                      ///< Whether execution is cancelled
+    std::unordered_map<QString, QJsonObject>
+        node_outputs;  ///< Node output data
+    std::unordered_map<QString, QJsonObject>
+        node_states;          ///< Node execution states
+    QJsonObject global_data;  ///< Global workflow data
+    bool cancelled{false};    ///< Whether execution is cancelled
 
     /**
      * @brief Convert to JSON representation
@@ -157,7 +162,8 @@ public:
      * @param workflow Workflow definition
      * @return Success or error
      */
-    qtplugin::expected<void, PluginError> register_workflow(const PluginWorkflow& workflow);
+    qtplugin::expected<void, PluginError> register_workflow(
+        const PluginWorkflow& workflow);
 
     /**
      * @brief Unregister a workflow
@@ -185,8 +191,8 @@ public:
      * @param execution_id Execution identifier
      * @return Execution context or error
      */
-    qtplugin::expected<WorkflowExecutionContext, PluginError> get_execution_status(
-        const QString& execution_id);
+    qtplugin::expected<WorkflowExecutionContext, PluginError>
+    get_execution_status(const QString& execution_id);
 
     /**
      * @brief Get registered workflows
@@ -198,14 +204,16 @@ public:
      * @param workflow_id Workflow identifier
      * @return Workflow definition or error
      */
-    qtplugin::expected<PluginWorkflow, PluginError> get_workflow(const QString& workflow_id);
+    qtplugin::expected<PluginWorkflow, PluginError> get_workflow(
+        const QString& workflow_id);
 
     /**
      * @brief Create workflow from composition
      * @param composition Plugin composition
      * @return Workflow definition or error
      */
-    qtplugin::expected<PluginWorkflow, PluginError> create_workflow_from_composition(
+    qtplugin::expected<PluginWorkflow, PluginError>
+    create_workflow_from_composition(
         const qtplugin::composition::PluginComposition& composition);
 
     /**
@@ -213,29 +221,34 @@ public:
      * @param workflow_id Workflow identifier
      * @return Optimized workflow or error
      */
-    qtplugin::expected<PluginWorkflow, PluginError> optimize_workflow(const QString& workflow_id);
+    qtplugin::expected<PluginWorkflow, PluginError> optimize_workflow(
+        const QString& workflow_id);
 
 signals:
     /**
      * @brief Emitted when workflow execution starts
      */
-    void workflow_execution_started(const QString& execution_id, const QString& workflow_id);
+    void workflow_execution_started(const QString& execution_id,
+                                    const QString& workflow_id);
 
     /**
      * @brief Emitted when workflow execution completes
      */
-    void workflow_execution_completed(const QString& execution_id, const QJsonObject& result);
+    void workflow_execution_completed(const QString& execution_id,
+                                      const QJsonObject& result);
 
     /**
      * @brief Emitted when workflow execution fails
      */
-    void workflow_execution_failed(const QString& execution_id, const QString& error);
+    void workflow_execution_failed(const QString& execution_id,
+                                   const QString& error);
 
     /**
      * @brief Emitted when node execution completes
      */
-    void node_execution_completed(const QString& execution_id, const QString& node_id,
-                                 const QJsonObject& output);
+    void node_execution_completed(const QString& execution_id,
+                                  const QString& node_id,
+                                  const QJsonObject& output);
 
     /**
      * @brief Emitted when workflow execution is cancelled
@@ -265,8 +278,10 @@ private:
     qtplugin::expected<void, PluginError> execute_streaming_workflow(
         const QString& execution_id, const PluginWorkflow& workflow);
 
-    QJsonObject transform_data(const QJsonObject& data, const QJsonObject& transformation);
-    bool evaluate_condition(const QJsonObject& condition, const WorkflowExecutionContext& context);
+    QJsonObject transform_data(const QJsonObject& data,
+                               const QJsonObject& transformation);
+    bool evaluate_condition(const QJsonObject& condition,
+                            const WorkflowExecutionContext& context);
     QString generate_execution_id();
 };
 
@@ -319,8 +334,10 @@ public:
      * @param target_port Target port name
      * @return Connection identifier
      */
-    QString connect_nodes(const QString& source_node, const QString& source_port,
-                         const QString& target_node, const QString& target_port);
+    QString connect_nodes(const QString& source_node,
+                          const QString& source_port,
+                          const QString& target_node,
+                          const QString& target_port);
 
     /**
      * @brief Remove a connection
@@ -364,4 +381,4 @@ private:
     QString generate_connection_id();
 };
 
-} // namespace qtplugin
+}  // namespace qtplugin

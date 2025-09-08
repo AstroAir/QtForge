@@ -27,12 +27,14 @@ We welcome several types of contributions:
 ### Development Setup
 
 1. **Fork and Clone**
+
    ```bash
    git clone https://github.com/AstroAir/QtForge.git
    cd QtForge
    ```
 
 2. **Create Development Branch**
+
    ```bash
    git checkout -b feature/your-feature-name
    # or
@@ -40,6 +42,7 @@ We welcome several types of contributions:
    ```
 
 3. **Build and Test**
+
    ```bash
    mkdir build && cd build
    cmake .. -DQTFORGE_BUILD_TESTS=ON -DCMAKE_BUILD_TYPE=Debug
@@ -48,10 +51,11 @@ We welcome several types of contributions:
    ```
 
 4. **Verify Everything Works**
+
    ```bash
    # Run all tests
    ctest --verbose
-   
+
    # Run examples
    ./examples/basic_plugin_example
    ./examples/service_plugin_example
@@ -75,17 +79,17 @@ We follow modern C++ best practices:
 // Use Qt-style naming
 class PluginManager : public QObject {
     Q_OBJECT
-    
+
 public:
     explicit PluginManager(QObject* parent = nullptr);
-    
+
     // Use camelCase for methods
     bool loadPlugin(const QString& pluginPath);
     QList<PluginInfo> getAvailablePlugins() const;
-    
+
 private slots:
     void onPluginLoaded(const QString& pluginId);
-    
+
 private:
     // Use m_ prefix for member variables
     QHash<QString, PluginInterface*> m_loadedPlugins;
@@ -105,7 +109,7 @@ private:
  * @brief Loads a plugin from the specified path
  * @param pluginPath Path to the plugin file
  * @return true if plugin loaded successfully, false otherwise
- * 
+ *
  * @code
  * PluginManager manager;
  * if (manager.loadPlugin("/path/to/plugin.dll")) {
@@ -130,15 +134,15 @@ bool loadPlugin(const QString& pluginPath);
 ```cpp
 class PluginManagerTest : public QObject {
     Q_OBJECT
-    
+
 private slots:
     void initTestCase();
     void cleanupTestCase();
-    
+
     void testLoadPlugin();
     void testUnloadPlugin();
     void testPluginDependencies();
-    
+
 private:
     PluginManager* m_manager;
 };
@@ -146,10 +150,10 @@ private:
 void PluginManagerTest::testLoadPlugin() {
     // Arrange
     QString pluginPath = "test_plugin.dll";
-    
+
     // Act
     bool result = m_manager->loadPlugin(pluginPath);
-    
+
     // Assert
     QVERIFY(result);
     QVERIFY(m_manager->isPluginLoaded("test_plugin"));
@@ -170,9 +174,11 @@ void PluginManagerTest::testLoadPlugin() {
 
 ```markdown
 ## Description
+
 Brief description of changes
 
 ## Type of Change
+
 - [ ] Bug fix
 - [ ] New feature
 - [ ] Documentation update
@@ -180,12 +186,14 @@ Brief description of changes
 - [ ] Code refactoring
 
 ## Testing
+
 - [ ] Unit tests added/updated
 - [ ] Integration tests added/updated
 - [ ] All tests pass
 - [ ] Manual testing completed
 
 ## Checklist
+
 - [ ] Code follows style guidelines
 - [ ] Self-review completed
 - [ ] Documentation updated
@@ -208,6 +216,7 @@ Brief description of changes
 Clear description of the bug
 
 **Steps to Reproduce**
+
 1. Step one
 2. Step two
 3. Step three
@@ -219,6 +228,7 @@ What should happen
 What actually happens
 
 **Environment**
+
 - OS: [e.g., Windows 10, Ubuntu 20.04]
 - Qt Version: [e.g., 6.5.0]
 - Compiler: [e.g., MSVC 2019, GCC 11]

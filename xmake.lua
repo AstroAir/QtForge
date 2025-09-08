@@ -876,7 +876,7 @@ on_package(function (target)
     -- Create package metadata (matching CMake package configuration)
     local package_info = {
         name = "QtForge",
-        version = "3.0.0",
+        version = "3.2.0",
         description = "Modern C++ Plugin System for Qt Applications with Modular Architecture",
         homepage = "https://github.com/AstroAir/QtForge",  -- Updated to match actual repository
         license = "Apache-2.0"

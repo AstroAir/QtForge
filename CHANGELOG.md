@@ -5,6 +5,116 @@ All notable changes to the QtForge library will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.0] - 2025-09-07
+
+### 🎉 Major Feature Release - QtForge v3.2.0
+
+This release introduces comprehensive multilingual binding support, enhanced security features, and significant API improvements.
+
+### ✨ Added
+
+#### Multilingual Binding System
+- **Complete Lua Plugin Bridge**: Full Lua plugin support with sol2 integration
+- **Enhanced Python Bindings**: Updated Python bindings with comprehensive API coverage
+- **Advanced Plugin Interfaces**: New `IAdvancedPlugin` and `IDynamicPlugin` interfaces
+- **Service Contract System**: Complete communication system with service discovery
+- **Plugin Type System**: Support for Native, Python, JavaScript, Lua, Remote, and Composite plugins
+
+#### Security Enhancements
+- **Enhanced Security Sandbox**: Improved plugin sandboxing with detailed validation
+- **Security Policy Validator**: New `SecurityPolicyValidator` class for policy integrity
+- **Resource Monitor Utils**: Advanced resource monitoring and threshold checking
+- **Security Enforcer**: Enhanced policy management and signal handling
+- **Comprehensive Security Testing**: Full test coverage for security components
+
+#### API Improvements
+- **Dynamic Interface Adaptation**: Runtime interface capability negotiation
+- **Enhanced Configuration System**: Updated configuration management with scoped access
+- **Version Management**: Improved plugin version tracking and compatibility
+- **Hot Reload Capabilities**: Enhanced plugin hot reloading support
+- **Background Task Processing**: Improved service plugin background processing
+
+#### Developer Experience
+- **Type Safety**: Complete Python type stubs for better IDE support
+- **Comprehensive Examples**: New examples demonstrating advanced features
+- **Enhanced Documentation**: Updated guides and API reference
+- **Build System Optimization**: Improved CMake, Meson, and XMake configurations
+
+### 🔧 Changed
+
+#### Breaking Changes
+- **Configuration API**: Updated configuration manager interface with scoped access
+- **Plugin Interface**: Enhanced plugin interfaces with new capabilities
+- **Binding APIs**: Updated Python and Lua binding interfaces for consistency
+
+#### API Updates
+- **Factory Functions**: Updated factory function patterns across all bindings
+- **Error Handling**: Improved error handling and validation throughout
+- **Thread Safety**: Enhanced thread safety for concurrent operations
+- **Memory Management**: Optimized memory usage and resource cleanup
+
+### 🐛 Fixed
+
+#### Build System
+- **CMake Duplications**: Removed duplicate entries causing build conflicts
+- **Python Version Support**: Updated maximum supported Python version to 3.13
+- **Module Dependencies**: Fixed missing dependencies in binding modules
+- **Cross-Platform**: Improved cross-platform build compatibility
+
+#### Security
+- **Sandbox Initialization**: Fixed security policy validation in sandbox initialization
+- **Resource Monitoring**: Improved resource threshold checking and formatting
+- **Policy Management**: Enhanced security policy management and enforcement
+
+### 📚 Documentation
+
+#### Comprehensive Updates
+- **API Reference**: Complete API documentation with new features
+- **Binding Guides**: Detailed Python and Lua binding documentation
+- **Migration Guide**: Step-by-step upgrade instructions from v3.0.0
+- **Security Guide**: Enhanced security configuration and best practices
+- **Examples**: New examples for all major features
+
+#### Version Consistency
+- **Unified Versioning**: All documentation updated to v3.2.0
+- **Cross-References**: Updated all internal documentation links
+- **Code Examples**: Validated and updated all code examples
+
+### 🚀 Performance
+
+#### Optimizations
+- **Binding Performance**: Minimal overhead with direct C++ integration
+- **Memory Usage**: Optimized memory usage in plugin loading and execution
+- **Build Times**: Improved build system performance and caching
+- **Runtime Performance**: Enhanced plugin execution and communication performance
+
+### 🔄 Migration from v3.0.0
+
+#### Python Users
+```python
+# Old way (v3.0.0)
+config = qtforge.ConfigurationManager()
+value = config.get_value("key")
+
+# New way (v3.2.0)
+config = qtforge.managers.create_configuration_manager()
+value = config.get_value("key", qtforge.managers.ConfigurationScope.Global)
+```
+
+#### Lua Users
+```lua
+-- Old way (v3.0.0)
+local config = qtforge.create_configuration_manager()
+
+-- New way (v3.2.0)
+local config = qtforge.managers.create_configuration_manager()
+```
+
+#### C++ Users
+- Update plugin interfaces to use new `IAdvancedPlugin` or `IDynamicPlugin` as needed
+- Update configuration manager usage to include scope parameters
+- Review security policy configurations for enhanced validation
+
 ## [3.0.0] - 2025-09-03
 
 ### 🎉 Major Release - QtForge v3.0.0 Documentation Update

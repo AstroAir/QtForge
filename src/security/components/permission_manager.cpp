@@ -4,12 +4,12 @@
  * @version 3.0.0
  */
 
-#include "../qtplugin/security/components/permission_manager.hpp"
+#include <qtplugin/security/components/permission_manager.hpp>
 #include <QDebug>
 #include <QLoggingCategory>
 #include <algorithm>
 #include <mutex>
-#include "../qtplugin/security/security_manager.hpp"
+#include <qtplugin/security/security_manager.hpp>
 
 Q_LOGGING_CATEGORY(permissionManagerLog, "qtplugin.security.permissions")
 

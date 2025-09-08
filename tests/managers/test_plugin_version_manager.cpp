@@ -15,6 +15,8 @@
 
 #include "../include/qtplugin/core/plugin_registry.hpp"
 #include "../include/qtplugin/managers/plugin_version_manager.hpp"
+#include "../include/qtplugin/managers/configuration_manager_impl.hpp"
+#include "../include/qtplugin/managers/logging_manager_impl.hpp"
 
 using namespace qtplugin;
 
@@ -93,10 +95,10 @@ void TestPluginVersionManager::initTestCase() {
 
     test_storage_dir_ = temp_dir_->path().toStdString();
 
-    // Create mock dependencies
+    // Create real dependencies for testing
     registry_ = std::make_shared<PluginRegistry>();
-    config_manager_ = nullptr;  // Use nullptr for testing
-    logger_ = nullptr;          // Use nullptr for testing
+    config_manager_ = std::shared_ptr<IConfigurationManager>(create_configuration_manager().release());
+    logger_ = std::shared_ptr<ILoggingManager>(create_logging_manager().release());
 }
 
 void TestPluginVersionManager::cleanupTestCase() {
@@ -108,11 +110,25 @@ void TestPluginVersionManager::cleanupTestCase() {
 }
 
 void TestPluginVersionManager::init() {
-    QSKIP("Plugin version manager tests disabled due to crash with null dependencies");
+    // Debug: Check if dependencies are available
+    qDebug() << "Registry available:" << (registry_ != nullptr);
+    qDebug() << "Config manager available:" << (config_manager_ != nullptr);
+    qDebug() << "Logger available:" << (logger_ != nullptr);
 
     // Create fresh version manager for each test
+    qDebug() << "About to call create_plugin_version_manager";
     version_manager_ =
         create_plugin_version_manager(registry_, config_manager_, logger_);
+    qDebug() << "create_plugin_version_manager returned:" << (version_manager_ != nullptr);
+
+    // Check if version manager was created successfully
+    if (!version_manager_) {
+        qDebug() << "Plugin version manager creation failed";
+        QSKIP("Plugin version manager implementation not available");
+        return;
+    }
+
+    qDebug() << "Plugin version manager created successfully";
 
     // Set test storage directory
     auto result = version_manager_->set_storage_directory(test_storage_dir_);

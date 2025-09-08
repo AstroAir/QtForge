@@ -805,8 +805,10 @@ bool TestPythonBindings::isQtForgeModuleAvailable() {
 try:
     import qtforge
     print("AVAILABLE")
-except ImportError:
-    print("NOT_AVAILABLE")
+except ImportError as e:
+    print(f"NOT_AVAILABLE: {e}")
+except Exception as e:
+    print(f"ERROR: {e}")
 )";
 
     QString result = runPythonScript(script);
@@ -814,7 +816,7 @@ except ImportError:
 }
 
 QString TestPythonBindings::runPythonScript(const QString& script) {
-    // Create temporary script file
+    // Create temporary script file with proper Python path setup
     QString script_file = m_temp_dir.filePath("test_script.py");
     QFile file(script_file);
 
@@ -823,6 +825,24 @@ QString TestPythonBindings::runPythonScript(const QString& script) {
     }
 
     QTextStream stream(&file);
+
+    // Add the build directory to Python path so it can find the qtforge module
+    stream << "import sys\n";
+    stream << "import os\n";
+
+    // Get the build directory path relative to the test executable
+    QString build_dir = QCoreApplication::applicationDirPath();
+    // Navigate up to find the build directory containing the qtforge module
+    QDir dir(build_dir);
+    while (!dir.exists("qtforge.cp312-mingw_x86_64_msvcrt_gnu.pyd") &&
+           !dir.exists("qtforge.pyd") &&
+           dir.cdUp()) {
+        // Keep going up until we find the build directory with the Python module
+    }
+
+    stream << "sys.path.insert(0, r'" << dir.absolutePath() << "')\n";
+    stream << "print(f'Python path: {sys.path[0]}')\n";
+    stream << "\n";
     stream << script;
     file.close();
 

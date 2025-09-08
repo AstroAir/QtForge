@@ -4,7 +4,7 @@
  * @version 3.0.0
  */
 
-#include "../qtplugin/security/components/security_policy_engine.hpp"
+#include <qtplugin/security/components/security_policy_engine.hpp>
 #include <QDebug>
 #include <QFile>
 #include <QJsonArray>
@@ -12,7 +12,7 @@
 #include <QLoggingCategory>
 #include <QStandardPaths>
 #include <algorithm>
-#include "../qtplugin/security/security_manager.hpp"
+#include <qtplugin/security/security_manager.hpp>
 
 Q_LOGGING_CATEGORY(securityPolicyLog, "qtplugin.security.policy")
 

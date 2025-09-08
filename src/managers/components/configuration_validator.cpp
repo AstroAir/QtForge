@@ -4,7 +4,7 @@
  * @version 3.0.0
  */
 
-#include "../qtplugin/managers/components/configuration_validator.hpp"
+#include <qtplugin/managers/components/configuration_validator.hpp>
 #include <QDebug>
 #include <QJsonArray>
 #include <QLoggingCategory>

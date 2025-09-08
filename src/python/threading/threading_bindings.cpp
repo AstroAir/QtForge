@@ -223,6 +223,30 @@ void bind_threading(py::module& m) {
         py::arg("default_threads") = 4, py::arg("io_threads") = 2,
         py::arg("compute_threads") = 4,
         "Set up a complete threading system with specialized pools");
+
+    // === Additional Utility Functions ===
+    m.def("test_threading", []() -> std::string {
+        return "Threading module working!";
+    }, "Test function for threading module");
+
+    m.def("get_available_threading_features", []() -> py::list {
+        py::list features;
+        features.append("plugin_thread_pool");
+        features.append("thread_pool_manager");
+        features.append("task_management");
+        features.append("thread_priorities");
+        return features;
+    }, "Get list of available threading features");
+
+    m.def("validate_thread_priority", [](int priority) -> bool {
+        return priority >= static_cast<int>(ThreadPriority::Idle) &&
+               priority <= static_cast<int>(ThreadPriority::TimeCritical);
+    }, "Validate thread priority value", py::arg("priority"));
+
+    m.def("validate_task_status", [](int status) -> bool {
+        return status >= static_cast<int>(TaskStatus::Pending) &&
+               status <= static_cast<int>(TaskStatus::Timeout);
+    }, "Validate task status value", py::arg("status"));
 }
 
 }  // namespace qtforge_python

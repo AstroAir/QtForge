@@ -203,6 +203,30 @@ void bind_transactions(py::module& m) {
         py::arg("operations"),
         py::arg("isolation") = IsolationLevel::ReadCommitted,
         "Execute multiple operations atomically within a single transaction");
+
+    // === Additional Utility Functions ===
+    m.def("test_transactions", []() -> std::string {
+        return "Transactions module working!";
+    }, "Test function for transactions module");
+
+    m.def("get_available_transaction_features", []() -> py::list {
+        py::list features;
+        features.append("transaction_manager");
+        features.append("transaction_participants");
+        features.append("isolation_levels");
+        features.append("operation_types");
+        return features;
+    }, "Get list of available transaction features");
+
+    m.def("validate_transaction_state", [](int state) -> bool {
+        return state >= static_cast<int>(TransactionState::Active) &&
+               state <= static_cast<int>(TransactionState::Timeout);
+    }, "Validate transaction state value", py::arg("state"));
+
+    m.def("validate_isolation_level", [](int level) -> bool {
+        return level >= static_cast<int>(IsolationLevel::ReadUncommitted) &&
+               level <= static_cast<int>(IsolationLevel::Serializable);
+    }, "Validate isolation level value", py::arg("level"));
 }
 
 }  // namespace qtforge_python

@@ -251,16 +251,16 @@ void ComponentPerformanceTests::testComponentMemoryFootprint() {
     auto monitor = std::make_unique<ResourceMonitor>();
 
     size_t after_components = getCurrentMemoryUsage();
-    size_t component_memory = after_components - initial_memory;
+    qint64 component_memory = static_cast<qint64>(after_components) - static_cast<qint64>(initial_memory);
 
     qDebug() << "Component memory footprint:";
     qDebug() << "  Total components memory:" << component_memory << "bytes";
     qDebug() << "  Average per component:" << (component_memory / 14)
              << "bytes";
 
-    // Each component should use less than 5MB
-    QVERIFY2(component_memory < 14 * 5 * 1024 * 1024,
-             QString("Components use too much memory: %1 bytes")
+    // Each component should use less than 5MB (allow negative values for memory fluctuation)
+    QVERIFY2(component_memory < 14 * 5 * 1024 * 1024 && component_memory > -14 * 5 * 1024 * 1024,
+             QString("Components memory usage is unexpected: %1 bytes")
                  .arg(component_memory)
                  .toLocal8Bit());
 
@@ -494,11 +494,11 @@ void ComponentPerformanceTests::testManagerMemoryFootprint() {
     auto monitor_manager = std::make_unique<ResourceMonitor>();
 
     size_t final_memory = getCurrentMemoryUsage();
-    size_t manager_memory = final_memory - initial_memory;
+    qint64 manager_memory = static_cast<qint64>(final_memory) - static_cast<qint64>(initial_memory);
 
-    // Verify memory usage is reasonable (less than 10MB)
-    QVERIFY2(manager_memory < 10 * 1024 * 1024,
-             QString("Managers use too much memory: %1 bytes")
+    // Verify memory usage is reasonable (less than 10MB, allow negative values for memory fluctuation)
+    QVERIFY2(manager_memory < 10 * 1024 * 1024 && manager_memory > -10 * 1024 * 1024,
+             QString("Managers memory usage is unexpected: %1 bytes")
                  .arg(manager_memory)
                  .toLocal8Bit());
 
@@ -507,8 +507,8 @@ void ComponentPerformanceTests::testManagerMemoryFootprint() {
 }
 
 void ComponentPerformanceTests::testMemoryUsageComparison() {
-    size_t component_memory = 0;
-    size_t manager_memory = 0;
+    qint64 component_memory = 0;
+    qint64 manager_memory = 0;
 
     // Measure component memory
     {
@@ -517,7 +517,7 @@ void ComponentPerformanceTests::testMemoryUsageComparison() {
         auto allocator = std::make_unique<ResourceAllocator>();
         auto validator = std::make_unique<SecurityValidator>();
         size_t final = getCurrentMemoryUsage();
-        component_memory = final - initial;
+        component_memory = static_cast<qint64>(final) - static_cast<qint64>(initial);
         Q_UNUSED(registry);
         Q_UNUSED(allocator);
         Q_UNUSED(validator);
@@ -529,13 +529,13 @@ void ComponentPerformanceTests::testMemoryUsageComparison() {
         auto config_manager = std::make_unique<ConfigurationManager>();
         auto resource_manager = std::make_unique<ResourceManager>();
         size_t final = getCurrentMemoryUsage();
-        manager_memory = final - initial;
+        manager_memory = static_cast<qint64>(final) - static_cast<qint64>(initial);
         Q_UNUSED(config_manager);
         Q_UNUSED(resource_manager);
     }
 
     logPerformanceResult("Memory Usage Comparison",
-                         component_memory + manager_memory,
+                         qAbs(component_memory) + qAbs(manager_memory),
                          QString("Components: %1 bytes, Managers: %2 bytes")
                              .arg(component_memory)
                              .arg(manager_memory));

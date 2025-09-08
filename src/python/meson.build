@@ -10,12 +10,11 @@ message('Building QtForge Python bindings')
 # Python installation
 python3 = import('python').find_installation('python3')
 
-# Python binding sources - all modules now working
+# Python binding sources - progressive architecture
 python_binding_sources = [
-  'qtforge_python.cpp',
+  'qtforge_python_progressive.cpp',
   'qt_conversions.cpp',
-  'core/core_bindings.cpp',
-  'core/plugin_manager_bindings.cpp',
+  'core/core_bindings_basic.cpp',
   'utils/utils_bindings.cpp',
   'security/security_bindings.cpp',
   'managers/managers_bindings.cpp',

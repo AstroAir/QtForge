@@ -14,8 +14,8 @@
 #include <sol/sol.hpp>
 #endif
 
-#include "../qtplugin/utils/error_handling.hpp"
-#include "../qtplugin/core/plugin_interface.hpp"
+#include <qtplugin/utils/error_handling.hpp>
+#include <qtplugin/core/plugin_interface.hpp>
 #include "../qt_conversions.cpp"
 
 Q_LOGGING_CATEGORY(errorHandlingBindingsLog, "qtforge.lua.error");

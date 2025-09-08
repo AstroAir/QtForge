@@ -2,11 +2,37 @@
 
 This directory contains comprehensive examples demonstrating how to use the QtForge Python bindings effectively. Each example focuses on different aspects of the bindings and provides practical usage patterns.
 
-## 📁 Example Files
+## 🚀 **New Complete Integration Examples**
+
+### 🎯 `complete_integration_example.py` - Full Feature Demonstration
+
+**Purpose**: Comprehensive demonstration of all QtForge Python modules
+**Topics Covered**:
+
+- All available modules (core, communication, orchestration, monitoring, etc.)
+- Complete feature testing and validation
+- Integration status reporting
+- Advanced functionality showcase
+
+**Run**: `python complete_integration_example.py`
+
+### 🔧 `simple_plugin_example.py` - Python Plugin Development
+
+**Purpose**: Complete Python plugin development example
+**Topics Covered**:
+
+- Python plugin creation and lifecycle
+- Data processing and message handling
+- Plugin statistics and monitoring
+- Integration with QtForge core systems
+
+**Run**: `python simple_plugin_example.py`
+
+## 📁 Original Example Files
 
 ### 1. `basic_usage.py` - Getting Started
 
-**Purpose**: Introduction to QtForge Python bindings  
+**Purpose**: Introduction to QtForge Python bindings
 **Topics Covered**:
 
 - Module import and initialization
@@ -18,7 +44,7 @@ This directory contains comprehensive examples demonstrating how to use the QtFo
 
 ### 2. `plugin_management.py` - Plugin Operations
 
-**Purpose**: Demonstrate plugin management capabilities  
+**Purpose**: Demonstrate plugin management capabilities
 **Topics Covered**:
 
 - Plugin lifecycle management
@@ -67,33 +93,74 @@ This directory contains comprehensive examples demonstrating how to use the QtFo
 
 ## 🚀 Quick Start
 
-1. **Build QtForge with Python bindings**:
+1. **Build QtForge with Python bindings** (now enabled by default):
 
    ```bash
-   cmake -DQTFORGE_BUILD_PYTHON_BINDINGS=ON -B build -S .
+   # Python bindings are now enabled by default!
+   cmake -B build -S .
+   cmake --build build
+
+   # Or explicitly enable all Python features:
+   cmake -DQTFORGE_BUILD_PYTHON_BINDINGS=ON \
+         -DQTFORGE_PYTHON_ENABLE_ALL_MODULES=ON \
+         -DQTFORGE_PYTHON_BINDINGS_EXAMPLES=ON \
+         -B build -S .
    cmake --build build
    ```
 
-2. **Run a basic example**:
+2. **Run the complete integration example**:
 
    ```bash
-   cd examples/python
-   python basic_usage.py
+   cd examples/05-integration/python-bindings
+   python complete_integration_example.py
    ```
 
-3. **Explore other examples**:
+3. **Try the simple plugin example**:
 
    ```bash
+   python simple_plugin_example.py
+   ```
+
+4. **Explore other examples**:
+
+   ```bash
+   python basic_usage.py
    python plugin_management.py
    python version_handling.py
    python error_handling.py
-   python advanced_usage.py
    ```
+
+## ✨ **New Features in Python Integration**
+
+### 🎯 **Complete Module Coverage**
+All QtForge modules are now available in Python:
+
+- **Core**: Plugin management and lifecycle
+- **Communication**: Message bus and request-response system
+- **Security**: Security validation and permission management
+- **Managers**: Configuration, logging, and resource management
+- **Orchestration**: Plugin workflow and orchestration
+- **Monitoring**: Hot reload and metrics collection
+- **Threading**: Thread management and concurrency
+- **Transactions**: Transaction management and atomic operations
+- **Composition**: Plugin composition and aggregation
+- **Marketplace**: Plugin marketplace and distribution
+
+### 🔧 **Enhanced Configuration**
+- Python bindings enabled by default
+- Automatic type stub generation (.pyi files)
+- Complete example suite
+- Improved error handling and diagnostics
+
+### 📦 **Easy Installation**
+- No manual configuration required
+- Automatic dependency detection
+- Built-in examples and documentation
 
 ## 📋 Prerequisites
 
-- QtForge built with Python bindings enabled
-- Python 3.7 or later
+- QtForge built with Python bindings (enabled by default)
+- Python 3.8 or later (recommended)
 - QtForge Python module in Python path
 
 ## 🔧 Configuration

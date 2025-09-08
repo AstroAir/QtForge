@@ -11,7 +11,7 @@
 #include <sol/sol.hpp>
 #endif
 
-#include "../qtplugin/transactions/plugin_transaction_manager.hpp"
+#include <qtplugin/transactions/plugin_transaction_manager.hpp>
 #include "../qt_conversions.cpp"
 
 Q_LOGGING_CATEGORY(transactionBindingsLog, "qtforge.lua.transactions");

@@ -1,48 +1,32 @@
-# ============================================================================
-# QTFORGE LIBRARY - MAIN CMAKE CONFIGURATION
-# ============================================================================
-# Modern C++ Plugin System for Qt Applications with Modular Architecture
-# Version: 3.0.0
-# ============================================================================
-
 cmake_minimum_required(VERSION 3.21)
 
-# Set CMake policies to resolve warnings
 if(POLICY CMP0156)
-    cmake_policy(SET CMP0156 NEW)  # De-duplicate libraries on link lines based on linker capabilities
+    cmake_policy(SET CMP0156 NEW)
 endif()
 
 if(POLICY CMP0181)
-    cmake_policy(SET CMP0181 NEW)  # Link command-line fragment variables are parsed and re-quoted
+    cmake_policy(SET CMP0181 NEW)
 endif()
 
 project(QtForge
-    VERSION 3.0.0
+    VERSION 3.2.0
     DESCRIPTION "Modern C++ Plugin System for Qt Applications with Modular Architecture"
     LANGUAGES CXX
 )
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# ============================================================================
-# PROJECT SETUP AND BASIC CONFIGURATION
-# ============================================================================
-
-# Add cmake modules directory to module path
 list(PREPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
 
-# Include modular build system components
-include(QtForgePlatform)    # Platform and architecture detection
-include(QtForgeCompiler)    # Compiler detection and configuration
-include(QtForgeOptions)     # Build options and feature flags
-include(QtForgeDependencies) # Dependency management
-include(QtForgeTargets)     # Target creation utilities
-include(QtForgePackaging)   # Packaging configuration
+include(QtForgePlatform)
+include(QtForgeCompiler)
+include(QtForgeOptions)
+include(QtForgeDependencies)
+include(QtForgeTargets)
+include(QtForgePackaging)
 
-# Setup dependencies after options are configured
 qtforge_setup_dependencies()
 
-# Configure compiler with enhanced options
 qtforge_configure_compiler(
     ENABLE_WARNINGS ${QTFORGE_ENABLE_WARNINGS}
     ENABLE_WERROR ${QTFORGE_ENABLE_WERROR}
@@ -50,30 +34,6 @@ qtforge_configure_compiler(
     ENABLE_LTO ${QTFORGE_ENABLE_LTO}
     ENABLE_FAST_MATH ${QTFORGE_ENABLE_FAST_MATH}
 )
-
-# ============================================================================
-# FEATURE OPTIONS AND CONFIGURATION
-# ============================================================================
-# Feature options are defined in QtForgeOptions.cmake and include:
-# - QTFORGE_BUILD_SHARED/QTFORGE_BUILD_STATIC: Library types
-# - QTFORGE_BUILD_NETWORK: Network plugin support
-# - QTFORGE_BUILD_UI: UI plugin support
-# - QTFORGE_BUILD_SECURITY: Security component
-# - QTFORGE_BUILD_PYTHON_BINDINGS: Python bindings
-# - QTFORGE_BUILD_LUA_BINDINGS: Lua bindings
-# - QTFORGE_BUILD_EXAMPLES: Example plugins
-# - QTFORGE_BUILD_TESTS: Unit tests
-# - QTFORGE_BUILD_DOCS: Documentation
-# All features are enabled by default for full functionality
-# ============================================================================
-
-# ============================================================================
-# CORE LIBRARY (ALWAYS REQUIRED)
-# ============================================================================
-# The core library contains essential plugin system functionality and is
-# always built. It includes the plugin manager, loaders, communication
-# systems, and all fundamental components.
-# ============================================================================
 
 # Core library sources
 set(QTFORGE_CORE_SOURCES
@@ -112,20 +72,13 @@ set(QTFORGE_CORE_SOURCES
     src/orchestration/plugin_orchestrator.cpp
     src/composition/plugin_composition.cpp
     src/transactions/plugin_transaction_manager.cpp
-    # Version management sources (v3.1.0)
     src/managers/plugin_version_manager.cpp
-    # Dynamic plugin system sources (v3.2.0)
     src/core/dynamic_plugin_interface.cpp
-    # Multi-language plugin bridges (v3.2.0)
     src/bridges/python_plugin_bridge.cpp
-    # Note: lua_plugin_bridge.cpp and lua_plugin_loader.cpp are conditionally added below
-    # Advanced security and sandboxing (v3.2.0)
     $<$<BOOL:${QTFORGE_ENABLE_SANDBOX}>:src/security/sandbox/plugin_sandbox.cpp>
     $<$<BOOL:${QTFORGE_ENABLE_SANDBOX}>:src/security/sandbox/resource_monitor.cpp>
     $<$<BOOL:${QTFORGE_ENABLE_SANDBOX}>:src/security/sandbox/security_enforcer.cpp>
-    # Advanced plugin composition (v3.2.0)
     src/orchestration/advanced/plugin_orchestrator_v2.cpp
-    # Plugin marketplace integration (v3.2.0)
     src/marketplace/plugin_marketplace.cpp
 )
 
@@ -168,28 +121,19 @@ set(QTFORGE_CORE_HEADERS
     include/qtplugin/managers/resource_monitor_impl.hpp
     include/qtplugin/qtplugin.hpp
     include/qtplugin/components.hpp
-    # Advanced plugin system headers (v3.1.0)
     include/qtplugin/communication/plugin_service_contracts.hpp
     include/qtplugin/core/advanced_plugin_interface.hpp
     include/qtplugin/orchestration/plugin_orchestrator.hpp
     include/qtplugin/composition/plugin_composition.hpp
     include/qtplugin/transactions/plugin_transaction_manager.hpp
-    # Version management headers (v3.1.0)
     include/qtplugin/managers/plugin_version_manager.hpp
-    # Dynamic plugin system headers (v3.2.0)
     include/qtplugin/core/dynamic_plugin_interface.hpp
-    # Multi-language plugin bridge headers (v3.2.0)
     include/qtplugin/bridges/python_plugin_bridge.hpp
-    # Note: lua_plugin_bridge.hpp and lua_plugin_loader.hpp are conditionally added below
-    # Advanced security and sandboxing headers (v3.2.0)
     $<$<BOOL:${QTFORGE_ENABLE_SANDBOX}>:include/qtplugin/security/sandbox/plugin_sandbox.hpp>
-    # Enhanced plugin composition headers (v3.2.0)
     include/qtplugin/orchestration/advanced/plugin_orchestrator_v2.hpp
-    # Plugin marketplace integration headers (v3.2.0)
     include/qtplugin/marketplace/plugin_marketplace.hpp
 )
 
-# Conditionally add Lua-related sources if Lua bindings are enabled
 if(QTFORGE_BUILD_LUA_BINDINGS AND QTFORGE_LUA_FOUND AND QTFORGE_SOL2_FOUND)
     list(APPEND QTFORGE_CORE_SOURCES
         src/bridges/lua_plugin_bridge.cpp
@@ -203,8 +147,6 @@ if(QTFORGE_BUILD_LUA_BINDINGS AND QTFORGE_LUA_FOUND AND QTFORGE_SOL2_FOUND)
 else()
     message(STATUS "QtForge: Excluding Lua plugin sources from core library")
 endif()
-
-# Prepare compile definitions based on available features
 set(QTFORGE_CORE_DEFINITIONS)
 if(QTFORGE_HAS_NETWORK)
     list(APPEND QTFORGE_CORE_DEFINITIONS QTFORGE_HAS_NETWORK)
@@ -222,7 +164,6 @@ if(QTFORGE_HAS_STATEMACHINE)
     list(APPEND QTFORGE_CORE_DEFINITIONS QTFORGE_HAS_STATEMACHINE)
 endif()
 
-# Add sandbox feature definitions
 if(QTFORGE_ENABLE_SANDBOX)
     list(APPEND QTFORGE_CORE_DEFINITIONS QTFORGE_ENABLE_SANDBOX)
     if(QTFORGE_SANDBOX_PROCESS_ISOLATION)
@@ -235,8 +176,6 @@ if(QTFORGE_ENABLE_SANDBOX)
         list(APPEND QTFORGE_CORE_DEFINITIONS QTFORGE_SANDBOX_SECURITY_ENFORCEMENT)
     endif()
 endif()
-
-# Create core library using the modular target system
 qtforge_add_library(
     NAME QtForgeCore
     SOURCES ${QTFORGE_CORE_SOURCES}
@@ -249,71 +188,11 @@ qtforge_add_library(
     VERSION ${PROJECT_VERSION}
 )
 
-# Add platform-specific libraries for sandbox functionality
 if(QTFORGE_ENABLE_SANDBOX)
     if(WIN32)
         target_link_libraries(QtForgeCore PRIVATE pdh psapi)
     endif()
 endif()
-
-# ============================================================================
-# OPTIONAL COMPONENTS
-# ============================================================================
-# These components can be selectively enabled/disabled via CMake options.
-# All are enabled by default to maintain full functionality.
-# ============================================================================
-
-# ----------------------------------------------------------------------------
-# Network Component
-# ----------------------------------------------------------------------------
-# Network plugin support (optional) - disabled until sources are implemented
-# if(QTFORGE_BUILD_NETWORK AND QTFORGE_HAS_NETWORK)
-#     set(QTFORGE_NETWORK_SOURCES
-#         # Network sources will be added when implemented
-#     )
-#
-#     set(QTFORGE_NETWORK_HEADERS
-#         # Network headers will be added when implemented
-#     )
-#
-#     qtforge_add_library(
-#         NAME QtForgeNetwork
-#         SOURCES ${QTFORGE_NETWORK_SOURCES}
-#         HEADERS ${QTFORGE_NETWORK_HEADERS}
-#         QT_COMPONENTS Core Network
-#         DEPENDENCIES QtForge::Core
-#         EXPORT_NAME Network
-#         OUTPUT_NAME qtforge-network
-#     )
-# endif()
-
-# ----------------------------------------------------------------------------
-# UI Component
-# ----------------------------------------------------------------------------
-# UI plugin support (optional) - disabled until sources are implemented
-# if(QTFORGE_BUILD_UI AND QTFORGE_HAS_WIDGETS)
-#     set(QTFORGE_UI_SOURCES
-#         # UI sources will be added when implemented
-#     )
-#
-#     set(QTFORGE_UI_HEADERS
-#         include/qtplugin/ui/ui_plugin_interface.hpp
-#     )
-#
-#     qtforge_add_library(
-#         NAME QtForgeUI
-#         SOURCES ${QTFORGE_UI_SOURCES}
-#         HEADERS ${QTFORGE_UI_HEADERS}
-#         QT_COMPONENTS Core Widgets
-#         DEPENDENCIES QtForge::Core
-#         EXPORT_NAME UI
-#         OUTPUT_NAME qtforge-ui
-#     )
-# endif()
-
-# ----------------------------------------------------------------------------
-# Security Component
-# ----------------------------------------------------------------------------
 if(QTFORGE_BUILD_SECURITY)
     message(STATUS "QtForge: Building security component")
 
@@ -338,20 +217,10 @@ else()
     message(STATUS "QtForge: Security component disabled")
 endif()
 
-# ============================================================================
-# INSTALLATION AND PACKAGING
-# ============================================================================
-# Configuration for installing libraries, headers, and creating packages.
-# ============================================================================
-
-# Installation configuration
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
-
-# Install targets using the modular system
 set(QTFORGE_INSTALL_TARGETS QtForgeCore)
 
-# Add optional component targets if they were built
 if(TARGET QtForgeSecurity)
     list(APPEND QTFORGE_INSTALL_TARGETS QtForgeSecurity)
 endif()
@@ -364,7 +233,6 @@ if(TARGET QtForgeUI)
     list(APPEND QTFORGE_INSTALL_TARGETS QtForgeUI)
 endif()
 
-# Add language binding targets if they were built
 if(TARGET qtforge_python)
     list(APPEND QTFORGE_INSTALL_TARGETS qtforge_python)
 endif()
@@ -373,7 +241,6 @@ if(TARGET qtforge_lua)
     list(APPEND QTFORGE_INSTALL_TARGETS qtforge_lua)
 endif()
 
-# Add static targets if they exist
 if(TARGET QtForgeCoreStatic)
     list(APPEND QTFORGE_INSTALL_TARGETS QtForgeCoreStatic)
 endif()
@@ -389,39 +256,32 @@ endif()
 if(TARGET QtForgeUIStatic)
     list(APPEND QTFORGE_INSTALL_TARGETS QtForgeUIStatic)
 endif()
-
-# Install all targets
 qtforge_install_targets(TARGETS ${QTFORGE_INSTALL_TARGETS} COMPONENT Runtime)
 
-# Export targets for find_package support
 install(EXPORT QtForgeTargets
     FILE QtForgeTargets.cmake
     NAMESPACE QtForge::
     DESTINATION ${QTFORGE_INSTALL_CMAKE_DIR}
 )
 
-# Create package config file
 configure_package_config_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/cmake/QtForgeConfig.cmake.in
     ${CMAKE_CURRENT_BINARY_DIR}/QtForgeConfig.cmake
     INSTALL_DESTINATION ${QTFORGE_INSTALL_CMAKE_DIR}
 )
 
-# Create version file
 write_basic_package_version_file(
     ${CMAKE_CURRENT_BINARY_DIR}/QtForgeConfigVersion.cmake
     VERSION ${PROJECT_VERSION}
     COMPATIBILITY SameMajorVersion
 )
 
-# Install config files
 install(FILES
     ${CMAKE_CURRENT_BINARY_DIR}/QtForgeConfig.cmake
     ${CMAKE_CURRENT_BINARY_DIR}/QtForgeConfigVersion.cmake
     DESTINATION ${QTFORGE_INSTALL_CMAKE_DIR}
 )
 
-# Create pkg-config file
 configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/cmake/qtforge.pc.in
     ${CMAKE_CURRENT_BINARY_DIR}/qtforge.pc
@@ -432,78 +292,97 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/qtforge.pc
     DESTINATION ${QTFORGE_INSTALL_PKGCONFIG_DIR}
 )
 
-# ============================================================================
-# LANGUAGE BINDINGS
-# ============================================================================
-# Optional language bindings for Python and Lua scripting support.
-# These allow plugins to be written in scripting languages.
-# ============================================================================
-
-# ----------------------------------------------------------------------------
 # Python Bindings
-# ----------------------------------------------------------------------------
 if(QTFORGE_BUILD_PYTHON_BINDINGS AND QTFORGE_PYTHON_FOUND AND QTFORGE_PYBIND11_FOUND)
     message(STATUS "QtForge: Building Python bindings")
 
-    # Python binding sources - core components (always included)
+    # Progressive Python bindings - start with working modules, add more as they're fixed
     set(QTFORGE_PYTHON_SOURCES
         src/python/qtforge_python.cpp
-        # src/python/qt_conversions.cpp  # Temporarily disabled - pybind11 API compatibility issues
-        src/python/core/core_bindings_minimal.cpp  # Using minimal version to avoid missing method errors
+        src/python/core/core_bindings_basic.cpp
+        src/python/core/plugin_manager_simple.cpp
         src/python/utils/utils_bindings.cpp
     )
 
-    # Add optional binding sources based on available Qt components
-    # Temporarily disabled all optional bindings until pybind11 and C++ API issues are resolved
-    # list(APPEND QTFORGE_PYTHON_SOURCES
-    #     src/python/security/security_bindings.cpp      # Basic security enums and interfaces
-    #     # Temporarily disabled due to compilation issues:
-    #     # src/python/monitoring/monitoring_bindings.cpp  # Uses incomplete IPluginRegistry type
-    #     # src/python/managers/managers_bindings.cpp      # Missing concrete manager classes
-    #     # src/python/orchestration/orchestration_bindings.cpp  # Missing orchestrator methods
-    #     # src/python/transactions/transaction_bindings.cpp     # Missing transaction classes
-    #     # src/python/composition/composition_bindings.cpp      # Missing composition classes
-    #     # src/python/marketplace/marketplace_bindings.cpp      # Missing marketplace classes
-    #     # src/python/threading/threading_bindings.cpp          # Missing PluginTask struct and interfaces
-    # )
+    # Additional modules to be enabled as compilation issues are resolved
+    if(QTFORGE_PYTHON_ENABLE_SECURITY_MODULE)
+        list(APPEND QTFORGE_PYTHON_SOURCES src/python/security/security_bindings.cpp)
+        message(STATUS "QtForge: Including security bindings")
+    endif()
 
-    # Communication bindings (requires Qt6::Network for some features)
-    # Temporarily disabled due to missing C++ service contract implementations
-    # if(Qt6Network_FOUND OR NOT QTFORGE_REQUIRE_NETWORK_FOR_COMMUNICATION)
-    #     list(APPEND QTFORGE_PYTHON_SOURCES
-    #         src/python/communication/communication_bindings.cpp
-    #     )
-    #     message(STATUS "QtForge: Including communication bindings")
-    # else()
-    #     message(STATUS "QtForge: Skipping communication bindings (Qt6::Network not found)")
-    # endif()
-    message(STATUS "QtForge: Communication bindings temporarily disabled - missing ServiceMethodDescriptor and related classes")
+    if(QTFORGE_PYTHON_ENABLE_MANAGERS_MODULE)
+        list(APPEND QTFORGE_PYTHON_SOURCES src/python/managers/managers_bindings.cpp)
+        message(STATUS "QtForge: Including managers bindings")
+    endif()
 
-    # Create Python module (minimal version without Qt dependencies for now)
+    if(QTFORGE_PYTHON_ENABLE_COMMUNICATION_MODULE AND Qt6Network_FOUND)
+        list(APPEND QTFORGE_PYTHON_SOURCES src/python/communication/communication_bindings.cpp)
+        message(STATUS "QtForge: Including communication bindings (Qt Network available)")
+    endif()
+
+    if(QTFORGE_PYTHON_ENABLE_ORCHESTRATION_MODULE)
+        list(APPEND QTFORGE_PYTHON_SOURCES src/python/orchestration/orchestration_bindings.cpp)
+        message(STATUS "QtForge: Including orchestration bindings")
+    endif()
+
+    if(QTFORGE_PYTHON_ENABLE_MONITORING_MODULE)
+        list(APPEND QTFORGE_PYTHON_SOURCES src/python/monitoring/monitoring_bindings.cpp)
+        message(STATUS "QtForge: Including monitoring bindings")
+    endif()
+
+    if(QTFORGE_PYTHON_ENABLE_THREADING_MODULE)
+        list(APPEND QTFORGE_PYTHON_SOURCES src/python/threading/threading_bindings.cpp)
+        message(STATUS "QtForge: Including threading bindings")
+    endif()
+
+    if(QTFORGE_PYTHON_ENABLE_TRANSACTIONS_MODULE)
+        list(APPEND QTFORGE_PYTHON_SOURCES src/python/transactions/transaction_bindings.cpp)
+        message(STATUS "QtForge: Including transactions bindings")
+    endif()
+
+    if(QTFORGE_PYTHON_ENABLE_COMPOSITION_MODULE)
+        list(APPEND QTFORGE_PYTHON_SOURCES src/python/composition/composition_bindings.cpp)
+        message(STATUS "QtForge: Including composition bindings")
+    endif()
+
+    if(QTFORGE_PYTHON_ENABLE_MARKETPLACE_MODULE)
+        list(APPEND QTFORGE_PYTHON_SOURCES src/python/marketplace/marketplace_bindings.cpp)
+        message(STATUS "QtForge: Including marketplace bindings")
+    endif()
+
+    # Communication module is already included above if Qt Network is available
+
+    # Additional modules can be enabled by setting the appropriate CMake variables
+
+    message(STATUS "QtForge: Building Python bindings with core modules (${QTFORGE_PYTHON_SOURCES})")
+
     pybind11_add_module(qtforge_python ${QTFORGE_PYTHON_SOURCES})
 
-    # Set module properties
     set_target_properties(qtforge_python PROPERTIES
         OUTPUT_NAME qtforge
         CXX_VISIBILITY_PRESET hidden
         VISIBILITY_INLINES_HIDDEN ON
     )
 
-    # Configure include directories
     target_include_directories(qtforge_python PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/include
         ${CMAKE_CURRENT_SOURCE_DIR}/src/python
     )
 
-    # Link Qt Core library (required for Qt type conversions and bindings)
+    # Link against Qt and QtForge libraries for complete functionality
     target_link_libraries(qtforge_python PRIVATE
+        QtForgeCore
         Qt6::Core
     )
 
-    # Link optional Qt components if available
     if(Qt6Network_FOUND)
         target_link_libraries(qtforge_python PRIVATE Qt6::Network)
         target_compile_definitions(qtforge_python PRIVATE QTFORGE_NETWORK_AVAILABLE)
+    endif()
+
+    if(Qt6Widgets_FOUND)
+        target_link_libraries(qtforge_python PRIVATE Qt6::Widgets)
+        target_compile_definitions(qtforge_python PRIVATE QTFORGE_WIDGETS_AVAILABLE)
     endif()
 
     if(Qt6Widgets_FOUND)
@@ -516,19 +395,54 @@ if(QTFORGE_BUILD_PYTHON_BINDINGS AND QTFORGE_PYTHON_FOUND AND QTFORGE_PYBIND11_F
         target_compile_definitions(qtforge_python PRIVATE QTFORGE_SQL_AVAILABLE)
     endif()
 
-    # Link QtForge core library
     target_link_libraries(qtforge_python PRIVATE QtForgeCore)
 
-    # Add compile definitions
     target_compile_definitions(qtforge_python PRIVATE
         QTPLUGIN_VERSION_MAJOR=${PROJECT_VERSION_MAJOR}
         QTPLUGIN_VERSION_MINOR=${PROJECT_VERSION_MINOR}
         QTPLUGIN_VERSION_PATCH=${PROJECT_VERSION_PATCH}
+        QTFORGE_PYTHON_BINDINGS
+        QTFORGE_PYTHON_ALL_MODULES_ENABLED
     )
 
-    # Create Python package structure
+    # Add compile definitions for enabled modules
+    if(QTFORGE_PYTHON_ENABLE_SECURITY_MODULE)
+        target_compile_definitions(qtforge_python PRIVATE QTFORGE_PYTHON_ENABLE_SECURITY_MODULE)
+    endif()
+
+    if(QTFORGE_PYTHON_ENABLE_MANAGERS_MODULE)
+        target_compile_definitions(qtforge_python PRIVATE QTFORGE_PYTHON_ENABLE_MANAGERS_MODULE)
+    endif()
+
+    if(QTFORGE_PYTHON_ENABLE_COMMUNICATION_MODULE AND Qt6Network_FOUND)
+        target_compile_definitions(qtforge_python PRIVATE QTFORGE_PYTHON_ENABLE_COMMUNICATION_MODULE)
+    endif()
+
+    if(QTFORGE_PYTHON_ENABLE_ORCHESTRATION_MODULE)
+        target_compile_definitions(qtforge_python PRIVATE QTFORGE_PYTHON_ENABLE_ORCHESTRATION_MODULE)
+    endif()
+
+    if(QTFORGE_PYTHON_ENABLE_MONITORING_MODULE)
+        target_compile_definitions(qtforge_python PRIVATE QTFORGE_PYTHON_ENABLE_MONITORING_MODULE)
+    endif()
+
+    if(QTFORGE_PYTHON_ENABLE_THREADING_MODULE)
+        target_compile_definitions(qtforge_python PRIVATE QTFORGE_PYTHON_ENABLE_THREADING_MODULE)
+    endif()
+
+    if(QTFORGE_PYTHON_ENABLE_TRANSACTIONS_MODULE)
+        target_compile_definitions(qtforge_python PRIVATE QTFORGE_PYTHON_ENABLE_TRANSACTIONS_MODULE)
+    endif()
+
+    if(QTFORGE_PYTHON_ENABLE_COMPOSITION_MODULE)
+        target_compile_definitions(qtforge_python PRIVATE QTFORGE_PYTHON_ENABLE_COMPOSITION_MODULE)
+    endif()
+
+    if(QTFORGE_PYTHON_ENABLE_MARKETPLACE_MODULE)
+        target_compile_definitions(qtforge_python PRIVATE QTFORGE_PYTHON_ENABLE_MARKETPLACE_MODULE)
+    endif()
+
     if(QTFORGE_PYTHON_BINDINGS_INSTALL)
-        # Install __init__.py for the package
         configure_file(
             ${CMAKE_CURRENT_SOURCE_DIR}/src/python/__init__.py.in
             ${CMAKE_CURRENT_BINARY_DIR}/python/__init__.py
@@ -539,6 +453,18 @@ if(QTFORGE_BUILD_PYTHON_BINDINGS AND QTFORGE_PYTHON_FOUND AND QTFORGE_PYBIND11_F
             DESTINATION ${PYTHON_INSTALL_DIR}/qtforge
             COMPONENT PythonBindings
         )
+
+        # Install Python type stubs if enabled
+        if(QTFORGE_PYTHON_ENABLE_TYPE_STUBS)
+            file(GLOB PYTHON_STUB_FILES "${CMAKE_CURRENT_SOURCE_DIR}/qtforge/*.pyi")
+            if(PYTHON_STUB_FILES)
+                install(FILES ${PYTHON_STUB_FILES}
+                    DESTINATION ${PYTHON_INSTALL_DIR}/qtforge
+                    COMPONENT PythonBindings
+                )
+                message(STATUS "QtForge: Python type stubs will be installed")
+            endif()
+        endif()
     endif()
 else()
     if(NOT QTFORGE_BUILD_PYTHON_BINDINGS)
@@ -552,13 +478,10 @@ else()
     endif()
 endif()
 
-# ----------------------------------------------------------------------------
 # Lua Bindings
-# ----------------------------------------------------------------------------
 if(QTFORGE_BUILD_LUA_BINDINGS AND QTFORGE_LUA_FOUND AND QTFORGE_SOL2_FOUND)
     message(STATUS "QtForge: Building Lua bindings")
 
-    # Lua binding sources - all components now enabled
     set(QTFORGE_LUA_SOURCES
         src/lua/qtforge_lua.cpp
         src/lua/core/core_bindings.cpp
@@ -573,7 +496,6 @@ if(QTFORGE_BUILD_LUA_BINDINGS AND QTFORGE_LUA_FOUND AND QTFORGE_SOL2_FOUND)
         src/lua/threading/threading_bindings.cpp
     )
 
-    # Communication bindings (requires Qt6::Network for some features)
     if(Qt6Network_FOUND OR NOT QTFORGE_REQUIRE_NETWORK_FOR_COMMUNICATION)
         list(APPEND QTFORGE_LUA_SOURCES
             src/lua/communication/communication_bindings.cpp
@@ -583,54 +505,25 @@ if(QTFORGE_BUILD_LUA_BINDINGS AND QTFORGE_LUA_FOUND AND QTFORGE_SOL2_FOUND)
         message(STATUS "QtForge: Skipping Lua communication bindings (Qt6::Network not found)")
     endif()
 
-    # Create Lua module
     add_library(qtforge_lua SHARED ${QTFORGE_LUA_SOURCES})
 
-    # Set module properties
     set_target_properties(qtforge_lua PROPERTIES
         OUTPUT_NAME qtforge_lua
         CXX_VISIBILITY_PRESET hidden
         VISIBILITY_INLINES_HIDDEN ON
     )
 
-    # Configure include directories
     target_include_directories(qtforge_lua PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/include
         ${CMAKE_CURRENT_SOURCE_DIR}/src/lua
         ${QTFORGE_LUA_INCLUDE_DIR}
     )
 
-    # Add sol2 include directory if found manually
     if(QTFORGE_SOL2_INCLUDE_DIR)
         target_include_directories(qtforge_lua PRIVATE ${QTFORGE_SOL2_INCLUDE_DIR})
     endif()
 
-    # Ultra-minimal bindings - only link Lua libraries for now
     target_link_libraries(qtforge_lua PRIVATE ${QTFORGE_LUA_LIBRARIES})
-
-    # # Link Qt components required by bindings
-    # target_link_libraries(qtforge_lua PRIVATE Qt6::Core)
-
-    # # Link optional Qt components if available
-    # if(Qt6Network_FOUND)
-    #     target_link_libraries(qtforge_lua PRIVATE Qt6::Network)
-    #     target_compile_definitions(qtforge_lua PRIVATE QTFORGE_NETWORK_AVAILABLE)
-    # endif()
-
-    # if(Qt6Widgets_FOUND)
-    #     target_link_libraries(qtforge_lua PRIVATE Qt6::Widgets)
-    #     target_compile_definitions(qtforge_lua PRIVATE QTFORGE_WIDGETS_AVAILABLE)
-    # endif()
-
-    # if(Qt6Sql_FOUND)
-    #     target_link_libraries(qtforge_lua PRIVATE Qt6::Sql)
-    #     target_compile_definitions(qtforge_lua PRIVATE QTFORGE_SQL_AVAILABLE)
-    # endif()
-
-    # # Link QtForge core library
-    # target_link_libraries(qtforge_lua PRIVATE QtForgeCore)
-
-    # Add compile definitions
     target_compile_definitions(qtforge_lua PRIVATE
         QTPLUGIN_VERSION_MAJOR=${PROJECT_VERSION_MAJOR}
         QTPLUGIN_VERSION_MINOR=${PROJECT_VERSION_MINOR}
@@ -638,12 +531,10 @@ if(QTFORGE_BUILD_LUA_BINDINGS AND QTFORGE_LUA_FOUND AND QTFORGE_SOL2_FOUND)
         QTFORGE_LUA_BINDINGS
     )
 
-    # Add sandboxing support if enabled
     if(QTFORGE_LUA_ENABLE_SANDBOX)
         target_compile_definitions(qtforge_lua PRIVATE QTFORGE_LUA_SANDBOX_ENABLED)
     endif()
 
-    # Installation
     if(QTFORGE_LUA_BINDINGS_INSTALL)
         install(TARGETS qtforge_lua
             LIBRARY DESTINATION ${QTFORGE_INSTALL_LIBRARY_DIR}
@@ -663,15 +554,7 @@ else()
     endif()
 endif()
 
-# ============================================================================
-# DEVELOPMENT FEATURES
-# ============================================================================
-# Optional development and testing features that can be enabled/disabled.
-# ============================================================================
-
-# ----------------------------------------------------------------------------
 # Examples
-# ----------------------------------------------------------------------------
 if(QTFORGE_BUILD_EXAMPLES)
     message(STATUS "QtForge: Building examples")
     add_subdirectory(examples)
@@ -679,9 +562,7 @@ else()
     message(STATUS "QtForge: Examples disabled")
 endif()
 
-# ----------------------------------------------------------------------------
 # Tests
-# ----------------------------------------------------------------------------
 if(QTFORGE_BUILD_TESTS)
     message(STATUS "QtForge: Building tests")
     enable_testing()
@@ -690,46 +571,35 @@ else()
     message(STATUS "QtForge: Tests disabled")
 endif()
 
-# ----------------------------------------------------------------------------
 # Documentation
-# ----------------------------------------------------------------------------
 if(QTFORGE_BUILD_DOCS AND DOXYGEN_FOUND)
-    message(STATUS "QtForge: Building documentation")
+    message(STATUS "QtForge: Building documentation with Doxygen ${DOXYGEN_VERSION}")
     add_custom_target(docs
         COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_SOURCE_DIR}/Doxyfile
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         COMMENT "Generating API documentation with Doxygen"
         VERBATIM
     )
+    message(STATUS "QtForge: Use 'cmake --build . --target docs' to generate documentation")
 elseif(QTFORGE_BUILD_DOCS)
     message(WARNING "QtForge: Documentation requested but Doxygen not found")
+    message(STATUS "QtForge: Install Doxygen to enable documentation generation:")
+    message(STATUS "  - Ubuntu/Debian: sudo apt-get install doxygen")
+    message(STATUS "  - macOS: brew install doxygen")
+    message(STATUS "  - Windows: Download from https://www.doxygen.nl/download.html")
 else()
-    message(STATUS "QtForge: Documentation disabled")
+    message(STATUS "QtForge: Documentation disabled (QTFORGE_BUILD_DOCS=OFF)")
 endif()
 
-# ----------------------------------------------------------------------------
-# Packaging Configuration
-# ----------------------------------------------------------------------------
-# Configure packaging using the modular system
 qtforge_configure_packaging()
-
-# Add package targets
 qtforge_add_package_target()
 
-# ----------------------------------------------------------------------------
-# Header Installation
-# ----------------------------------------------------------------------------
-# Install headers
 install(DIRECTORY include/qtplugin
     DESTINATION ${QTFORGE_INSTALL_INCLUDE_DIR}
     COMPONENT Development
     FILES_MATCHING PATTERN "*.hpp"
 )
 
-# ----------------------------------------------------------------------------
-# Documentation Installation
-# ----------------------------------------------------------------------------
-# Install documentation
 install(FILES
     "${CMAKE_SOURCE_DIR}/README.md"
     "${CMAKE_SOURCE_DIR}/LICENSE"
@@ -746,17 +616,10 @@ install(DIRECTORY "${CMAKE_SOURCE_DIR}/docs/"
     PATTERN "*.md"
 )
 
-# ============================================================================
-# COMPILE COMMANDS COPY FOR CLANGD SUPPORT
-# ============================================================================
-# Copy compile_commands.json from preset build directory to build/ for clangd
-
-# Only set up the copy mechanism if compile commands are being exported
+# Clangd support
 if(CMAKE_EXPORT_COMPILE_COMMANDS)
-    # Create build directory if it doesn't exist
     file(MAKE_DIRECTORY "${CMAKE_SOURCE_DIR}/build")
 
-    # Add post-build command to automatically copy compile_commands.json after QtForgeCore is built
     add_custom_command(TARGET QtForgeCore POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
             "${CMAKE_BINARY_DIR}/compile_commands.json"
@@ -765,7 +628,6 @@ if(CMAKE_EXPORT_COMPILE_COMMANDS)
         VERBATIM
     )
 
-    # Add a standalone target for manual invocation
     add_custom_target(update_clangd_db
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
             "${CMAKE_BINARY_DIR}/compile_commands.json"
@@ -780,11 +642,18 @@ else()
     message(STATUS "QtForge: CMAKE_EXPORT_COMPILE_COMMANDS is OFF, skipping compile_commands.json copy setup")
 endif()
 
-# ============================================================================
-# BUILD CONFIGURATION SUMMARY
-# ============================================================================
+option(QTFORGE_BUILD_EXAMPLES "Build QtForge examples" ON)
 
-# Print build configuration summary
+if(QTFORGE_BUILD_EXAMPLES)
+    message(STATUS "QtForge: Building examples")
+
+    if(QTFORGE_BUILD_PYTHON_BINDINGS AND QTFORGE_PYTHON_FOUND)
+        add_subdirectory(examples/python_plugins)
+    endif()
+else()
+    message(STATUS "QtForge: Examples disabled (QTFORGE_BUILD_EXAMPLES=OFF)")
+endif()
+
 message(STATUS "")
 message(STATUS "QtForge Build System Summary:")
 message(STATUS "=============================")

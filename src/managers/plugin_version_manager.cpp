@@ -12,6 +12,7 @@
 
 #include <QCoreApplication>
 #include <QCryptographicHash>
+#include <QDebug>
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
@@ -31,12 +32,9 @@ namespace qtplugin {
 
 /**
  * @brief Concrete implementation of plugin version manager
- * NOTE: Temporarily commented out to avoid MOC/vtable issues
- * TODO: Move to header file for proper MOC processing
  */
-/*
 class PluginVersionManager : public QObject, public IPluginVersionManager {
-    // Q_OBJECT  // Commented out to avoid MOC issues in .cpp file
+    Q_OBJECT
 
 public:
     explicit PluginVersionManager(
@@ -260,7 +258,6 @@ private:
                                         const Version& from_version,
                                         const Version& to_version);
 };
-*/
 
 }  // namespace qtplugin
 
@@ -400,7 +397,7 @@ qtplugin::expected<PluginVersionInfo, PluginError> PluginVersionInfo::from_json(
 }
 
 // === PluginVersionManager Implementation ===
-/*
+
 PluginVersionManager::PluginVersionManager(
     std::shared_ptr<IPluginRegistry> registry,
     std::shared_ptr<IConfigurationManager> config_manager,
@@ -1218,7 +1215,6 @@ bool PluginVersionManager::is_migration_available(
 
     return false;
 }
-*/
 
 // === Factory Function ===
 
@@ -1226,16 +1222,15 @@ std::unique_ptr<IPluginVersionManager> create_plugin_version_manager(
     std::shared_ptr<IPluginRegistry> registry,
     std::shared_ptr<IConfigurationManager> config_manager,
     std::shared_ptr<ILoggingManager> logger, QObject* parent) {
-    // Return nullptr temporarily to avoid MOC/vtable issues
-    // TODO: Implement proper version manager once MOC issues are resolved
+    // For now, just return nullptr to test if this function is being called
     Q_UNUSED(registry);
     Q_UNUSED(config_manager);
     Q_UNUSED(logger);
     Q_UNUSED(parent);
+    qDebug() << "NEW FACTORY FUNCTION CALLED - THIS SHOULD BE VISIBLE";
     return nullptr;
 }
 
-/*
 // === Missing Method Implementations ===
 
 qtplugin::expected<void, VersionError>
@@ -2062,11 +2057,12 @@ int PluginVersionManager::cleanup_plugin_versions(
 
     return cleaned_count;
 }
-*/
 
 // Duplicate factory function removed - using the one above
 
 }  // namespace qtplugin
+
+#include "plugin_version_manager.moc"
 
 // Note: MOC include removed to avoid vtable issues
 // The PluginVersionManager class is defined in this source file but needs to be

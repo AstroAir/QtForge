@@ -47,16 +47,16 @@
 
 // Version information
 #define QTPLUGIN_VERSION_MAJOR 3
-#define QTPLUGIN_VERSION_MINOR 0
+#define QTPLUGIN_VERSION_MINOR 2
 #define QTPLUGIN_VERSION_PATCH 0
-#define QTPLUGIN_VERSION "3.0.0"
+#define QTPLUGIN_VERSION "3.2.0"
 
 // Core components
 #include "core/plugin_interface.hpp"
+#include "core/plugin_lifecycle_manager.hpp"  // Re-enabled with custom state machine
 #include "core/plugin_loader.hpp"
 #include "core/plugin_manager.hpp"  // Re-enabled after fixing MOC issues
 #include "core/service_plugin_interface.hpp"
-#include "core/plugin_lifecycle_manager.hpp"  // Re-enabled with custom state machine
 
 // Qt-dependent components (conditionally included)
 #ifdef QT_CORE_LIB
@@ -110,8 +110,8 @@
 
 // UI components (if available) - using comprehensive interface from interfaces/
 // #ifdef QTPLUGIN_BUILD_UI
-// #include "ui/ui_plugin_interface.hpp"  // Disabled to avoid duplicate with interfaces/ui_plugin_interface.hpp
-// #endif
+// #include "ui/ui_plugin_interface.hpp"  // Disabled to avoid duplicate with
+// interfaces/ui_plugin_interface.hpp #endif
 
 /**
  * @namespace qtplugin
