@@ -11,6 +11,7 @@
 #include <QFileInfo>
 #include <QLoggingCategory>
 #include <QStandardPaths>
+#include <QThread>
 #include <future>
 #include <chrono>
 
@@ -32,24 +33,62 @@ qtplugin::expected<void, PluginError> PythonExecutionEnvironment::initialize() {
     }
 
     m_process = std::make_unique<QProcess>();
+
+    // Configure process for bidirectional communication
+    m_process->setProcessChannelMode(QProcess::SeparateChannels);
+
     setup_process();
 
     // Start Python interpreter with our bridge script
-    QString bridge_script =
-        QCoreApplication::applicationDirPath() + "/python_bridge.py";
+    QString bridge_script;
+
+    // Try multiple locations for the bridge script
+    QStringList possible_paths = {
+        QCoreApplication::applicationDirPath() + "/python_bridge.py",
+        QDir::currentPath() + "/python_bridge.py",
+        QDir::currentPath() + "/tests/python_bridge/python_bridge.py",
+        QDir::currentPath() + "/../tests/python_bridge/python_bridge.py"
+    };
+
+    for (const QString& path : possible_paths) {
+        if (QFile::exists(path)) {
+            bridge_script = path;
+            break;
+        }
+    }
+
+    if (bridge_script.isEmpty()) {
+        return make_error<void>(PluginErrorCode::InitializationFailed,
+                                "Could not find python_bridge.py script");
+    }
+
     QStringList arguments;
-    arguments << bridge_script;
+    arguments << "-u" << bridge_script;  // -u for unbuffered output
 
     qCDebug(pythonBridgeLog)
         << "Starting Python process:" << m_python_path << arguments;
+    qCDebug(pythonBridgeLog) << "Working directory:" << QDir::currentPath();
+    qCDebug(pythonBridgeLog) << "Bridge script exists:" << QFile::exists(bridge_script);
+
+    // Set working directory to ensure Python can find any dependencies
+    m_process->setWorkingDirectory(QDir::currentPath());
 
     m_process->start(m_python_path, arguments);
 
     if (!m_process->waitForStarted(5000)) {
+        qCCritical(pythonBridgeLog) << "Failed to start Python process. Error:" << m_process->errorString();
+        qCCritical(pythonBridgeLog) << "Process state:" << m_process->state();
+        qCCritical(pythonBridgeLog) << "Process error:" << m_process->error();
         return make_error<void>(PluginErrorCode::InitializationFailed,
                                 "Failed to start Python interpreter: " +
                                     m_process->errorString().toStdString());
     }
+
+    qCDebug(pythonBridgeLog) << "Python process started successfully. PID:" << m_process->processId();
+    qCDebug(pythonBridgeLog) << "Process state:" << m_process->state();
+
+    // Give the Python process a moment to initialize
+    QThread::msleep(100);
 
     // Send initialization request
     QJsonObject init_request;
@@ -168,10 +207,16 @@ PythonExecutionEnvironment::call_plugin_method(const QString& plugin_id,
 void PythonExecutionEnvironment::setup_process() {
     // Connect process signals
     QObject::connect(m_process.get(), &QProcess::readyReadStandardOutput,
-                     [this]() { handle_process_output(); });
+                     [this]() {
+                         qCDebug(pythonBridgeLog) << "readyReadStandardOutput signal received";
+                         handle_process_output();
+                     });
 
     QObject::connect(m_process.get(), &QProcess::readyReadStandardError,
-                     [this]() { handle_process_error(); });
+                     [this]() {
+                         qCDebug(pythonBridgeLog) << "readyReadStandardError signal received";
+                         handle_process_error();
+                     });
 
     QObject::connect(
         m_process.get(),
@@ -188,7 +233,11 @@ void PythonExecutionEnvironment::handle_process_output() {
         return;
 
     QByteArray data = m_process->readAllStandardOutput();
+    qCDebug(pythonBridgeLog) << "Received data from Python process:" << data.size() << "bytes";
+    qCDebug(pythonBridgeLog) << "Raw data:" << data;
+
     QStringList lines = QString::fromUtf8(data).split('\n', Qt::SkipEmptyParts);
+    qCDebug(pythonBridgeLog) << "Split into" << lines.size() << "lines";
 
     for (const QString& line : lines) {
         QJsonParseError error;
@@ -203,11 +252,21 @@ void PythonExecutionEnvironment::handle_process_output() {
         QJsonObject response = doc.object();
         int response_id = response["id"].toInt();
 
+        qCDebug(pythonBridgeLog) << "Received response from Python:" << doc.toJson(QJsonDocument::Compact);
+        qCDebug(pythonBridgeLog) << "Response ID:" << response_id << "Expected ID:" << m_request_id;
+
         QMutexLocker locker(&m_mutex);
+
+        // Store the response regardless of whether we're currently waiting
+        m_pending_responses[response_id] = response;
+
         if (m_waiting_for_response && response_id == m_request_id) {
             m_last_response = response;
             m_waiting_for_response = false;
             m_response_condition.wakeAll();
+            qCDebug(pythonBridgeLog) << "Response matched, waking up waiting thread";
+        } else {
+            qCDebug(pythonBridgeLog) << "Response stored for later - waiting:" << m_waiting_for_response << "ID match:" << (response_id == m_request_id);
         }
     }
 }
@@ -218,12 +277,23 @@ void PythonExecutionEnvironment::handle_process_error() {
 
     QByteArray data = m_process->readAllStandardError();
     QString error_text = QString::fromUtf8(data);
-    qCWarning(pythonBridgeLog) << "Python process error:" << error_text;
+    if (!error_text.isEmpty()) {
+        qCWarning(pythonBridgeLog) << "Python process stderr:" << error_text;
+    }
 }
 
 qtplugin::expected<QJsonObject, PluginError>
 PythonExecutionEnvironment::send_request(const QJsonObject& request) {
-    if (!m_process || m_process->state() != QProcess::Running) {
+    if (!m_process) {
+        qCCritical(pythonBridgeLog) << "No Python process available";
+        return make_error<QJsonObject>(PluginErrorCode::InvalidState,
+                                       "Python process is not available");
+    }
+
+    if (m_process->state() != QProcess::Running) {
+        qCCritical(pythonBridgeLog) << "Python process is not running. State:" << m_process->state();
+        qCCritical(pythonBridgeLog) << "Process error:" << m_process->error();
+        qCCritical(pythonBridgeLog) << "Exit code:" << m_process->exitCode();
         return make_error<QJsonObject>(PluginErrorCode::InvalidState,
                                        "Python process is not running");
     }
@@ -233,12 +303,49 @@ PythonExecutionEnvironment::send_request(const QJsonObject& request) {
     // Send request
     QJsonDocument doc(request);
     QByteArray data = doc.toJson(QJsonDocument::Compact) + "\n";
-    m_process->write(data);
+    qCDebug(pythonBridgeLog) << "Sending request to Python:" << doc.toJson(QJsonDocument::Compact);
+    qint64 written = m_process->write(data);
+    if (written != data.size()) {
+        return make_error<QJsonObject>(PluginErrorCode::ExecutionFailed,
+                                       "Failed to write complete request to Python process");
+    }
+    m_process->waitForBytesWritten(1000);
 
-    // Wait for response
-    m_waiting_for_response = true;
-    if (!m_response_condition.wait(&m_mutex, 30000)) {  // 30 second timeout
+    qCDebug(pythonBridgeLog) << "Request sent, process state:" << m_process->state();
+
+    // Check if we already have a pending response for this request
+    if (m_pending_responses.contains(m_request_id)) {
+        m_last_response = m_pending_responses.take(m_request_id);
+        qCDebug(pythonBridgeLog) << "Found pending response for ID:" << m_request_id;
+    } else {
+        // Wait for response
+        m_waiting_for_response = true;
+
+        // Check periodically for data
+        for (int i = 0; i < 50; ++i) {  // Check for 5 seconds (50 * 100ms)
+            if (!m_waiting_for_response) {
+                break;  // Response received
+            }
+
+            // Check if there's data available to read
+            if (m_process->bytesAvailable() > 0) {
+                qCDebug(pythonBridgeLog) << "Data available, manually calling handle_process_output";
+                handle_process_output();
+            }
+
+            if (!m_response_condition.wait(&m_mutex, 100)) {  // 100ms timeout
+                continue;  // Continue checking
+            } else {
+                break;  // Response received
+            }
+        }
+    }
+
+    if (m_waiting_for_response) {
         m_waiting_for_response = false;
+        qCWarning(pythonBridgeLog) << "Timeout waiting for Python response. Process state:" << m_process->state();
+        qCWarning(pythonBridgeLog) << "Process error:" << m_process->error();
+        qCWarning(pythonBridgeLog) << "Bytes available:" << m_process->bytesAvailable();
         return make_error<QJsonObject>(PluginErrorCode::TimeoutError,
                                        "Timeout waiting for Python response");
     }

@@ -394,7 +394,7 @@ qtplugin::expected<void, PluginError> PluginSandbox::initialize() {
     // Initialize and start resource monitoring if enabled
     if (m_policy.level != SandboxSecurityLevel::Unrestricted) {
         if (m_resource_monitor->initialize()) {
-            m_resource_monitor_timer->start(1000); // Monitor every second
+            m_resource_monitor_timer->start(100); // Monitor every 100ms for better responsiveness
             qCDebug(sandboxLog) << "Resource monitoring started";
         } else {
             qCWarning(sandboxLog) << "Failed to initialize resource monitoring";
@@ -545,6 +545,13 @@ qtplugin::expected<QJsonObject, PluginError> PluginSandbox::execute_plugin(
         return qtplugin::unexpected(PluginError{
             PluginErrorCode::ExecutionFailed,
             "Failed to start plugin process: " + m_process->errorString().toStdString()
+        });
+    }
+
+    // Emit initial resource usage update to ensure at least one signal is sent
+    if (m_policy.level != SandboxSecurityLevel::Unrestricted) {
+        QTimer::singleShot(50, this, [this]() {
+            update_resource_usage();
         });
     }
 

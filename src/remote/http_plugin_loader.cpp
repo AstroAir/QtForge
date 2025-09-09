@@ -3,35 +3,36 @@
  * @brief Implementation of HTTP/HTTPS plugin loader
  */
 
-#include <qtplugin/remote/http_plugin_loader.hpp>
 #include <QEventLoop>
+#include <QFileInfo>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QTimer>
 #include <QUrlQuery>
+#include <qtplugin/remote/http_plugin_loader.hpp>
 
 namespace qtplugin {
 
 HttpPluginLoader::HttpPluginLoader(
     std::shared_ptr<RemotePluginConfiguration> configuration,
     std::shared_ptr<PluginDownloadManager> download_manager,
-    std::shared_ptr<RemotePluginValidator> validator,
-    QObject* parent)
-    : RemotePluginLoaderBase(configuration, download_manager, validator),
+    std::shared_ptr<RemotePluginValidator> validator, QObject* parent)
+    : RemotePluginLoaderBase(configuration, download_manager, validator,
+                             parent),
       m_network_manager(std::make_unique<QNetworkAccessManager>(this)) {
-    
-    setParent(parent);
-    
     // Connect download manager signals for async operations
     if (m_download_manager) {
-        connect(m_download_manager.get(), &PluginDownloadManager::download_progress,
-                this, &HttpPluginLoader::on_async_load_progress);
-        connect(m_download_manager.get(), &PluginDownloadManager::download_completed,
-                this, &HttpPluginLoader::on_async_load_completed);
-        connect(m_download_manager.get(), &PluginDownloadManager::download_failed,
-                this, &HttpPluginLoader::on_async_load_failed);
+        QObject::connect(m_download_manager.get(),
+                         &PluginDownloadManager::download_progress, this,
+                         &HttpPluginLoader::on_async_load_progress);
+        QObject::connect(m_download_manager.get(),
+                         &PluginDownloadManager::download_completed, this,
+                         &HttpPluginLoader::on_async_load_completed);
+        QObject::connect(m_download_manager.get(),
+                         &PluginDownloadManager::download_failed, this,
+                         &HttpPluginLoader::on_async_load_failed);
     }
 }
 
@@ -41,129 +42,135 @@ bool HttpPluginLoader::can_load_remote(const QUrl& url) const {
     return is_http_url(url) && RemotePluginLoaderBase::can_load_remote(url);
 }
 
-qtplugin::expected<RemotePluginLoadResult, PluginError> HttpPluginLoader::load_remote(
-    const RemotePluginSource& source,
-    const RemotePluginLoadOptions& options) {
-    
+qtplugin::expected<RemotePluginLoadResult, PluginError>
+HttpPluginLoader::load_remote(const RemotePluginSource& source,
+                              const RemotePluginLoadOptions& options) {
     m_remote_loads_attempted++;
-    
+
     try {
         return perform_remote_load(source, options);
     } catch (const std::exception& e) {
         m_remote_loads_failed++;
         return qtplugin::make_error<RemotePluginLoadResult>(
-            PluginErrorCode::LoadingFailed,
+            PluginErrorCode::LoadFailed,
             "Remote plugin loading failed: " + std::string(e.what()));
     }
 }
 
-qtplugin::expected<RemotePluginLoadResult, PluginError> HttpPluginLoader::load_remote(
-    const QUrl& url,
-    const RemotePluginLoadOptions& options) {
-    
+qtplugin::expected<RemotePluginLoadResult, PluginError>
+HttpPluginLoader::load_remote(const QUrl& url,
+                              const RemotePluginLoadOptions& options) {
     // Create a temporary source from URL
     RemotePluginSource source = create_source_from_url(url);
     return load_remote(source, options);
 }
 
 QString HttpPluginLoader::load_remote_async(
-    const RemotePluginSource& source,
-    const RemotePluginLoadOptions& options,
+    const RemotePluginSource& source, const RemotePluginLoadOptions& options,
     std::function<void(const DownloadProgress&)> progress_callback,
-    std::function<void(const qtplugin::expected<RemotePluginLoadResult, PluginError>&)> completion_callback) {
-    
+    std::function<
+        void(const qtplugin::expected<RemotePluginLoadResult, PluginError>&)>
+        completion_callback) {
     m_remote_loads_attempted++;
-    
-    QString operation_id = register_async_operation(source, options, progress_callback, completion_callback);
-    
+
+    QString operation_id = register_async_operation(
+        source, options, progress_callback, completion_callback);
+
     // Start async validation and download
     QTimer::singleShot(0, this, [this, operation_id, source, options]() {
         // Validate source first
         auto validation_result = validate_http_source(source, options);
         if (!validation_result) {
-            complete_async_operation(operation_id, qtplugin::unexpected(validation_result.error()));
+            complete_async_operation(
+                operation_id, qtplugin::unexpected(validation_result.error()));
             return;
         }
-        
-        if (validation_result->is_failed()) {
-            PluginError error{PluginErrorCode::SecurityViolation, validation_result->message};
+
+        if (validation_result.value().is_failed()) {
+            PluginError error{PluginErrorCode::SecurityViolation,
+                              validation_result.value().message};
             complete_async_operation(operation_id, qtplugin::unexpected(error));
             return;
         }
-        
+
         // Check cache first
-        if (options.cache_plugin && m_download_manager->is_cached(source.url())) {
-            auto cached_path = m_download_manager->get_cached_path(source.url());
+        if (options.cache_plugin &&
+            m_download_manager->is_cached(source.url())) {
+            auto cached_path =
+                m_download_manager->get_cached_path(source.url());
             if (cached_path) {
                 auto plugin_result = load_from_cache(*cached_path);
                 if (plugin_result) {
-                    RemotePluginLoadResult result;
-                    result.plugin = *plugin_result;
-                    result.source = source;
-                    result.cached_path = *cached_path;
-                    result.load_time = std::chrono::system_clock::now();
-                    result.validation_result = *validation_result;
-                    
+                    RemotePluginLoadResult result{
+                        *plugin_result,    // plugin
+                        source,            // source
+                        DownloadResult{},  // download_result (default
+                                           // constructed)
+                        *cached_path,      // cached_path
+                        std::chrono::system_clock::now(),  // load_time
+                        *validation_result                 // validation_result
+                    };
+
                     m_cache_hits++;
                     complete_async_operation(operation_id, result);
                     return;
                 }
             }
         }
-        
+
         // Start async download
         QString download_id = m_download_manager->download_plugin_async(
             source, QUrl(), options.download_options,
             nullptr,  // Progress handled by our slot
             nullptr   // Completion handled by our slot
         );
-        
+
         if (download_id.isEmpty()) {
-            PluginError error{PluginErrorCode::NetworkError, "Failed to start download"};
+            PluginError error{PluginErrorCode::NetworkError,
+                              "Failed to start download"};
             complete_async_operation(operation_id, qtplugin::unexpected(error));
             return;
         }
-        
+
         // Map download ID to operation ID
         {
             std::lock_guard<std::mutex> lock(m_async_operations_mutex);
             m_download_to_operation_map[download_id] = operation_id;
         }
     });
-    
+
     return operation_id;
 }
 
-qtplugin::expected<void, PluginError> HttpPluginLoader::cancel_remote_load(const QString& operation_id) {
+qtplugin::expected<void, PluginError> HttpPluginLoader::cancel_remote_load(
+    const QString& operation_id) {
     std::lock_guard<std::mutex> lock(m_async_operations_mutex);
-    
+
     auto it = m_async_operations.find(operation_id);
     if (it == m_async_operations.end()) {
         return qtplugin::make_error<void>(
             PluginErrorCode::NotFound,
             "Operation not found: " + operation_id.toStdString());
     }
-    
+
     // Cancel download if active
     if (!it->second->download_id.isEmpty()) {
         m_download_manager->cancel_download(it->second->download_id);
     }
-    
+
     // Clean up operation
     cleanup_async_operation(operation_id);
-    
+
     return qtplugin::make_success();
 }
 
-qtplugin::expected<std::vector<QJsonObject>, PluginError> HttpPluginLoader::discover_plugins(
-    const RemotePluginSource& source) {
-    
+qtplugin::expected<std::vector<QJsonObject>, PluginError>
+HttpPluginLoader::discover_plugins(const RemotePluginSource& source) {
     if (!is_http_url(source.url())) {
         return qtplugin::make_error<std::vector<QJsonObject>>(
-            PluginErrorCode::UnsupportedFormat,
-            "Source is not HTTP/HTTPS");
+            PluginErrorCode::InvalidFormat, "Source is not HTTP/HTTPS");
     }
-    
+
     // Check if source supports registry API
     if (supports_registry_api(source)) {
         QUrl endpoint = get_registry_endpoint(source, "list");
@@ -198,37 +205,37 @@ qtplugin::expected<std::vector<QJsonObject>, PluginError> HttpPluginLoader::disc
                 }
             }
         }
-        
+
         // Fallback: return empty list if discovery is not supported
         return std::vector<QJsonObject>{};
     }
 }
 
-qtplugin::expected<std::vector<QJsonObject>, PluginError> HttpPluginLoader::search_plugins(
-    const QString& query, int max_results) {
-    
+qtplugin::expected<std::vector<QJsonObject>, PluginError>
+HttpPluginLoader::search_plugins(const QString& query, int max_results) {
     std::vector<QJsonObject> all_results;
     auto sources = get_sources();
-    
+
     for (const auto& source : sources) {
         if (!is_http_url(source.url())) {
             continue;
         }
-        
+
         try {
             if (supports_registry_api(source)) {
                 QUrl endpoint = get_registry_endpoint(source, "search");
                 QJsonObject params;
                 params["query"] = query;
                 params["limit"] = max_results;
-                
+
                 auto response = make_registry_request(endpoint, params);
                 if (response) {
                     auto plugins = parse_plugin_list_response(*response);
                     if (plugins) {
                         for (const auto& plugin_value : *plugins) {
                             all_results.push_back(plugin_value.toObject());
-                            if (all_results.size() >= static_cast<size_t>(max_results)) {
+                            if (all_results.size() >=
+                                static_cast<size_t>(max_results)) {
                                 break;
                             }
                         }
@@ -243,7 +250,8 @@ qtplugin::expected<std::vector<QJsonObject>, PluginError> HttpPluginLoader::sear
                     if (plugins) {
                         for (const auto& plugin_value : *plugins) {
                             all_results.push_back(plugin_value.toObject());
-                            if (all_results.size() >= static_cast<size_t>(max_results)) {
+                            if (all_results.size() >=
+                                static_cast<size_t>(max_results)) {
                                 break;
                             }
                         }
@@ -254,16 +262,17 @@ qtplugin::expected<std::vector<QJsonObject>, PluginError> HttpPluginLoader::sear
             // Continue with other sources if one fails
             continue;
         }
-        
+
         if (all_results.size() >= static_cast<size_t>(max_results)) {
             break;
         }
     }
-    
+
     return all_results;
 }
 
-void HttpPluginLoader::set_network_manager(std::unique_ptr<QNetworkAccessManager> network_manager) {
+void HttpPluginLoader::set_network_manager(
+    std::unique_ptr<QNetworkAccessManager> network_manager) {
     m_network_manager = std::move(network_manager);
     m_network_manager->setParent(this);
 }
@@ -273,65 +282,66 @@ bool HttpPluginLoader::is_http_url(const QUrl& url) {
     return scheme == "http" || scheme == "https";
 }
 
-qtplugin::expected<QJsonObject, PluginError> HttpPluginLoader::get_plugin_metadata(
-    const QUrl& url, std::chrono::seconds timeout) {
-    
+qtplugin::expected<QJsonObject, PluginError>
+HttpPluginLoader::get_plugin_metadata(const QUrl& url,
+                                      std::chrono::seconds timeout) {
     if (!is_http_url(url)) {
-        return qtplugin::make_error<QJsonObject>(
-            PluginErrorCode::UnsupportedFormat,
-            "URL is not HTTP/HTTPS");
+        return qtplugin::make_error<QJsonObject>(PluginErrorCode::InvalidFormat,
+                                                 "URL is not HTTP/HTTPS");
     }
-    
+
     // Try to get metadata from a .meta or .json file alongside the plugin
     QUrl metadata_url = url;
     QString path = metadata_url.path();
-    
+
     // Try different metadata file extensions
     QStringList metadata_extensions = {".meta", ".json", ".info"};
-    
+
     for (const QString& ext : metadata_extensions) {
         QUrl test_url = metadata_url;
         test_url.setPath(path + ext);
-        
+
         auto response = make_http_request(test_url, "GET", {}, {}, timeout);
         if (response) {
             return *response;
         }
     }
-    
+
     // If no metadata file found, return basic metadata
     QJsonObject basic_metadata;
     basic_metadata["url"] = url.toString();
     basic_metadata["name"] = QFileInfo(url.path()).baseName();
     basic_metadata["source"] = "http";
-    
+
     return basic_metadata;
 }
 
-bool HttpPluginLoader::supports_registry_api(const RemotePluginSource& source) const {
+bool HttpPluginLoader::supports_registry_api(
+    const RemotePluginSource& source) const {
     // Check if source has registry API configuration
     QJsonObject custom_options = source.configuration().custom_options;
-    return custom_options.contains("registry_api") && custom_options["registry_api"].toBool();
+    return custom_options.contains("registry_api") &&
+           custom_options["registry_api"].toBool();
 }
 
-QUrl HttpPluginLoader::get_registry_endpoint(const RemotePluginSource& source, const QString& endpoint) const {
+QUrl HttpPluginLoader::get_registry_endpoint(const RemotePluginSource& source,
+                                             const QString& endpoint) const {
     QUrl base_url = source.url();
-    
+
     // Get API base path from configuration
     QJsonObject custom_options = source.configuration().custom_options;
     QString api_base = custom_options.value("api_base").toString("/api/v1");
-    
+
     // Build endpoint URL
     QString path = api_base + "/" + endpoint;
     base_url.setPath(path);
-    
+
     return base_url;
 }
 
-qtplugin::expected<RemotePluginLoadResult, PluginError> HttpPluginLoader::perform_remote_load(
-    const RemotePluginSource& source,
-    const RemotePluginLoadOptions& options) {
-
+qtplugin::expected<RemotePluginLoadResult, PluginError>
+HttpPluginLoader::perform_remote_load(const RemotePluginSource& source,
+                                      const RemotePluginLoadOptions& options) {
     // Validate source
     auto validation_result = validate_http_source(source, options);
     if (!validation_result) {
@@ -351,12 +361,14 @@ qtplugin::expected<RemotePluginLoadResult, PluginError> HttpPluginLoader::perfor
         if (cached_path) {
             auto plugin_result = load_from_cache(*cached_path);
             if (plugin_result) {
-                RemotePluginLoadResult result;
-                result.plugin = *plugin_result;
-                result.source = source;
-                result.cached_path = *cached_path;
-                result.load_time = std::chrono::system_clock::now();
-                result.validation_result = validation_result.value();
+                RemotePluginLoadResult result{
+                    *plugin_result,    // plugin
+                    source,            // source
+                    DownloadResult{},  // download_result (default constructed)
+                    *cached_path,      // cached_path
+                    std::chrono::system_clock::now(),  // load_time
+                    validation_result.value()          // validation_result
+                };
 
                 m_cache_hits++;
                 m_remote_loads_successful++;
@@ -380,13 +392,14 @@ qtplugin::expected<RemotePluginLoadResult, PluginError> HttpPluginLoader::perfor
     }
 
     // Create result
-    RemotePluginLoadResult result;
-    result.plugin = *plugin_result;
-    result.source = source;
-    result.download_result = *download_result;
-    result.validation_result = validation_result.value();
-    result.cached_path = download_result->file_path;
-    result.load_time = std::chrono::system_clock::now();
+    RemotePluginLoadResult result{
+        *plugin_result,                    // plugin
+        source,                            // source
+        *download_result,                  // download_result
+        download_result->file_path,        // cached_path
+        std::chrono::system_clock::now(),  // load_time
+        validation_result.value()          // validation_result
+    };
 
     m_remote_loads_successful++;
     return result;
@@ -394,7 +407,8 @@ qtplugin::expected<RemotePluginLoadResult, PluginError> HttpPluginLoader::perfor
 
 // === Slot Implementations ===
 
-void HttpPluginLoader::on_async_load_progress(const QString& download_id, const DownloadProgress& progress) {
+void HttpPluginLoader::on_async_load_progress(
+    const QString& download_id, const DownloadProgress& progress) {
     std::lock_guard<std::mutex> lock(m_async_operations_mutex);
 
     auto map_it = m_download_to_operation_map.find(download_id);
@@ -408,7 +422,8 @@ void HttpPluginLoader::on_async_load_progress(const QString& download_id, const 
     }
 }
 
-void HttpPluginLoader::on_async_load_completed(const QString& download_id, const DownloadResult& result) {
+void HttpPluginLoader::on_async_load_completed(const QString& download_id,
+                                               const DownloadResult& result) {
     std::lock_guard<std::mutex> lock(m_async_operations_mutex);
 
     auto map_it = m_download_to_operation_map.find(download_id);
@@ -425,22 +440,26 @@ void HttpPluginLoader::on_async_load_completed(const QString& download_id, const
     // Load the downloaded plugin
     auto plugin_result = load_downloaded_plugin(result, op_it->second->source);
     if (plugin_result) {
-        RemotePluginLoadResult load_result;
-        load_result.plugin = *plugin_result;
-        load_result.source = op_it->second->source;
-        load_result.download_result = result;
-        load_result.cached_path = result.file_path;
-        load_result.load_time = std::chrono::system_clock::now();
+        RemotePluginLoadResult load_result{
+            *plugin_result,                    // plugin
+            op_it->second->source,             // source
+            result,                            // download_result
+            result.file_path,                  // cached_path
+            std::chrono::system_clock::now(),  // load_time
+            ValidationResult{}  // validation_result (default constructed)
+        };
 
         m_remote_loads_successful++;
         complete_async_operation(operation_id, load_result);
     } else {
         m_remote_loads_failed++;
-        complete_async_operation(operation_id, qtplugin::unexpected(plugin_result.error()));
+        complete_async_operation(operation_id,
+                                 qtplugin::unexpected(plugin_result.error()));
     }
 }
 
-void HttpPluginLoader::on_async_load_failed(const QString& download_id, const PluginError& error) {
+void HttpPluginLoader::on_async_load_failed(const QString& download_id,
+                                            const PluginError& error) {
     std::lock_guard<std::mutex> lock(m_async_operations_mutex);
 
     auto map_it = m_download_to_operation_map.find(download_id);
@@ -455,17 +474,21 @@ void HttpPluginLoader::on_async_load_failed(const QString& download_id, const Pl
 
 // === Helper Methods ===
 
-RemotePluginSource HttpPluginLoader::create_source_from_url(const QUrl& url) const {
+RemotePluginSource HttpPluginLoader::create_source_from_url(
+    const QUrl& url) const {
     RemotePluginSource source(url, RemoteSourceType::Http);
 
     // Apply default configuration if available
     if (m_configuration) {
         RemoteSourceConfig config;
-        config.security_level = m_configuration->security_policy().default_security_level;
-        config.cache_policy = m_configuration->cache_config().default_cache_policy;
+        config.security_level =
+            m_configuration->security_policy().default_security_level;
+        config.cache_policy =
+            m_configuration->cache_config().default_cache_policy;
         config.timeout = m_configuration->network_config().connection_timeout;
         config.max_retries = m_configuration->network_config().max_retries;
-        config.verify_ssl = m_configuration->network_config().verify_ssl_certificates;
+        config.verify_ssl =
+            m_configuration->network_config().verify_ssl_certificates;
 
         source.set_configuration(config);
     }
@@ -473,9 +496,9 @@ RemotePluginSource HttpPluginLoader::create_source_from_url(const QUrl& url) con
     return source;
 }
 
-qtplugin::expected<ValidationResult, PluginError> HttpPluginLoader::validate_http_source(
-    const RemotePluginSource& source, const RemotePluginLoadOptions& options) {
-
+qtplugin::expected<ValidationResult, PluginError>
+HttpPluginLoader::validate_http_source(const RemotePluginSource& source,
+                                       const RemotePluginLoadOptions& options) {
     if (!options.validate_source) {
         ValidationResult result;
         result.level = ValidationLevel::Passed;
@@ -486,28 +509,28 @@ qtplugin::expected<ValidationResult, PluginError> HttpPluginLoader::validate_htt
 
     if (!m_validator) {
         return qtplugin::make_error<ValidationResult>(
-            PluginErrorCode::InvalidConfiguration,
-            "No validator available");
+            PluginErrorCode::InvalidConfiguration, "No validator available");
     }
 
     return m_validator->validate_source(source);
 }
 
-qtplugin::expected<DownloadResult, PluginError> HttpPluginLoader::download_plugin_file(
-    const RemotePluginSource& source, const RemotePluginLoadOptions& options) {
-
+qtplugin::expected<DownloadResult, PluginError>
+HttpPluginLoader::download_plugin_file(const RemotePluginSource& source,
+                                       const RemotePluginLoadOptions& options) {
     if (!m_download_manager) {
         return qtplugin::make_error<DownloadResult>(
             PluginErrorCode::InvalidConfiguration,
             "No download manager available");
     }
 
-    return m_download_manager->download_plugin(source, QUrl(), options.download_options);
+    return m_download_manager->download_plugin(source, QUrl(),
+                                               options.download_options);
 }
 
-qtplugin::expected<std::shared_ptr<IPlugin>, PluginError> HttpPluginLoader::load_downloaded_plugin(
-    const DownloadResult& download_result, const RemotePluginSource& source) {
-
+qtplugin::expected<std::shared_ptr<IPlugin>, PluginError>
+HttpPluginLoader::load_downloaded_plugin(const DownloadResult& download_result,
+                                         const RemotePluginSource& source) {
     // Validate downloaded file if required
     if (m_validator) {
         auto validation_result = m_validator->validate_plugin_file(
@@ -517,10 +540,10 @@ qtplugin::expected<std::shared_ptr<IPlugin>, PluginError> HttpPluginLoader::load
             return qtplugin::unexpected(validation_result.error());
         }
 
-        if (validation_result->is_failed()) {
+        if (validation_result.value().is_failed()) {
             return qtplugin::make_error<std::shared_ptr<IPlugin>>(
                 PluginErrorCode::SecurityViolation,
-                validation_result->message);
+                validation_result.value().message);
         }
     }
 
@@ -529,11 +552,11 @@ qtplugin::expected<std::shared_ptr<IPlugin>, PluginError> HttpPluginLoader::load
 }
 
 QString HttpPluginLoader::register_async_operation(
-    const RemotePluginSource& source,
-    const RemotePluginLoadOptions& options,
+    const RemotePluginSource& source, const RemotePluginLoadOptions& options,
     std::function<void(const DownloadProgress&)> progress_callback,
-    std::function<void(const qtplugin::expected<RemotePluginLoadResult, PluginError>&)> completion_callback) {
-
+    std::function<
+        void(const qtplugin::expected<RemotePluginLoadResult, PluginError>&)>
+        completion_callback) {
     QString operation_id = generate_operation_id();
 
     auto operation = std::make_unique<AsyncOperation>();
@@ -553,18 +576,21 @@ QString HttpPluginLoader::register_async_operation(
     QJsonObject info;
     info["type"] = "async_load";
     info["source_url"] = source.url().toString();
-    info["start_time"] = QDateTime::fromSecsSinceEpoch(
-        std::chrono::duration_cast<std::chrono::seconds>(
-            std::chrono::system_clock::now().time_since_epoch()).count()
-    ).toString(Qt::ISODate);
+    info["start_time"] =
+        QDateTime::fromSecsSinceEpoch(
+            std::chrono::duration_cast<std::chrono::seconds>(
+                std::chrono::system_clock::now().time_since_epoch())
+                .count())
+            .toString(Qt::ISODate);
 
     track_operation(operation_id, info);
 
     return operation_id;
 }
 
-void HttpPluginLoader::complete_async_operation(const QString& operation_id,
-                                               const qtplugin::expected<RemotePluginLoadResult, PluginError>& result) {
+void HttpPluginLoader::complete_async_operation(
+    const QString& operation_id,
+    const qtplugin::expected<RemotePluginLoadResult, PluginError>& result) {
     std::unique_ptr<AsyncOperation> operation;
 
     {
@@ -588,7 +614,8 @@ void HttpPluginLoader::cleanup_async_operation(const QString& operation_id) {
         std::lock_guard<std::mutex> lock(m_async_operations_mutex);
 
         // Remove from download mapping
-        for (auto it = m_download_to_operation_map.begin(); it != m_download_to_operation_map.end(); ++it) {
+        for (auto it = m_download_to_operation_map.begin();
+             it != m_download_to_operation_map.end(); ++it) {
             if (it->second == operation_id) {
                 m_download_to_operation_map.erase(it);
                 break;
@@ -601,9 +628,10 @@ void HttpPluginLoader::cleanup_async_operation(const QString& operation_id) {
 
 // === Registry API Helpers ===
 
-qtplugin::expected<QJsonObject, PluginError> HttpPluginLoader::make_registry_request(
-    const QUrl& endpoint, const QJsonObject& params, std::chrono::seconds timeout) {
-
+qtplugin::expected<QJsonObject, PluginError>
+HttpPluginLoader::make_registry_request(const QUrl& endpoint,
+                                        const QJsonObject& params,
+                                        std::chrono::seconds timeout) {
     QJsonObject headers;
     headers["Content-Type"] = "application/json";
     headers["Accept"] = "application/json";
@@ -611,7 +639,8 @@ qtplugin::expected<QJsonObject, PluginError> HttpPluginLoader::make_registry_req
     return make_http_request(endpoint, "POST", params, headers, timeout);
 }
 
-qtplugin::expected<QJsonArray, PluginError> HttpPluginLoader::parse_plugin_list_response(const QJsonObject& response) {
+qtplugin::expected<QJsonArray, PluginError>
+HttpPluginLoader::parse_plugin_list_response(const QJsonObject& response) {
     if (is_error_response(response)) {
         return qtplugin::unexpected(extract_error_from_response(response));
     }
@@ -625,11 +654,11 @@ qtplugin::expected<QJsonArray, PluginError> HttpPluginLoader::parse_plugin_list_
     }
 
     return qtplugin::make_error<QJsonArray>(
-        PluginErrorCode::InvalidFormat,
-        "Invalid plugin list response format");
+        PluginErrorCode::InvalidFormat, "Invalid plugin list response format");
 }
 
-qtplugin::expected<QJsonObject, PluginError> HttpPluginLoader::parse_plugin_info_response(const QJsonObject& response) {
+qtplugin::expected<QJsonObject, PluginError>
+HttpPluginLoader::parse_plugin_info_response(const QJsonObject& response) {
     if (is_error_response(response)) {
         return qtplugin::unexpected(extract_error_from_response(response));
     }
@@ -645,10 +674,11 @@ qtplugin::expected<QJsonObject, PluginError> HttpPluginLoader::parse_plugin_info
 
 // === HTTP Request Helpers ===
 
-qtplugin::expected<QJsonObject, PluginError> HttpPluginLoader::make_http_request(
-    const QUrl& url, const QString& method, const QJsonObject& data,
-    const QJsonObject& headers, std::chrono::seconds timeout) {
-
+qtplugin::expected<QJsonObject, PluginError>
+HttpPluginLoader::make_http_request(const QUrl& url, const QString& method,
+                                    const QJsonObject& data,
+                                    const QJsonObject& headers,
+                                    std::chrono::seconds timeout) {
     QNetworkRequest request(url);
 
     // Apply headers
@@ -667,7 +697,7 @@ qtplugin::expected<QJsonObject, PluginError> HttpPluginLoader::make_http_request
         reply = m_network_manager->post(request, post_data);
     } else {
         return qtplugin::make_error<QJsonObject>(
-            PluginErrorCode::UnsupportedFormat,
+            PluginErrorCode::InvalidFormat,
             "Unsupported HTTP method: " + method.toStdString());
     }
 
@@ -677,8 +707,9 @@ qtplugin::expected<QJsonObject, PluginError> HttpPluginLoader::make_http_request
     timeout_timer.setSingleShot(true);
     timeout_timer.start(static_cast<int>(timeout.count() * 1000));
 
-    connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-    connect(&timeout_timer, &QTimer::timeout, &loop, &QEventLoop::quit);
+    QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+    QObject::connect(&timeout_timer, &QTimer::timeout, &loop,
+                     &QEventLoop::quit);
     loop.exec();
 
     if (timeout_timer.isActive()) {
@@ -701,13 +732,13 @@ qtplugin::expected<QJsonObject, PluginError> HttpPluginLoader::make_http_request
         reply->abort();
         reply->deleteLater();
 
-        return qtplugin::make_error<QJsonObject>(
-            PluginErrorCode::NetworkError,
-            "HTTP request timed out");
+        return qtplugin::make_error<QJsonObject>(PluginErrorCode::NetworkError,
+                                                 "HTTP request timed out");
     }
 }
 
-void HttpPluginLoader::setup_network_request(QNetworkRequest& request, const RemotePluginSource& source) const {
+void HttpPluginLoader::setup_network_request(
+    QNetworkRequest& request, const RemotePluginSource& source) const {
     // Set user agent
     QString user_agent = "QtForge-HttpPluginLoader/3.0.0";
     if (m_configuration) {
@@ -723,7 +754,8 @@ void HttpPluginLoader::setup_network_request(QNetworkRequest& request, const Rem
     apply_custom_headers(request, custom_headers);
 }
 
-void HttpPluginLoader::apply_authentication(QNetworkRequest& request, const RemotePluginSource& source) const {
+void HttpPluginLoader::apply_authentication(
+    QNetworkRequest& request, const RemotePluginSource& source) const {
     if (!source.has_authentication()) {
         return;
     }
@@ -738,7 +770,8 @@ void HttpPluginLoader::apply_authentication(QNetworkRequest& request, const Remo
             break;
         }
         case AuthenticationType::Bearer:
-            request.setRawHeader("Authorization", "Bearer " + auth.token.toUtf8());
+            request.setRawHeader("Authorization",
+                                 "Bearer " + auth.token.toUtf8());
             break;
         case AuthenticationType::ApiKey:
             request.setRawHeader("X-API-Key", auth.api_key.toUtf8());
@@ -749,7 +782,8 @@ void HttpPluginLoader::apply_authentication(QNetworkRequest& request, const Remo
     }
 }
 
-void HttpPluginLoader::apply_custom_headers(QNetworkRequest& request, const QJsonObject& headers) const {
+void HttpPluginLoader::apply_custom_headers(QNetworkRequest& request,
+                                            const QJsonObject& headers) const {
     for (auto it = headers.begin(); it != headers.end(); ++it) {
         request.setRawHeader(it.key().toUtf8(), it.value().toString().toUtf8());
     }
@@ -757,10 +791,12 @@ void HttpPluginLoader::apply_custom_headers(QNetworkRequest& request, const QJso
 
 // === URL Manipulation Helpers ===
 
-QUrl HttpPluginLoader::resolve_plugin_url(const RemotePluginSource& source, const QString& plugin_path) const {
+QUrl HttpPluginLoader::resolve_plugin_url(const RemotePluginSource& source,
+                                          const QString& plugin_path) const {
     QUrl base_url = source.url();
 
-    if (plugin_path.startsWith("http://") || plugin_path.startsWith("https://")) {
+    if (plugin_path.startsWith("http://") ||
+        plugin_path.startsWith("https://")) {
         return QUrl(plugin_path);
     }
 
@@ -774,7 +810,9 @@ QUrl HttpPluginLoader::resolve_plugin_url(const RemotePluginSource& source, cons
     return base_url;
 }
 
-QUrl HttpPluginLoader::build_search_url(const RemotePluginSource& source, const QString& query, int max_results) const {
+QUrl HttpPluginLoader::build_search_url(const RemotePluginSource& source,
+                                        const QString& query,
+                                        int max_results) const {
     QUrl search_url = source.url();
 
     QUrlQuery url_query;
@@ -788,7 +826,8 @@ QUrl HttpPluginLoader::build_search_url(const RemotePluginSource& source, const 
     return search_url;
 }
 
-QUrl HttpPluginLoader::build_discovery_url(const RemotePluginSource& source) const {
+QUrl HttpPluginLoader::build_discovery_url(
+    const RemotePluginSource& source) const {
     QUrl discovery_url = source.url();
 
     // Try common discovery endpoints
@@ -807,32 +846,34 @@ QUrl HttpPluginLoader::build_discovery_url(const RemotePluginSource& source) con
 
 // === Response Parsing Helpers ===
 
-qtplugin::expected<QJsonObject, PluginError> HttpPluginLoader::parse_json_response(const QByteArray& data) const {
+qtplugin::expected<QJsonObject, PluginError>
+HttpPluginLoader::parse_json_response(const QByteArray& data) const {
     QJsonParseError parse_error;
     QJsonDocument doc = QJsonDocument::fromJson(data, &parse_error);
 
     if (parse_error.error != QJsonParseError::NoError) {
         return qtplugin::make_error<QJsonObject>(
             PluginErrorCode::InvalidFormat,
-            "Failed to parse JSON response: " + parse_error.errorString().toStdString());
+            "Failed to parse JSON response: " +
+                parse_error.errorString().toStdString());
     }
 
     if (!doc.isObject()) {
         return qtplugin::make_error<QJsonObject>(
-            PluginErrorCode::InvalidFormat,
-            "Response is not a JSON object");
+            PluginErrorCode::InvalidFormat, "Response is not a JSON object");
     }
 
     return doc.object();
 }
 
 bool HttpPluginLoader::is_error_response(const QJsonObject& response) const {
-    return response.contains("error") ||
-           response.contains("errors") ||
-           (response.contains("status") && response["status"].toString() == "error");
+    return response.contains("error") || response.contains("errors") ||
+           (response.contains("status") &&
+            response["status"].toString() == "error");
 }
 
-PluginError HttpPluginLoader::extract_error_from_response(const QJsonObject& response) const {
+PluginError HttpPluginLoader::extract_error_from_response(
+    const QJsonObject& response) const {
     QString error_message = "Unknown error";
 
     if (response.contains("error")) {
@@ -841,30 +882,35 @@ PluginError HttpPluginLoader::extract_error_from_response(const QJsonObject& res
             error_message = error_value.toString();
         } else if (error_value.isObject()) {
             QJsonObject error_obj = error_value.toObject();
-            error_message = error_obj.value("message").toString("Unknown error");
+            error_message =
+                error_obj.value("message").toString("Unknown error");
         }
     } else if (response.contains("message")) {
         error_message = response["message"].toString();
     }
 
-    return PluginError{PluginErrorCode::NetworkError, error_message.toStdString()};
+    return PluginError{PluginErrorCode::NetworkError,
+                       error_message.toStdString()};
 }
 
 // === Validation Helpers ===
 
-bool HttpPluginLoader::is_valid_plugin_response(const QJsonObject& response) const {
+bool HttpPluginLoader::is_valid_plugin_response(
+    const QJsonObject& response) const {
     return !is_error_response(response) &&
            (response.contains("plugin") || response.contains("data") ||
             response.contains("name"));
 }
 
-bool HttpPluginLoader::is_valid_search_response(const QJsonObject& response) const {
+bool HttpPluginLoader::is_valid_search_response(
+    const QJsonObject& response) const {
     return !is_error_response(response) &&
            (response.contains("results") || response.contains("plugins") ||
             response.contains("data"));
 }
 
-bool HttpPluginLoader::is_valid_discovery_response(const QJsonObject& response) const {
+bool HttpPluginLoader::is_valid_discovery_response(
+    const QJsonObject& response) const {
     return !is_error_response(response) &&
            (response.contains("plugins") || response.contains("list") ||
             response.contains("data"));
@@ -872,7 +918,8 @@ bool HttpPluginLoader::is_valid_discovery_response(const QJsonObject& response) 
 
 // === Factory Implementation ===
 
-std::unique_ptr<HttpPluginLoader> HttpPluginLoaderFactory::create_default(QObject* parent) {
+std::unique_ptr<HttpPluginLoader> HttpPluginLoaderFactory::create_default(
+    QObject* parent) {
     auto config = std::make_shared<RemotePluginConfiguration>(
         RemotePluginConfiguration::create_default());
 
@@ -881,11 +928,12 @@ std::unique_ptr<HttpPluginLoader> HttpPluginLoaderFactory::create_default(QObjec
 
 std::unique_ptr<HttpPluginLoader> HttpPluginLoaderFactory::create_with_config(
     std::shared_ptr<RemotePluginConfiguration> configuration, QObject* parent) {
-
-    return std::make_unique<HttpPluginLoader>(configuration, nullptr, nullptr, parent);
+    return std::make_unique<HttpPluginLoader>(configuration, nullptr, nullptr,
+                                              parent);
 }
 
-std::unique_ptr<HttpPluginLoader> HttpPluginLoaderFactory::create_enterprise(QObject* parent) {
+std::unique_ptr<HttpPluginLoader> HttpPluginLoaderFactory::create_enterprise(
+    QObject* parent) {
     auto config = std::make_shared<RemotePluginConfiguration>(
         RemotePluginConfiguration::create_enterprise());
 
@@ -895,10 +943,9 @@ std::unique_ptr<HttpPluginLoader> HttpPluginLoaderFactory::create_enterprise(QOb
 std::unique_ptr<HttpPluginLoader> HttpPluginLoaderFactory::create_custom(
     std::shared_ptr<RemotePluginConfiguration> configuration,
     std::shared_ptr<PluginDownloadManager> download_manager,
-    std::shared_ptr<RemotePluginValidator> validator,
-    QObject* parent) {
-
-    return std::make_unique<HttpPluginLoader>(configuration, download_manager, validator, parent);
+    std::shared_ptr<RemotePluginValidator> validator, QObject* parent) {
+    return std::make_unique<HttpPluginLoader>(configuration, download_manager,
+                                              validator, parent);
 }
 
 }  // namespace qtplugin

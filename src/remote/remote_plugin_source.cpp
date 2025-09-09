@@ -3,7 +3,6 @@
  * @brief Implementation of remote plugin source management
  */
 
-#include <qtplugin/remote/remote_plugin_source.hpp>
 #include <QCryptographicHash>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -15,6 +14,7 @@
 #include <QUuid>
 #include <algorithm>
 #include <mutex>
+#include <qtplugin/remote/remote_plugin_source.hpp>
 #include <shared_mutex>
 
 namespace qtplugin {
@@ -42,7 +42,7 @@ bool AuthenticationCredentials::is_valid() const {
 QJsonObject AuthenticationCredentials::to_json() const {
     QJsonObject json;
     json["type"] = static_cast<int>(type);
-    
+
     // Only store non-sensitive data in JSON
     if (type == AuthenticationType::Basic) {
         json["username"] = username;
@@ -53,11 +53,12 @@ QJsonObject AuthenticationCredentials::to_json() const {
     } else if (type == AuthenticationType::OAuth2) {
         json["oauth2_config"] = oauth2_config;
     }
-    
+
     return json;
 }
 
-AuthenticationCredentials AuthenticationCredentials::from_json(const QJsonObject& json) {
+AuthenticationCredentials AuthenticationCredentials::from_json(
+    const QJsonObject& json) {
     AuthenticationCredentials creds;
     creds.type = static_cast<AuthenticationType>(json["type"].toInt());
     creds.username = json["username"].toString();
@@ -86,8 +87,10 @@ QJsonObject RemoteSourceConfig::to_json() const {
 
 RemoteSourceConfig RemoteSourceConfig::from_json(const QJsonObject& json) {
     RemoteSourceConfig config;
-    config.cache_policy = static_cast<CachePolicy>(json["cache_policy"].toInt());
-    config.security_level = static_cast<RemoteSecurityLevel>(json["security_level"].toInt());
+    config.cache_policy =
+        static_cast<CachePolicy>(json["cache_policy"].toInt());
+    config.security_level =
+        static_cast<RemoteSecurityLevel>(json["security_level"].toInt());
     config.cache_ttl = std::chrono::seconds(json["cache_ttl"].toInt());
     config.timeout = std::chrono::seconds(json["timeout"].toInt());
     config.max_retries = json["max_retries"].toInt();
@@ -101,18 +104,18 @@ RemoteSourceConfig RemoteSourceConfig::from_json(const QJsonObject& json) {
 
 // === RemotePluginSource Implementation ===
 
-RemotePluginSource::RemotePluginSource(const QUrl& url, RemoteSourceType type, const QString& name)
+RemotePluginSource::RemotePluginSource(const QUrl& url, RemoteSourceType type,
+                                       const QString& name)
     : m_url(url), m_type(type), m_name(name) {
-    
     if (m_type == RemoteSourceType::Http && type == RemoteSourceType::Http) {
         // Auto-detect type if default was used
         m_type = detect_source_type(url);
     }
-    
+
     if (m_name.isEmpty()) {
         m_name = url.host();
     }
-    
+
     initialize_defaults();
 }
 
@@ -126,10 +129,10 @@ RemotePluginSource::RemotePluginSource(const RemotePluginSource& other)
       m_name(other.m_name),
       m_enabled(other.m_enabled),
       m_auth(other.m_auth),
-      m_config(other.m_config) {
-}
+      m_config(other.m_config) {}
 
-RemotePluginSource& RemotePluginSource::operator=(const RemotePluginSource& other) {
+RemotePluginSource& RemotePluginSource::operator=(
+    const RemotePluginSource& other) {
     if (this != &other) {
         m_url = other.m_url;
         m_type = other.m_type;
@@ -151,11 +154,10 @@ void RemotePluginSource::set_url(const QUrl& url) {
     }
 }
 
-QString RemotePluginSource::id() const {
-    return generate_id();
-}
+QString RemotePluginSource::id() const { return generate_id(); }
 
-void RemotePluginSource::set_authentication(const AuthenticationCredentials& credentials) {
+void RemotePluginSource::set_authentication(
+    const AuthenticationCredentials& credentials) {
     m_auth = credentials;
 }
 
@@ -167,7 +169,8 @@ void RemotePluginSource::set_configuration(const RemoteSourceConfig& config) {
     m_config = config;
 }
 
-void RemotePluginSource::set_config_option(const QString& key, const QJsonValue& value) {
+void RemotePluginSource::set_config_option(const QString& key,
+                                           const QJsonValue& value) {
     m_config.custom_options[key] = value;
 }
 
@@ -182,101 +185,108 @@ qtplugin::expected<void, PluginError> RemotePluginSource::validate() const {
             PluginErrorCode::InvalidConfiguration,
             "Invalid URL: " + m_url.toString().toStdString());
     }
-    
+
     // Validate scheme
     if (!is_supported_url(m_url)) {
         return qtplugin::make_error<void>(
             PluginErrorCode::InvalidConfiguration,
             "Unsupported URL scheme: " + m_url.scheme().toStdString());
     }
-    
+
     // Validate authentication
     if (has_authentication() && !m_auth.is_valid()) {
         return qtplugin::make_error<void>(
             PluginErrorCode::InvalidConfiguration,
             "Invalid authentication configuration");
     }
-    
+
     // Validate configuration
     if (m_config.timeout.count() <= 0) {
-        return qtplugin::make_error<void>(
-            PluginErrorCode::InvalidConfiguration,
-            "Invalid timeout configuration");
+        return qtplugin::make_error<void>(PluginErrorCode::InvalidConfiguration,
+                                          "Invalid timeout configuration");
     }
-    
+
     if (m_config.max_download_size == 0) {
         return qtplugin::make_error<void>(
             PluginErrorCode::InvalidConfiguration,
             "Invalid max download size configuration");
     }
-    
+
     return qtplugin::make_success();
 }
 
-qtplugin::expected<void, PluginError> RemotePluginSource::test_connection() const {
+qtplugin::expected<void, PluginError> RemotePluginSource::test_connection()
+    const {
     // Basic validation first
     auto validation_result = validate();
     if (!validation_result) {
         return validation_result;
     }
-    
+
     // For HTTP sources, try a HEAD request
     if (m_type == RemoteSourceType::Http) {
         QNetworkAccessManager manager;
         QNetworkRequest request(m_url);
-        
+
         // Set timeout
-        request.setTransferTimeout(static_cast<int>(m_config.timeout.count() * 1000));
-        
+        request.setTransferTimeout(
+            static_cast<int>(m_config.timeout.count() * 1000));
+
         // Add authentication if configured
         if (has_authentication()) {
             if (m_auth.type == AuthenticationType::Basic) {
                 QString credentials = m_auth.username + ":" + m_auth.password;
                 QString encoded = credentials.toUtf8().toBase64();
-                request.setRawHeader("Authorization", "Basic " + encoded.toUtf8());
+                request.setRawHeader("Authorization",
+                                     "Basic " + encoded.toUtf8());
             } else if (m_auth.type == AuthenticationType::Bearer) {
-                request.setRawHeader("Authorization", "Bearer " + m_auth.token.toUtf8());
+                request.setRawHeader("Authorization",
+                                     "Bearer " + m_auth.token.toUtf8());
             } else if (m_auth.type == AuthenticationType::ApiKey) {
                 request.setRawHeader("X-API-Key", m_auth.api_key.toUtf8());
             }
         }
-        
+
         // Add custom headers
-        for (auto it = m_config.custom_headers.begin(); it != m_config.custom_headers.end(); ++it) {
-            request.setRawHeader(it.key().toUtf8(), it.value().toString().toUtf8());
+        for (auto it = m_config.custom_headers.begin();
+             it != m_config.custom_headers.end(); ++it) {
+            request.setRawHeader(it.key().toUtf8(),
+                                 it.value().toString().toUtf8());
         }
-        
+
         QNetworkReply* reply = manager.head(request);
-        
+
         // Wait for response with timeout
         QTimer timer;
         timer.setSingleShot(true);
         timer.start(static_cast<int>(m_config.timeout.count() * 1000));
-        
+
         QEventLoop loop;
-        QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+        QObject::connect(reply, &QNetworkReply::finished, &loop,
+                         &QEventLoop::quit);
         QObject::connect(&timer, &QTimer::timeout, &loop, &QEventLoop::quit);
         loop.exec();
-        
+
         if (timer.isActive()) {
             timer.stop();
             if (reply->error() == QNetworkReply::NoError) {
                 reply->deleteLater();
                 return qtplugin::make_success();
             } else {
-                QString error_msg = "Connection test failed: " + reply->errorString();
+                QString error_msg =
+                    "Connection test failed: " + reply->errorString();
                 reply->deleteLater();
-                return qtplugin::make_error<void>(
-                    PluginErrorCode::NetworkError, error_msg.toStdString());
+                return qtplugin::make_error<void>(PluginErrorCode::NetworkError,
+                                                  error_msg.toStdString());
             }
         } else {
             reply->abort();
             reply->deleteLater();
-            return qtplugin::make_error<void>(
-                PluginErrorCode::NetworkError, "Connection test timed out");
+            return qtplugin::make_error<void>(PluginErrorCode::NetworkError,
+                                              "Connection test timed out");
         }
     }
-    
+
     // For other source types, just return success for now
     // TODO: Implement specific connection tests for Git, FTP, etc.
     return qtplugin::make_success();
@@ -297,13 +307,14 @@ RemotePluginSource RemotePluginSource::from_json(const QJsonObject& json) {
     RemotePluginSource source(
         QUrl(json["url"].toString()),
         static_cast<RemoteSourceType>(json["type"].toInt()),
-        json["name"].toString()
-    );
-    
+        json["name"].toString());
+
     source.m_enabled = json["enabled"].toBool();
-    source.m_auth = AuthenticationCredentials::from_json(json["authentication"].toObject());
-    source.m_config = RemoteSourceConfig::from_json(json["configuration"].toObject());
-    
+    source.m_auth =
+        AuthenticationCredentials::from_json(json["authentication"].toObject());
+    source.m_config =
+        RemoteSourceConfig::from_json(json["configuration"].toObject());
+
     return source;
 }
 
@@ -313,7 +324,7 @@ QString RemotePluginSource::to_string() const {
 
 RemoteSourceType RemotePluginSource::detect_source_type(const QUrl& url) {
     QString scheme = url.scheme().toLower();
-    
+
     if (scheme == "http" || scheme == "https") {
         return RemoteSourceType::Http;
     } else if (scheme == "git" || scheme.startsWith("git+")) {
@@ -330,11 +341,13 @@ RemoteSourceType RemotePluginSource::detect_source_type(const QUrl& url) {
 bool RemotePluginSource::is_supported_url(const QUrl& url) {
     auto supported = supported_schemes();
     QString scheme = url.scheme().toLower();
-    return std::find(supported.begin(), supported.end(), scheme) != supported.end();
+    return std::find(supported.begin(), supported.end(), scheme) !=
+           supported.end();
 }
 
 std::vector<QString> RemotePluginSource::supported_schemes() {
-    return {"http", "https", "git", "git+http", "git+https", "ftp", "ftps", "registry"};
+    return {"http",      "https", "git",  "git+http",
+            "git+https", "ftp",   "ftps", "registry"};
 }
 
 bool RemotePluginSource::operator==(const RemotePluginSource& other) const {
@@ -380,7 +393,8 @@ RemoteSourceManager::RemoteSourceManager() = default;
 
 RemoteSourceManager::~RemoteSourceManager() = default;
 
-qtplugin::expected<void, PluginError> RemoteSourceManager::add_source(const RemotePluginSource& source) {
+qtplugin::expected<void, PluginError> RemoteSourceManager::add_source(
+    const RemotePluginSource& source) {
     // Validate source first
     auto validation_result = source.validate();
     if (!validation_result) {
@@ -402,7 +416,8 @@ qtplugin::expected<void, PluginError> RemoteSourceManager::add_source(const Remo
     return qtplugin::make_success();
 }
 
-qtplugin::expected<void, PluginError> RemoteSourceManager::remove_source(const QString& source_id) {
+qtplugin::expected<void, PluginError> RemoteSourceManager::remove_source(
+    const QString& source_id) {
     std::unique_lock lock(m_sources_mutex);
 
     auto it = m_sources.find(source_id);
@@ -416,7 +431,8 @@ qtplugin::expected<void, PluginError> RemoteSourceManager::remove_source(const Q
     return qtplugin::make_success();
 }
 
-std::optional<RemotePluginSource> RemoteSourceManager::get_source(const QString& source_id) const {
+std::optional<RemotePluginSource> RemoteSourceManager::get_source(
+    const QString& source_id) const {
     std::shared_lock lock(m_sources_mutex);
 
     auto it = m_sources.find(source_id);
@@ -440,7 +456,8 @@ std::vector<RemotePluginSource> RemoteSourceManager::get_all_sources() const {
     return sources;
 }
 
-std::vector<RemotePluginSource> RemoteSourceManager::get_enabled_sources() const {
+std::vector<RemotePluginSource> RemoteSourceManager::get_enabled_sources()
+    const {
     std::shared_lock lock(m_sources_mutex);
 
     std::vector<RemotePluginSource> enabled_sources;
@@ -459,7 +476,8 @@ void RemoteSourceManager::clear() {
     m_sources.clear();
 }
 
-qtplugin::expected<void, PluginError> RemoteSourceManager::load_from_config(const QJsonObject& config) {
+qtplugin::expected<void, PluginError> RemoteSourceManager::load_from_config(
+    const QJsonObject& config) {
     QJsonArray sources_array = config["sources"].toArray();
 
     std::unique_lock lock(m_sources_mutex);
@@ -471,7 +489,8 @@ qtplugin::expected<void, PluginError> RemoteSourceManager::load_from_config(cons
         }
 
         try {
-            RemotePluginSource source = RemotePluginSource::from_json(source_value.toObject());
+            RemotePluginSource source =
+                RemotePluginSource::from_json(source_value.toObject());
 
             // Validate source
             auto validation_result = source.validate();

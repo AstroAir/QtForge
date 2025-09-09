@@ -298,6 +298,7 @@ private:
     bool m_waiting_for_response = false;  ///< Response waiting flag
     int m_request_id = 0;                 ///< Request ID counter
     int m_request_timeout = 30000;        ///< Request timeout in ms
+    QHash<int, QJsonObject> m_pending_responses;  ///< Pending responses by ID
 
     /**
      * @brief Set up the Python process

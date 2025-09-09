@@ -48,7 +48,7 @@ if(WIN32)
     set(QT_WINDEPLOYQT_EXECUTABLE "${QT_WINDEPLOYQT_EXECUTABLE}/windeployqt.exe")
 
     # Define test directories
-    set(TEST_DIRS core communication security managers monitoring orchestration utils platform python)
+    set(TEST_DIRS core communication security managers monitoring orchestration utils platform python python_bridge bridges composition marketplace transactions)
 
     add_custom_target(copy_dlls_to_tests ALL
         COMMENT "Copying DLLs to test directories"

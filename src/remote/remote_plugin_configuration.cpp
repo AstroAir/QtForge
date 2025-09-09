@@ -3,13 +3,13 @@
  * @brief Implementation of remote plugin configuration system
  */
 
-#include <qtplugin/remote/remote_plugin_configuration.hpp>
 #include <QDir>
 #include <QFile>
 #include <QJsonArray>
 #include <QJsonDocument>
-#include <QStandardPaths>
 #include <QRegularExpression>
+#include <QStandardPaths>
+#include <qtplugin/remote/remote_plugin_configuration.hpp>
 
 namespace qtplugin {
 
@@ -46,58 +46,66 @@ QJsonObject SecurityPolicyConfiguration::to_json() const {
     json["enable_sandbox"] = enable_sandbox;
     json["allow_network_access"] = allow_network_access;
     json["allow_file_system_access"] = allow_file_system_access;
-    
+
     QJsonArray trusted_domains_array;
     for (const QString& domain : trusted_domains) {
         trusted_domains_array.append(domain);
     }
     json["trusted_domains"] = trusted_domains_array;
-    
+
     QJsonArray blocked_domains_array;
     for (const QString& domain : blocked_domains) {
         blocked_domains_array.append(domain);
     }
     json["blocked_domains"] = blocked_domains_array;
-    
+
     QJsonArray fingerprints_array;
     for (const QString& fingerprint : trusted_certificate_fingerprints) {
         fingerprints_array.append(fingerprint);
     }
     json["trusted_certificate_fingerprints"] = fingerprints_array;
-    
-    json["signature_cache_ttl"] = static_cast<qint64>(signature_cache_ttl.count());
-    
+
+    json["signature_cache_ttl"] =
+        static_cast<qint64>(signature_cache_ttl.count());
+
     return json;
 }
 
-SecurityPolicyConfiguration SecurityPolicyConfiguration::from_json(const QJsonObject& json) {
+SecurityPolicyConfiguration SecurityPolicyConfiguration::from_json(
+    const QJsonObject& json) {
     SecurityPolicyConfiguration config;
-    config.default_security_level = static_cast<RemoteSecurityLevel>(json["default_security_level"].toInt());
-    config.require_signature_verification = json["require_signature_verification"].toBool();
-    config.allow_self_signed_certificates = json["allow_self_signed_certificates"].toBool();
-    config.enable_certificate_pinning = json["enable_certificate_pinning"].toBool();
+    config.default_security_level = static_cast<RemoteSecurityLevel>(
+        json["default_security_level"].toInt());
+    config.require_signature_verification =
+        json["require_signature_verification"].toBool();
+    config.allow_self_signed_certificates =
+        json["allow_self_signed_certificates"].toBool();
+    config.enable_certificate_pinning =
+        json["enable_certificate_pinning"].toBool();
     config.require_https = json["require_https"].toBool();
     config.enable_sandbox = json["enable_sandbox"].toBool();
     config.allow_network_access = json["allow_network_access"].toBool();
     config.allow_file_system_access = json["allow_file_system_access"].toBool();
-    
+
     QJsonArray trusted_domains_array = json["trusted_domains"].toArray();
     for (const auto& value : trusted_domains_array) {
         config.trusted_domains.append(value.toString());
     }
-    
+
     QJsonArray blocked_domains_array = json["blocked_domains"].toArray();
     for (const auto& value : blocked_domains_array) {
         config.blocked_domains.append(value.toString());
     }
-    
-    QJsonArray fingerprints_array = json["trusted_certificate_fingerprints"].toArray();
+
+    QJsonArray fingerprints_array =
+        json["trusted_certificate_fingerprints"].toArray();
     for (const auto& value : fingerprints_array) {
         config.trusted_certificate_fingerprints.append(value.toString());
     }
-    
-    config.signature_cache_ttl = std::chrono::seconds(json["signature_cache_ttl"].toInt());
-    
+
+    config.signature_cache_ttl =
+        std::chrono::seconds(json["signature_cache_ttl"].toInt());
+
     return config;
 }
 
@@ -122,12 +130,14 @@ CacheConfiguration CacheConfiguration::from_json(const QJsonObject& json) {
     config.cache_directory = json["cache_directory"].toString().toStdString();
     config.max_cache_size = json["max_cache_size"].toInt();
     config.default_ttl = std::chrono::seconds(json["default_ttl"].toInt());
-    config.cleanup_interval = std::chrono::seconds(json["cleanup_interval"].toInt());
+    config.cleanup_interval =
+        std::chrono::seconds(json["cleanup_interval"].toInt());
     config.enable_compression = json["enable_compression"].toBool();
     config.enable_encryption = json["enable_encryption"].toBool();
     config.max_concurrent_downloads = json["max_concurrent_downloads"].toInt();
     config.max_file_size = json["max_file_size"].toInt();
-    config.default_cache_policy = static_cast<CachePolicy>(json["default_cache_policy"].toInt());
+    config.default_cache_policy =
+        static_cast<CachePolicy>(json["default_cache_policy"].toInt());
     return config;
 }
 
@@ -135,7 +145,8 @@ CacheConfiguration CacheConfiguration::from_json(const QJsonObject& json) {
 
 QJsonObject NetworkConfiguration::to_json() const {
     QJsonObject json;
-    json["connection_timeout"] = static_cast<qint64>(connection_timeout.count());
+    json["connection_timeout"] =
+        static_cast<qint64>(connection_timeout.count());
     json["read_timeout"] = static_cast<qint64>(read_timeout.count());
     json["max_retries"] = max_retries;
     json["retry_delay"] = static_cast<qint64>(retry_delay.count());
@@ -149,7 +160,8 @@ QJsonObject NetworkConfiguration::to_json() const {
 
 NetworkConfiguration NetworkConfiguration::from_json(const QJsonObject& json) {
     NetworkConfiguration config;
-    config.connection_timeout = std::chrono::seconds(json["connection_timeout"].toInt());
+    config.connection_timeout =
+        std::chrono::seconds(json["connection_timeout"].toInt());
     config.read_timeout = std::chrono::seconds(json["read_timeout"].toInt());
     config.max_retries = json["max_retries"].toInt();
     config.retry_delay = std::chrono::seconds(json["retry_delay"].toInt());
@@ -170,30 +182,31 @@ QJsonObject UpdateConfiguration::to_json() const {
     json["notify_updates"] = notify_updates;
     json["backup_before_update"] = backup_before_update;
     json["rollback_on_failure"] = rollback_on_failure;
-    
+
     QJsonArray channels_array;
     for (const QString& channel : update_channels) {
         channels_array.append(channel);
     }
     json["update_channels"] = channels_array;
-    
+
     return json;
 }
 
 UpdateConfiguration UpdateConfiguration::from_json(const QJsonObject& json) {
     UpdateConfiguration config;
     config.policy = static_cast<AutoUpdatePolicy>(json["policy"].toInt());
-    config.check_interval = std::chrono::seconds(json["check_interval"].toInt());
+    config.check_interval =
+        std::chrono::seconds(json["check_interval"].toInt());
     config.notify_updates = json["notify_updates"].toBool();
     config.backup_before_update = json["backup_before_update"].toBool();
     config.rollback_on_failure = json["rollback_on_failure"].toBool();
-    
+
     QJsonArray channels_array = json["update_channels"].toArray();
     config.update_channels.clear();
     for (const auto& value : channels_array) {
         config.update_channels.append(value.toString());
     }
-    
+
     return config;
 }
 
@@ -207,17 +220,18 @@ RemotePluginConfiguration::RemotePluginConfiguration(const QJsonObject& json) {
     *this = from_json(json);
 }
 
-RemotePluginConfiguration::RemotePluginConfiguration(const RemotePluginConfiguration& other)
+RemotePluginConfiguration::RemotePluginConfiguration(
+    const RemotePluginConfiguration& other)
     : m_remote_plugins_enabled(other.m_remote_plugins_enabled),
       m_version(other.m_version),
       m_security_policy(other.m_security_policy),
       m_cache_config(other.m_cache_config),
       m_network_config(other.m_network_config),
       m_update_config(other.m_update_config),
-      m_source_manager(other.m_source_manager) {
-}
+      m_source_manager(other.m_source_manager) {}
 
-RemotePluginConfiguration& RemotePluginConfiguration::operator=(const RemotePluginConfiguration& other) {
+RemotePluginConfiguration& RemotePluginConfiguration::operator=(
+    const RemotePluginConfiguration& other) {
     if (this != &other) {
         m_remote_plugins_enabled = other.m_remote_plugins_enabled;
         m_version = other.m_version;
@@ -232,76 +246,81 @@ RemotePluginConfiguration& RemotePluginConfiguration::operator=(const RemotePlug
 
 RemotePluginConfiguration::~RemotePluginConfiguration() = default;
 
-qtplugin::expected<void, PluginError> RemotePluginConfiguration::add_trusted_source(const RemotePluginSource& source) {
+qtplugin::expected<void, PluginError>
+RemotePluginConfiguration::add_trusted_source(
+    const RemotePluginSource& source) {
     return m_source_manager.add_source(source);
 }
 
-qtplugin::expected<void, PluginError> RemotePluginConfiguration::remove_source(const QString& source_id) {
+qtplugin::expected<void, PluginError> RemotePluginConfiguration::remove_source(
+    const QString& source_id) {
     return m_source_manager.remove_source(source_id);
 }
 
-std::vector<RemotePluginSource> RemotePluginConfiguration::get_all_sources() const {
+std::vector<RemotePluginSource> RemotePluginConfiguration::get_all_sources()
+    const {
     return m_source_manager.get_all_sources();
 }
 
-qtplugin::expected<void, PluginError> RemotePluginConfiguration::validate() const {
+qtplugin::expected<void, PluginError> RemotePluginConfiguration::validate()
+    const {
     // Validate cache configuration
     if (m_cache_config.max_cache_size <= 0) {
-        return qtplugin::make_error<void>(
-            PluginErrorCode::InvalidConfiguration,
-            "Invalid cache size configuration");
+        return qtplugin::make_error<void>(PluginErrorCode::InvalidConfiguration,
+                                          "Invalid cache size configuration");
     }
-    
+
     if (m_cache_config.max_file_size <= 0) {
         return qtplugin::make_error<void>(
             PluginErrorCode::InvalidConfiguration,
             "Invalid max file size configuration");
     }
-    
+
     // Validate network configuration
     if (m_network_config.connection_timeout.count() <= 0) {
         return qtplugin::make_error<void>(
             PluginErrorCode::InvalidConfiguration,
             "Invalid connection timeout configuration");
     }
-    
+
     if (m_network_config.max_retries < 0) {
-        return qtplugin::make_error<void>(
-            PluginErrorCode::InvalidConfiguration,
-            "Invalid max retries configuration");
+        return qtplugin::make_error<void>(PluginErrorCode::InvalidConfiguration,
+                                          "Invalid max retries configuration");
     }
-    
+
     // Validate update configuration
     if (m_update_config.check_interval.count() <= 0) {
         return qtplugin::make_error<void>(
             PluginErrorCode::InvalidConfiguration,
             "Invalid update check interval configuration");
     }
-    
+
     return qtplugin::make_success();
 }
 
 bool RemotePluginConfiguration::is_domain_trusted(const QString& domain) const {
     // Check if domain is in trusted list
     for (const QString& trusted : m_security_policy.trusted_domains) {
-        QRegularExpression regex(trusted, QRegularExpression::CaseInsensitiveOption);
+        QRegularExpression regex(trusted,
+                                 QRegularExpression::CaseInsensitiveOption);
         if (regex.match(domain).hasMatch()) {
             return true;
         }
     }
-    
+
     return false;
 }
 
 bool RemotePluginConfiguration::is_domain_blocked(const QString& domain) const {
     // Check if domain is in blocked list
     for (const QString& blocked : m_security_policy.blocked_domains) {
-        QRegularExpression regex(blocked, QRegularExpression::CaseInsensitiveOption);
+        QRegularExpression regex(blocked,
+                                 QRegularExpression::CaseInsensitiveOption);
         if (regex.match(domain).hasMatch()) {
             return true;
         }
     }
-    
+
     return false;
 }
 
@@ -317,14 +336,19 @@ QJsonObject RemotePluginConfiguration::to_json() const {
     return json;
 }
 
-RemotePluginConfiguration RemotePluginConfiguration::from_json(const QJsonObject& json) {
+RemotePluginConfiguration RemotePluginConfiguration::from_json(
+    const QJsonObject& json) {
     RemotePluginConfiguration config;
     config.m_version = json["version"].toString();
     config.m_remote_plugins_enabled = json["remote_plugins_enabled"].toBool();
-    config.m_security_policy = SecurityPolicyConfiguration::from_json(json["security_policy"].toObject());
-    config.m_cache_config = CacheConfiguration::from_json(json["cache_config"].toObject());
-    config.m_network_config = NetworkConfiguration::from_json(json["network_config"].toObject());
-    config.m_update_config = UpdateConfiguration::from_json(json["update_config"].toObject());
+    config.m_security_policy = SecurityPolicyConfiguration::from_json(
+        json["security_policy"].toObject());
+    config.m_cache_config =
+        CacheConfiguration::from_json(json["cache_config"].toObject());
+    config.m_network_config =
+        NetworkConfiguration::from_json(json["network_config"].toObject());
+    config.m_update_config =
+        UpdateConfiguration::from_json(json["update_config"].toObject());
 
     // Load sources
     config.m_source_manager.load_from_config(json["sources"].toObject());
@@ -337,14 +361,18 @@ void RemotePluginConfiguration::initialize_defaults() {
     m_version = "1.0";
 
     // Set default cache directory
-    QString cache_path = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
-    m_cache_config.cache_directory = std::filesystem::path(cache_path.toStdString()) / "qtforge" / "remote_plugins";
+    QString cache_path =
+        QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
+    m_cache_config.cache_directory =
+        std::filesystem::path(cache_path.toStdString()) / "qtforge" /
+        "remote_plugins";
 
     // Apply standard security level
     apply_security_level(RemoteSecurityLevel::Standard);
 }
 
-void RemotePluginConfiguration::apply_security_level(RemoteSecurityLevel level) {
+void RemotePluginConfiguration::apply_security_level(
+    RemoteSecurityLevel level) {
     m_security_policy.default_security_level = level;
 
     switch (level) {
@@ -437,13 +465,17 @@ RemotePluginConfigurationManager& RemotePluginConfigurationManager::instance() {
     return instance;
 }
 
-void RemotePluginConfigurationManager::set_configuration(const RemotePluginConfiguration& config) {
+void RemotePluginConfigurationManager::set_configuration(
+    const RemotePluginConfiguration& config) {
     m_configuration = config;
 }
 
-std::filesystem::path RemotePluginConfigurationManager::default_config_path() const {
-    QString config_dir = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation);
-    return std::filesystem::path(config_dir.toStdString()) / "qtforge" / "remote_plugins.json";
+std::filesystem::path RemotePluginConfigurationManager::default_config_path()
+    const {
+    QString config_dir =
+        QStandardPaths::writableLocation(QStandardPaths::ConfigLocation);
+    return std::filesystem::path(config_dir.toStdString()) / "qtforge" /
+           "remote_plugins.json";
 }
 
 }  // namespace qtplugin
