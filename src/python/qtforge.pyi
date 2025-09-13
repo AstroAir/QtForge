@@ -17,40 +17,40 @@ def get_help() -> str: ...
 
 # Core enums
 class PluginState(Enum):
-    Unloaded: int
-    Loading: int
-    Loaded: int
-    Initializing: int
-    Running: int
-    Paused: int
-    Stopping: int
-    Stopped: int
-    Error: int
-    Reloading: int
+    Unloaded = 0
+    Loading = 1
+    Loaded = 2
+    Initializing = 3
+    Running = 4
+    Paused = 5
+    Stopping = 6
+    Stopped = 7
+    Error = 8
+    Reloading = 9
 
 class PluginCapability(Enum):
-    None_: int
-    UI: int
-    Service: int
-    Network: int
-    DataProcessing: int
-    Scripting: int
-    FileSystem: int
-    Database: int
-    AsyncInit: int
-    HotReload: int
-    Configuration: int
-    Logging: int
-    Security: int
-    Threading: int
-    Monitoring: int
+    None_ = 0
+    UI = 1
+    Service = 2
+    Network = 3
+    DataProcessing = 4
+    Scripting = 5
+    FileSystem = 6
+    Database = 7
+    AsyncInit = 8
+    HotReload = 9
+    Configuration = 10
+    Logging = 11
+    Security = 12
+    Threading = 13
+    Monitoring = 14
 
 class PluginPriority(Enum):
-    Lowest: int
-    Low: int
-    Normal: int
-    High: int
-    Highest: int
+    Lowest = 0
+    Low = 1
+    Normal = 2
+    High = 3
+    Highest = 4
 
 # Core classes
 class Version:
@@ -61,8 +61,8 @@ class Version:
     def to_string(self) -> str: ...
     def __str__(self) -> str: ...
     def __repr__(self) -> str: ...
-    def __eq__(self, other: 'Version') -> bool: ...
-    def __ne__(self, other: 'Version') -> bool: ...
+    def __eq__(self, other: object) -> bool: ...
+    def __ne__(self, other: object) -> bool: ...
     def __lt__(self, other: 'Version') -> bool: ...
     def __le__(self, other: 'Version') -> bool: ...
     def __gt__(self, other: 'Version') -> bool: ...

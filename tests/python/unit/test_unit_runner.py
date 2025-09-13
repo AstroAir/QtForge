@@ -27,7 +27,7 @@ except ImportError as e:
 class UnitTestRunner:
     """Comprehensive unit test runner for QtForge Python bindings."""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.test_dir = Path(__file__).parent
         self.test_modules = [
             "test_core_unit.py",
@@ -305,7 +305,7 @@ class UnitTestRunner:
         return "\n".join(report_lines)
 
 
-def main():
+def main() -> None:
     """Main entry point for unit test runner."""
     runner = UnitTestRunner()
     

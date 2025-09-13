@@ -15,7 +15,7 @@ from typing import List, Dict, Any, Optional
 
 
 class TestResult:
-    def __init__(self, name: str, passed: bool, duration: float, output: str = "", error: str = ""):
+    def __init__(self, name: str, passed: bool, duration: float, output: str = "", error: str = "") -> None:
         self.name = name
         self.passed = passed
         self.duration = duration
@@ -24,7 +24,7 @@ class TestResult:
 
 
 class TestRunner:
-    def __init__(self, build_dir: str, verbose: bool = False):
+    def __init__(self, build_dir: str, verbose: bool = False) -> None:
         self.build_dir = Path(build_dir)
         self.verbose = verbose
         self.results: List[TestResult] = []
@@ -147,7 +147,7 @@ class TestRunner:
 
         return report
 
-    def print_summary(self):
+    def print_summary(self) -> None:
         """Print test summary"""
         total_tests = len(self.results)
         passed_tests = sum(1 for r in self.results if r.passed)
@@ -172,7 +172,7 @@ class TestRunner:
 
         print(f"{'='*60}")
 
-    def save_report(self, filename: str):
+    def save_report(self, filename: str) -> None:
         """Save test report to JSON file"""
         report = self.generate_report()
 
@@ -207,7 +207,7 @@ def check_build_environment(build_dir: Path) -> bool:
     return True
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="Run QtForge Sandbox Tests")
     parser.add_argument("--build-dir", "-b", default="build",
                         help="Build directory containing test executables")

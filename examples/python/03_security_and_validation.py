@@ -30,7 +30,7 @@ except ImportError as e:
     sys.exit(1)
 
 
-def demonstrate_security_manager():
+def demonstrate_security_manager() -> None:
     """Demonstrate security manager creation and basic operations."""
     print("\n" + "="*50)
     print("🔒 Security Manager Operations")
@@ -107,7 +107,7 @@ def demonstrate_security_manager():
         return None
 
 
-def demonstrate_security_validator():
+def demonstrate_security_validator() -> None:
     """Demonstrate security validator operations."""
     print("\n" + "="*50)
     print("🔍 Security Validator Operations")
@@ -165,7 +165,7 @@ def demonstrate_security_validator():
         return None
 
 
-def demonstrate_signature_verifier():
+def demonstrate_signature_verifier() -> None:
     """Demonstrate signature verification operations."""
     print("\n" + "="*50)
     print("✍️  Signature Verification Operations")
@@ -226,7 +226,7 @@ def demonstrate_signature_verifier():
         return None
 
 
-def demonstrate_permission_manager():
+def demonstrate_permission_manager() -> None:
     """Demonstrate permission management operations."""
     print("\n" + "="*50)
     print("🔐 Permission Management Operations")
@@ -304,7 +304,7 @@ def demonstrate_permission_manager():
         return None
 
 
-def demonstrate_security_policy_engine():
+def demonstrate_security_policy_engine() -> None:
     """Demonstrate security policy engine operations."""
     print("\n" + "="*50)
     print("📋 Security Policy Engine Operations")
@@ -379,7 +379,7 @@ def demonstrate_security_policy_engine():
         return None
 
 
-def demonstrate_security_enums():
+def demonstrate_security_enums() -> None:
     """Demonstrate security-related enumerations."""
     print("\n" + "="*50)
     print("📊 Security Enumerations")
@@ -419,7 +419,7 @@ def demonstrate_security_enums():
                 print(f"  • {level}: {value}")
 
 
-def demonstrate_security_context():
+def demonstrate_security_context() -> None:
     """Demonstrate security context operations."""
     print("\n" + "="*50)
     print("🏷️  Security Context Operations")
@@ -470,7 +470,7 @@ def demonstrate_security_context():
         return None
 
 
-def demonstrate_error_handling():
+def demonstrate_error_handling() -> None:
     """Demonstrate security error handling."""
     print("\n" + "="*50)
     print("⚠️  Security Error Handling")
@@ -517,7 +517,7 @@ def demonstrate_error_handling():
         print(f"❌ Error handling demonstration failed: {e}")
 
 
-def main():
+def main() -> None:
     """Main demonstration function."""
     print("QtForge Python Bindings - Security and Validation Example")
     print("=" * 60)

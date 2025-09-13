@@ -29,7 +29,7 @@ pytestmark = pytest.mark.skipif(not BINDINGS_AVAILABLE, reason="QtForge bindings
 class TestPluginHotReloadManager:
     """Test PluginHotReloadManager functionality."""
     
-    def test_hot_reload_manager_creation(self):
+    def test_hot_reload_manager_creation(self) -> None:
         """Test PluginHotReloadManager can be created."""
         if hasattr(monitoring, 'create_hot_reload_manager'):
             manager = monitoring.create_hot_reload_manager()
@@ -37,7 +37,7 @@ class TestPluginHotReloadManager:
             assert hasattr(manager, 'enable_hot_reload')
             assert hasattr(manager, 'disable_hot_reload')
     
-    def test_hot_reload_enable_disable(self):
+    def test_hot_reload_enable_disable(self) -> None:
         """Test enabling and disabling hot reload."""
         if hasattr(monitoring, 'create_hot_reload_manager'):
             manager = monitoring.create_hot_reload_manager()
@@ -62,7 +62,7 @@ class TestPluginHotReloadManager:
                 # Some implementations might require plugin to be loaded first
                 pass
     
-    def test_hot_reload_watch_directory(self):
+    def test_hot_reload_watch_directory(self) -> None:
         """Test watching directory for changes."""
         if hasattr(monitoring, 'create_hot_reload_manager'):
             manager = monitoring.create_hot_reload_manager()
@@ -87,7 +87,7 @@ class TestPluginHotReloadManager:
                         # Some implementations might not support directory watching
                         pass
     
-    def test_hot_reload_callback(self):
+    def test_hot_reload_callback(self) -> None:
         """Test hot reload callback functionality."""
         if hasattr(monitoring, 'create_hot_reload_manager'):
             manager = monitoring.create_hot_reload_manager()
@@ -96,7 +96,7 @@ class TestPluginHotReloadManager:
                 callback_called = False
                 reloaded_plugin = None
                 
-                def reload_callback(plugin_name):
+                def reload_callback(plugin_name) -> None:
                     nonlocal callback_called, reloaded_plugin
                     callback_called = True
                     reloaded_plugin = plugin_name
@@ -116,7 +116,7 @@ class TestPluginHotReloadManager:
                     # Some implementations might not support callbacks
                     pass
     
-    def test_hot_reload_invalid_plugin(self):
+    def test_hot_reload_invalid_plugin(self) -> None:
         """Test hot reload with invalid plugin."""
         if hasattr(monitoring, 'create_hot_reload_manager'):
             manager = monitoring.create_hot_reload_manager()
@@ -133,14 +133,14 @@ class TestPluginHotReloadManager:
 class TestPluginMetricsCollector:
     """Test PluginMetricsCollector functionality."""
     
-    def test_metrics_collector_creation(self):
+    def test_metrics_collector_creation(self) -> None:
         """Test PluginMetricsCollector can be created."""
         if hasattr(monitoring, 'create_metrics_collector'):
             collector = monitoring.create_metrics_collector()
             assert collector is not None
             assert hasattr(collector, 'collect_metrics')
     
-    def test_metrics_collection(self):
+    def test_metrics_collection(self) -> None:
         """Test collecting plugin metrics."""
         if hasattr(monitoring, 'create_metrics_collector'):
             collector = monitoring.create_metrics_collector()
@@ -157,7 +157,7 @@ class TestPluginMetricsCollector:
                 # Plugin might not exist or be loaded
                 pass
     
-    def test_metrics_collection_all_plugins(self):
+    def test_metrics_collection_all_plugins(self) -> None:
         """Test collecting metrics for all plugins."""
         if hasattr(monitoring, 'create_metrics_collector'):
             collector = monitoring.create_metrics_collector()
@@ -171,7 +171,7 @@ class TestPluginMetricsCollector:
                     # Some implementations might not support this
                     pass
     
-    def test_metrics_history(self):
+    def test_metrics_history(self) -> None:
         """Test metrics history functionality."""
         if hasattr(monitoring, 'create_metrics_collector'):
             collector = monitoring.create_metrics_collector()
@@ -184,7 +184,7 @@ class TestPluginMetricsCollector:
                     # Plugin might not exist or have history
                     pass
     
-    def test_metrics_export(self):
+    def test_metrics_export(self) -> None:
         """Test exporting metrics."""
         if hasattr(monitoring, 'create_metrics_collector'):
             collector = monitoring.create_metrics_collector()
@@ -203,7 +203,7 @@ class TestPluginMetricsCollector:
                     finally:
                         os.unlink(temp_file.name)
     
-    def test_custom_metrics(self):
+    def test_custom_metrics(self) -> None:
         """Test custom metrics functionality."""
         if hasattr(monitoring, 'create_metrics_collector'):
             collector = monitoring.create_metrics_collector()
@@ -224,13 +224,13 @@ class TestPluginMetricsCollector:
 class TestPluginHealthMonitor:
     """Test plugin health monitoring functionality."""
     
-    def test_health_monitor_creation(self):
+    def test_health_monitor_creation(self) -> None:
         """Test creating health monitor."""
         if hasattr(monitoring, 'PluginHealthMonitor'):
             monitor = monitoring.PluginHealthMonitor()
             assert monitor is not None
     
-    def test_health_check(self):
+    def test_health_check(self) -> None:
         """Test plugin health checking."""
         if hasattr(monitoring, 'PluginHealthMonitor'):
             monitor = monitoring.PluginHealthMonitor()
@@ -247,7 +247,7 @@ class TestPluginHealthMonitor:
                     # Plugin might not exist
                     pass
     
-    def test_health_monitoring_interval(self):
+    def test_health_monitoring_interval(self) -> None:
         """Test setting health monitoring interval."""
         if hasattr(monitoring, 'PluginHealthMonitor'):
             monitor = monitoring.PluginHealthMonitor()
@@ -263,7 +263,7 @@ class TestPluginHealthMonitor:
                     # Some implementations might not support interval changes
                     pass
     
-    def test_health_callback(self):
+    def test_health_callback(self) -> None:
         """Test health status change callbacks."""
         if hasattr(monitoring, 'PluginHealthMonitor'):
             monitor = monitoring.PluginHealthMonitor()
@@ -271,7 +271,7 @@ class TestPluginHealthMonitor:
             if hasattr(monitor, 'set_health_callback'):
                 callback_called = False
                 
-                def health_callback(plugin_name, old_status, new_status):
+                def health_callback(plugin_name, old_status, new_status) -> None:
                     nonlocal callback_called
                     callback_called = True
                 
@@ -292,13 +292,13 @@ class TestPluginHealthMonitor:
 class TestPerformanceMonitor:
     """Test performance monitoring functionality."""
     
-    def test_performance_monitor_creation(self):
+    def test_performance_monitor_creation(self) -> None:
         """Test creating performance monitor."""
         if hasattr(monitoring, 'PerformanceMonitor'):
             monitor = monitoring.PerformanceMonitor()
             assert monitor is not None
     
-    def test_performance_measurement(self):
+    def test_performance_measurement(self) -> None:
         """Test measuring plugin performance."""
         if hasattr(monitoring, 'PerformanceMonitor'):
             monitor = monitoring.PerformanceMonitor()
@@ -318,7 +318,7 @@ class TestPerformanceMonitor:
                     # Some implementations might not support performance measurement
                     pass
     
-    def test_performance_statistics(self):
+    def test_performance_statistics(self) -> None:
         """Test getting performance statistics."""
         if hasattr(monitoring, 'PerformanceMonitor'):
             monitor = monitoring.PerformanceMonitor()
@@ -340,7 +340,7 @@ class TestPerformanceMonitor:
 class TestMonitoringEnums:
     """Test monitoring-related enums."""
     
-    def test_plugin_health_status_enum(self):
+    def test_plugin_health_status_enum(self) -> None:
         """Test PluginHealthStatus enum values."""
         if hasattr(monitoring, 'PluginHealthStatus'):
             statuses = ['Healthy', 'Unhealthy', 'Unknown', 'Degraded']
@@ -349,7 +349,7 @@ class TestMonitoringEnums:
                     value = getattr(monitoring.PluginHealthStatus, status)
                     assert value is not None
     
-    def test_monitoring_event_type_enum(self):
+    def test_monitoring_event_type_enum(self) -> None:
         """Test MonitoringEventType enum values."""
         if hasattr(monitoring, 'MonitoringEventType'):
             types = ['HealthChanged', 'MetricsUpdated', 'PerformanceAlert', 'ReloadTriggered']
@@ -362,7 +362,7 @@ class TestMonitoringEnums:
 class TestMonitoringEvents:
     """Test monitoring event system."""
     
-    def test_monitoring_event_listener(self):
+    def test_monitoring_event_listener(self) -> None:
         """Test monitoring event listeners."""
         if hasattr(monitoring, 'create_hot_reload_manager'):
             manager = monitoring.create_hot_reload_manager()
@@ -370,7 +370,7 @@ class TestMonitoringEvents:
             if hasattr(manager, 'add_event_listener'):
                 events_received = []
                 
-                def event_listener(event_type, plugin_name, event_data):
+                def event_listener(event_type, plugin_name, event_data) -> None:
                     events_received.append((event_type, plugin_name, event_data))
                 
                 try:
@@ -387,7 +387,7 @@ class TestMonitoringEvents:
                     # Some implementations might not support event listeners
                     pass
     
-    def test_monitoring_event_filtering(self):
+    def test_monitoring_event_filtering(self) -> None:
         """Test filtering monitoring events."""
         if hasattr(monitoring, 'MonitoringEventFilter'):
             event_filter = monitoring.MonitoringEventFilter()
@@ -403,13 +403,13 @@ class TestMonitoringEvents:
 class TestMonitoringConfiguration:
     """Test monitoring configuration functionality."""
     
-    def test_monitoring_config_creation(self):
+    def test_monitoring_config_creation(self) -> None:
         """Test creating monitoring configuration."""
         if hasattr(monitoring, 'MonitoringConfig'):
             config = monitoring.MonitoringConfig()
             assert config is not None
     
-    def test_monitoring_config_properties(self):
+    def test_monitoring_config_properties(self) -> None:
         """Test monitoring configuration properties."""
         if hasattr(monitoring, 'MonitoringConfig'):
             config = monitoring.MonitoringConfig()
@@ -426,7 +426,7 @@ class TestMonitoringConfiguration:
                         # Some properties might be read-only
                         pass
     
-    def test_monitoring_config_intervals(self):
+    def test_monitoring_config_intervals(self) -> None:
         """Test monitoring interval configuration."""
         if hasattr(monitoring, 'MonitoringConfig'):
             config = monitoring.MonitoringConfig()
@@ -446,7 +446,7 @@ class TestMonitoringConfiguration:
 class TestMonitoringErrorHandling:
     """Test error handling in monitoring bindings."""
     
-    def test_invalid_plugin_monitoring(self):
+    def test_invalid_plugin_monitoring(self) -> None:
         """Test handling invalid plugin names in monitoring."""
         if hasattr(monitoring, 'create_hot_reload_manager'):
             manager = monitoring.create_hot_reload_manager()
@@ -455,7 +455,7 @@ class TestMonitoringErrorHandling:
             with pytest.raises((ValueError, RuntimeError, TypeError)):
                 manager.enable_hot_reload(None)
     
-    def test_invalid_metrics_collection(self):
+    def test_invalid_metrics_collection(self) -> None:
         """Test handling invalid metrics collection."""
         if hasattr(monitoring, 'create_metrics_collector'):
             collector = monitoring.create_metrics_collector()
@@ -464,7 +464,7 @@ class TestMonitoringErrorHandling:
             with pytest.raises((ValueError, RuntimeError, TypeError)):
                 collector.collect_metrics(None)
     
-    def test_monitoring_exception_handling(self):
+    def test_monitoring_exception_handling(self) -> None:
         """Test monitoring exception handling."""
         if hasattr(monitoring, 'MonitoringException'):
             # Test creating monitoring exception
@@ -476,7 +476,7 @@ class TestMonitoringErrorHandling:
 class TestMonitoringIntegration:
     """Test integration between monitoring components."""
     
-    def test_hot_reload_metrics_integration(self):
+    def test_hot_reload_metrics_integration(self) -> None:
         """Test integration between hot reload and metrics collection."""
         if (hasattr(monitoring, 'create_hot_reload_manager') and 
             hasattr(monitoring, 'create_metrics_collector')):
@@ -492,7 +492,7 @@ class TestMonitoringIntegration:
                     # Some implementations might not support this integration
                     pass
     
-    def test_health_metrics_integration(self):
+    def test_health_metrics_integration(self) -> None:
         """Test integration between health monitoring and metrics collection."""
         if (hasattr(monitoring, 'PluginHealthMonitor') and 
             hasattr(monitoring, 'create_metrics_collector')):
@@ -512,12 +512,12 @@ class TestMonitoringIntegration:
 class TestMonitoringThreadSafety:
     """Test thread safety of monitoring components."""
     
-    def test_concurrent_metrics_collection(self):
+    def test_concurrent_metrics_collection(self) -> None:
         """Test concurrent metrics collection."""
         if hasattr(monitoring, 'create_metrics_collector'):
             collector = monitoring.create_metrics_collector()
             
-            def collect_metrics(plugin_id):
+            def collect_metrics(plugin_id) -> None:
                 try:
                     metrics = collector.collect_metrics(f"test_plugin_{plugin_id}")
                     return metrics is not None
@@ -540,12 +540,12 @@ class TestMonitoringThreadSafety:
             # Should not crash with concurrent access
             assert len(results) <= 3
     
-    def test_concurrent_hot_reload_operations(self):
+    def test_concurrent_hot_reload_operations(self) -> None:
         """Test concurrent hot reload operations."""
         if hasattr(monitoring, 'create_hot_reload_manager'):
             manager = monitoring.create_hot_reload_manager()
             
-            def toggle_hot_reload(plugin_id):
+            def toggle_hot_reload(plugin_id) -> None:
                 try:
                     manager.enable_hot_reload(f"test_plugin_{plugin_id}")
                     manager.disable_hot_reload(f"test_plugin_{plugin_id}")

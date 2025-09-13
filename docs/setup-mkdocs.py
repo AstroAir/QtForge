@@ -11,7 +11,7 @@ import sys
 import os
 from pathlib import Path
 
-def run_command(cmd, check=True):
+def run_command(cmd, check=True) -> None:
     """Run a command and return the result."""
     print(f"Running: {' '.join(cmd)}")
     try:
@@ -27,14 +27,14 @@ def run_command(cmd, check=True):
             sys.exit(1)
         return e
 
-def check_python_version():
+def check_python_version() -> None:
     """Check if Python version is compatible."""
     if sys.version_info < (3, 8):
         print("Error: Python 3.8 or higher is required")
         sys.exit(1)
     print(f"✅ Python version: {sys.version}")
 
-def install_mkdocs():
+def install_mkdocs() -> None:
     """Install MkDocs and required plugins."""
     print("\n📦 Installing MkDocs and plugins...")
 
@@ -58,7 +58,7 @@ def install_mkdocs():
         for package in packages:
             run_command([sys.executable, "-m", "pip", "install", package])
 
-def validate_mkdocs_config():
+def validate_mkdocs_config() -> None:
     """Validate the MkDocs configuration."""
     print("\n🔍 Validating MkDocs configuration...")
 
@@ -79,7 +79,7 @@ def validate_mkdocs_config():
         print("❌ MkDocs configuration has errors")
         return False
 
-def build_docs():
+def build_docs() -> None:
     """Build the documentation."""
     print("\n🏗️ Building documentation...")
 
@@ -91,7 +91,7 @@ def build_docs():
         print("❌ Documentation build failed")
         return False
 
-def serve_docs():
+def serve_docs() -> None:
     """Start the development server."""
     print("\n🚀 Starting development server...")
     print("📖 Documentation will be available at: http://127.0.0.1:8000")
@@ -104,7 +104,7 @@ def serve_docs():
     except subprocess.CalledProcessError as e:
         print(f"❌ Failed to start server: {e}")
 
-def check_documentation_structure():
+def check_documentation_structure() -> None:
     """Check if required documentation files exist."""
     print("\n📁 Checking documentation structure...")
 
@@ -138,7 +138,7 @@ def check_documentation_structure():
         print("\n✅ All required documentation files are present")
         return True
 
-def main():
+def main() -> None:
     """Main setup function."""
     print("🔧 QtPlugin MkDocs Setup")
     print("=" * 50)

@@ -36,17 +36,17 @@ except ImportError as e:
 class TestCrossLanguageInteroperability:
     """Test interoperability between Python and Lua bindings."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Setup for each test method."""
         self.temp_dir = tempfile.mkdtemp()
         self.lua_executable = self.find_lua_executable()
 
-    def teardown_method(self):
+    def teardown_method(self) -> None:
         """Cleanup after each test method."""
         import shutil
         shutil.rmtree(self.temp_dir, ignore_errors=True)
 
-    def find_lua_executable(self):
+    def find_lua_executable(self) -> None:
         """Find available Lua executable."""
         lua_commands = ['lua', 'lua5.1', 'lua5.2', 'lua5.3', 'lua5.4', 'luajit']
         for cmd in lua_commands:
@@ -58,7 +58,7 @@ class TestCrossLanguageInteroperability:
                 continue
         return None
 
-    def run_lua_script(self, script_content):
+    def run_lua_script(self, script_content) -> None:
         """Run a Lua script and return the result."""
         if not self.lua_executable:
             pytest.skip("Lua executable not found")
@@ -79,7 +79,7 @@ class TestCrossLanguageInteroperability:
         except subprocess.TimeoutExpired:
             return False, "", "Timeout"
 
-    def test_plugin_manager_consistency(self):
+    def test_plugin_manager_consistency(self) -> None:
         """Test that PluginManager behaves consistently across languages."""
         # Test Python PluginManager
         python_manager = core.PluginManager()
@@ -120,7 +120,7 @@ class TestCrossLanguageInteroperability:
             print(f"⚠️  Lua PluginManager test failed: {stdout} {stderr}")
             # Don't fail the test if Lua bindings are not available
 
-    def test_message_bus_interoperability(self):
+    def test_message_bus_interoperability(self) -> None:
         """Test MessageBus interoperability between Python and Lua."""
         # Test Python MessageBus
         if hasattr(comm, 'MessageBus'):
@@ -162,7 +162,7 @@ class TestCrossLanguageInteroperability:
         else:
             print(f"⚠️  Lua MessageBus test failed: {stdout} {stderr}")
 
-    def test_configuration_sharing(self):
+    def test_configuration_sharing(self) -> None:
         """Test configuration sharing between Python and Lua."""
         # Create configuration in Python
         if hasattr(managers, 'ConfigurationManager'):
@@ -203,7 +203,7 @@ class TestCrossLanguageInteroperability:
         else:
             print(f"⚠️  Lua configuration test failed: {stdout} {stderr}")
 
-    def test_security_policy_consistency(self):
+    def test_security_policy_consistency(self) -> None:
         """Test security policy consistency between languages."""
         # Test Python security
         if hasattr(security, 'SecurityManager'):
@@ -238,7 +238,7 @@ class TestCrossLanguageInteroperability:
         else:
             print(f"⚠️  Lua security test failed: {stdout} {stderr}")
 
-    def test_enum_value_consistency(self):
+    def test_enum_value_consistency(self) -> None:
         """Test that enum values are consistent between Python and Lua."""
         # Test Python enum values
         python_states = {}
@@ -293,13 +293,13 @@ class TestCrossLanguageInteroperability:
 class TestThreadingSafety:
     """Test threading safety of Python bindings."""
 
-    def test_concurrent_plugin_manager_access(self):
+    def test_concurrent_plugin_manager_access(self) -> None:
         """Test concurrent access to PluginManager from multiple threads."""
         manager = core.PluginManager()
         results = []
         errors = []
 
-        def worker_thread(thread_id):
+        def worker_thread(thread_id) -> None:
             try:
                 # Perform various operations
                 count = manager.get_plugin_count()
@@ -340,7 +340,7 @@ class TestThreadingSafety:
 
         print("✅ Concurrent PluginManager access test passed")
 
-    def test_concurrent_message_bus_operations(self):
+    def test_concurrent_message_bus_operations(self) -> None:
         """Test concurrent MessageBus operations."""
         if not hasattr(comm, 'MessageBus') and not hasattr(comm, 'create_message_bus'):
             pytest.skip("MessageBus not available")
@@ -354,7 +354,7 @@ class TestThreadingSafety:
         messages_sent = []
         errors = []
 
-        def publisher_thread(thread_id):
+        def publisher_thread(thread_id) -> None:
             try:
                 for i in range(5):
                     if hasattr(comm, 'Message'):
@@ -395,9 +395,9 @@ class TestThreadingSafety:
 
         print("✅ Concurrent MessageBus operations test passed")
 
-    def test_thread_pool_execution(self):
+    def test_thread_pool_execution(self) -> None:
         """Test thread pool execution with QtForge operations."""
-        def qtforge_operation(operation_id):
+        def qtforge_operation(operation_id) -> None:
             """Perform QtForge operations in thread pool."""
             try:
                 # Create various QtForge objects
@@ -444,17 +444,17 @@ class TestThreadingSafety:
 class TestMemoryManagement:
     """Test memory management and resource cleanup."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Setup for memory tests."""
         gc.collect()  # Clean up before test
         self.initial_memory = self.get_memory_usage()
 
-    def get_memory_usage(self):
+    def get_memory_usage(self) -> None:
         """Get current memory usage in MB."""
         process = psutil.Process()
         return process.memory_info().rss / 1024 / 1024
 
-    def test_object_creation_cleanup(self):
+    def test_object_creation_cleanup(self) -> None:
         """Test that objects are properly cleaned up."""
         initial_memory = self.get_memory_usage()
 
@@ -493,7 +493,7 @@ class TestMemoryManagement:
 
         print("✅ Object creation cleanup test passed")
 
-    def test_circular_reference_handling(self):
+    def test_circular_reference_handling(self) -> None:
         """Test handling of circular references."""
         initial_memory = self.get_memory_usage()
 
@@ -535,7 +535,7 @@ class TestMemoryManagement:
 
         print("✅ Circular reference handling test passed")
 
-    def test_large_data_handling(self):
+    def test_large_data_handling(self) -> None:
         """Test handling of large data structures."""
         initial_memory = self.get_memory_usage()
 
@@ -573,7 +573,7 @@ class TestMemoryManagement:
 class TestErrorHandlingIntegration:
     """Test error handling in integration scenarios."""
 
-    def test_exception_propagation(self):
+    def test_exception_propagation(self) -> None:
         """Test that exceptions are properly propagated across language boundaries."""
         manager = core.PluginManager()
 
@@ -594,7 +594,7 @@ class TestErrorHandlingIntegration:
 
         print("✅ Exception propagation test completed")
 
-    def test_resource_cleanup_on_error(self):
+    def test_resource_cleanup_on_error(self) -> None:
         """Test that resources are cleaned up when errors occur."""
         initial_memory = self.get_memory_usage()
 
@@ -629,7 +629,7 @@ class TestErrorHandlingIntegration:
 class TestPerformanceIntegration:
     """Test performance aspects of Python bindings."""
 
-    def test_object_creation_performance(self):
+    def test_object_creation_performance(self) -> None:
         """Test performance of object creation."""
         start_time = time.time()
 
@@ -650,7 +650,7 @@ class TestPerformanceIntegration:
 
         print("✅ Object creation performance test passed")
 
-    def test_method_call_performance(self):
+    def test_method_call_performance(self) -> None:
         """Test performance of method calls."""
         manager = core.PluginManager()
 
@@ -670,7 +670,7 @@ class TestPerformanceIntegration:
 
         print("✅ Method call performance test passed")
 
-    def test_data_transfer_performance(self):
+    def test_data_transfer_performance(self) -> None:
         """Test performance of data transfer between C++ and Python."""
         manager = core.PluginManager()
 

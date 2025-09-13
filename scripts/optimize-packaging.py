@@ -20,7 +20,7 @@ from datetime import datetime
 class PackagingOptimizer:
     """Optimizes packaging process for QtForge"""
     
-    def __init__(self, build_dir: Path, output_dir: Path):
+    def __init__(self, build_dir: Path, output_dir: Path) -> None:
         self.build_dir = Path(build_dir)
         self.output_dir = Path(output_dir)
         self.system = platform.system().lower()
@@ -247,7 +247,7 @@ class PackagingOptimizer:
             json.dump(self.metadata, f, indent=2)
         print(f"📋 Metadata saved to {metadata_file.name}")
 
-def main():
+def main() -> None:
     """Main function"""
     import argparse
     

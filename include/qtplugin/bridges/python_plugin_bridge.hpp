@@ -250,6 +250,36 @@ public:
         const QJsonArray& parameters = {});
 
     /**
+     * @brief Get plugin information
+     *
+     * @param plugin_id Unique identifier of the loaded plugin
+     * @return Plugin information including metadata, methods, and properties
+     */
+    qtplugin::expected<QJsonObject, PluginError> get_plugin_info(
+        const QString& plugin_id);
+
+    /**
+     * @brief Get a property value from a loaded plugin
+     *
+     * @param plugin_id Unique identifier of the loaded plugin
+     * @param property_name Name of the property to get
+     * @return Property value as JSON object or PluginError
+     */
+    qtplugin::expected<QJsonObject, PluginError> get_plugin_property(
+        const QString& plugin_id, const QString& property_name);
+
+    /**
+     * @brief Set a property value on a loaded plugin
+     *
+     * @param plugin_id Unique identifier of the loaded plugin
+     * @param property_name Name of the property to set
+     * @param value New property value
+     * @return Success or PluginError
+     */
+    qtplugin::expected<QJsonObject, PluginError> set_plugin_property(
+        const QString& plugin_id, const QString& property_name, const QJsonValue& value);
+
+    /**
      * @brief Check if environment is running
      *
      * @return true if the Python process is running and responsive

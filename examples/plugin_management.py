@@ -31,7 +31,7 @@ except ImportError:
         PluginLoadOptions, PluginInfo, PluginMetadata, Version
     )
 
-def demonstrate_plugin_manager():
+def demonstrate_plugin_manager() -> None:
     """Demonstrate basic plugin manager functionality."""
     print("\n" + "=" * 50)
     print("Plugin Manager Demonstration")
@@ -65,7 +65,7 @@ def demonstrate_plugin_manager():
     
     return manager
 
-def demonstrate_plugin_metadata():
+def demonstrate_plugin_metadata() -> None:
     """Demonstrate plugin metadata creation and manipulation."""
     print("\n" + "=" * 50)
     print("Plugin Metadata Demonstration")
@@ -95,7 +95,7 @@ def demonstrate_plugin_metadata():
     print(f"Dependencies: {metadata.dependencies}")
     print(f"Tags: {metadata.tags}")
 
-def demonstrate_plugin_capabilities():
+def demonstrate_plugin_capabilities() -> None:
     """Demonstrate plugin capabilities and priorities."""
     print("\n" + "=" * 50)
     print("Plugin Capabilities Demonstration")
@@ -154,7 +154,7 @@ def demonstrate_plugin_capabilities():
     for state in states:
         print(f"  - {state}")
 
-def demonstrate_plugin_load_options():
+def demonstrate_plugin_load_options() -> None:
     """Demonstrate plugin loading options."""
     print("\n" + "=" * 50)
     print("Plugin Load Options Demonstration")
@@ -176,7 +176,7 @@ def demonstrate_plugin_load_options():
     print(f"  Initialize immediately: {options.initialize_immediately}")
     print(f"  Enable hot reload: {options.enable_hot_reload}")
 
-def demonstrate_system_information():
+def demonstrate_system_information() -> None:
     """Demonstrate system information retrieval."""
     print("\n" + "=" * 50)
     print("System Information Demonstration")
@@ -205,7 +205,7 @@ def demonstrate_system_information():
     except Exception as e:
         print(f"Could not get system info: {e}")
 
-def main():
+def main() -> None:
     """Main function demonstrating plugin management."""
     print("QtForge Python Bindings - Plugin Management Example")
     

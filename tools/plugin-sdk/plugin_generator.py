@@ -17,12 +17,12 @@ import uuid
 class PluginTemplate:
     """Base class for plugin templates"""
 
-    def __init__(self, name: str, description: str):
+    def __init__(self, name: str, description: str) -> None:
         self.name = name
         self.description = description
         self.variables = {}
 
-    def set_variables(self, variables: Dict[str, Any]):
+    def set_variables(self, variables: Dict[str, Any]) -> None:
         """Set template variables"""
         self.variables.update(variables)
 
@@ -40,7 +40,7 @@ class PluginTemplate:
 class NativePluginTemplate(PluginTemplate):
     """Template for native C++ plugins"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("native", "Native C++ plugin with full QtForge integration")
 
     def generate_files(self, output_dir: Path) -> List[Path]:
@@ -539,7 +539,7 @@ QTEST_MAIN(Test{{class_name}})
 class PythonPluginTemplate(PluginTemplate):
     """Template for Python script plugins"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("python", "Python script plugin with QtForge integration")
 
     def generate_files(self, output_dir: Path) -> List[Path]:
@@ -593,7 +593,7 @@ logger = logging.getLogger("{{plugin_id}}")
 class {{class_name}}:
     """{{description}}"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.state = "unloaded"
         self.configuration = {}
         self.interfaces = []
@@ -779,7 +779,7 @@ class {{class_name}}:
 
         return {"success": False, "error": f"Method not found: {method_name}"}
 
-    def _setup_interfaces(self):
+    def _setup_interfaces(self) -> None:
         """Setup plugin interfaces"""
         interface = {
             "interface_id": f"{self.id()}.main",
@@ -792,7 +792,7 @@ class {{class_name}}:
         self.interfaces.append(interface)
 
 # Plugin entry point
-def create_plugin():
+def create_plugin() -> None:
     """Create and return plugin instance"""
     return {{class_name}}()
 
@@ -871,16 +871,16 @@ from {{plugin_name}} import {{class_name}}
 class Test{{class_name}}(unittest.TestCase):
     """Test cases for {{class_name}}"""
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Set up test fixtures"""
         self.plugin = {{class_name}}()
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         """Clean up after tests"""
         if self.plugin.get_state() != "unloaded":
             self.plugin.shutdown()
 
-    def test_plugin_metadata(self):
+    def test_plugin_metadata(self) -> None:
         """Test plugin metadata"""
         self.assertEqual(self.plugin.name(), "{{name}}")
         self.assertEqual(self.plugin.description(), "{{description}}")
@@ -888,7 +888,7 @@ class Test{{class_name}}(unittest.TestCase):
         self.assertEqual(self.plugin.author(), "{{author}}")
         self.assertEqual(self.plugin.id(), "{{plugin_id}}")
 
-    def test_initialization(self):
+    def test_initialization(self) -> None:
         """Test plugin initialization"""
         self.assertEqual(self.plugin.get_state(), "unloaded")
 
@@ -900,7 +900,7 @@ class Test{{class_name}}(unittest.TestCase):
         result = self.plugin.initialize()
         self.assertFalse(result["success"])
 
-    def test_commands(self):
+    def test_commands(self) -> None:
         """Test command execution"""
         self.plugin.initialize()
 
@@ -913,7 +913,7 @@ class Test{{class_name}}(unittest.TestCase):
         self.assertIn("state", result["result"])
         self.assertIn("name", result["result"])
 
-    def test_configuration(self):
+    def test_configuration(self) -> None:
         """Test plugin configuration"""
         config = {"test_setting": "test_value"}
         result = self.plugin.configure(config)
@@ -922,7 +922,7 @@ class Test{{class_name}}(unittest.TestCase):
         current_config = self.plugin.current_configuration()
         self.assertEqual(current_config["test_setting"], "test_value")
 
-    def test_interfaces(self):
+    def test_interfaces(self) -> None:
         """Test interface support"""
         interfaces = self.plugin.get_interface_descriptors()
         self.assertGreater(len(interfaces), 0)
@@ -934,7 +934,7 @@ class Test{{class_name}}(unittest.TestCase):
         self.assertIsNotNone(descriptor)
         self.assertEqual(descriptor["interface_id"], main_interface_id)
 
-    def test_code_execution(self):
+    def test_code_execution(self) -> None:
         """Test code execution"""
         result = self.plugin.execute_code("2 + 2")
         self.assertTrue(result["success"])
@@ -946,7 +946,7 @@ class Test{{class_name}}(unittest.TestCase):
         self.assertTrue(result["success"])
         self.assertEqual(result["result"], 20)
 
-    def test_method_invocation(self):
+    def test_method_invocation(self) -> None:
         """Test dynamic method invocation"""
         result = self.plugin.invoke_method("name")
         self.assertTrue(result["success"])
@@ -963,7 +963,7 @@ if __name__ == "__main__":
 class PluginGenerator:
     """Main plugin generator class"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.templates = {
             "native": NativePluginTemplate(),
             "python": PythonPluginTemplate(),
@@ -1041,7 +1041,7 @@ class PluginGenerator:
             "description": template.description
         }
 
-def main():
+def main() -> None:
     """Main entry point"""
     parser = argparse.ArgumentParser(
         description="QtForge Plugin Generator - Create plugin projects with templates and scaffolding"

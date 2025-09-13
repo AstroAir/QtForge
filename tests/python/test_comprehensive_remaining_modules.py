@@ -32,7 +32,7 @@ pytestmark = pytest.mark.skipif(not BINDINGS_AVAILABLE, reason="QtForge bindings
 class TestTransactionManager:
     """Test TransactionManager functionality."""
     
-    def test_transaction_manager_creation(self):
+    def test_transaction_manager_creation(self) -> None:
         """Test TransactionManager can be created."""
         if hasattr(transactions, 'create_transaction_manager'):
             manager = transactions.create_transaction_manager()
@@ -41,7 +41,7 @@ class TestTransactionManager:
             assert hasattr(manager, 'commit_transaction')
             assert hasattr(manager, 'rollback_transaction')
     
-    def test_transaction_lifecycle(self):
+    def test_transaction_lifecycle(self) -> None:
         """Test transaction begin/commit/rollback lifecycle."""
         if hasattr(transactions, 'create_transaction_manager'):
             manager = transactions.create_transaction_manager()
@@ -58,7 +58,7 @@ class TestTransactionManager:
                 # Some implementations might require specific setup
                 pass
     
-    def test_transaction_rollback(self):
+    def test_transaction_rollback(self) -> None:
         """Test transaction rollback functionality."""
         if hasattr(transactions, 'create_transaction_manager'):
             manager = transactions.create_transaction_manager()
@@ -74,7 +74,7 @@ class TestTransactionManager:
                 # Some implementations might require specific setup
                 pass
     
-    def test_nested_transactions(self):
+    def test_nested_transactions(self) -> None:
         """Test nested transaction support."""
         if hasattr(transactions, 'create_transaction_manager'):
             manager = transactions.create_transaction_manager()
@@ -102,14 +102,14 @@ class TestTransactionManager:
 class TestCompositionManager:
     """Test CompositionManager functionality."""
     
-    def test_composition_manager_creation(self):
+    def test_composition_manager_creation(self) -> None:
         """Test CompositionManager can be created."""
         if hasattr(composition, 'create_composition_manager'):
             manager = composition.create_composition_manager()
             assert manager is not None
             assert hasattr(manager, 'create_composition')
     
-    def test_composition_creation(self):
+    def test_composition_creation(self) -> None:
         """Test creating plugin compositions."""
         if hasattr(composition, 'create_composition_manager'):
             manager = composition.create_composition_manager()
@@ -121,7 +121,7 @@ class TestCompositionManager:
                 # Some implementations might require specific parameters
                 pass
     
-    def test_composition_binding(self):
+    def test_composition_binding(self) -> None:
         """Test composition binding functionality."""
         if hasattr(composition, 'create_composition_binding'):
             try:
@@ -136,7 +136,7 @@ class TestCompositionManager:
                 # Some implementations might require different parameters
                 pass
     
-    def test_pipeline_composition(self):
+    def test_pipeline_composition(self) -> None:
         """Test pipeline composition functionality."""
         if hasattr(composition, 'create_pipeline_composition'):
             try:
@@ -146,7 +146,7 @@ class TestCompositionManager:
                 # Some implementations might require loaded plugins
                 pass
     
-    def test_facade_composition(self):
+    def test_facade_composition(self) -> None:
         """Test facade composition functionality."""
         if hasattr(composition, 'create_facade_composition'):
             try:
@@ -160,14 +160,14 @@ class TestCompositionManager:
 class TestMarketplace:
     """Test Marketplace functionality."""
     
-    def test_marketplace_creation(self):
+    def test_marketplace_creation(self) -> None:
         """Test Marketplace can be created."""
         if hasattr(marketplace, 'create_marketplace'):
             mp = marketplace.create_marketplace()
             assert mp is not None
             assert hasattr(mp, 'search_plugins')
     
-    def test_plugin_search(self):
+    def test_plugin_search(self) -> None:
         """Test plugin search functionality."""
         if hasattr(marketplace, 'create_marketplace'):
             mp = marketplace.create_marketplace()
@@ -179,7 +179,7 @@ class TestMarketplace:
                 # Marketplace might not be available or configured
                 pass
     
-    def test_search_filters(self):
+    def test_search_filters(self) -> None:
         """Test search filters functionality."""
         if hasattr(marketplace, 'create_search_filters'):
             try:
@@ -195,7 +195,7 @@ class TestMarketplace:
                 # Some implementations might have different API
                 pass
     
-    def test_free_plugins_search(self):
+    def test_free_plugins_search(self) -> None:
         """Test searching for free plugins."""
         if hasattr(marketplace, 'search_free_plugins'):
             try:
@@ -205,7 +205,7 @@ class TestMarketplace:
                 # Marketplace might not be available
                 pass
     
-    def test_top_rated_plugins(self):
+    def test_top_rated_plugins(self) -> None:
         """Test getting top rated plugins."""
         if hasattr(marketplace, 'get_top_rated_plugins'):
             try:
@@ -216,7 +216,7 @@ class TestMarketplace:
                 # Marketplace might not be available
                 pass
     
-    def test_plugin_details(self):
+    def test_plugin_details(self) -> None:
         """Test getting plugin details."""
         if hasattr(marketplace, 'create_marketplace'):
             mp = marketplace.create_marketplace()
@@ -235,14 +235,14 @@ class TestMarketplace:
 class TestThreadPool:
     """Test ThreadPool functionality."""
     
-    def test_thread_pool_creation(self):
+    def test_thread_pool_creation(self) -> None:
         """Test ThreadPool can be created."""
         if hasattr(qtforge_threading, 'create_thread_pool'):
             pool = qtforge_threading.create_thread_pool(4)  # 4 threads
             assert pool is not None
             assert hasattr(pool, 'submit_task')
     
-    def test_thread_pool_task_submission(self):
+    def test_thread_pool_task_submission(self) -> None:
         """Test submitting tasks to thread pool."""
         if hasattr(qtforge_threading, 'create_thread_pool'):
             pool = qtforge_threading.create_thread_pool(2)
@@ -261,7 +261,7 @@ class TestThreadPool:
                     # Some implementations might have different API
                     pass
     
-    def test_thread_pool_shutdown(self):
+    def test_thread_pool_shutdown(self) -> None:
         """Test thread pool shutdown."""
         if hasattr(qtforge_threading, 'create_thread_pool'):
             pool = qtforge_threading.create_thread_pool(2)
@@ -277,7 +277,7 @@ class TestThreadPool:
                     # Some implementations might not support shutdown check
                     pass
     
-    def test_thread_pool_manager(self):
+    def test_thread_pool_manager(self) -> None:
         """Test ThreadPoolManager functionality."""
         if hasattr(qtforge_threading, 'create_thread_pool_manager'):
             manager = qtforge_threading.create_thread_pool_manager()
@@ -295,10 +295,10 @@ class TestThreadPool:
 class TestAsyncOperations:
     """Test asynchronous operations functionality."""
     
-    def test_async_task_execution(self):
+    def test_async_task_execution(self) -> None:
         """Test asynchronous task execution."""
         if hasattr(qtforge_threading, 'execute_async'):
-            def test_task():
+            def test_task() -> None:
                 time.sleep(0.01)
                 return "completed"
             
@@ -313,16 +313,16 @@ class TestAsyncOperations:
                 # Some implementations might have different async API
                 pass
     
-    def test_async_callback(self):
+    def test_async_callback(self) -> None:
         """Test asynchronous operations with callbacks."""
         if hasattr(qtforge_threading, 'execute_async_with_callback'):
             callback_called = False
             callback_result = None
             
-            def test_task():
+            def test_task() -> None:
                 return "task_result"
             
-            def callback(result):
+            def callback(result) -> None:
                 nonlocal callback_called, callback_result
                 callback_called = True
                 callback_result = result
@@ -342,7 +342,7 @@ class TestAsyncOperations:
 class TestErrorHandling:
     """Test error handling across remaining modules."""
     
-    def test_transaction_invalid_operations(self):
+    def test_transaction_invalid_operations(self) -> None:
         """Test handling invalid transaction operations."""
         if hasattr(transactions, 'create_transaction_manager'):
             manager = transactions.create_transaction_manager()
@@ -351,7 +351,7 @@ class TestErrorHandling:
             with pytest.raises((ValueError, RuntimeError)):
                 manager.commit_transaction("invalid_tx_id")
     
-    def test_composition_invalid_operations(self):
+    def test_composition_invalid_operations(self) -> None:
         """Test handling invalid composition operations."""
         if hasattr(composition, 'create_composition_manager'):
             manager = composition.create_composition_manager()
@@ -360,7 +360,7 @@ class TestErrorHandling:
             with pytest.raises((ValueError, RuntimeError, TypeError)):
                 manager.create_composition(None)
     
-    def test_marketplace_invalid_operations(self):
+    def test_marketplace_invalid_operations(self) -> None:
         """Test handling invalid marketplace operations."""
         if hasattr(marketplace, 'create_marketplace'):
             mp = marketplace.create_marketplace()
@@ -369,7 +369,7 @@ class TestErrorHandling:
             with pytest.raises((ValueError, RuntimeError, TypeError)):
                 mp.search_plugins(None)
     
-    def test_threading_invalid_operations(self):
+    def test_threading_invalid_operations(self) -> None:
         """Test handling invalid threading operations."""
         if hasattr(qtforge_threading, 'create_thread_pool'):
             # Test creating thread pool with invalid size
@@ -380,7 +380,7 @@ class TestErrorHandling:
 class TestIntegrationScenarios:
     """Test integration scenarios between modules."""
     
-    def test_transaction_composition_integration(self):
+    def test_transaction_composition_integration(self) -> None:
         """Test integration between transactions and composition."""
         if (hasattr(transactions, 'create_transaction_manager') and 
             hasattr(composition, 'create_composition_manager')):
@@ -401,7 +401,7 @@ class TestIntegrationScenarios:
                 # Integration might not be supported
                 pass
     
-    def test_marketplace_threading_integration(self):
+    def test_marketplace_threading_integration(self) -> None:
         """Test integration between marketplace and threading."""
         if (hasattr(marketplace, 'create_marketplace') and 
             hasattr(qtforge_threading, 'create_thread_pool')):
@@ -425,7 +425,7 @@ class TestIntegrationScenarios:
 class TestPerformanceAndScalability:
     """Test performance and scalability aspects."""
     
-    def test_transaction_performance(self):
+    def test_transaction_performance(self) -> None:
         """Test transaction performance with multiple operations."""
         if hasattr(transactions, 'create_transaction_manager'):
             manager = transactions.create_transaction_manager()
@@ -447,7 +447,7 @@ class TestPerformanceAndScalability:
                 # Performance test might not be applicable
                 pass
     
-    def test_thread_pool_scalability(self):
+    def test_thread_pool_scalability(self) -> None:
         """Test thread pool scalability."""
         if hasattr(qtforge_threading, 'create_thread_pool'):
             pool = qtforge_threading.create_thread_pool(4)
@@ -477,7 +477,7 @@ class TestPerformanceAndScalability:
 class TestResourceManagement:
     """Test resource management in remaining modules."""
     
-    def test_transaction_resource_cleanup(self):
+    def test_transaction_resource_cleanup(self) -> None:
         """Test transaction resource cleanup."""
         if hasattr(transactions, 'create_transaction_manager'):
             manager = transactions.create_transaction_manager()
@@ -496,7 +496,7 @@ class TestResourceManagement:
                 # Resource management might be automatic
                 pass
     
-    def test_thread_pool_resource_cleanup(self):
+    def test_thread_pool_resource_cleanup(self) -> None:
         """Test thread pool resource cleanup."""
         if hasattr(qtforge_threading, 'create_thread_pool'):
             pool = qtforge_threading.create_thread_pool(2)
@@ -522,7 +522,7 @@ class TestResourceManagement:
 class TestConfigurationAndSettings:
     """Test configuration and settings for remaining modules."""
     
-    def test_transaction_configuration(self):
+    def test_transaction_configuration(self) -> None:
         """Test transaction manager configuration."""
         if hasattr(transactions, 'TransactionConfig'):
             config = transactions.TransactionConfig()
@@ -542,7 +542,7 @@ class TestConfigurationAndSettings:
                         # Some properties might be read-only
                         pass
     
-    def test_marketplace_configuration(self):
+    def test_marketplace_configuration(self) -> None:
         """Test marketplace configuration."""
         if hasattr(marketplace, 'MarketplaceConfig'):
             config = marketplace.MarketplaceConfig()

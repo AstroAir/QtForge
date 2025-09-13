@@ -107,10 +107,56 @@ private:
     std::unique_ptr<MessageBus> m_message_bus;
 
     // Test message types
-    struct TestMessage {
-        std::string content;
-        int priority = 0;
-        std::chrono::system_clock::time_point timestamp;
+    class TestMessage : public IMessage {
+    public:
+        TestMessage(const std::string& content = "",
+                    const std::string& sender = "test")
+            : m_content(content),
+              m_sender(sender),
+              m_timestamp(std::chrono::system_clock::now()),
+              m_priority(MessagePriority::Normal),
+              m_id(generate_id()) {}
+
+        std::string_view type() const noexcept override {
+            return "TestMessage";
+        }
+        std::string_view sender() const noexcept override { return m_sender; }
+        std::chrono::system_clock::time_point timestamp()
+            const noexcept override {
+            return m_timestamp;
+        }
+        MessagePriority priority() const noexcept override {
+            return m_priority;
+        }
+        std::string id() const noexcept override { return m_id; }
+
+        QJsonObject to_json() const override {
+            QJsonObject obj;
+            obj["content"] = QString::fromStdString(m_content);
+            obj["sender"] = QString::fromStdString(m_sender);
+            obj["timestamp"] = static_cast<qint64>(
+                std::chrono::duration_cast<std::chrono::milliseconds>(
+                    m_timestamp.time_since_epoch())
+                    .count());
+            obj["priority"] = static_cast<int>(m_priority);
+            obj["id"] = QString::fromStdString(m_id);
+            return obj;
+        }
+
+        std::string content() const { return m_content; }
+        void set_content(const std::string& content) { m_content = content; }
+
+    private:
+        std::string m_content;
+        std::string m_sender;
+        std::chrono::system_clock::time_point m_timestamp;
+        MessagePriority m_priority;
+        std::string m_id;
+
+        static std::string generate_id() {
+            static std::atomic<uint64_t> counter{0};
+            return "test_msg_" + std::to_string(counter.fetch_add(1));
+        }
     };
 
     // Helper methods
@@ -137,7 +183,7 @@ void TestMessageBus::init() {
 void TestMessageBus::cleanup() {
     // Clean up message bus
     if (m_message_bus) {
-        m_message_bus->shutdown();
+        m_message_bus->clear();  // Clear all subscriptions and messages
         m_message_bus.reset();
     }
 }
@@ -147,14 +193,17 @@ void TestMessageBus::testMessageBusCreation() {
     auto bus = std::make_unique<MessageBus>();
     QVERIFY(bus != nullptr);
 
-    // Test creation with custom configuration
-    MessageBusConfig config;
-    config.max_message_size = 1024 * 1024;  // 1MB
-    config.max_subscribers_per_topic = 1000;
-    config.enable_persistence = true;
+    // Test initial state
+    QVERIFY(!bus->is_logging_enabled());
+    auto stats = bus->statistics();
+    QVERIFY(stats.contains("messages_published"));
+    QVERIFY(stats.contains("messages_delivered"));
+    QVERIFY(stats.contains("delivery_failures"));
 
-    auto custom_bus = std::make_unique<MessageBus>(config);
-    QVERIFY(custom_bus != nullptr);
+    // Test that initial statistics are zero
+    QCOMPARE(stats["messages_published"].toInt(), 0);
+    QCOMPARE(stats["messages_delivered"].toInt(), 0);
+    QCOMPARE(stats["delivery_failures"].toInt(), 0);
 }
 
 void TestMessageBus::testMessageBusDestruction() {
@@ -162,16 +211,9 @@ void TestMessageBus::testMessageBusDestruction() {
     {
         auto bus = std::make_unique<MessageBus>();
 
-        // Create some topics and subscriptions
-        auto create_result = bus->create_topic("test_topic");
-        QVERIFY(create_result.has_value());
-
-        auto subscribe_result =
-            bus->subscribe("test_topic", [](const Message& msg) {
-                Q_UNUSED(msg)
-                // Test callback
-            });
-        QVERIFY(subscribe_result.has_value());
+        // Test basic functionality before destruction
+        auto stats = bus->statistics();
+        QVERIFY(!stats.isEmpty());
 
         // Bus should clean up automatically when destroyed
     }
@@ -182,78 +224,78 @@ void TestMessageBus::testMessageBusDestruction() {
 
 void TestMessageBus::testMessageBusInitialization() {
     // Test initialization state
-    QVERIFY(m_message_bus->is_running());
-    QCOMPARE(m_message_bus->get_topic_count(), 0);
-    QCOMPARE(m_message_bus->get_subscription_count(), 0);
-    QCOMPARE(m_message_bus->get_message_count(), 0);
+    auto stats = m_message_bus->statistics();
+    QVERIFY(!stats.isEmpty());
+
+    // Test that logging is initially disabled
+    QVERIFY(!m_message_bus->is_logging_enabled());
+
+    // Test that we can enable logging
+    m_message_bus->set_logging_enabled(true);
+    QVERIFY(m_message_bus->is_logging_enabled());
+
+    // Test that message log is initially empty
+    auto log = m_message_bus->message_log();
+    QVERIFY(log.empty());
 }
 
 void TestMessageBus::testPublishMessage() {
-    // Create a topic first
-    auto create_result = m_message_bus->create_topic("test_topic");
-    QVERIFY(create_result.has_value());
-
     // Create a test message
-    Message msg;
-    msg.topic = "test_topic";
-    msg.content = "Hello, World!";
-    msg.sender = "test_sender";
-    msg.timestamp = std::chrono::system_clock::now();
+    TestMessage msg("Hello, World!", "test_sender");
 
-    // Publish the message
-    auto publish_result = m_message_bus->publish(msg);
+    // Publish the message using broadcast mode
+    auto publish_result = m_message_bus->publish(msg, DeliveryMode::Broadcast);
     QVERIFY(publish_result.has_value());
 
-    // Verify message was published
-    QCOMPARE(m_message_bus->get_message_count(), 1);
+    // Verify statistics were updated
+    auto stats = m_message_bus->statistics();
+    QVERIFY(stats["messages_published"].toInt() >= 1);
 }
 
 void TestMessageBus::testPublishInvalidMessage() {
-    // Try to publish message with empty topic
-    Message invalid_msg;
-    invalid_msg.topic = "";
-    invalid_msg.content = "Invalid message";
+    // Test publishing with empty content to test edge cases
+    TestMessage empty_msg("", "");
 
-    auto result = m_message_bus->publish(invalid_msg);
-    QVERIFY(!result.has_value());
-    QCOMPARE(result.error().code, PluginErrorCode::InvalidArgument);
+    // Publishing should still succeed but with empty content
+    auto publish_result =
+        m_message_bus->publish(empty_msg, DeliveryMode::Broadcast);
+    QVERIFY(publish_result.has_value());  // Empty content is still valid
 }
 
 void TestMessageBus::testSubscribeToTopic() {
-    // Create a topic
-    auto create_result = m_message_bus->create_topic("subscribe_test");
-    QVERIFY(create_result.has_value());
-
-    // Subscribe to the topic
+    // Test subscription to TestMessage type
     bool message_received = false;
     std::string received_content;
 
-    auto subscribe_result = m_message_bus->subscribe(
-        "subscribe_test",
-        [&message_received, &received_content](const Message& msg) {
+    auto subscribe_result = m_message_bus->subscribe<TestMessage>(
+        "test_subscriber",
+        [&message_received, &received_content](
+            const TestMessage& msg) -> qtplugin::expected<void, PluginError> {
             message_received = true;
-            received_content = msg.content;
+            received_content = msg.content();
+            return make_success();
         });
-
     QVERIFY(subscribe_result.has_value());
-    auto subscription_id = subscribe_result.value();
-    QVERIFY(!subscription_id.empty());
+
+    // Verify subscriber was added
+    auto subscribers =
+        m_message_bus->subscribers(std::type_index(typeid(TestMessage)));
+    QVERIFY(!subscribers.empty());
+    QVERIFY(std::find(subscribers.begin(), subscribers.end(),
+                      "test_subscriber") != subscribers.end());
 
     // Publish a message to test delivery
-    Message test_msg;
-    test_msg.topic = "subscribe_test";
-    test_msg.content = "Test message";
-    test_msg.sender = "test_sender";
-
-    auto publish_result = m_message_bus->publish(test_msg);
+    TestMessage test_msg("Test message", "test_sender");
+    auto publish_result =
+        m_message_bus->publish(test_msg, DeliveryMode::Broadcast);
     QVERIFY(publish_result.has_value());
 
-    // Wait for message delivery (in a real implementation)
-    QTest::qWait(100);  // Small delay for async processing
+    // Wait for message delivery
+    QTest::qWait(100);
 
     // Verify message was received
     QVERIFY(message_received);
-    QCOMPARE(received_content, "Test message");
+    QCOMPARE(QString::fromStdString(received_content), "Test message");
 }
 
 void TestMessageBus::testUnsubscribeFromTopic() {

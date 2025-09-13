@@ -27,7 +27,7 @@ class Colors:
     BOLD = '\033[1m'
     END = '\033[0m'
 
-def print_status(message, status="info"):
+def print_status(message, status="info") -> None:
     """Print colored status messages"""
     colors = {
         "success": Colors.GREEN + "✅ ",
@@ -37,7 +37,7 @@ def print_status(message, status="info"):
     }
     print(f"{colors.get(status, '')}{message}{Colors.END}")
 
-def check_build_files():
+def check_build_files() -> None:
     """Check if required build files exist"""
     print_status("Checking build files...", "info")
 
@@ -59,7 +59,7 @@ def check_build_files():
         print_status("All required build files present", "success")
         return True
 
-def test_python_import():
+def test_python_import() -> None:
     """Test basic Python import"""
     print_status("Testing Python import...", "info")
 
@@ -71,7 +71,7 @@ def test_python_import():
         print_status(f"Failed to import QtForge: {e}", "error")
         return False
 
-def test_basic_functionality():
+def test_basic_functionality() -> None:
     """Test basic QtForge functionality"""
     print_status("Testing basic functionality...", "info")
 
@@ -93,7 +93,7 @@ def test_basic_functionality():
         print_status(f"Functionality test failed: {e}", "error")
         return False
 
-def test_module_availability():
+def test_module_availability() -> None:
     """Test availability of Python modules"""
     print_status("Testing module availability...", "info")
 
@@ -138,7 +138,7 @@ def test_module_availability():
         print_status(f"Module availability test failed: {e}", "error")
         return False
 
-def test_specific_module(module_name):
+def test_specific_module(module_name) -> None:
     """Test a specific module in detail"""
     print_status(f"Testing module: {module_name}", "info")
 
@@ -165,7 +165,7 @@ def test_specific_module(module_name):
         print_status(f"Module {module_name} test failed: {e}", "error")
         return False
 
-def check_cmake_configuration():
+def check_cmake_configuration() -> None:
     """Check CMake configuration status"""
     print_status("Checking CMake configuration...", "info")
 
@@ -204,7 +204,7 @@ def check_cmake_configuration():
         print_status(f"CMake configuration check failed: {e}", "error")
         return False
 
-def run_comprehensive_validation(verbose=False, specific_module=None):
+def run_comprehensive_validation(verbose=False, specific_module=None) -> None:
     """Run comprehensive build validation"""
     print_status("QtForge Build Validation", "info")
     print_status("=" * 50, "info")
@@ -251,7 +251,7 @@ def run_comprehensive_validation(verbose=False, specific_module=None):
 
     return passed == total
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="Validate QtForge build system")
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
     parser.add_argument("--module", "-m", help="Test specific module")

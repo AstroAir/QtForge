@@ -17,7 +17,7 @@ import re
 class DependencyValidator:
     """Validates build dependencies and system requirements"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.system = platform.system().lower()
         self.arch = platform.machine().lower()
         self.errors = []
@@ -297,7 +297,7 @@ class DependencyValidator:
         print("✅ All required dependencies validated successfully!")
         return True
 
-def main():
+def main() -> None:
     """Main entry point"""
     validator = DependencyValidator()
     

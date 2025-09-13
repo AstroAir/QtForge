@@ -18,7 +18,7 @@ import re
 class VersionInfo:
     """Version information handling"""
     
-    def __init__(self, version_string: str):
+    def __init__(self, version_string: str) -> None:
         self.version_string = version_string
         self.major, self.minor, self.patch = self._parse_version(version_string)
     
@@ -34,22 +34,22 @@ class VersionInfo:
         else:
             raise ValueError(f"Invalid version format: {version}")
     
-    def __str__(self):
+    def __str__(self) -> None:
         return f"{self.major}.{self.minor}.{self.patch}"
     
-    def __lt__(self, other):
+    def __lt__(self, other) -> None:
         return (self.major, self.minor, self.patch) < (other.major, other.minor, other.patch)
     
-    def __le__(self, other):
+    def __le__(self, other) -> None:
         return (self.major, self.minor, self.patch) <= (other.major, other.minor, other.patch)
     
-    def __gt__(self, other):
+    def __gt__(self, other) -> None:
         return (self.major, self.minor, self.patch) > (other.major, other.minor, other.patch)
     
-    def __ge__(self, other):
+    def __ge__(self, other) -> None:
         return (self.major, self.minor, self.patch) >= (other.major, other.minor, other.patch)
     
-    def __eq__(self, other):
+    def __eq__(self, other) -> None:
         return (self.major, self.minor, self.patch) == (other.major, other.minor, other.patch)
     
     def is_compatible_with(self, other) -> bool:
@@ -60,7 +60,7 @@ class VersionInfo:
 class QtPluginUpgrader:
     """QtPlugin upgrade manager"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.system = platform.system().lower()
         self.is_windows = self.system == 'windows'
         self.is_macos = self.system == 'darwin'
@@ -376,7 +376,7 @@ class QtPluginUpgrader:
             print(f"❌ Backup restoration failed: {e}")
             return False
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description='QtPlugin Upgrade Script')
     parser.add_argument('--version', type=str,
                        help='Target version to upgrade to (default: latest)')

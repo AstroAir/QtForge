@@ -130,7 +130,7 @@ if(QTFORGE_ENABLE_SANDBOX)
 
     add_test(NAME SandboxIntegrationTests COMMAND test_sandbox_integration)
     set_tests_properties(SandboxIntegrationTests PROPERTIES
-        TIMEOUT 300
+        TIMEOUT 60
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
 

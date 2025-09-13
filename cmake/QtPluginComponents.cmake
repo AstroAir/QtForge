@@ -33,12 +33,19 @@ set(QTFORGE_RESOURCE_COMPONENTS
     ResourceMonitor
 )
 
+set(QTFORGE_REMOTE_COMPONENTS
+    RemoteSecurityManager
+    RemotePluginManager
+    UnifiedPluginManager
+)
+
 set(QTFORGE_ALL_COMPONENTS
     ${QTFORGE_CORE_COMPONENTS}
     ${QTFORGE_MONITORING_COMPONENTS}
     ${QTFORGE_SECURITY_COMPONENTS}
     ${QTFORGE_CONFIGURATION_COMPONENTS}
     ${QTFORGE_RESOURCE_COMPONENTS}
+    ${QTFORGE_REMOTE_COMPONENTS}
 )
 
 # Backward compatibility with deprecation warnings
@@ -61,6 +68,10 @@ endif()
 if(NOT DEFINED QTPLUGIN_RESOURCE_COMPONENTS)
     set(QTPLUGIN_RESOURCE_COMPONENTS ${QTFORGE_RESOURCE_COMPONENTS})
     message(DEPRECATION "QTPLUGIN_RESOURCE_COMPONENTS is deprecated, use QTFORGE_RESOURCE_COMPONENTS instead")
+endif()
+if(NOT DEFINED QTPLUGIN_REMOTE_COMPONENTS)
+    set(QTPLUGIN_REMOTE_COMPONENTS ${QTFORGE_REMOTE_COMPONENTS})
+    message(DEPRECATION "QTPLUGIN_REMOTE_COMPONENTS is deprecated, use QTFORGE_REMOTE_COMPONENTS instead")
 endif()
 if(NOT DEFINED QTPLUGIN_ALL_COMPONENTS)
     set(QTPLUGIN_ALL_COMPONENTS ${QTFORGE_ALL_COMPONENTS})
@@ -95,6 +106,8 @@ function(qtplugin_get_components_by_category category result_var)
         set(${result_var} ${QTPLUGIN_CONFIGURATION_COMPONENTS} PARENT_SCOPE)
     elseif(category STREQUAL "resource")
         set(${result_var} ${QTPLUGIN_RESOURCE_COMPONENTS} PARENT_SCOPE)
+    elseif(category STREQUAL "remote")
+        set(${result_var} ${QTPLUGIN_REMOTE_COMPONENTS} PARENT_SCOPE)
     elseif(category STREQUAL "all")
         set(${result_var} ${QTPLUGIN_ALL_COMPONENTS} PARENT_SCOPE)
     else()
@@ -127,6 +140,11 @@ function(qtplugin_print_component_info)
 
     message(STATUS "  Resource Components (${list_length(QTPLUGIN_RESOURCE_COMPONENTS)}):")
     foreach(component ${QTPLUGIN_RESOURCE_COMPONENTS})
+        message(STATUS "    - ${component}")
+    endforeach()
+
+    message(STATUS "  Remote Components (${list_length(QTPLUGIN_REMOTE_COMPONENTS)}):")
+    foreach(component ${QTPLUGIN_REMOTE_COMPONENTS})
         message(STATUS "    - ${component}")
     endforeach()
 

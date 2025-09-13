@@ -9,7 +9,7 @@ Due to compilation issues with advanced modules, this shows the minimal working 
 import sys
 import os
 
-def test_qtforge_integration():
+def test_qtforge_integration() -> None:
     """Test QtForge Python integration"""
     
     print("🔧 QtForge Python Integration Test")
@@ -79,7 +79,7 @@ def test_qtforge_integration():
     
     return True
 
-def demonstrate_cmake_improvements():
+def demonstrate_cmake_improvements() -> None:
     """Demonstrate the CMake improvements made"""
     
     print("\n🔧 CMake Configuration Improvements")

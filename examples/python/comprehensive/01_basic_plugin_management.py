@@ -37,14 +37,14 @@ except ImportError as e:
 class PluginManagerExample:
     """Comprehensive example of plugin management operations."""
     
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the plugin manager example."""
         self.manager = None
         self.registry = None
         self.loader = None
         self.setup_components()
     
-    def setup_components(self):
+    def setup_components(self) -> None:
         """Set up the core plugin management components."""
         print("\n🔧 Setting up plugin management components...")
         
@@ -79,7 +79,7 @@ class PluginManagerExample:
             print(f"❌ Failed to setup components: {e}")
             raise
     
-    def demonstrate_basic_operations(self):
+    def demonstrate_basic_operations(self) -> None:
         """Demonstrate basic plugin management operations."""
         print("\n📋 Demonstrating basic plugin operations...")
         
@@ -103,7 +103,7 @@ class PluginManagerExample:
             plugin = self.manager.get_plugin("non_existent_plugin")
             print(f"Get non-existent plugin result: {plugin}")
     
-    def demonstrate_plugin_loading(self):
+    def demonstrate_plugin_loading(self) -> None:
         """Demonstrate plugin loading operations."""
         print("\n🔌 Demonstrating plugin loading...")
         
@@ -130,7 +130,7 @@ class PluginManagerExample:
             except Exception as e:
                 print(f"Expected error (file doesn't exist): {e}")
     
-    def demonstrate_plugin_queries(self):
+    def demonstrate_plugin_queries(self) -> None:
         """Demonstrate plugin query operations."""
         print("\n🔍 Demonstrating plugin queries...")
         
@@ -164,7 +164,7 @@ class PluginManagerExample:
                 all_plugins = self.registry.get_all_plugins()
                 print(f"Registry plugins: {len(all_plugins)}")
     
-    def demonstrate_plugin_states(self):
+    def demonstrate_plugin_states(self) -> None:
         """Demonstrate plugin state management."""
         print("\n🔄 Demonstrating plugin states...")
         
@@ -195,7 +195,7 @@ class PluginManagerExample:
                     priority = getattr(core.PluginPriority, attr)
                     print(f"  - {attr}: {priority}")
     
-    def demonstrate_dependency_management(self):
+    def demonstrate_dependency_management(self) -> None:
         """Demonstrate plugin dependency management."""
         print("\n🔗 Demonstrating dependency management...")
         
@@ -230,7 +230,7 @@ class PluginManagerExample:
             except Exception as e:
                 print(f"Dependency operation error: {e}")
     
-    def demonstrate_lifecycle_management(self):
+    def demonstrate_lifecycle_management(self) -> None:
         """Demonstrate plugin lifecycle management."""
         print("\n♻️  Demonstrating lifecycle management...")
         
@@ -273,7 +273,7 @@ class PluginManagerExample:
                     event = getattr(core.PluginLifecycleEvent, attr)
                     print(f"  - {attr}: {event}")
     
-    def demonstrate_error_handling(self):
+    def demonstrate_error_handling(self) -> None:
         """Demonstrate proper error handling patterns."""
         print("\n⚠️  Demonstrating error handling...")
         
@@ -292,7 +292,7 @@ class PluginManagerExample:
             except Exception as e:
                 print(f"Exception caught: {type(e).__name__}: {e}")
     
-    def cleanup(self):
+    def cleanup(self) -> None:
         """Clean up resources."""
         print("\n🧹 Cleaning up resources...")
         
@@ -312,7 +312,7 @@ class PluginManagerExample:
             except Exception as e:
                 print(f"Registry cleanup error: {e}")
     
-    def run_complete_example(self):
+    def run_complete_example(self) -> None:
         """Run the complete plugin management example."""
         print("🚀 QtForge Python Bindings - Basic Plugin Management Example")
         print("=" * 70)
@@ -337,7 +337,7 @@ class PluginManagerExample:
         return 0
 
 
-def main():
+def main() -> None:
     """Main entry point for the example."""
     try:
         example = PluginManagerExample()

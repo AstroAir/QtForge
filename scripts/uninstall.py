@@ -17,7 +17,7 @@ from typing import List, Dict, Optional
 class QtPluginUninstaller:
     """QtPlugin uninstaller"""
     
-    def __init__(self, install_prefix: Optional[Path] = None):
+    def __init__(self, install_prefix: Optional[Path] = None) -> None:
         self.system = platform.system().lower()
         self.is_windows = self.system == 'windows'
         self.is_macos = self.system == 'darwin'
@@ -281,7 +281,7 @@ class QtPluginUninstaller:
         
         return success
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description='QtPlugin Universal Uninstallation Script')
     parser.add_argument('--prefix', type=Path,
                        help='Installation prefix to remove from (default: system-dependent)')

@@ -28,14 +28,14 @@ pytestmark = pytest.mark.skipif(not BINDINGS_AVAILABLE, reason="QtForge bindings
 class TestPluginOrchestrator:
     """Test PluginOrchestrator functionality."""
     
-    def test_orchestrator_creation(self):
+    def test_orchestrator_creation(self) -> None:
         """Test PluginOrchestrator can be created."""
         if hasattr(orchestration, 'create_plugin_orchestrator'):
             orchestrator = orchestration.create_plugin_orchestrator()
             assert orchestrator is not None
             assert hasattr(orchestrator, 'execute_workflow')
     
-    def test_orchestrator_execute_workflow(self):
+    def test_orchestrator_execute_workflow(self) -> None:
         """Test executing workflows."""
         if hasattr(orchestration, 'create_plugin_orchestrator'):
             orchestrator = orchestration.create_plugin_orchestrator()
@@ -50,7 +50,7 @@ class TestPluginOrchestrator:
                     # Empty workflow might not be executable
                     pass
     
-    def test_orchestrator_register_plugin(self):
+    def test_orchestrator_register_plugin(self) -> None:
         """Test registering plugins with orchestrator."""
         if hasattr(orchestration, 'create_plugin_orchestrator'):
             orchestrator = orchestrator.create_plugin_orchestrator()
@@ -62,7 +62,7 @@ class TestPluginOrchestrator:
                     # Some implementations might require valid plugin path
                     pass
     
-    def test_orchestrator_get_registered_plugins(self):
+    def test_orchestrator_get_registered_plugins(self) -> None:
         """Test getting registered plugins."""
         if hasattr(orchestration, 'create_plugin_orchestrator'):
             orchestrator = orchestration.create_plugin_orchestrator()
@@ -75,7 +75,7 @@ class TestPluginOrchestrator:
 class TestWorkflow:
     """Test Workflow functionality."""
     
-    def test_workflow_creation(self):
+    def test_workflow_creation(self) -> None:
         """Test Workflow can be created."""
         if hasattr(orchestration, 'Workflow'):
             workflow = orchestration.Workflow("test_workflow")
@@ -84,7 +84,7 @@ class TestWorkflow:
             if hasattr(workflow, 'name'):
                 assert workflow.name == "test_workflow"
     
-    def test_workflow_add_step(self):
+    def test_workflow_add_step(self) -> None:
         """Test adding steps to workflow."""
         if hasattr(orchestration, 'Workflow') and hasattr(orchestration, 'WorkflowStep'):
             workflow = orchestration.Workflow("test_workflow")
@@ -97,7 +97,7 @@ class TestWorkflow:
                     steps = workflow.get_steps()
                     assert len(steps) > 0
     
-    def test_workflow_remove_step(self):
+    def test_workflow_remove_step(self) -> None:
         """Test removing steps from workflow."""
         if hasattr(orchestration, 'Workflow') and hasattr(orchestration, 'WorkflowStep'):
             workflow = orchestration.Workflow("test_workflow")
@@ -111,7 +111,7 @@ class TestWorkflow:
                     steps = workflow.get_steps()
                     assert len(steps) == 0
     
-    def test_workflow_execution_order(self):
+    def test_workflow_execution_order(self) -> None:
         """Test workflow step execution order."""
         if hasattr(orchestration, 'Workflow') and hasattr(orchestration, 'WorkflowStep'):
             workflow = orchestration.Workflow("test_workflow")
@@ -127,7 +127,7 @@ class TestWorkflow:
                 if hasattr(step2, 'add_dependency'):
                     step2.add_dependency("step1")
     
-    def test_workflow_validation(self):
+    def test_workflow_validation(self) -> None:
         """Test workflow validation."""
         if hasattr(orchestration, 'Workflow'):
             workflow = orchestration.Workflow("test_workflow")
@@ -144,7 +144,7 @@ class TestWorkflow:
 class TestWorkflowStep:
     """Test WorkflowStep functionality."""
     
-    def test_workflow_step_creation(self):
+    def test_workflow_step_creation(self) -> None:
         """Test WorkflowStep can be created."""
         if hasattr(orchestration, 'WorkflowStep'):
             step = orchestration.WorkflowStep("step1", "Test Step", "test_plugin")
@@ -157,7 +157,7 @@ class TestWorkflowStep:
             if hasattr(step, 'plugin_id'):
                 assert step.plugin_id == "test_plugin"
     
-    def test_workflow_step_parameters(self):
+    def test_workflow_step_parameters(self) -> None:
         """Test setting step parameters."""
         if hasattr(orchestration, 'WorkflowStep'):
             step = orchestration.WorkflowStep("step1", "Test Step", "test_plugin")
@@ -169,7 +169,7 @@ class TestWorkflowStep:
                     value = step.get_parameter("param1")
                     assert value == "value1"
     
-    def test_workflow_step_dependencies(self):
+    def test_workflow_step_dependencies(self) -> None:
         """Test step dependencies."""
         if hasattr(orchestration, 'WorkflowStep'):
             step = orchestration.WorkflowStep("step1", "Test Step", "test_plugin")
@@ -181,7 +181,7 @@ class TestWorkflowStep:
                     deps = step.get_dependencies()
                     assert "prerequisite_step" in deps
     
-    def test_workflow_step_execution(self):
+    def test_workflow_step_execution(self) -> None:
         """Test step execution."""
         if hasattr(orchestration, 'WorkflowStep'):
             step = orchestration.WorkflowStep("step1", "Test Step", "test_plugin")
@@ -194,7 +194,7 @@ class TestWorkflowStep:
                     # Step might require plugin to be loaded
                     pass
     
-    def test_workflow_step_status(self):
+    def test_workflow_step_status(self) -> None:
         """Test step status tracking."""
         if hasattr(orchestration, 'WorkflowStep') and hasattr(orchestration, 'StepStatus'):
             step = orchestration.WorkflowStep("step1", "Test Step", "test_plugin")
@@ -213,7 +213,7 @@ class TestWorkflowStep:
 class TestStepResult:
     """Test StepResult functionality."""
     
-    def test_step_result_creation(self):
+    def test_step_result_creation(self) -> None:
         """Test StepResult can be created."""
         if hasattr(orchestration, 'StepResult'):
             result = orchestration.StepResult(True, "Step completed successfully")
@@ -224,7 +224,7 @@ class TestStepResult:
             if hasattr(result, 'message'):
                 assert result.message == "Step completed successfully"
     
-    def test_step_result_with_data(self):
+    def test_step_result_with_data(self) -> None:
         """Test StepResult with output data."""
         if hasattr(orchestration, 'StepResult'):
             result = orchestration.StepResult(True, "Step completed")
@@ -236,7 +236,7 @@ class TestStepResult:
                     data = result.get_data()
                     assert data["output"] == "test_data"
     
-    def test_step_result_failure(self):
+    def test_step_result_failure(self) -> None:
         """Test StepResult for failed steps."""
         if hasattr(orchestration, 'StepResult'):
             result = orchestration.StepResult(False, "Step failed")
@@ -251,7 +251,7 @@ class TestStepResult:
 class TestOrchestrationEnums:
     """Test orchestration-related enums."""
     
-    def test_step_status_enum(self):
+    def test_step_status_enum(self) -> None:
         """Test StepStatus enum values."""
         if hasattr(orchestration, 'StepStatus'):
             statuses = ['Pending', 'Running', 'Completed', 'Failed', 'Skipped']
@@ -260,7 +260,7 @@ class TestOrchestrationEnums:
                     value = getattr(orchestration.StepStatus, status)
                     assert value is not None
     
-    def test_execution_mode_enum(self):
+    def test_execution_mode_enum(self) -> None:
         """Test ExecutionMode enum values."""
         if hasattr(orchestration, 'ExecutionMode'):
             modes = ['Sequential', 'Parallel', 'Pipeline']
@@ -269,7 +269,7 @@ class TestOrchestrationEnums:
                     value = getattr(orchestration.ExecutionMode, mode)
                     assert value is not None
     
-    def test_workflow_state_enum(self):
+    def test_workflow_state_enum(self) -> None:
         """Test WorkflowState enum values."""
         if hasattr(orchestration, 'WorkflowState'):
             states = ['Created', 'Running', 'Completed', 'Failed', 'Cancelled']
@@ -282,7 +282,7 @@ class TestOrchestrationEnums:
 class TestWorkflowExecution:
     """Test workflow execution functionality."""
     
-    def test_sequential_execution(self):
+    def test_sequential_execution(self) -> None:
         """Test sequential workflow execution."""
         if (hasattr(orchestration, 'create_plugin_orchestrator') and 
             hasattr(orchestration, 'Workflow') and 
@@ -311,7 +311,7 @@ class TestWorkflowExecution:
                     # Plugins might not be available
                     pass
     
-    def test_parallel_execution(self):
+    def test_parallel_execution(self) -> None:
         """Test parallel workflow execution."""
         if (hasattr(orchestration, 'create_plugin_orchestrator') and 
             hasattr(orchestration, 'Workflow') and 
@@ -340,7 +340,7 @@ class TestWorkflowExecution:
                     # Plugins might not be available
                     pass
     
-    def test_workflow_cancellation(self):
+    def test_workflow_cancellation(self) -> None:
         """Test workflow cancellation."""
         if hasattr(orchestration, 'create_plugin_orchestrator') and hasattr(orchestration, 'Workflow'):
             orchestrator = orchestration.create_plugin_orchestrator()
@@ -366,7 +366,7 @@ class TestWorkflowExecution:
 class TestWorkflowPersistence:
     """Test workflow persistence functionality."""
     
-    def test_workflow_serialization(self):
+    def test_workflow_serialization(self) -> None:
         """Test workflow serialization."""
         if hasattr(orchestration, 'Workflow') and hasattr(orchestration, 'WorkflowStep'):
             workflow = orchestration.Workflow("serialization_test")
@@ -384,7 +384,7 @@ class TestWorkflowPersistence:
                     # Some implementations might not support serialization
                     pass
     
-    def test_workflow_deserialization(self):
+    def test_workflow_deserialization(self) -> None:
         """Test workflow deserialization."""
         if hasattr(orchestration, 'Workflow'):
             if hasattr(orchestration.Workflow, 'deserialize'):
@@ -401,7 +401,7 @@ class TestWorkflowPersistence:
 class TestOrchestrationErrorHandling:
     """Test error handling in orchestration bindings."""
     
-    def test_invalid_workflow_execution(self):
+    def test_invalid_workflow_execution(self) -> None:
         """Test handling invalid workflow execution."""
         if hasattr(orchestration, 'create_plugin_orchestrator'):
             orchestrator = orchestration.create_plugin_orchestrator()
@@ -410,7 +410,7 @@ class TestOrchestrationErrorHandling:
             with pytest.raises((ValueError, RuntimeError, TypeError)):
                 orchestrator.execute_workflow(None)
     
-    def test_invalid_step_creation(self):
+    def test_invalid_step_creation(self) -> None:
         """Test handling invalid step creation."""
         if hasattr(orchestration, 'WorkflowStep'):
             # Test with None parameters
@@ -420,7 +420,7 @@ class TestOrchestrationErrorHandling:
             with pytest.raises((ValueError, RuntimeError, TypeError)):
                 orchestration.WorkflowStep("step1", None, "plugin")
     
-    def test_circular_dependency_detection(self):
+    def test_circular_dependency_detection(self) -> None:
         """Test circular dependency detection."""
         if hasattr(orchestration, 'Workflow') and hasattr(orchestration, 'WorkflowStep'):
             workflow = orchestration.Workflow("circular_test")
@@ -450,7 +450,7 @@ class TestOrchestrationErrorHandling:
 class TestOrchestrationEvents:
     """Test orchestration event handling."""
     
-    def test_workflow_events(self):
+    def test_workflow_events(self) -> None:
         """Test workflow event notifications."""
         if hasattr(orchestration, 'create_plugin_orchestrator'):
             orchestrator = orchestration.create_plugin_orchestrator()
@@ -458,7 +458,7 @@ class TestOrchestrationEvents:
             if hasattr(orchestrator, 'add_event_listener'):
                 events_received = []
                 
-                def event_listener(event_type, event_data):
+                def event_listener(event_type, event_data) -> None:
                     events_received.append((event_type, event_data))
                 
                 try:
@@ -477,7 +477,7 @@ class TestOrchestrationEvents:
                     # Some implementations might not support event listeners
                     pass
     
-    def test_step_events(self):
+    def test_step_events(self) -> None:
         """Test step-level event notifications."""
         if hasattr(orchestration, 'WorkflowStep'):
             step = orchestration.WorkflowStep("step1", "Test Step", "test_plugin")
@@ -485,7 +485,7 @@ class TestOrchestrationEvents:
             if hasattr(step, 'add_event_listener'):
                 events_received = []
                 
-                def step_event_listener(event_type, event_data):
+                def step_event_listener(event_type, event_data) -> None:
                     events_received.append((event_type, event_data))
                 
                 try:
@@ -507,12 +507,12 @@ class TestOrchestrationEvents:
 class TestOrchestrationThreadSafety:
     """Test thread safety of orchestration components."""
     
-    def test_concurrent_workflow_execution(self):
+    def test_concurrent_workflow_execution(self) -> None:
         """Test concurrent workflow execution."""
         if hasattr(orchestration, 'create_plugin_orchestrator') and hasattr(orchestration, 'Workflow'):
             orchestrator = orchestration.create_plugin_orchestrator()
             
-            def execute_workflow(workflow_id):
+            def execute_workflow(workflow_id) -> None:
                 workflow = orchestration.Workflow(f"concurrent_test_{workflow_id}")
                 try:
                     result = orchestrator.execute_workflow(workflow)

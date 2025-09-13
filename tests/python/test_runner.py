@@ -13,7 +13,7 @@ from pathlib import Path
 # Add the build directory to Python path for testing
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../build'))
 
-def check_bindings_availability():
+def check_bindings_availability() -> None:
     """Check if QtForge bindings are available."""
     try:
         import qtforge
@@ -21,7 +21,7 @@ def check_bindings_availability():
     except ImportError as e:
         return False, str(e)
 
-def run_comprehensive_tests():
+def run_comprehensive_tests() -> None:
     """Run all comprehensive tests."""
     print("QtForge Python Bindings - Comprehensive Test Suite")
     print("=" * 60)
@@ -103,7 +103,7 @@ def run_comprehensive_tests():
     
     return exit_code
 
-def run_specific_module(module_name):
+def run_specific_module(module_name) -> None:
     """Run tests for a specific module."""
     test_dir = Path(__file__).parent
     test_path = test_dir / f"test_comprehensive_{module_name}.py"
@@ -122,7 +122,7 @@ def run_specific_module(module_name):
     
     return pytest.main(pytest_args)
 
-def list_available_modules():
+def list_available_modules() -> None:
     """List available test modules."""
     test_dir = Path(__file__).parent
     
@@ -145,7 +145,7 @@ def list_available_modules():
         status = "✅" if test_path.exists() else "❌"
         print(f"{status} {module:<20} - {description}")
 
-def main():
+def main() -> None:
     """Main entry point."""
     if len(sys.argv) == 1:
         # Run all tests

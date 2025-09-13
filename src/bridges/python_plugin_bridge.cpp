@@ -164,13 +164,17 @@ PythonExecutionEnvironment::load_plugin_module(const QString& plugin_path,
                                    "Python environment is not running");
     }
 
+    qCDebug(pythonBridgeLog) << "Loading plugin module:" << plugin_path << "class:" << plugin_class;
+
     QJsonObject request;
     request["type"] = "load_plugin";
     request["id"] = ++m_request_id;
     request["plugin_path"] = plugin_path;
     request["plugin_class"] = plugin_class;
 
+    qCDebug(pythonBridgeLog) << "Sending load_plugin request...";
     auto response = send_request(request);
+    qCDebug(pythonBridgeLog) << "Got response from load_plugin request";
     if (!response) {
         return make_error<QString>(response.error().code,
                                    response.error().message);
@@ -200,6 +204,57 @@ PythonExecutionEnvironment::call_plugin_method(const QString& plugin_id,
     request["plugin_id"] = plugin_id;
     request["method_name"] = method_name;
     request["parameters"] = parameters;
+
+    return send_request(request);
+}
+
+qtplugin::expected<QJsonObject, PluginError>
+PythonExecutionEnvironment::get_plugin_info(const QString& plugin_id) {
+    if (!is_running()) {
+        return make_error<QJsonObject>(PluginErrorCode::InvalidState,
+                                       "Python environment is not running");
+    }
+
+    QJsonObject request;
+    request["type"] = "get_plugin_info";
+    request["id"] = ++m_request_id;
+    request["plugin_id"] = plugin_id;
+
+    return send_request(request);
+}
+
+qtplugin::expected<QJsonObject, PluginError>
+PythonExecutionEnvironment::get_plugin_property(const QString& plugin_id,
+                                                 const QString& property_name) {
+    if (!is_running()) {
+        return make_error<QJsonObject>(PluginErrorCode::InvalidState,
+                                       "Python environment is not running");
+    }
+
+    QJsonObject request;
+    request["type"] = "get_property";
+    request["id"] = ++m_request_id;
+    request["plugin_id"] = plugin_id;
+    request["property_name"] = property_name;
+
+    return send_request(request);
+}
+
+qtplugin::expected<QJsonObject, PluginError>
+PythonExecutionEnvironment::set_plugin_property(const QString& plugin_id,
+                                                 const QString& property_name,
+                                                 const QJsonValue& value) {
+    if (!is_running()) {
+        return make_error<QJsonObject>(PluginErrorCode::InvalidState,
+                                       "Python environment is not running");
+    }
+
+    QJsonObject request;
+    request["type"] = "set_property";
+    request["id"] = ++m_request_id;
+    request["plugin_id"] = plugin_id;
+    request["property_name"] = property_name;
+    request["value"] = value;
 
     return send_request(request);
 }
@@ -255,19 +310,13 @@ void PythonExecutionEnvironment::handle_process_output() {
         qCDebug(pythonBridgeLog) << "Received response from Python:" << doc.toJson(QJsonDocument::Compact);
         qCDebug(pythonBridgeLog) << "Response ID:" << response_id << "Expected ID:" << m_request_id;
 
+        qCDebug(pythonBridgeLog) << "Acquiring mutex to store response...";
         QMutexLocker locker(&m_mutex);
 
-        // Store the response regardless of whether we're currently waiting
+        // Store the response in pending responses map for polling
         m_pending_responses[response_id] = response;
-
-        if (m_waiting_for_response && response_id == m_request_id) {
-            m_last_response = response;
-            m_waiting_for_response = false;
-            m_response_condition.wakeAll();
-            qCDebug(pythonBridgeLog) << "Response matched, waking up waiting thread";
-        } else {
-            qCDebug(pythonBridgeLog) << "Response stored for later - waiting:" << m_waiting_for_response << "ID match:" << (response_id == m_request_id);
-        }
+        qCDebug(pythonBridgeLog) << "Response stored for ID:" << response_id << "Total pending:" << m_pending_responses.size();
+        qCDebug(pythonBridgeLog) << "All pending IDs:" << m_pending_responses.keys();
     }
 }
 
@@ -298,10 +347,13 @@ PythonExecutionEnvironment::send_request(const QJsonObject& request) {
                                        "Python process is not running");
     }
 
-    QMutexLocker locker(&m_mutex);
-
-    // Send request
-    QJsonDocument doc(request);
+    // Generate request ID and update the request JSON
+    const int expected_id = ++m_request_id;
+    QJsonObject modified_request = request;
+    modified_request["id"] = expected_id;
+    
+    // Send request (do this outside of mutex to avoid deadlock)
+    QJsonDocument doc(modified_request);
     QByteArray data = doc.toJson(QJsonDocument::Compact) + "\n";
     qCDebug(pythonBridgeLog) << "Sending request to Python:" << doc.toJson(QJsonDocument::Compact);
     qint64 written = m_process->write(data);
@@ -309,48 +361,60 @@ PythonExecutionEnvironment::send_request(const QJsonObject& request) {
         return make_error<QJsonObject>(PluginErrorCode::ExecutionFailed,
                                        "Failed to write complete request to Python process");
     }
-    m_process->waitForBytesWritten(1000);
+    m_process->waitForBytesWritten(2000);
 
     qCDebug(pythonBridgeLog) << "Request sent, process state:" << m_process->state();
 
-    // Check if we already have a pending response for this request
-    if (m_pending_responses.contains(m_request_id)) {
-        m_last_response = m_pending_responses.take(m_request_id);
-        qCDebug(pythonBridgeLog) << "Found pending response for ID:" << m_request_id;
-    } else {
-        // Wait for response
-        m_waiting_for_response = true;
-
-        // Check periodically for data
-        for (int i = 0; i < 50; ++i) {  // Check for 5 seconds (50 * 100ms)
-            if (!m_waiting_for_response) {
-                break;  // Response received
+    // Simplified wait mechanism - poll for response in pending map
+    const int timeout_iterations = m_request_timeout / 100; // 100ms per iteration
+    for (int i = 0; i < timeout_iterations; ++i) {
+        // Check if response is available (with mutex protection)
+        {
+            QMutexLocker locker(&m_mutex);
+            if (m_pending_responses.contains(expected_id)) {
+                m_last_response = m_pending_responses.take(expected_id);
+                qCDebug(pythonBridgeLog) << "Response found for ID:" << expected_id;
+                return m_last_response;
             }
+        }
 
-            // Check if there's data available to read
+        // Wait for data and process it (without holding mutex)
+        if (m_process->waitForReadyRead(100)) {
+            qCDebug(pythonBridgeLog) << "Processing new data from Python process";
+            handle_process_output();
+            // After processing, check again if our response arrived
+            QMutexLocker locker(&m_mutex);
+            if (m_pending_responses.contains(expected_id)) {
+                m_last_response = m_pending_responses.take(expected_id);
+                qCDebug(pythonBridgeLog) << "Response received after processing for ID:" << expected_id;
+                return m_last_response;
+            }
+        } else {
+            // No data available, but check if we have buffered data to process
             if (m_process->bytesAvailable() > 0) {
-                qCDebug(pythonBridgeLog) << "Data available, manually calling handle_process_output";
+                qCDebug(pythonBridgeLog) << "Processing buffered data";
                 handle_process_output();
-            }
-
-            if (!m_response_condition.wait(&m_mutex, 100)) {  // 100ms timeout
-                continue;  // Continue checking
-            } else {
-                break;  // Response received
+                QMutexLocker locker(&m_mutex);
+                if (m_pending_responses.contains(expected_id)) {
+                    m_last_response = m_pending_responses.take(expected_id);
+                    qCDebug(pythonBridgeLog) << "Response found in buffered data for ID:" << expected_id;
+                    return m_last_response;
+                }
             }
         }
     }
 
-    if (m_waiting_for_response) {
-        m_waiting_for_response = false;
-        qCWarning(pythonBridgeLog) << "Timeout waiting for Python response. Process state:" << m_process->state();
-        qCWarning(pythonBridgeLog) << "Process error:" << m_process->error();
-        qCWarning(pythonBridgeLog) << "Bytes available:" << m_process->bytesAvailable();
-        return make_error<QJsonObject>(PluginErrorCode::TimeoutError,
-                                       "Timeout waiting for Python response");
+    // Timeout - no response received
+    qCWarning(pythonBridgeLog) << "Timeout waiting for Python response ID:" << expected_id;
+    qCWarning(pythonBridgeLog) << "Process state:" << m_process->state();
+    qCWarning(pythonBridgeLog) << "Process error:" << m_process->error();
+    qCWarning(pythonBridgeLog) << "Bytes available:" << m_process->bytesAvailable();
+    {
+        QMutexLocker locker(&m_mutex);
+        qCWarning(pythonBridgeLog) << "Pending responses:" << m_pending_responses.keys();
     }
-
-    return m_last_response;
+    return make_error<QJsonObject>(PluginErrorCode::TimeoutError,
+                                   "Timeout waiting for Python response");
 }
 
 // === PythonPluginBridge Implementation ===
@@ -383,15 +447,21 @@ std::string PythonPluginBridge::id() const noexcept { return "python-bridge"; }
 
 qtplugin::expected<void, qtplugin::PluginError>
 PythonPluginBridge::initialize() {
+    qCDebug(pythonBridgeLog) << "PythonPluginBridge::initialize() starting";
+    
     // Initialize the Python environment
+    qCDebug(pythonBridgeLog) << "Initializing Python environment...";
     auto env_result = m_environment->initialize();
     if (!env_result) {
+        qCDebug(pythonBridgeLog) << "Python environment initialization failed";
         return env_result;
     }
+    qCDebug(pythonBridgeLog) << "Python environment initialized successfully";
 
     // If we have a plugin path, load the plugin
     if (!m_plugin_path.isEmpty()) {
-        auto load_result = m_environment->load_plugin_module(m_plugin_path, "");
+        qCDebug(pythonBridgeLog) << "Loading plugin from path:" << m_plugin_path;
+        auto load_result = m_environment->load_plugin_module(m_plugin_path, "create_plugin");
         if (!load_result) {
             return make_error<void>(load_result.error().code, load_result.error().message);
         }
@@ -399,58 +469,39 @@ PythonPluginBridge::initialize() {
         m_current_plugin_id = load_result.value();
         m_loaded_plugins[m_current_plugin_id] = m_plugin_path;
 
-        // Get plugin information using execute_code to call our bridge functions
-        QString info_code = QString(R"(
-import json
-bridge = globals().get('bridge')
-if bridge and hasattr(bridge, 'handle_get_plugin_info'):
-    request = {'type': 'get_plugin_info', 'id': 1, 'plugin_id': '%1'}
-    response = bridge.handle_get_plugin_info(request)
-    json.dumps(response)
-else:
-    json.dumps({'success': False, 'error': 'Bridge not available'})
-)").arg(m_current_plugin_id);
+        // Get plugin information using the proper bridge request mechanism
+        auto info_response = m_environment->get_plugin_info(m_current_plugin_id);
+        if (info_response && info_response.value()["success"].toBool()) {
+            QJsonObject response_data = info_response.value();
+            
+            // Extract metadata
+            if (response_data.contains("metadata")) {
+                m_metadata = response_data["metadata"].toObject();
+            }
 
-        auto info_response = m_environment->execute_code(info_code);
-        if (info_response) {
-            // Parse the JSON response
-            QJsonParseError error;
-            QJsonDocument doc = QJsonDocument::fromJson(info_response.value()["result"].toString().toUtf8(), &error);
-
-            if (error.error == QJsonParseError::NoError && doc.isObject()) {
-                QJsonObject response_data = doc.object();
-
-                if (response_data["success"].toBool()) {
-                    // Extract metadata
-                    if (response_data.contains("metadata")) {
-                        m_metadata = response_data["metadata"].toObject();
-                    }
-
-                    // Extract available methods
-                    if (response_data.contains("methods")) {
-                        QJsonArray methods = response_data["methods"].toArray();
-                        m_available_methods.clear();
-                        for (const QJsonValue& method : methods) {
-                            if (method.isObject()) {
-                                QString method_name = method.toObject()["name"].toString();
-                                if (!method_name.isEmpty()) {
-                                    m_available_methods.push_back(method_name);
-                                }
-                            }
+            // Extract available methods
+            if (response_data.contains("methods")) {
+                QJsonArray methods = response_data["methods"].toArray();
+                m_available_methods.clear();
+                for (const QJsonValue& method : methods) {
+                    if (method.isObject()) {
+                        QString method_name = method.toObject()["name"].toString();
+                        if (!method_name.isEmpty()) {
+                            m_available_methods.push_back(method_name);
                         }
                     }
+                }
+            }
 
-                    // Extract available properties
-                    if (response_data.contains("properties")) {
-                        QJsonArray properties = response_data["properties"].toArray();
-                        m_available_properties.clear();
-                        for (const QJsonValue& property : properties) {
-                            if (property.isObject()) {
-                                QString prop_name = property.toObject()["name"].toString();
-                                if (!prop_name.isEmpty()) {
-                                    m_available_properties.push_back(prop_name);
-                                }
-                            }
+            // Extract available properties
+            if (response_data.contains("properties")) {
+                QJsonArray properties = response_data["properties"].toArray();
+                m_available_properties.clear();
+                for (const QJsonValue& property : properties) {
+                    if (property.isObject()) {
+                        QString prop_name = property.toObject()["name"].toString();
+                        if (!prop_name.isEmpty()) {
+                            m_available_properties.push_back(prop_name);
                         }
                     }
                 }
@@ -469,11 +520,12 @@ void PythonPluginBridge::shutdown() noexcept {
         m_environment->shutdown();
     }
     m_loaded_plugins.clear();
+    m_state = qtplugin::PluginState::Unloaded;
     qCDebug(pythonBridgeLog) << "Python plugin bridge shutdown completed";
 }
 
 qtplugin::PluginState PythonPluginBridge::state() const noexcept {
-    return qtplugin::PluginState::Loaded;
+    return m_state;
 }
 
 qtplugin::PluginCapabilities PythonPluginBridge::capabilities() const noexcept {
@@ -579,27 +631,94 @@ PythonPluginBridge::hot_reload() {
                                 "Python environment is not running");
     }
 
-    if (m_current_plugin_id.isEmpty()) {
-        return make_error<void>(PluginErrorCode::InvalidState,
-                                "No plugin loaded");
+    QString plugin_path;
+    
+    // Get plugin path from loaded plugins or m_plugin_path
+    if (!m_current_plugin_id.isEmpty()) {
+        plugin_path = m_loaded_plugins.value(m_current_plugin_id);
     }
+    
+    if (plugin_path.isEmpty()) {
+        plugin_path = m_plugin_path;
+    }
+    
+    if (plugin_path.isEmpty()) {
+        return make_error<void>(PluginErrorCode::InvalidState,
+                                "No plugin path available for reload");
+    }
+
+    qCDebug(pythonBridgeLog) << "Hot reloading plugin:" << plugin_path;
 
     // Save current state
     QString old_plugin_id = m_current_plugin_id;
-    QString plugin_path = m_loaded_plugins.value(old_plugin_id);
+    
+    // Clear current plugin state
+    m_current_plugin_id.clear();
+    m_available_methods.clear();
+    m_available_properties.clear();
+    m_event_callbacks.clear();
+    m_metadata = QJsonObject();
 
-    // Reload the plugin
-    auto load_result = m_environment->load_plugin_module(plugin_path, "");
+    // Reload the plugin with proper plugin class
+    auto load_result = m_environment->load_plugin_module(plugin_path, "create_plugin");
     if (!load_result) {
+        qCWarning(pythonBridgeLog) << "Failed to reload plugin:" << load_result.error().message.c_str();
         return make_error<void>(load_result.error().code, load_result.error().message);
     }
 
-    // Update plugin ID
+    // Update plugin ID and registry
     m_current_plugin_id = load_result.value();
-    m_loaded_plugins.remove(old_plugin_id);
+    if (!old_plugin_id.isEmpty()) {
+        m_loaded_plugins.remove(old_plugin_id);
+    }
     m_loaded_plugins[m_current_plugin_id] = plugin_path;
 
+    // Get plugin information using the proper bridge request mechanism
+    auto info_response = m_environment->get_plugin_info(m_current_plugin_id);
+    if (info_response && info_response.value()["success"].toBool()) {
+        QJsonObject response_data = info_response.value();
+        
+        // Extract metadata
+        if (response_data.contains("metadata")) {
+            m_metadata = response_data["metadata"].toObject();
+        }
+
+        // Extract available methods
+        if (response_data.contains("methods")) {
+            QJsonArray methods = response_data["methods"].toArray();
+            m_available_methods.clear();
+            for (const QJsonValue& method : methods) {
+                if (method.isObject()) {
+                    QString method_name = method.toObject()["name"].toString();
+                    if (!method_name.isEmpty()) {
+                        m_available_methods.push_back(method_name);
+                    }
+                }
+            }
+        }
+
+        // Extract available properties
+        if (response_data.contains("properties")) {
+            QJsonArray properties = response_data["properties"].toArray();
+            m_available_properties.clear();
+            for (const QJsonValue& property : properties) {
+                if (property.isObject()) {
+                    QString prop_name = property.toObject()["name"].toString();
+                    if (!prop_name.isEmpty()) {
+                        m_available_properties.push_back(prop_name);
+                    }
+                }
+            }
+        }
+    } else {
+        qCWarning(pythonBridgeLog) << "Failed to get plugin info after reload";
+        return make_error<void>(PluginErrorCode::LoadFailed,
+                                "Failed to retrieve plugin information after reload");
+    }
+
+    m_state = qtplugin::PluginState::Running;
     qCDebug(pythonBridgeLog) << "Hot reload completed for plugin:" << plugin_path;
+    
     return make_success();
 }
 
@@ -690,7 +809,35 @@ PythonPluginBridge::invoke_method(const QString& method_name,
 
     auto result = m_environment->call_plugin_method(m_current_plugin_id, method_name, params);
     if (result) {
-        return QVariant::fromValue(result.value());
+        QJsonObject response = result.value();
+        
+        // Check if the method call was successful
+        if (response["success"].toBool()) {
+            if (response.contains("result")) {
+                return convert_json_to_variant(response["result"]);
+            } else {
+                // If no "result" field but successful, return null variant
+                return QVariant();
+            }
+        } else {
+            // Method call failed, report the error
+            QString error_msg = response["error"].toString();
+            if (error_msg.isEmpty()) {
+                error_msg = "Method invocation failed";
+            }
+            
+            // Determine appropriate error code based on the error message
+            PluginErrorCode error_code = PluginErrorCode::ExecutionFailed;
+            if (error_msg.contains("not found", Qt::CaseInsensitive) || 
+                error_msg.contains("AttributeError", Qt::CaseInsensitive)) {
+                error_code = PluginErrorCode::CommandNotFound;
+            } else if (error_msg.contains("not callable", Qt::CaseInsensitive) || 
+                       error_msg.contains("TypeError", Qt::CaseInsensitive)) {
+                error_code = PluginErrorCode::InvalidParameters;
+            }
+            
+            return make_error<QVariant>(error_code, error_msg.toStdString());
+        }
     }
     return qtplugin::unexpected(result.error());
 }
@@ -718,12 +865,16 @@ PythonPluginBridge::get_property(const QString& property_name,
                                     "No plugin loaded");
     }
 
-    // Create a Python code snippet to get the property
-    QString code = QString("getattr(plugin, '%1', None)").arg(property_name);
-
-    auto result = m_environment->execute_code(code, QJsonObject());
+    // Use the new get_plugin_property method
+    auto result = m_environment->get_plugin_property(m_current_plugin_id, property_name);
     if (result) {
-        return QVariant::fromValue(result.value());
+        QJsonObject response = result.value();
+        if (response["success"].toBool() && response.contains("value")) {
+            return convert_json_to_variant(response["value"]);
+        } else {
+            QString error_msg = response["error"].toString();
+            return make_error<QVariant>(PluginErrorCode::ExecutionFailed, error_msg.toStdString());
+        }
     }
     return qtplugin::unexpected(result.error());
 }
@@ -744,19 +895,16 @@ PythonPluginBridge::set_property(const QString& property_name,
                                 "No plugin loaded");
     }
 
-    // Create a Python code snippet to set the property
-    QString valueStr;
-    if (value.typeId() == QMetaType::QString) {
-        valueStr = QString("'%1'").arg(value.toString());
-    } else {
-        valueStr = value.toString();
-    }
-
-    QString code = QString("setattr(plugin, '%1', %2)").arg(property_name, valueStr);
-
-    auto result = m_environment->execute_code(code, QJsonObject());
+    // Use the new set_plugin_property method
+    auto result = m_environment->set_plugin_property(m_current_plugin_id, property_name, QJsonValue::fromVariant(value));
     if (result) {
-        return make_success();
+        QJsonObject response = result.value();
+        if (response["success"].toBool()) {
+            return make_success();
+        } else {
+            QString error_msg = response["error"].toString();
+            return make_error<void>(PluginErrorCode::ExecutionFailed, error_msg.toStdString());
+        }
     }
     return make_error<void>(result.error().code, result.error().message);
 }

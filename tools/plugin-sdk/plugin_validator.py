@@ -16,20 +16,20 @@ import subprocess
 class ValidationResult:
     """Represents the result of a validation check"""
 
-    def __init__(self, check_name: str, passed: bool, message: str, severity: str = "error"):
+    def __init__(self, check_name: str, passed: bool, message: str, severity: str = "error") -> None:
         self.check_name = check_name
         self.passed = passed
         self.message = message
         self.severity = severity  # "error", "warning", "info"
 
-    def __str__(self):
+    def __str__(self) -> None:
         status = "✅" if self.passed else ("⚠️" if self.severity == "warning" else "❌")
         return f"{status} {self.check_name}: {self.message}"
 
 class PluginValidator:
     """Main plugin validator class"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.results = []
 
     def validate_plugin(self, plugin_path: Path) -> List[ValidationResult]:
@@ -53,12 +53,12 @@ class PluginValidator:
 
         return self.results
 
-    def _add_result(self, check_name: str, passed: bool, message: str, severity: str = "error"):
+    def _add_result(self, check_name: str, passed: bool, message: str, severity: str = "error") -> None:
         """Add a validation result"""
         result = ValidationResult(check_name, passed, message, severity)
         self.results.append(result)
 
-    def _validate_structure(self, plugin_path: Path):
+    def _validate_structure(self, plugin_path: Path) -> None:
         """Validate plugin directory structure"""
         # Check if directory exists
         if not plugin_path.exists():
@@ -105,7 +105,7 @@ class PluginValidator:
         else:
             self._add_result("Source Files", False, "No source files found")
 
-    def _validate_metadata(self, plugin_path: Path):
+    def _validate_metadata(self, plugin_path: Path) -> None:
         """Validate plugin metadata"""
         metadata_file = plugin_path / "metadata.json"
 
@@ -174,7 +174,7 @@ class PluginValidator:
         except Exception as e:
             self._add_result("Metadata Parse", False, f"Error reading metadata: {e}")
 
-    def _validate_source_code(self, plugin_path: Path):
+    def _validate_source_code(self, plugin_path: Path) -> None:
         """Validate source code"""
         # Find source files
         cpp_files = list(plugin_path.glob("**/*.cpp"))
@@ -187,7 +187,7 @@ class PluginValidator:
         if py_files:
             self._validate_python_code(py_files)
 
-    def _validate_cpp_code(self, cpp_files: List[Path], hpp_files: List[Path]):
+    def _validate_cpp_code(self, cpp_files: List[Path], hpp_files: List[Path]) -> None:
         """Validate C++ source code"""
         # Check for plugin interface implementation
         found_plugin_interface = False
@@ -239,7 +239,7 @@ class PluginValidator:
             except Exception:
                 pass
 
-    def _validate_python_code(self, py_files: List[Path]):
+    def _validate_python_code(self, py_files: List[Path]) -> None:
         """Validate Python source code"""
         found_plugin_class = False
 
@@ -266,7 +266,7 @@ class PluginValidator:
         if not found_plugin_class:
             self._add_result("Plugin Class", False, "No plugin class with required methods found")
 
-    def _validate_cmake(self, plugin_path: Path):
+    def _validate_cmake(self, plugin_path: Path) -> None:
         """Validate CMakeLists.txt"""
         cmake_file = plugin_path / "CMakeLists.txt"
 
@@ -305,7 +305,7 @@ class PluginValidator:
         except Exception as e:
             self._add_result("CMakeLists.txt Read", False, f"Error reading CMakeLists.txt: {e}")
 
-    def _validate_interfaces(self, plugin_path: Path):
+    def _validate_interfaces(self, plugin_path: Path) -> None:
         """Validate plugin interfaces"""
         metadata_file = plugin_path / "metadata.json"
 
@@ -357,7 +357,7 @@ class PluginValidator:
         except Exception as e:
             self._add_result("Interface Validation", False, f"Error validating interfaces: {e}")
 
-def main():
+def main() -> None:
     """Main entry point"""
     parser = argparse.ArgumentParser(
         description="QtForge Plugin Validator - Validate plugin projects and metadata"

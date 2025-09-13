@@ -28,7 +28,7 @@ pytestmark = pytest.mark.skipif(not BINDINGS_AVAILABLE, reason="QtForge bindings
 class TestMessageBus:
     """Test MessageBus functionality."""
     
-    def test_message_bus_creation(self):
+    def test_message_bus_creation(self) -> None:
         """Test MessageBus can be created."""
         if hasattr(comm, 'create_message_bus'):
             bus = comm.create_message_bus()
@@ -36,7 +36,7 @@ class TestMessageBus:
             assert hasattr(bus, 'publish')
             assert hasattr(bus, 'subscribe')
     
-    def test_message_bus_publish_subscribe(self):
+    def test_message_bus_publish_subscribe(self) -> None:
         """Test basic publish/subscribe functionality."""
         if hasattr(comm, 'create_message_bus'):
             bus = comm.create_message_bus()
@@ -52,7 +52,7 @@ class TestMessageBus:
                     # Some implementations might require subscribers first
                     pass
     
-    def test_message_bus_subscribe_callback(self):
+    def test_message_bus_subscribe_callback(self) -> None:
         """Test subscribing with callback."""
         if hasattr(comm, 'create_message_bus'):
             bus = comm.create_message_bus()
@@ -60,7 +60,7 @@ class TestMessageBus:
             callback_called = False
             received_message = None
             
-            def test_callback(message):
+            def test_callback(message) -> None:
                 nonlocal callback_called, received_message
                 callback_called = True
                 received_message = message
@@ -72,12 +72,12 @@ class TestMessageBus:
                 # Some implementations might not support Python callbacks directly
                 pass
     
-    def test_message_bus_unsubscribe(self):
+    def test_message_bus_unsubscribe(self) -> None:
         """Test unsubscribing from topics."""
         if hasattr(comm, 'create_message_bus'):
             bus = comm.create_message_bus()
             
-            def dummy_callback(message):
+            def dummy_callback(message) -> None:
                 pass
             
             try:
@@ -91,7 +91,7 @@ class TestMessageBus:
                 # Some implementations might not support this pattern
                 pass
     
-    def test_message_bus_invalid_topic(self):
+    def test_message_bus_invalid_topic(self) -> None:
         """Test handling invalid topics."""
         if hasattr(comm, 'create_message_bus'):
             bus = comm.create_message_bus()
@@ -108,7 +108,7 @@ class TestMessageBus:
 class TestMessage:
     """Test Message classes and functionality."""
     
-    def test_basic_message_creation(self):
+    def test_basic_message_creation(self) -> None:
         """Test BasicMessage creation."""
         if hasattr(comm, 'BasicMessage'):
             message = comm.BasicMessage("test_topic", "test_data")
@@ -120,7 +120,7 @@ class TestMessage:
             if hasattr(message, 'data'):
                 assert message.data == "test_data"
     
-    def test_message_with_metadata(self):
+    def test_message_with_metadata(self) -> None:
         """Test message with metadata."""
         if hasattr(comm, 'BasicMessage'):
             message = comm.BasicMessage("test_topic", "test_data")
@@ -133,7 +133,7 @@ class TestMessage:
                     value = message.get_metadata("key")
                     assert value == "value"
     
-    def test_message_serialization(self):
+    def test_message_serialization(self) -> None:
         """Test message serialization."""
         if hasattr(comm, 'BasicMessage'):
             message = comm.BasicMessage("test_topic", "test_data")
@@ -144,7 +144,7 @@ class TestMessage:
                 assert isinstance(serialized, (str, bytes))
                 assert len(serialized) > 0
     
-    def test_message_deserialization(self):
+    def test_message_deserialization(self) -> None:
         """Test message deserialization."""
         if hasattr(comm, 'BasicMessage') and hasattr(comm.BasicMessage, 'deserialize'):
             # Test with valid serialized data
@@ -161,7 +161,7 @@ class TestMessage:
 class TestServiceContract:
     """Test Service Contract functionality."""
     
-    def test_service_version_creation(self):
+    def test_service_version_creation(self) -> None:
         """Test ServiceVersion creation."""
         if hasattr(comm, 'ServiceVersion'):
             version = comm.ServiceVersion(1, 0, 0)
@@ -175,7 +175,7 @@ class TestServiceContract:
             if hasattr(version, 'patch'):
                 assert version.patch == 0
     
-    def test_service_method_descriptor(self):
+    def test_service_method_descriptor(self) -> None:
         """Test ServiceMethodDescriptor creation."""
         if hasattr(comm, 'ServiceMethodDescriptor'):
             descriptor = comm.ServiceMethodDescriptor()
@@ -186,7 +186,7 @@ class TestServiceContract:
                 descriptor.name = "test_method"
                 assert descriptor.name == "test_method"
     
-    def test_service_contract_creation(self):
+    def test_service_contract_creation(self) -> None:
         """Test ServiceContract creation."""
         if hasattr(comm, 'ServiceContract'):
             contract = comm.ServiceContract()
@@ -204,7 +204,7 @@ class TestServiceContract:
                     # Some implementations might have different API
                     pass
     
-    def test_service_contract_validation(self):
+    def test_service_contract_validation(self) -> None:
         """Test service contract validation."""
         if hasattr(comm, 'ServiceContract'):
             contract = comm.ServiceContract()
@@ -222,7 +222,7 @@ class TestServiceContract:
 class TestRequestResponse:
     """Test Request-Response pattern functionality."""
     
-    def test_request_creation(self):
+    def test_request_creation(self) -> None:
         """Test creating requests."""
         if hasattr(comm, 'Request'):
             request = comm.Request("test_service", "test_method")
@@ -234,7 +234,7 @@ class TestRequestResponse:
             if hasattr(request, 'method'):
                 assert request.method == "test_method"
     
-    def test_response_creation(self):
+    def test_response_creation(self) -> None:
         """Test creating responses."""
         if hasattr(comm, 'Response'):
             response = comm.Response()
@@ -248,7 +248,7 @@ class TestRequestResponse:
                     result = response.get_result()
                     assert result == "test_result"
     
-    def test_request_response_timeout(self):
+    def test_request_response_timeout(self) -> None:
         """Test request-response with timeout."""
         if hasattr(comm, 'create_message_bus'):
             bus = comm.create_message_bus()
@@ -266,7 +266,7 @@ class TestRequestResponse:
                         # Timeout or service not available is acceptable
                         pass
     
-    def test_async_request_response(self):
+    def test_async_request_response(self) -> None:
         """Test asynchronous request-response."""
         if hasattr(comm, 'create_message_bus'):
             bus = comm.create_message_bus()
@@ -290,7 +290,7 @@ class TestRequestResponse:
 class TestServiceCapabilities:
     """Test Service Capability functionality."""
     
-    def test_service_capability_enum(self):
+    def test_service_capability_enum(self) -> None:
         """Test ServiceCapability enum values."""
         if hasattr(comm, 'ServiceCapability'):
             capabilities = ['Synchronous', 'Asynchronous', 'Streaming', 'Transactional']
@@ -299,7 +299,7 @@ class TestServiceCapabilities:
                     value = getattr(comm.ServiceCapability, capability)
                     assert value is not None
     
-    def test_service_capability_checking(self):
+    def test_service_capability_checking(self) -> None:
         """Test checking service capabilities."""
         if hasattr(comm, 'ServiceContract'):
             contract = comm.ServiceContract()
@@ -314,7 +314,7 @@ class TestServiceCapabilities:
 class TestMessagePriority:
     """Test Message Priority functionality."""
     
-    def test_message_priority_enum(self):
+    def test_message_priority_enum(self) -> None:
         """Test MessagePriority enum values."""
         if hasattr(comm, 'MessagePriority'):
             priorities = ['Low', 'Normal', 'High', 'Critical']
@@ -323,7 +323,7 @@ class TestMessagePriority:
                     value = getattr(comm.MessagePriority, priority)
                     assert value is not None
     
-    def test_message_with_priority(self):
+    def test_message_with_priority(self) -> None:
         """Test creating messages with priority."""
         if hasattr(comm, 'BasicMessage') and hasattr(comm, 'MessagePriority'):
             message = comm.BasicMessage("test_topic", "test_data")
@@ -339,7 +339,7 @@ class TestMessagePriority:
 class TestDeliveryMode:
     """Test Delivery Mode functionality."""
     
-    def test_delivery_mode_enum(self):
+    def test_delivery_mode_enum(self) -> None:
         """Test DeliveryMode enum values."""
         if hasattr(comm, 'DeliveryMode'):
             modes = ['Immediate', 'Queued', 'Persistent']
@@ -348,7 +348,7 @@ class TestDeliveryMode:
                     value = getattr(comm.DeliveryMode, mode)
                     assert value is not None
     
-    def test_message_with_delivery_mode(self):
+    def test_message_with_delivery_mode(self) -> None:
         """Test creating messages with delivery mode."""
         if hasattr(comm, 'BasicMessage') and hasattr(comm, 'DeliveryMode'):
             message = comm.BasicMessage("test_topic", "test_data")
@@ -364,7 +364,7 @@ class TestDeliveryMode:
 class TestCommunicationErrorHandling:
     """Test error handling in communication bindings."""
     
-    def test_invalid_message_handling(self):
+    def test_invalid_message_handling(self) -> None:
         """Test handling invalid messages."""
         if hasattr(comm, 'create_message_bus'):
             bus = comm.create_message_bus()
@@ -373,7 +373,7 @@ class TestCommunicationErrorHandling:
             with pytest.raises((ValueError, RuntimeError, TypeError)):
                 bus.publish(None)
     
-    def test_service_not_found_error(self):
+    def test_service_not_found_error(self) -> None:
         """Test handling service not found errors."""
         if hasattr(comm, 'create_message_bus'):
             bus = comm.create_message_bus()
@@ -391,7 +391,7 @@ class TestCommunicationErrorHandling:
                     # Exception is acceptable for non-existent service
                     pass
     
-    def test_timeout_handling(self):
+    def test_timeout_handling(self) -> None:
         """Test timeout handling in communication."""
         if hasattr(comm, 'create_message_bus'):
             bus = comm.create_message_bus()
@@ -411,12 +411,12 @@ class TestCommunicationErrorHandling:
 class TestThreadSafety:
     """Test thread safety of communication components."""
     
-    def test_concurrent_publish(self):
+    def test_concurrent_publish(self) -> None:
         """Test concurrent publishing from multiple threads."""
         if hasattr(comm, 'create_message_bus') and hasattr(comm, 'BasicMessage'):
             bus = comm.create_message_bus()
             
-            def publish_messages(thread_id):
+            def publish_messages(thread_id) -> None:
                 for i in range(10):
                     message = comm.BasicMessage(f"topic_{thread_id}", f"data_{i}")
                     try:
@@ -436,13 +436,13 @@ class TestThreadSafety:
             for thread in threads:
                 thread.join(timeout=5.0)
     
-    def test_concurrent_subscribe(self):
+    def test_concurrent_subscribe(self) -> None:
         """Test concurrent subscription from multiple threads."""
         if hasattr(comm, 'create_message_bus'):
             bus = comm.create_message_bus()
             
-            def subscribe_to_topics(thread_id):
-                def callback(message):
+            def subscribe_to_topics(thread_id) -> None:
+                def callback(message) -> None:
                     pass
                 
                 try:

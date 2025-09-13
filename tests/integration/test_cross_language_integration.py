@@ -27,7 +27,7 @@ except ImportError as e:
     print(f"Python bindings not available: {e}")
 
 # Check if Lua bindings are available by trying to run a simple Lua script
-def check_lua_bindings():
+def check_lua_bindings() -> None:
     """Check if Lua bindings are available."""
     try:
         lua_test_script = """
@@ -54,7 +54,7 @@ def check_lua_bindings():
 
 LUA_BINDINGS_AVAILABLE = check_lua_bindings()
 
-def run_lua_script(script_content, timeout=10):
+def run_lua_script(script_content, timeout=10) -> None:
     """Run a Lua script and return the result."""
     with tempfile.NamedTemporaryFile(mode='w', suffix='.lua', delete=False) as f:
         f.write(script_content)
@@ -71,7 +71,7 @@ def run_lua_script(script_content, timeout=10):
 class TestCrossLanguageIntegration:
     """Test cross-language integration scenarios."""
     
-    def test_bindings_availability(self):
+    def test_bindings_availability(self) -> None:
         """Test that both Python and Lua bindings are available."""
         print("🔍 Testing bindings availability...")
         
@@ -92,7 +92,7 @@ class TestCrossLanguageIntegration:
         
         return True
     
-    def test_plugin_manager_consistency(self):
+    def test_plugin_manager_consistency(self) -> None:
         """Test that plugin managers behave consistently across languages."""
         print("\n🔧 Testing plugin manager consistency...")
         
@@ -159,7 +159,7 @@ class TestCrossLanguageIntegration:
         else:
             print("⚠️  Could not verify consistency due to errors")
     
-    def test_message_bus_interoperability(self):
+    def test_message_bus_interoperability(self) -> None:
         """Test message bus interoperability between Python and Lua."""
         print("\n📡 Testing message bus interoperability...")
         
@@ -196,7 +196,7 @@ class TestCrossLanguageIntegration:
         else:
             print(f"❌ Lua message bus creation failed: {stdout} {stderr}")
     
-    def test_configuration_sharing(self):
+    def test_configuration_sharing(self) -> None:
         """Test configuration sharing between Python and Lua."""
         print("\n⚙️  Testing configuration sharing...")
         
@@ -244,7 +244,7 @@ class TestCrossLanguageIntegration:
         else:
             print("⚠️  Configuration sharing test incomplete")
     
-    def test_security_policy_consistency(self):
+    def test_security_policy_consistency(self) -> None:
         """Test security policy consistency between languages."""
         print("\n🔒 Testing security policy consistency...")
         
@@ -292,7 +292,7 @@ class TestCrossLanguageIntegration:
         else:
             print("⚠️  Security policy consistency test incomplete")
     
-    def test_enum_value_consistency(self):
+    def test_enum_value_consistency(self) -> None:
         """Test that enum values are consistent between languages."""
         print("\n📊 Testing enum value consistency...")
         
@@ -364,7 +364,7 @@ class TestCrossLanguageIntegration:
         else:
             print(f"⚠️  Lua enum test failed: {stderr}")
     
-    def test_error_handling_consistency(self):
+    def test_error_handling_consistency(self) -> None:
         """Test that error handling is consistent between languages."""
         print("\n⚠️  Testing error handling consistency...")
         
@@ -426,7 +426,7 @@ class TestCrossLanguageIntegration:
             print(f"⚠️  Lua error test failed: {stderr}")
 
 
-def main():
+def main() -> None:
     """Run cross-language integration tests."""
     print("QtForge Cross-Language Integration Tests")
     print("=" * 50)

@@ -1,0 +1,278 @@
+{
+  "remote_plugin_test_configuration": {
+    "version": "3.2.0",
+    "description": "Comprehensive test configuration for QtForge remote plugin system",
+    
+    "test_categories": {
+      "functional": {
+        "enabled": true,
+        "timeout_seconds": 30,
+        "retry_count": 3,
+        "tests": [
+          "marketplace_search",
+          "plugin_download",
+          "security_validation",
+          "installation_lifecycle",
+          "error_handling",
+          "configuration_management"
+        ]
+      },
+      
+      "performance": {
+        "enabled": true,
+        "timeout_seconds": 60,
+        "retry_count": 1,
+        "benchmarks": {
+          "single_plugin_load_ms": 1000,
+          "concurrent_loads_ms": 3000,
+          "cache_performance_ratio": 1.1,
+          "security_validation_ms": 2000,
+          "memory_usage_mb": 100
+        },
+        "tests": [
+          "single_plugin_performance",
+          "concurrent_load_performance",
+          "cache_efficiency",
+          "security_performance",
+          "memory_stress_test",
+          "resource_cleanup"
+        ]
+      },
+      
+      "security": {
+        "enabled": true,
+        "timeout_seconds": 45,
+        "retry_count": 2,
+        "security_levels": ["None", "Basic", "Standard", "Strict", "Maximum"],
+        "tests": [
+          "signature_verification",
+          "certificate_validation",
+          "malicious_plugin_detection",
+          "privilege_escalation_prevention",
+          "network_security",
+          "trust_boundary_validation"
+        ]
+      },
+      
+      "integration": {
+        "enabled": true,
+        "timeout_seconds": 90,
+        "retry_count": 2,
+        "tests": [
+          "marketplace_integration",
+          "plugin_manager_integration",
+          "security_manager_integration",
+          "cache_system_integration",
+          "network_layer_integration",
+          "error_propagation"
+        ]
+      }
+    },
+    
+    "test_data": {
+      "mock_plugins": {
+        "small_plugin": {
+          "size_kb": 1,
+          "format": "zip",
+          "signed": true,
+          "valid": true
+        },
+        "medium_plugin": {
+          "size_kb": 100,
+          "format": "zip",
+          "signed": true,
+          "valid": true
+        },
+        "large_plugin": {
+          "size_mb": 5,
+          "format": "zip",
+          "signed": true,
+          "valid": true
+        },
+        "unsigned_plugin": {
+          "size_kb": 50,
+          "format": "zip",
+          "signed": false,
+          "valid": true
+        },
+        "corrupted_plugin": {
+          "size_kb": 25,
+          "format": "zip",
+          "signed": false,
+          "valid": false
+        }
+      },
+      
+      "mock_marketplace": {
+        "base_url": "https://mock.marketplace.qtforge.com",
+        "api_version": "v1",
+        "endpoints": {
+          "search": "/api/v1/plugins/search",
+          "details": "/api/v1/plugins/{id}",
+          "download": "/api/v1/plugins/{id}/download",
+          "install": "/api/v1/plugins/{id}/install"
+        },
+        "sample_plugins": [
+          {
+            "id": "com.example.testplugin",
+            "name": "Test Plugin",
+            "version": "1.0.0",
+            "description": "A test plugin for marketplace integration",
+            "author": "Test Author",
+            "category": "Testing",
+            "rating": 4.5,
+            "download_count": 1000,
+            "verified": true,
+            "download_url": "https://mock.marketplace.qtforge.com/plugins/testplugin.zip",
+            "checksum": "sha256:abcdef123456",
+            "file_size": 1048576
+          },
+          {
+            "id": "com.example.dataplugin",
+            "name": "Data Processing Plugin",
+            "version": "2.1.0",
+            "description": "Advanced data processing capabilities",
+            "author": "Data Corp",
+            "category": "Data",
+            "rating": 4.8,
+            "download_count": 5000,
+            "verified": true,
+            "download_url": "https://mock.marketplace.qtforge.com/plugins/dataplugin.zip",
+            "checksum": "sha256:fedcba654321",
+            "file_size": 2097152
+          }
+        ]
+      },
+      
+      "network_scenarios": {
+        "normal": {
+          "latency_ms": 50,
+          "bandwidth_mbps": 10,
+          "packet_loss_percent": 0,
+          "timeout_ms": 5000
+        },
+        "slow_network": {
+          "latency_ms": 500,
+          "bandwidth_mbps": 1,
+          "packet_loss_percent": 2,
+          "timeout_ms": 15000
+        },
+        "unreliable_network": {
+          "latency_ms": 200,
+          "bandwidth_mbps": 5,
+          "packet_loss_percent": 10,
+          "timeout_ms": 10000
+        },
+        "offline": {
+          "latency_ms": 0,
+          "bandwidth_mbps": 0,
+          "packet_loss_percent": 100,
+          "timeout_ms": 1000
+        }
+      }
+    },
+    
+    "security_configuration": {
+      "test_certificates": {
+        "valid_ca": {
+          "path": "test_data/certificates/valid_ca.pem",
+          "description": "Valid CA certificate for testing"
+        },
+        "expired_ca": {
+          "path": "test_data/certificates/expired_ca.pem",
+          "description": "Expired CA certificate for negative testing"
+        },
+        "self_signed": {
+          "path": "test_data/certificates/self_signed.pem",
+          "description": "Self-signed certificate for testing"
+        }
+      },
+      
+      "signature_keys": {
+        "valid_key": {
+          "path": "test_data/keys/valid_signing_key.pem",
+          "description": "Valid signing key for plugin signatures"
+        },
+        "revoked_key": {
+          "path": "test_data/keys/revoked_signing_key.pem",
+          "description": "Revoked signing key for negative testing"
+        }
+      },
+      
+      "malicious_patterns": [
+        "eval(",
+        "system(",
+        "exec(",
+        "shell_exec(",
+        "file_get_contents(",
+        "fopen(",
+        "include(",
+        "require("
+      ]
+    },
+    
+    "performance_thresholds": {
+      "load_times": {
+        "small_plugin_ms": 500,
+        "medium_plugin_ms": 2000,
+        "large_plugin_ms": 10000
+      },
+      
+      "concurrent_operations": {
+        "max_concurrent": 10,
+        "total_time_multiplier": 1.5
+      },
+      
+      "memory_usage": {
+        "baseline_mb": 50,
+        "per_plugin_mb": 10,
+        "max_total_mb": 200
+      },
+      
+      "cache_efficiency": {
+        "hit_ratio_percent": 90,
+        "cache_speedup_factor": 2.0
+      }
+    },
+    
+    "error_injection": {
+      "network_errors": [
+        "connection_timeout",
+        "dns_resolution_failure",
+        "http_404",
+        "http_500",
+        "ssl_handshake_failure"
+      ],
+      
+      "plugin_errors": [
+        "corrupted_download",
+        "invalid_format",
+        "missing_dependencies",
+        "version_conflict"
+      ],
+      
+      "system_errors": [
+        "insufficient_disk_space",
+        "permission_denied",
+        "resource_exhaustion",
+        "concurrent_access_conflict"
+      ]
+    },
+    
+    "reporting": {
+      "output_formats": ["junit", "json", "html"],
+      "include_performance_metrics": true,
+      "include_security_analysis": true,
+      "include_coverage_report": true,
+      "generate_benchmark_comparison": true
+    },
+    
+    "environment": {
+      "temp_directory": "/tmp/qtforge_remote_plugin_tests",
+      "cache_directory": "/tmp/qtforge_remote_plugin_cache",
+      "log_level": "INFO",
+      "enable_debug_logging": false,
+      "cleanup_after_tests": true
+    }
+  }
+}

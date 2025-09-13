@@ -190,7 +190,7 @@ def run_module_tests() -> Tuple[bool, str]:
     except Exception as e:
         return False, f"Module tests failed: {e}"
 
-def print_system_info():
+def print_system_info() -> None:
     """Print system information."""
     print("\n" + "=" * 60)
     print("SYSTEM INFORMATION")
@@ -218,7 +218,7 @@ def print_system_info():
     except Exception as e:
         print(f"Could not get QtForge information: {e}")
 
-def main():
+def main() -> None:
     """Main test runner function."""
     print("QtForge Python Bindings - Comprehensive Test Runner")
     print("=" * 60)

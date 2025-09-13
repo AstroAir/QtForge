@@ -30,7 +30,7 @@ except ImportError as e:
     sys.exit(1)
 
 
-def demonstrate_plugin_manager_creation():
+def demonstrate_plugin_manager_creation() -> None:
     """Demonstrate creating and configuring a plugin manager."""
     print("\n" + "="*50)
     print("🔧 Creating Plugin Manager")
@@ -58,7 +58,7 @@ def demonstrate_plugin_manager_creation():
         return None
 
 
-def demonstrate_plugin_loading(manager):
+def demonstrate_plugin_loading(manager) -> None:
     """Demonstrate plugin loading operations."""
     print("\n" + "="*50)
     print("📥 Plugin Loading Operations")
@@ -99,7 +99,7 @@ def demonstrate_plugin_loading(manager):
             print(f"❌ Failed to load plugin: {e}")
 
 
-def demonstrate_plugin_enumeration(manager):
+def demonstrate_plugin_enumeration(manager) -> None:
     """Demonstrate enumerating loaded plugins."""
     print("\n" + "="*50)
     print("📋 Plugin Enumeration")
@@ -129,7 +129,7 @@ def demonstrate_plugin_enumeration(manager):
         return []
 
 
-def demonstrate_plugin_registry():
+def demonstrate_plugin_registry() -> None:
     """Demonstrate plugin registry operations."""
     print("\n" + "="*50)
     print("📚 Plugin Registry Operations")
@@ -167,7 +167,7 @@ def demonstrate_plugin_registry():
         return None
 
 
-def demonstrate_plugin_lifecycle():
+def demonstrate_plugin_lifecycle() -> None:
     """Demonstrate plugin lifecycle management."""
     print("\n" + "="*50)
     print("🔄 Plugin Lifecycle Management")
@@ -214,7 +214,7 @@ def demonstrate_plugin_lifecycle():
         return None
 
 
-def demonstrate_plugin_dependencies():
+def demonstrate_plugin_dependencies() -> None:
     """Demonstrate plugin dependency resolution."""
     print("\n" + "="*50)
     print("🔗 Plugin Dependency Resolution")
@@ -264,7 +264,7 @@ def demonstrate_plugin_dependencies():
         return None
 
 
-def demonstrate_plugin_enums():
+def demonstrate_plugin_enums() -> None:
     """Demonstrate plugin-related enumerations."""
     print("\n" + "="*50)
     print("📊 Plugin Enumerations")
@@ -307,7 +307,7 @@ def demonstrate_plugin_enums():
                 print(f"  • {plugin_type}: {value}")
 
 
-def demonstrate_error_handling():
+def demonstrate_error_handling() -> None:
     """Demonstrate error handling in plugin operations."""
     print("\n" + "="*50)
     print("⚠️  Error Handling Demonstration")
@@ -345,7 +345,7 @@ def demonstrate_error_handling():
         print(f"❌ Failed to create manager for error testing: {e}")
 
 
-def main():
+def main() -> None:
     """Main demonstration function."""
     print("QtForge Python Bindings - Basic Plugin Management Example")
     print("=" * 60)

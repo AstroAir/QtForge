@@ -7,7 +7,7 @@ Tests all new functionality added to the bindings.
 import sys
 import traceback
 
-def test_core_bindings():
+def test_core_bindings() -> None:
     """Test core module bindings including new interfaces."""
     print("Testing core bindings...")
 
@@ -88,7 +88,7 @@ def test_core_bindings():
         traceback.print_exc()
         return False
 
-def test_communication_bindings():
+def test_communication_bindings() -> None:
     """Test communication module bindings including service contracts."""
     print("Testing communication bindings...")
 
@@ -132,7 +132,7 @@ def test_communication_bindings():
         traceback.print_exc()
         return False
 
-def test_security_bindings():
+def test_security_bindings() -> None:
     """Test security module bindings including new enums."""
     print("Testing security bindings...")
 
@@ -190,7 +190,7 @@ def test_security_bindings():
         traceback.print_exc()
         return False
 
-def test_managers_bindings():
+def test_managers_bindings() -> None:
     """Test managers module bindings."""
     print("Testing managers bindings...")
 
@@ -229,7 +229,7 @@ def test_managers_bindings():
         traceback.print_exc()
         return False
 
-def test_monitoring_bindings():
+def test_monitoring_bindings() -> None:
     """Test monitoring module bindings."""
     print("Testing monitoring bindings...")
 
@@ -257,7 +257,7 @@ def test_monitoring_bindings():
         traceback.print_exc()
         return False
 
-def test_transactions_bindings():
+def test_transactions_bindings() -> None:
     """Test transactions module bindings."""
     print("Testing transactions bindings...")
 
@@ -286,7 +286,7 @@ def test_transactions_bindings():
         traceback.print_exc()
         return False
 
-def test_composition_bindings():
+def test_composition_bindings() -> None:
     """Test composition module bindings."""
     print("Testing composition bindings...")
 
@@ -315,7 +315,7 @@ def test_composition_bindings():
         traceback.print_exc()
         return False
 
-def test_marketplace_bindings():
+def test_marketplace_bindings() -> None:
     """Test marketplace module bindings."""
     print("Testing marketplace bindings...")
 
@@ -334,7 +334,7 @@ def test_marketplace_bindings():
         traceback.print_exc()
         return False
 
-def main():
+def main() -> None:
     """Run all binding tests."""
     print("QtForge Python Bindings Test Suite")
     print("=" * 40)

@@ -34,7 +34,7 @@ except ImportError as e:
     print("Make sure QtForge v3.2.0 Python bindings are installed and accessible")
     sys.exit(1)
 
-def demonstrate_advanced_plugin_interface():
+def demonstrate_advanced_plugin_interface() -> None:
     """Demonstrate IAdvancedPlugin interface features."""
     print("\n" + "=" * 60)
     print("Advanced Plugin Interface (IAdvancedPlugin) Demonstration")
@@ -73,7 +73,7 @@ def demonstrate_advanced_plugin_interface():
     except Exception as e:
         print(f"Error demonstrating advanced plugin interface: {e}")
 
-def demonstrate_dynamic_plugin_interface():
+def demonstrate_dynamic_plugin_interface() -> None:
     """Demonstrate IDynamicPlugin interface features."""
     print("\n" + "=" * 60)
     print("Dynamic Plugin Interface (IDynamicPlugin) Demonstration")
@@ -107,7 +107,7 @@ def demonstrate_dynamic_plugin_interface():
     except Exception as e:
         print(f"Error demonstrating dynamic plugin interface: {e}")
 
-def demonstrate_enhanced_security():
+def demonstrate_enhanced_security() -> None:
     """Demonstrate enhanced security features in v3.2.0."""
     print("\n" + "=" * 60)
     print("Enhanced Security Features Demonstration")
@@ -168,7 +168,7 @@ def demonstrate_enhanced_security():
     except Exception as e:
         print(f"Error demonstrating enhanced security: {e}")
 
-def demonstrate_configuration_management():
+def demonstrate_configuration_management() -> None:
     """Demonstrate enhanced configuration management in v3.2.0."""
     print("\n" + "=" * 60)
     print("Enhanced Configuration Management Demonstration")
@@ -206,7 +206,7 @@ def demonstrate_configuration_management():
     except Exception as e:
         print(f"Error demonstrating configuration management: {e}")
 
-def demonstrate_version_management():
+def demonstrate_version_management() -> None:
     """Demonstrate enhanced version management in v3.2.0."""
     print("\n" + "=" * 60)
     print("Enhanced Version Management Demonstration")
@@ -240,7 +240,7 @@ def demonstrate_version_management():
     except Exception as e:
         print(f"Error demonstrating version management: {e}")
 
-def main():
+def main() -> None:
     """Main function demonstrating QtForge v3.2.0 advanced features."""
     print("QtForge v3.2.0 - Advanced Plugin Interfaces Example")
     print("This example demonstrates the new features introduced in QtForge v3.2.0")

@@ -21,7 +21,7 @@ from python_bridge import PythonPluginBridge
 class TestPythonBridgeScript(unittest.TestCase):
     """Test cases for Python bridge script functionality"""
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Set up test environment"""
         self.bridge = PythonPluginBridge()
         self.temp_dir = tempfile.mkdtemp()
@@ -30,16 +30,16 @@ class TestPythonBridgeScript(unittest.TestCase):
         # Create a test plugin
         self.create_test_plugin()
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         """Clean up test environment"""
         if self.temp_dir and os.path.exists(self.temp_dir):
             shutil.rmtree(self.temp_dir)
 
-    def create_test_plugin(self):
+    def create_test_plugin(self) -> None:
         """Create a test plugin for testing"""
         plugin_content = '''
 class TestPlugin:
-    def __init__(self):
+    def __init__(self) -> None:
         self.name = "Test Plugin"
         self.version = "1.0.0"
         self.description = "A test plugin"
@@ -49,46 +49,46 @@ class TestPlugin:
         self.data = {}
         self.initialized = False
 
-    def initialize(self):
+    def initialize(self) -> None:
         self.initialized = True
         return {"success": True, "message": "Initialized"}
 
-    def shutdown(self):
+    def shutdown(self) -> None:
         self.initialized = False
         return {"success": True, "message": "Shutdown"}
 
-    def simple_method(self):
+    def simple_method(self) -> None:
         return "simple_result"
 
-    def method_with_params(self, param1, param2=None):
+    def method_with_params(self, param1, param2=None) -> None:
         return {"param1": param1, "param2": param2}
 
-    def get_counter(self):
+    def get_counter(self) -> None:
         return self.counter
 
-    def set_counter(self, value):
+    def set_counter(self, value) -> None:
         self.counter = int(value)
 
-    def increment_counter(self, amount=1):
+    def increment_counter(self, amount=1) -> None:
         self.counter += amount
         return self.counter
 
-    def store_data(self, key, value):
+    def store_data(self, key, value) -> None:
         self.data[key] = value
         return {"stored": True}
 
-    def get_data(self, key=None):
+    def get_data(self, key=None) -> None:
         if key is None:
             return self.data
         return self.data.get(key)
 
-    def raise_error(self):
+    def raise_error(self) -> None:
         raise ValueError("Test error")
 
-    def handle_event(self, event_name, event_data):
+    def handle_event(self, event_name, event_data) -> None:
         return {"handled": True, "event_name": event_name, "event_data": event_data}
 
-def create_plugin():
+def create_plugin() -> None:
     return TestPlugin()
 '''
         
@@ -96,7 +96,7 @@ def create_plugin():
         with open(self.test_plugin_path, 'w') as f:
             f.write(plugin_content)
 
-    def test_bridge_initialization(self):
+    def test_bridge_initialization(self) -> None:
         """Test bridge initialization"""
         request = {
             "type": "initialize",
@@ -108,7 +108,7 @@ def create_plugin():
         self.assertTrue(response["success"])
         self.assertEqual(response["id"], 1)
 
-    def test_plugin_loading(self):
+    def test_plugin_loading(self) -> None:
         """Test plugin loading functionality"""
         request = {
             "type": "load_plugin",
@@ -138,7 +138,7 @@ def create_plugin():
         
         return response["plugin_id"]
 
-    def test_method_calling(self):
+    def test_method_calling(self) -> None:
         """Test method calling functionality"""
         # First load a plugin
         plugin_id = self.test_plugin_loading()
@@ -157,7 +157,7 @@ def create_plugin():
         self.assertTrue(response["success"])
         self.assertEqual(response["result"], "simple_result")
 
-    def test_method_with_parameters(self):
+    def test_method_with_parameters(self) -> None:
         """Test method calling with parameters"""
         plugin_id = self.test_plugin_loading()
         
@@ -176,7 +176,7 @@ def create_plugin():
         self.assertEqual(result["param1"], "param1_value")
         self.assertEqual(result["param2"], "param2_value")
 
-    def test_property_access(self):
+    def test_property_access(self) -> None:
         """Test property access functionality"""
         plugin_id = self.test_plugin_loading()
         
@@ -210,7 +210,7 @@ def create_plugin():
         self.assertTrue(response["success"])
         self.assertEqual(response["value"], 42)
 
-    def test_event_handling(self):
+    def test_event_handling(self) -> None:
         """Test event handling functionality"""
         plugin_id = self.test_plugin_loading()
         
@@ -248,7 +248,7 @@ def create_plugin():
         response = self.bridge.handle_request(unsub_request)
         self.assertTrue(response["success"])
 
-    def test_plugin_info_retrieval(self):
+    def test_plugin_info_retrieval(self) -> None:
         """Test plugin information retrieval"""
         plugin_id = self.test_plugin_loading()
         
@@ -265,7 +265,7 @@ def create_plugin():
         self.assertIn("methods", response)
         self.assertIn("properties", response)
 
-    def test_error_handling(self):
+    def test_error_handling(self) -> None:
         """Test error handling"""
         plugin_id = self.test_plugin_loading()
         
@@ -296,7 +296,7 @@ def create_plugin():
         self.assertIn("error", response)
         self.assertIn("traceback", response)
 
-    def test_code_execution(self):
+    def test_code_execution(self) -> None:
         """Test code execution functionality"""
         request = {
             "type": "execute_code",
@@ -310,7 +310,7 @@ def create_plugin():
         self.assertTrue(response["success"])
         self.assertEqual(response["result"], 4)
 
-    def test_metadata_extraction(self):
+    def test_metadata_extraction(self) -> None:
         """Test metadata extraction functionality"""
         plugin_id = self.test_plugin_loading()
         plugin = self.bridge.plugins[plugin_id]
@@ -323,7 +323,7 @@ def create_plugin():
         self.assertEqual(metadata["author"], "Test Suite")
         self.assertEqual(metadata["license"], "MIT")
 
-    def test_method_discovery(self):
+    def test_method_discovery(self) -> None:
         """Test method discovery functionality"""
         plugin_id = self.test_plugin_loading()
         plugin = self.bridge.plugins[plugin_id]
@@ -340,7 +340,7 @@ def create_plugin():
         self.assertIn("signature", method_with_params)
         self.assertIn("parameters", method_with_params)
 
-    def test_property_discovery(self):
+    def test_property_discovery(self) -> None:
         """Test property discovery functionality"""
         plugin_id = self.test_plugin_loading()
         plugin = self.bridge.plugins[plugin_id]

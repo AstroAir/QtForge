@@ -132,7 +132,7 @@ class AsyncPatternsExample:
         """Demonstrate streaming/generator-like async patterns."""
         print("\n🌊 Async Streaming Patterns:")
 
-        async def version_stream(count: int):
+        async def version_stream(count: int) -> None:
             """Generate versions asynchronously."""
             for i in range(count):
                 version = await self.async_qtforge_operation(
@@ -152,10 +152,10 @@ class AsyncPatternsExample:
         print("\n⏱️ Async Rate Limiting:")
 
         class RateLimiter:
-            def __init__(self, max_concurrent: int = 3):
+            def __init__(self, max_concurrent: int = 3) -> None:
                 self.semaphore = asyncio.Semaphore(max_concurrent)
 
-            async def execute(self, operation: Callable):
+            async def execute(self, operation: Callable) -> None:
                 async with self.semaphore:
                     return await operation()
 
@@ -164,7 +164,7 @@ class AsyncPatternsExample:
         # Create many operations
         operations = []
         for i in range(8):
-            async def limited_operation(i=i):
+            async def limited_operation(i=i) -> None:
                 return await self.async_qtforge_operation(
                     f"limited_{i}",
                     lambda: self.qtforge.create_version(3, 0, i)
@@ -180,7 +180,7 @@ class AsyncPatternsExample:
         """Demonstrate timeout handling in async operations."""
         print("\n⏰ Async Timeout Handling:")
 
-        async def operation_with_timeout(timeout_seconds: float):
+        async def operation_with_timeout(timeout_seconds: float) -> None:
             """Execute operation with timeout."""
             try:
                 result = await asyncio.wait_for(

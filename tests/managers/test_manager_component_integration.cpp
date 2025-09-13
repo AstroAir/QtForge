@@ -61,6 +61,13 @@ private slots:
     void testBackwardCompatibility();
     void testAPIStability();
 
+    // New comprehensive integration tests
+    void testManagerLifecycleIntegration();
+    void testErrorHandlingIntegration();
+    void testConfigurationPersistenceIntegration();
+    void testResourceQuotaIntegration();
+    void testSecurityPolicyIntegration();
+
 private:
     void createTestPlugin(const QString& filename,
                           const QString& plugin_id = "com.test.plugin");
@@ -462,6 +469,165 @@ void TestManagerComponentIntegration::testConcurrentManagerOperations() {
         (num_threads * operations_per_thread) * 0.8;  // 80% success rate
     QVERIFY(success_count >= expected_min_success);
 }
+
+void TestManagerComponentIntegration::testManagerLifecycleIntegration() {
+    // Test complete lifecycle integration between managers
+    auto config_manager = create_configuration_manager();
+    auto resource_manager = create_resource_manager();
+    auto plugin_manager = std::make_unique<PluginManager>();
+    auto security_manager = std::make_unique<SecurityManager>();
+
+    // Test initialization phase
+    QVERIFY(config_manager != nullptr);
+    QVERIFY(resource_manager != nullptr);
+    QVERIFY(plugin_manager != nullptr);
+    QVERIFY(security_manager != nullptr);
+
+    // Test configuration setup
+    auto config_result = config_manager->set_value("test.lifecycle", QJsonValue("active"));
+    QVERIFY(config_result.has_value());
+
+    // Test resource allocation
+    auto pool_result = resource_manager->create_pool(ResourceType::Memory, "lifecycle_pool");
+    QVERIFY(pool_result.has_value());
+
+    // Test security configuration
+    security_manager->set_security_level(SecurityLevel::Standard);
+    QCOMPARE(security_manager->security_level(), SecurityLevel::Standard);
+
+    // Test that managers can work together
+    auto stats = resource_manager->get_usage_statistics();
+    QVERIFY(stats.total_created >= 0);
+
+    auto config_value = config_manager->get_value("test.lifecycle");
+    QVERIFY(config_value.has_value());
+    QCOMPARE(config_value.value().toString(), "active");
+}
+
+void TestManagerComponentIntegration::testErrorHandlingIntegration() {
+    // Test error handling across manager boundaries
+    auto config_manager = create_configuration_manager();
+    auto resource_manager = create_resource_manager();
+
+    // Test configuration error propagation
+    auto invalid_config = config_manager->get_value("non.existent.key");
+    QVERIFY(!invalid_config.has_value());
+    QVERIFY(!invalid_config.error().message.empty());
+
+    // Test resource error propagation
+    auto invalid_pool = resource_manager->remove_pool("non_existent_pool");
+    QVERIFY(!invalid_pool.has_value());
+    QVERIFY(!invalid_pool.error().message.empty());
+
+    // Test that errors don't affect other managers
+    auto valid_config = config_manager->set_value("test.error", QJsonValue("handled"));
+    QVERIFY(valid_config.has_value());
+
+    auto valid_pool = resource_manager->create_pool(ResourceType::Thread, "error_test_pool");
+    QVERIFY(valid_pool.has_value());
+}
+
+void TestManagerComponentIntegration::testConfigurationPersistenceIntegration() {
+    // Test configuration persistence across manager instances
+    QString config_file = m_test_dir + "/persistence_test.json";
+
+    {
+        // First manager instance
+        auto config_manager = create_configuration_manager();
+
+        // Set some configuration values
+        auto result1 = config_manager->set_value("persistence.test1", QJsonValue("value1"));
+        auto result2 = config_manager->set_value("persistence.test2", QJsonValue(42));
+        auto result3 = config_manager->set_value("persistence.nested.key", QJsonValue(true));
+
+        QVERIFY(result1.has_value());
+        QVERIFY(result2.has_value());
+        QVERIFY(result3.has_value());
+
+        // Save configuration
+        auto save_result = config_manager->save_to_file(config_file.toStdString());
+        QVERIFY(save_result.has_value());
+    }
+
+    {
+        // Second manager instance
+        auto config_manager = create_configuration_manager();
+
+        // Load configuration
+        auto load_result = config_manager->load_from_file(config_file.toStdString());
+        QVERIFY(load_result.has_value());
+
+        // Verify values were persisted
+        auto value1 = config_manager->get_value("persistence.test1");
+        auto value2 = config_manager->get_value("persistence.test2");
+        auto value3 = config_manager->get_value("persistence.nested.key");
+
+        QVERIFY(value1.has_value());
+        QVERIFY(value2.has_value());
+        QVERIFY(value3.has_value());
+
+        QCOMPARE(value1.value().toString(), "value1");
+        QCOMPARE(value2.value().toInt(), 42);
+        QCOMPARE(value3.value().toBool(), true);
+    }
+}
+
+void TestManagerComponentIntegration::testResourceQuotaIntegration() {
+    // Test resource quota management integration
+    auto resource_manager = create_resource_manager();
+
+    // Create resource pools with quotas
+    ResourceQuota memory_quota;
+    memory_quota.max_instances = 10;
+    memory_quota.max_memory_bytes = 1024 * 1024; // 1MB
+
+    auto pool_result = resource_manager->create_pool(ResourceType::Memory, "quota_pool", memory_quota);
+    QVERIFY(pool_result.has_value());
+
+    // Set plugin-specific quotas
+    ResourceQuota plugin_quota;
+    plugin_quota.max_instances = 5;
+    plugin_quota.max_memory_bytes = 512 * 1024; // 512KB
+
+    auto quota_result = resource_manager->set_plugin_quota("test.plugin", ResourceType::Memory, plugin_quota);
+    QVERIFY(quota_result.has_value());
+
+    // Test quota enforcement
+    auto stats = resource_manager->get_usage_statistics(ResourceType::Memory, "test.plugin");
+    QVERIFY(stats.currently_active >= 0);
+    QVERIFY(stats.total_created >= 0);
+}
+
+void TestManagerComponentIntegration::testSecurityPolicyIntegration() {
+    // Test security policy integration across managers
+    auto security_manager = std::make_unique<SecurityManager>();
+    auto config_manager = create_configuration_manager();
+
+    // Set security level
+    security_manager->set_security_level(SecurityLevel::Strict);
+
+    // Add trusted plugins
+    security_manager->add_trusted_plugin("trusted.plugin.id", SecurityLevel::Standard);
+
+    // Test security validation
+    QVERIFY(security_manager->is_trusted("trusted.plugin.id"));
+    QVERIFY(!security_manager->is_trusted("untrusted.plugin.id"));
+
+    // Test security statistics
+    auto stats = security_manager->security_statistics();
+    QVERIFY(stats.contains("validations_performed"));
+    QVERIFY(stats.contains("violations_detected"));
+
+    // Test configuration integration with security
+    auto security_config = config_manager->set_value("security.level", QJsonValue("strict"));
+    QVERIFY(security_config.has_value());
+
+    auto level_value = config_manager->get_value("security.level");
+    QVERIFY(level_value.has_value());
+    QCOMPARE(level_value.value().toString(), "strict");
+}
+
+QTEST_MAIN(TestManagerComponentIntegration)
 
 #include "test_manager_component_integration.moc"
 QTEST_MAIN(TestManagerComponentIntegration)

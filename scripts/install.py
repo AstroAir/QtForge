@@ -17,7 +17,7 @@ from typing import List, Dict, Optional, Tuple
 class SystemInfo:
     """System information detection"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.system = platform.system().lower()
         self.machine = platform.machine().lower()
         self.is_windows = self.system == 'windows'
@@ -41,7 +41,7 @@ class SystemInfo:
         else:
             self.arch = 'x86'
     
-    def _detect_linux_distro(self):
+    def _detect_linux_distro(self) -> None:
         """Detect Linux distribution and package manager"""
         try:
             # Try /etc/os-release first
@@ -70,7 +70,7 @@ class SystemInfo:
 class DependencyManager:
     """Handles dependency detection and installation"""
     
-    def __init__(self, system_info: SystemInfo):
+    def __init__(self, system_info: SystemInfo) -> None:
         self.system_info = system_info
         self.required_deps = {
             'cmake': '3.21',
@@ -202,7 +202,7 @@ class DependencyManager:
 class QtPluginInstaller:
     """Main installer class"""
     
-    def __init__(self, source_dir: Path, install_prefix: Optional[Path] = None):
+    def __init__(self, source_dir: Path, install_prefix: Optional[Path] = None) -> None:
         self.source_dir = source_dir
         self.system_info = SystemInfo()
         self.dependency_manager = DependencyManager(self.system_info)
@@ -325,7 +325,7 @@ class QtPluginInstaller:
             print(f"⚠️  System integration warning: {e}")
             return False
     
-    def _print_usage_info(self):
+    def _print_usage_info(self) -> None:
         """Print usage information"""
         print("\n" + "="*50)
         print("📚 QtPlugin Installation Complete!")
@@ -342,7 +342,7 @@ class QtPluginInstaller:
         print(f"   {self.install_prefix}/share/qtplugin/examples/")
         print("="*50)
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description='QtPlugin Universal Installation Script')
     parser.add_argument('--source-dir', type=Path, default=Path.cwd(),
                        help='Source directory (default: current directory)')

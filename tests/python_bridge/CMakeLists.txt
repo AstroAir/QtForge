@@ -174,35 +174,40 @@ file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/test_plugins)
 # Test Labels and Properties
 # ============================================================================
 
-# Set test labels for categorization
+# Set test labels for categorization with reduced timeouts
+set_tests_properties(SimpleBridgeTest PROPERTIES
+    LABELS "Python;Bridge;Unit;Basic"
+    TIMEOUT 15
+)
+
 set_tests_properties(PythonPluginBridgeComplete PROPERTIES
     LABELS "Python;Bridge;Unit"
-    TIMEOUT 60
+    TIMEOUT 30
 )
 
 set_tests_properties(PythonBridgeEventSystem PROPERTIES
     LABELS "Python;Bridge;Events;Unit"
-    TIMEOUT 60
+    TIMEOUT 30
 )
 
 set_tests_properties(PythonBridgeScript PROPERTIES
     LABELS "Python;Bridge;Script;Unit"
-    TIMEOUT 30
+    TIMEOUT 15
 )
 
 set_tests_properties(PythonBindingsEnhanced PROPERTIES
     LABELS "Python;Bindings;Unit"
-    TIMEOUT 30
+    TIMEOUT 15
 )
 
 set_tests_properties(PythonBridgeIntegration PROPERTIES
     LABELS "Python;Bridge;Integration"
-    TIMEOUT 120
+    TIMEOUT 60
 )
 
 set_tests_properties(PythonBridgePerformance PROPERTIES
     LABELS "Python;Bridge;Performance"
-    TIMEOUT 300
+    TIMEOUT 120
 )
 
 # ============================================================================

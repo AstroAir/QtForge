@@ -38,18 +38,18 @@ class QtPluginConan(ConanFile):
     # Sources are located in the same place as this recipe, copy them to the recipe
     exports_sources = "CMakeLists.txt", "src/*", "include/*", "cmake/*", "examples/*", "tests/*", "LICENSE", "README.md"
     
-    def config_options(self):
+    def config_options(self) -> None:
         if self.settings.os == "Windows":
             self.options.rm_safe("fPIC")
     
-    def configure(self):
+    def configure(self) -> None:
         if self.options.shared:
             self.options.rm_safe("fPIC")
     
-    def layout(self):
+    def layout(self) -> None:
         cmake_layout(self)
     
-    def requirements(self):
+    def requirements(self) -> None:
         self.requires("qt/6.5.3")
         
         if self.options.network:
@@ -60,10 +60,10 @@ class QtPluginConan(ConanFile):
             # Qt Widgets is included in qt/6.5.3
             pass
     
-    def build_requirements(self):
+    def build_requirements(self) -> None:
         self.tool_requires("cmake/[>=3.21]")
     
-    def generate(self):
+    def generate(self) -> None:
         deps = CMakeDeps(self)
         deps.generate()
         tc = CMakeToolchain(self)
@@ -77,7 +77,7 @@ class QtPluginConan(ConanFile):
         
         tc.generate()
     
-    def build(self):
+    def build(self) -> None:
         cmake = CMake(self)
         cmake.configure()
         cmake.build()
@@ -85,12 +85,12 @@ class QtPluginConan(ConanFile):
         if self.options.tests:
             cmake.test()
     
-    def package(self):
+    def package(self) -> None:
         copy(self, "LICENSE", src=self.source_folder, dst=os.path.join(self.package_folder, "licenses"))
         cmake = CMake(self)
         cmake.install()
     
-    def package_info(self):
+    def package_info(self) -> None:
         # Core library is always available
         self.cpp_info.components["core"].libs = ["qtplugin-core"]
         self.cpp_info.components["core"].requires = ["qt::qt6Core"]

@@ -13,33 +13,33 @@ import time
 import json
 from pathlib import Path
 
-def print_header(title):
+def print_header(title) -> None:
     """Print a formatted header."""
     print("\n" + "="*70)
     print(f"🚀 {title}")
     print("="*70)
 
-def print_success(message):
+def print_success(message) -> None:
     """Print a success message."""
     print(f"✅ {message}")
 
-def print_warning(message):
+def print_warning(message) -> None:
     """Print a warning message."""
     print(f"⚠️  {message}")
 
-def print_error(message):
+def print_error(message) -> None:
     """Print an error message."""
     print(f"❌ {message}")
 
-def print_info(message):
+def print_info(message) -> None:
     """Print an info message."""
     print(f"📋 {message}")
 
-def print_status(message):
+def print_status(message) -> None:
     """Print a status message."""
     print(f"📊 {message}")
 
-def run_python_performance_tests():
+def run_python_performance_tests() -> None:
     """Run Python performance tests."""
     print_header("Running Python Performance Tests")
     
@@ -85,7 +85,7 @@ def run_python_performance_tests():
         print_error(f"Failed to run Python performance tests: {e}")
         return False, {}
 
-def run_lua_performance_tests():
+def run_lua_performance_tests() -> None:
     """Run Lua performance tests."""
     print_header("Running Lua Performance Tests")
     
@@ -134,7 +134,7 @@ def run_lua_performance_tests():
         print_error(f"Failed to run Lua performance tests: {e}")
         return False, {}
 
-def parse_performance_metrics(output, language):
+def parse_performance_metrics(output, language) -> None:
     """Parse performance metrics from test output."""
     metrics = {
         'language': language,
@@ -195,7 +195,7 @@ def parse_performance_metrics(output, language):
     
     return metrics
 
-def compare_performance_metrics(python_metrics, lua_metrics):
+def compare_performance_metrics(python_metrics, lua_metrics) -> None:
     """Compare performance metrics between Python and Lua."""
     print_header("Performance Comparison Analysis")
     
@@ -303,7 +303,7 @@ def compare_performance_metrics(python_metrics, lua_metrics):
         else:
             print("  🤝 Similar execution time")
 
-def generate_performance_report(python_success, lua_success, python_metrics, lua_metrics):
+def generate_performance_report(python_success, lua_success, python_metrics, lua_metrics) -> None:
     """Generate a comprehensive performance report."""
     print_header("Performance Test Summary Report")
     
@@ -374,7 +374,7 @@ def generate_performance_report(python_success, lua_success, python_metrics, lua
         print("• Verify proper binding implementation")
         print("• Run individual tests for detailed debugging")
 
-def check_prerequisites():
+def check_prerequisites() -> None:
     """Check if prerequisites are met for running performance tests."""
     print_header("Checking Prerequisites")
     
@@ -420,7 +420,7 @@ def check_prerequisites():
     
     return prerequisites_met
 
-def main():
+def main() -> None:
     """Main function to run all performance tests."""
     print("QtForge Bindings Performance Test Runner")
     print("=" * 70)

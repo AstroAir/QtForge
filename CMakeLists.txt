@@ -217,12 +217,51 @@ else()
     message(STATUS "QtForge: Security component disabled")
 endif()
 
+# Remote Plugin System
+if(QTFORGE_BUILD_REMOTE_PLUGINS)
+    message(STATUS "QtForge: Building remote plugin system")
+
+    set(QTFORGE_REMOTE_SOURCES
+        src/remote/remote_security_manager.cpp
+        src/remote/remote_plugin_manager.cpp
+        src/remote/unified_plugin_manager.cpp
+    )
+
+    set(QTFORGE_REMOTE_HEADERS
+        include/qtplugin/remote/remote_security_manager.hpp
+        include/qtplugin/remote/remote_plugin_manager.hpp
+        include/qtplugin/remote/unified_plugin_manager.hpp
+    )
+
+    qtforge_add_library(
+        NAME QtForgeRemote
+        SOURCES ${QTFORGE_REMOTE_SOURCES}
+        HEADERS ${QTFORGE_REMOTE_HEADERS}
+        PUBLIC_HEADERS ${QTFORGE_REMOTE_HEADERS}
+        QT_COMPONENTS Core Network Concurrent
+        DEPENDENCIES QtForge::Core
+        EXPORT_NAME Remote
+        OUTPUT_NAME qtforge-remote
+        VERSION ${PROJECT_VERSION}
+    )
+
+    target_compile_definitions(QtForgeRemote PRIVATE
+        QTFORGE_REMOTE_PLUGINS
+    )
+else()
+    message(STATUS "QtForge: Remote plugin system disabled")
+endif()
+
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 set(QTFORGE_INSTALL_TARGETS QtForgeCore)
 
 if(TARGET QtForgeSecurity)
     list(APPEND QTFORGE_INSTALL_TARGETS QtForgeSecurity)
+endif()
+
+if(TARGET QtForgeRemote)
+    list(APPEND QTFORGE_INSTALL_TARGETS QtForgeRemote)
 endif()
 
 if(TARGET QtForgeNetwork)
@@ -247,6 +286,10 @@ endif()
 
 if(TARGET QtForgeSecurityStatic)
     list(APPEND QTFORGE_INSTALL_TARGETS QtForgeSecurityStatic)
+endif()
+
+if(TARGET QtForgeRemoteStatic)
+    list(APPEND QTFORGE_INSTALL_TARGETS QtForgeRemoteStatic)
 endif()
 
 if(TARGET QtForgeNetworkStatic)

@@ -25,6 +25,8 @@ set(REMOTE_PLUGIN_TEST_SOURCES
     test_remote_plugin_discovery.cpp
     test_remote_plugin_configuration.cpp
     test_remote_plugin_validator.cpp
+    test_remote_plugin_marketplace_integration.cpp
+    test_remote_plugin_performance.cpp
 )
 
 # Create test executable
@@ -150,11 +152,11 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     find_program(GCOV_PATH gcov)
     find_program(LCOV_PATH lcov)
     find_program(GENHTML_PATH genhtml)
-    
+
     if(GCOV_PATH AND LCOV_PATH AND GENHTML_PATH)
         target_compile_options(remote_plugin_tests PRIVATE --coverage)
         target_link_options(remote_plugin_tests PRIVATE --coverage)
-        
+
         add_custom_target(coverage_remote_plugins
             COMMAND ${LCOV_PATH} --directory . --zerocounters
             COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
@@ -171,7 +173,7 @@ endif()
 find_program(VALGRIND_PATH valgrind)
 if(VALGRIND_PATH)
     add_custom_target(test_remote_plugins_valgrind
-        COMMAND ${VALGRIND_PATH} --tool=memcheck --leak-check=full --show-leak-kinds=all 
+        COMMAND ${VALGRIND_PATH} --tool=memcheck --leak-check=full --show-leak-kinds=all
                 --track-origins=yes --verbose --error-exitcode=1
                 $<TARGET_FILE:remote_plugin_tests>
         DEPENDS remote_plugin_tests
@@ -187,7 +189,7 @@ if(benchmark_FOUND)
         benchmarks/benchmark_plugin_discovery.cpp
         benchmarks/benchmark_download_manager.cpp
     )
-    
+
     target_link_libraries(remote_plugin_benchmarks
         Qt6::Core
         Qt6::Network
@@ -195,7 +197,7 @@ if(benchmark_FOUND)
         benchmark::benchmark
         pthread
     )
-    
+
     add_custom_target(benchmark_remote_plugins
         COMMAND $<TARGET_FILE:remote_plugin_benchmarks>
         DEPENDS remote_plugin_benchmarks
@@ -208,7 +210,7 @@ if(INSTALL_TESTS)
     install(TARGETS remote_plugin_tests
         RUNTIME DESTINATION bin/tests
     )
-    
+
     install(DIRECTORY test_data
         DESTINATION share/qtforge/tests
     )

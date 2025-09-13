@@ -29,7 +29,7 @@ pytestmark = pytest.mark.skipif(not BINDINGS_AVAILABLE, reason="QtForge bindings
 class TestVersion:
     """Test Version utility functionality."""
     
-    def test_version_creation(self):
+    def test_version_creation(self) -> None:
         """Test Version can be created with different parameters."""
         if hasattr(utils, 'Version'):
             # Test with major, minor, patch
@@ -40,7 +40,7 @@ class TestVersion:
             version_str = utils.Version("1.2.3")
             assert version_str is not None
     
-    def test_version_comparison(self):
+    def test_version_comparison(self) -> None:
         """Test version comparison operations."""
         if hasattr(utils, 'Version'):
             v1 = utils.Version(1, 0, 0)
@@ -56,7 +56,7 @@ class TestVersion:
                 assert v1 == v3
                 assert not v1 == v2
     
-    def test_version_string_representation(self):
+    def test_version_string_representation(self) -> None:
         """Test version string representation."""
         if hasattr(utils, 'Version'):
             version = utils.Version(1, 2, 3)
@@ -66,7 +66,7 @@ class TestVersion:
             assert "2" in version_str
             assert "3" in version_str
     
-    def test_version_invalid_input(self):
+    def test_version_invalid_input(self) -> None:
         """Test version creation with invalid input."""
         if hasattr(utils, 'Version'):
             # Test with negative numbers
@@ -77,7 +77,7 @@ class TestVersion:
             with pytest.raises((ValueError, RuntimeError)):
                 utils.Version("invalid.version.string")
     
-    def test_version_properties(self):
+    def test_version_properties(self) -> None:
         """Test version property access."""
         if hasattr(utils, 'Version'):
             version = utils.Version(1, 2, 3)
@@ -94,7 +94,7 @@ class TestVersion:
 class TestJsonUtilities:
     """Test JSON utility functions."""
     
-    def test_json_parse_valid(self):
+    def test_json_parse_valid(self) -> None:
         """Test parsing valid JSON."""
         if hasattr(utils, 'parse_json'):
             valid_json = '{"key": "value", "number": 42}'
@@ -107,7 +107,7 @@ class TestJsonUtilities:
                 assert result["key"] == "value"
                 assert result["number"] == 42
     
-    def test_json_parse_invalid(self):
+    def test_json_parse_invalid(self) -> None:
         """Test parsing invalid JSON."""
         if hasattr(utils, 'parse_json'):
             invalid_json = '{"key": "value", "invalid": }'
@@ -115,7 +115,7 @@ class TestJsonUtilities:
             with pytest.raises((ValueError, RuntimeError)):
                 utils.parse_json(invalid_json)
     
-    def test_json_stringify(self):
+    def test_json_stringify(self) -> None:
         """Test JSON stringification."""
         if hasattr(utils, 'stringify_json'):
             data = {"key": "value", "number": 42, "array": [1, 2, 3]}
@@ -127,7 +127,7 @@ class TestJsonUtilities:
             assert parsed_back["key"] == "value"
             assert parsed_back["number"] == 42
     
-    def test_json_stringify_invalid_data(self):
+    def test_json_stringify_invalid_data(self) -> None:
         """Test stringifying invalid data."""
         if hasattr(utils, 'stringify_json'):
             # Test with non-serializable object
@@ -141,7 +141,7 @@ class TestJsonUtilities:
 class TestStringUtilities:
     """Test string utility functions."""
     
-    def test_string_trim(self):
+    def test_string_trim(self) -> None:
         """Test string trimming functionality."""
         if hasattr(utils, 'trim_string'):
             # Test with whitespace
@@ -156,7 +156,7 @@ class TestStringUtilities:
             result = utils.trim_string("   ")
             assert result == ""
     
-    def test_string_split(self):
+    def test_string_split(self) -> None:
         """Test string splitting functionality."""
         if hasattr(utils, 'split_string'):
             result = utils.split_string("a,b,c", ",")
@@ -166,14 +166,14 @@ class TestStringUtilities:
             assert "b" in result
             assert "c" in result
     
-    def test_string_join(self):
+    def test_string_join(self) -> None:
         """Test string joining functionality."""
         if hasattr(utils, 'join_strings'):
             strings = ["a", "b", "c"]
             result = utils.join_strings(strings, ",")
             assert result == "a,b,c"
     
-    def test_string_case_conversion(self):
+    def test_string_case_conversion(self) -> None:
         """Test string case conversion."""
         test_string = "Hello World"
         
@@ -189,7 +189,7 @@ class TestStringUtilities:
 class TestFilesystemUtilities:
     """Test filesystem utility functions."""
     
-    def test_file_exists(self):
+    def test_file_exists(self) -> None:
         """Test file existence checking."""
         if hasattr(utils, 'file_exists'):
             # Test with this test file (should exist)
@@ -198,7 +198,7 @@ class TestFilesystemUtilities:
             # Test with non-existent file
             assert not utils.file_exists("/non/existent/file.txt")
     
-    def test_directory_exists(self):
+    def test_directory_exists(self) -> None:
         """Test directory existence checking."""
         if hasattr(utils, 'directory_exists'):
             # Test with current directory (should exist)
@@ -207,7 +207,7 @@ class TestFilesystemUtilities:
             # Test with non-existent directory
             assert not utils.directory_exists("/non/existent/directory")
     
-    def test_create_directory(self):
+    def test_create_directory(self) -> None:
         """Test directory creation."""
         if hasattr(utils, 'create_directory'):
             with tempfile.TemporaryDirectory() as temp_dir:
@@ -223,7 +223,7 @@ class TestFilesystemUtilities:
                 assert os.path.exists(test_dir)
                 assert os.path.isdir(test_dir)
     
-    def test_read_file(self):
+    def test_read_file(self) -> None:
         """Test file reading functionality."""
         if hasattr(utils, 'read_file'):
             with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp_file:
@@ -238,7 +238,7 @@ class TestFilesystemUtilities:
                 finally:
                     os.unlink(temp_file.name)
     
-    def test_write_file(self):
+    def test_write_file(self) -> None:
         """Test file writing functionality."""
         if hasattr(utils, 'write_file'):
             with tempfile.NamedTemporaryFile(delete=False) as temp_file:
@@ -255,7 +255,7 @@ class TestFilesystemUtilities:
                 finally:
                     os.unlink(temp_file.name)
     
-    def test_get_file_size(self):
+    def test_get_file_size(self) -> None:
         """Test getting file size."""
         if hasattr(utils, 'get_file_size'):
             with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp_file:
@@ -273,7 +273,7 @@ class TestFilesystemUtilities:
 class TestLoggingUtilities:
     """Test logging utility functions."""
     
-    def test_log_levels(self):
+    def test_log_levels(self) -> None:
         """Test log level constants."""
         if hasattr(utils, 'LogLevel'):
             levels = ['Debug', 'Info', 'Warning', 'Error', 'Critical']
@@ -282,7 +282,7 @@ class TestLoggingUtilities:
                     value = getattr(utils.LogLevel, level)
                     assert value is not None
     
-    def test_log_functions(self):
+    def test_log_functions(self) -> None:
         """Test logging functions."""
         test_message = "Test log message"
         
@@ -298,14 +298,14 @@ class TestLoggingUtilities:
 class TestTimeUtilities:
     """Test time utility functions."""
     
-    def test_current_timestamp(self):
+    def test_current_timestamp(self) -> None:
         """Test getting current timestamp."""
         if hasattr(utils, 'current_timestamp'):
             timestamp = utils.current_timestamp()
             assert isinstance(timestamp, (int, float))
             assert timestamp > 0
     
-    def test_format_timestamp(self):
+    def test_format_timestamp(self) -> None:
         """Test timestamp formatting."""
         if hasattr(utils, 'format_timestamp'):
             timestamp = 1609459200  # 2021-01-01 00:00:00 UTC
@@ -313,7 +313,7 @@ class TestTimeUtilities:
             assert isinstance(formatted, str)
             assert len(formatted) > 0
     
-    def test_sleep_function(self):
+    def test_sleep_function(self) -> None:
         """Test sleep functionality."""
         if hasattr(utils, 'sleep'):
             import time
@@ -329,14 +329,14 @@ class TestTimeUtilities:
 class TestErrorUtilities:
     """Test error handling utilities."""
     
-    def test_error_creation(self):
+    def test_error_creation(self) -> None:
         """Test creating errors."""
         if hasattr(utils, 'create_error'):
             error = utils.create_error("Test error message")
             assert error is not None
             assert str(error) == "Test error message"
     
-    def test_error_codes(self):
+    def test_error_codes(self) -> None:
         """Test error code constants."""
         if hasattr(utils, 'ErrorCode'):
             codes = ['Success', 'InvalidArgument', 'FileNotFound', 'PermissionDenied']
@@ -349,14 +349,14 @@ class TestErrorUtilities:
 class TestMemoryUtilities:
     """Test memory management utilities."""
     
-    def test_memory_usage(self):
+    def test_memory_usage(self) -> None:
         """Test getting memory usage information."""
         if hasattr(utils, 'get_memory_usage'):
             usage = utils.get_memory_usage()
             assert isinstance(usage, (int, float))
             assert usage >= 0
     
-    def test_garbage_collection(self):
+    def test_garbage_collection(self) -> None:
         """Test garbage collection trigger."""
         if hasattr(utils, 'trigger_gc'):
             # Should not raise exception

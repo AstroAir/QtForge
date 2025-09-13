@@ -29,7 +29,7 @@ except ImportError as e:
     sys.exit(1)
 
 
-def demonstrate_plugin_orchestrator():
+def demonstrate_plugin_orchestrator() -> None:
     """Demonstrate plugin orchestrator creation and basic operations."""
     print("\n" + "="*50)
     print("🎭 Plugin Orchestrator Operations")
@@ -87,7 +87,7 @@ def demonstrate_plugin_orchestrator():
         return None
 
 
-def demonstrate_workflow_creation():
+def demonstrate_workflow_creation() -> None:
     """Demonstrate workflow creation and configuration."""
     print("\n" + "="*50)
     print("📋 Workflow Creation and Configuration")
@@ -137,7 +137,7 @@ def demonstrate_workflow_creation():
         return None
 
 
-def demonstrate_workflow_steps():
+def demonstrate_workflow_steps() -> None:
     """Demonstrate workflow step creation and management."""
     print("\n" + "="*50)
     print("🔧 Workflow Step Management")
@@ -241,7 +241,7 @@ def demonstrate_workflow_steps():
     return workflow, steps
 
 
-def demonstrate_workflow_execution():
+def demonstrate_workflow_execution() -> None:
     """Demonstrate workflow execution in different modes."""
     print("\n" + "="*50)
     print("▶️  Workflow Execution")
@@ -329,7 +329,7 @@ def demonstrate_workflow_execution():
             print(f"  ⚠️  Async workflow execution failed: {e}")
 
 
-def demonstrate_step_results():
+def demonstrate_step_results() -> None:
     """Demonstrate step result handling."""
     print("\n" + "="*50)
     print("📊 Step Result Handling")
@@ -380,7 +380,7 @@ def demonstrate_step_results():
         return []
 
 
-def demonstrate_orchestration_enums():
+def demonstrate_orchestration_enums() -> None:
     """Demonstrate orchestration-related enumerations."""
     print("\n" + "="*50)
     print("📊 Orchestration Enumerations")
@@ -417,7 +417,7 @@ def demonstrate_orchestration_enums():
                 print(f"  • {state}: {value}")
 
 
-def demonstrate_workflow_monitoring():
+def demonstrate_workflow_monitoring() -> None:
     """Demonstrate workflow monitoring and progress tracking."""
     print("\n" + "="*50)
     print("📈 Workflow Monitoring and Progress Tracking")
@@ -475,7 +475,7 @@ def demonstrate_workflow_monitoring():
                 print(f"⚠️  Failed to get workflow state: {e}")
 
 
-def demonstrate_error_handling():
+def demonstrate_error_handling() -> None:
     """Demonstrate error handling in orchestration operations."""
     print("\n" + "="*50)
     print("⚠️  Orchestration Error Handling")
@@ -541,7 +541,7 @@ def demonstrate_error_handling():
         print(f"❌ Error handling demonstration failed: {e}")
 
 
-def main():
+def main() -> None:
     """Main demonstration function."""
     print("QtForge Python Bindings - Orchestration and Workflows Example")
     print("=" * 65)

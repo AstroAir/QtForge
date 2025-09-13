@@ -27,14 +27,14 @@ except ImportError as e:
 class TestVersionClass:
     """Test Version class functionality."""
     
-    def test_version_creation(self):
+    def test_version_creation(self) -> None:
         """Test Version can be created."""
         if hasattr(utils, 'Version'):
             version = utils.Version()
             assert version is not None
             assert isinstance(version, utils.Version)
     
-    def test_version_with_parameters(self):
+    def test_version_with_parameters(self) -> None:
         """Test Version creation with parameters."""
         if hasattr(utils, 'Version'):
             # Test different constructor patterns
@@ -45,7 +45,7 @@ class TestVersionClass:
                 # Constructor might have different signature
                 pass
     
-    def test_version_string_representation(self):
+    def test_version_string_representation(self) -> None:
         """Test Version string representation."""
         if hasattr(utils, 'Version'):
             version = utils.Version()
@@ -57,7 +57,7 @@ class TestVersionClass:
 class TestErrorHandling:
     """Test error handling utilities."""
     
-    def test_create_error_function(self):
+    def test_create_error_function(self) -> None:
         """Test create_error function."""
         if hasattr(utils, 'create_error'):
             error = utils.create_error(404, "Not found")
@@ -66,21 +66,21 @@ class TestErrorHandling:
             assert "404" in error
             assert "Not found" in error
     
-    def test_create_error_with_empty_message(self):
+    def test_create_error_with_empty_message(self) -> None:
         """Test create_error with empty message."""
         if hasattr(utils, 'create_error'):
             error = utils.create_error(500, "")
             assert error is not None
             assert "500" in error
     
-    def test_create_error_with_zero_code(self):
+    def test_create_error_with_zero_code(self) -> None:
         """Test create_error with zero error code."""
         if hasattr(utils, 'create_error'):
             error = utils.create_error(0, "Success")
             assert error is not None
             assert "0" in error
     
-    def test_create_error_with_negative_code(self):
+    def test_create_error_with_negative_code(self) -> None:
         """Test create_error with negative error code."""
         if hasattr(utils, 'create_error'):
             error = utils.create_error(-1, "Invalid")
@@ -91,7 +91,7 @@ class TestErrorHandling:
 class TestStringUtilities:
     """Test string utility functions."""
     
-    def test_string_functions_exist(self):
+    def test_string_functions_exist(self) -> None:
         """Test that string utility functions exist."""
         # Check for common string utility functions
         string_functions = [
@@ -104,7 +104,7 @@ class TestStringUtilities:
                 func = getattr(utils, func_name)
                 assert callable(func), f"{func_name} should be callable"
     
-    def test_string_trim_function(self):
+    def test_string_trim_function(self) -> None:
         """Test string trim function if available."""
         if hasattr(utils, 'trim'):
             # Test basic trimming
@@ -119,7 +119,7 @@ class TestStringUtilities:
             result = utils.trim("hello")
             assert result == "hello"
     
-    def test_string_case_functions(self):
+    def test_string_case_functions(self) -> None:
         """Test string case conversion functions if available."""
         if hasattr(utils, 'to_upper'):
             result = utils.to_upper("hello")
@@ -135,7 +135,7 @@ class TestStringUtilities:
             result = utils.to_lower("")
             assert result == ""
     
-    def test_string_search_functions(self):
+    def test_string_search_functions(self) -> None:
         """Test string search functions if available."""
         if hasattr(utils, 'starts_with'):
             assert utils.starts_with("hello world", "hello") == True
@@ -156,7 +156,7 @@ class TestStringUtilities:
 class TestFileSystemUtilities:
     """Test filesystem utility functions."""
     
-    def test_filesystem_functions_exist(self):
+    def test_filesystem_functions_exist(self) -> None:
         """Test that filesystem utility functions exist."""
         fs_functions = [
             'file_exists', 'directory_exists', 'create_directory',
@@ -169,7 +169,7 @@ class TestFileSystemUtilities:
                 func = getattr(utils, func_name)
                 assert callable(func), f"{func_name} should be callable"
     
-    def test_file_exists_function(self):
+    def test_file_exists_function(self) -> None:
         """Test file_exists function if available."""
         if hasattr(utils, 'file_exists'):
             # Test with a file that definitely doesn't exist
@@ -178,7 +178,7 @@ class TestFileSystemUtilities:
             # Test with empty path
             assert utils.file_exists("") == False
     
-    def test_directory_exists_function(self):
+    def test_directory_exists_function(self) -> None:
         """Test directory_exists function if available."""
         if hasattr(utils, 'directory_exists'):
             # Test with a directory that definitely doesn't exist
@@ -187,7 +187,7 @@ class TestFileSystemUtilities:
             # Test with empty path
             assert utils.directory_exists("") == False
     
-    def test_get_file_extension_function(self):
+    def test_get_file_extension_function(self) -> None:
         """Test get_file_extension function if available."""
         if hasattr(utils, 'get_file_extension'):
             assert utils.get_file_extension("file.txt") == ".txt"
@@ -195,7 +195,7 @@ class TestFileSystemUtilities:
             assert utils.get_file_extension("file") == ""
             assert utils.get_file_extension("") == ""
     
-    def test_get_filename_function(self):
+    def test_get_filename_function(self) -> None:
         """Test get_filename function if available."""
         if hasattr(utils, 'get_filename'):
             assert utils.get_filename("/path/to/file.txt") == "file.txt"
@@ -207,7 +207,7 @@ class TestFileSystemUtilities:
 class TestJsonUtilities:
     """Test JSON utility functions."""
     
-    def test_json_functions_exist(self):
+    def test_json_functions_exist(self) -> None:
         """Test that JSON utility functions exist."""
         json_functions = [
             'parse_json', 'stringify_json', 'validate_json',
@@ -219,7 +219,7 @@ class TestJsonUtilities:
                 func = getattr(utils, func_name)
                 assert callable(func), f"{func_name} should be callable"
     
-    def test_parse_json_function(self):
+    def test_parse_json_function(self) -> None:
         """Test parse_json function if available."""
         if hasattr(utils, 'parse_json'):
             # Test valid JSON
@@ -233,7 +233,7 @@ class TestJsonUtilities:
             except:
                 pass  # Exception is acceptable
     
-    def test_stringify_json_function(self):
+    def test_stringify_json_function(self) -> None:
         """Test stringify_json function if available."""
         if hasattr(utils, 'stringify_json'):
             # Test with simple object
@@ -246,7 +246,7 @@ class TestJsonUtilities:
                 # Function might expect different input format
                 pass
     
-    def test_validate_json_function(self):
+    def test_validate_json_function(self) -> None:
         """Test validate_json function if available."""
         if hasattr(utils, 'validate_json'):
             # Test valid JSON
@@ -262,7 +262,7 @@ class TestJsonUtilities:
 class TestLoggingUtilities:
     """Test logging utility functions."""
     
-    def test_logging_functions_exist(self):
+    def test_logging_functions_exist(self) -> None:
         """Test that logging utility functions exist."""
         logging_functions = [
             'log_debug', 'log_info', 'log_warning', 'log_error',
@@ -274,7 +274,7 @@ class TestLoggingUtilities:
                 func = getattr(utils, func_name)
                 assert callable(func), f"{func_name} should be callable"
     
-    def test_log_functions(self):
+    def test_log_functions(self) -> None:
         """Test logging functions if available."""
         log_functions = ['log_debug', 'log_info', 'log_warning', 'log_error', 'log_critical']
         
@@ -288,7 +288,7 @@ class TestLoggingUtilities:
                 except:
                     pass  # Some implementations might require additional parameters
     
-    def test_log_level_functions(self):
+    def test_log_level_functions(self) -> None:
         """Test log level functions if available."""
         if hasattr(utils, 'set_log_level') and hasattr(utils, 'get_log_level'):
             # Test setting and getting log level
@@ -305,7 +305,7 @@ class TestLoggingUtilities:
 class TestTimeUtilities:
     """Test time utility functions."""
     
-    def test_time_functions_exist(self):
+    def test_time_functions_exist(self) -> None:
         """Test that time utility functions exist."""
         time_functions = [
             'current_timestamp', 'format_timestamp', 'parse_timestamp',
@@ -317,14 +317,14 @@ class TestTimeUtilities:
                 func = getattr(utils, func_name)
                 assert callable(func), f"{func_name} should be callable"
     
-    def test_current_timestamp_function(self):
+    def test_current_timestamp_function(self) -> None:
         """Test current_timestamp function if available."""
         if hasattr(utils, 'current_timestamp'):
             timestamp = utils.current_timestamp()
             assert isinstance(timestamp, (int, float))
             assert timestamp > 0
     
-    def test_format_timestamp_function(self):
+    def test_format_timestamp_function(self) -> None:
         """Test format_timestamp function if available."""
         if hasattr(utils, 'format_timestamp'):
             try:
@@ -336,7 +336,7 @@ class TestTimeUtilities:
             except:
                 pass  # Implementation might use different format strings
     
-    def test_sleep_function(self):
+    def test_sleep_function(self) -> None:
         """Test sleep function if available."""
         if hasattr(utils, 'sleep'):
             import time
@@ -352,12 +352,12 @@ class TestTimeUtilities:
 class TestUtilityModuleStructure:
     """Test overall utils module structure."""
     
-    def test_module_attributes(self):
+    def test_module_attributes(self) -> None:
         """Test that utils module has expected attributes."""
         assert hasattr(utils, '__name__')
         assert utils.__name__ == 'qtforge.utils'
     
-    def test_module_functions_are_callable(self):
+    def test_module_functions_are_callable(self) -> None:
         """Test that all module functions are callable."""
         for attr_name in dir(utils):
             if not attr_name.startswith('_'):
@@ -366,7 +366,7 @@ class TestUtilityModuleStructure:
                     # Just verify it's callable, don't call it
                     assert callable(attr)
     
-    def test_module_constants(self):
+    def test_module_constants(self) -> None:
         """Test module constants if they exist."""
         # Check for common constants
         constants = ['VERSION', 'MAX_PATH_LENGTH', 'DEFAULT_TIMEOUT']
@@ -379,7 +379,7 @@ class TestUtilityModuleStructure:
 class TestErrorConditions:
     """Test error conditions and edge cases."""
     
-    def test_null_pointer_handling(self):
+    def test_null_pointer_handling(self) -> None:
         """Test handling of null/None inputs."""
         functions_to_test = []
         
@@ -404,7 +404,7 @@ class TestErrorConditions:
                 # Other exceptions might indicate poor error handling
                 pytest.fail(f"Function {func_name} raised unexpected exception with None input: {e}")
     
-    def test_empty_string_handling(self):
+    def test_empty_string_handling(self) -> None:
         """Test handling of empty string inputs."""
         string_functions = []
         
@@ -426,7 +426,7 @@ class TestErrorConditions:
                 # These exceptions are acceptable for empty inputs
                 pass
     
-    def test_large_input_handling(self):
+    def test_large_input_handling(self) -> None:
         """Test handling of large inputs."""
         if hasattr(utils, 'trim'):
             # Test with very long string

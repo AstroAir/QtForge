@@ -21,7 +21,7 @@ except ImportError:
         sys.path.insert(0, str(build_dir))
     import qtforge
 
-def main():
+def main() -> None:
     """Main example function demonstrating QtForge basic usage."""
     
     print("=" * 60)

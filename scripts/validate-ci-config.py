@@ -17,7 +17,7 @@ import re
 class CIConfigValidator:
     """Validates CI/CD configuration files"""
     
-    def __init__(self, repo_root: Path):
+    def __init__(self, repo_root: Path) -> None:
         self.repo_root = Path(repo_root)
         self.workflows_dir = self.repo_root / '.github' / 'workflows'
         self.issues = []
@@ -148,7 +148,7 @@ class CIConfigValidator:
         """Check for consistent action versions"""
         action_versions = {}
         
-        def extract_actions(obj):
+        def extract_actions(obj) -> None:
             if isinstance(obj, dict):
                 if 'uses' in obj:
                     action = obj['uses']
@@ -308,7 +308,7 @@ class CIConfigValidator:
             
         print("\n" + "="*60)
 
-def main():
+def main() -> None:
     """Main function"""
     import argparse
     

@@ -28,7 +28,7 @@ pytestmark = pytest.mark.skipif(not BINDINGS_AVAILABLE, reason="QtForge bindings
 class TestConfigurationManager:
     """Test ConfigurationManager functionality."""
     
-    def test_configuration_manager_creation(self):
+    def test_configuration_manager_creation(self) -> None:
         """Test ConfigurationManager can be created."""
         if hasattr(managers, 'create_configuration_manager'):
             manager = managers.create_configuration_manager()
@@ -36,7 +36,7 @@ class TestConfigurationManager:
             assert hasattr(manager, 'get_value')
             assert hasattr(manager, 'set_value')
     
-    def test_configuration_manager_set_get_value(self):
+    def test_configuration_manager_set_get_value(self) -> None:
         """Test setting and getting configuration values."""
         if hasattr(managers, 'create_configuration_manager'):
             manager = managers.create_configuration_manager()
@@ -50,7 +50,7 @@ class TestConfigurationManager:
                 # Some implementations might require initialization first
                 pass
     
-    def test_configuration_manager_different_types(self):
+    def test_configuration_manager_different_types(self) -> None:
         """Test configuration with different value types."""
         if hasattr(managers, 'create_configuration_manager'):
             manager = managers.create_configuration_manager()
@@ -71,7 +71,7 @@ class TestConfigurationManager:
                     # Some implementations might not support all types
                     pass
     
-    def test_configuration_manager_scopes(self):
+    def test_configuration_manager_scopes(self) -> None:
         """Test configuration scopes."""
         if hasattr(managers, 'create_configuration_manager') and hasattr(managers, 'ConfigurationScope'):
             manager = managers.create_configuration_manager()
@@ -92,7 +92,7 @@ class TestConfigurationManager:
                             # Some implementations might not support scopes
                             pass
     
-    def test_configuration_manager_invalid_key(self):
+    def test_configuration_manager_invalid_key(self) -> None:
         """Test handling invalid configuration keys."""
         if hasattr(managers, 'create_configuration_manager'):
             manager = managers.create_configuration_manager()
@@ -105,7 +105,7 @@ class TestConfigurationManager:
             with pytest.raises((ValueError, RuntimeError)):
                 manager.get_value("")
     
-    def test_configuration_manager_nonexistent_key(self):
+    def test_configuration_manager_nonexistent_key(self) -> None:
         """Test getting non-existent configuration key."""
         if hasattr(managers, 'create_configuration_manager'):
             manager = managers.create_configuration_manager()
@@ -122,14 +122,14 @@ class TestConfigurationManager:
 class TestLoggingManager:
     """Test LoggingManager functionality."""
     
-    def test_logging_manager_creation(self):
+    def test_logging_manager_creation(self) -> None:
         """Test LoggingManager can be created."""
         if hasattr(managers, 'create_logging_manager'):
             manager = managers.create_logging_manager()
             assert manager is not None
             assert hasattr(manager, 'log')
     
-    def test_logging_manager_log_levels(self):
+    def test_logging_manager_log_levels(self) -> None:
         """Test logging with different levels."""
         if hasattr(managers, 'create_logging_manager') and hasattr(managers, 'LogLevel'):
             manager = managers.create_logging_manager()
@@ -145,7 +145,7 @@ class TestLoggingManager:
                         # Some implementations might require logger initialization
                         pass
     
-    def test_logging_manager_set_level(self):
+    def test_logging_manager_set_level(self) -> None:
         """Test setting logging level."""
         if hasattr(managers, 'create_logging_manager') and hasattr(managers, 'LogLevel'):
             manager = managers.create_logging_manager()
@@ -161,7 +161,7 @@ class TestLoggingManager:
                     # Some implementations might not support level changes
                     pass
     
-    def test_logging_manager_add_handler(self):
+    def test_logging_manager_add_handler(self) -> None:
         """Test adding log handlers."""
         if hasattr(managers, 'create_logging_manager'):
             manager = managers.create_logging_manager()
@@ -177,7 +177,7 @@ class TestLoggingManager:
                     finally:
                         os.unlink(log_file.name)
     
-    def test_logging_manager_format_message(self):
+    def test_logging_manager_format_message(self) -> None:
         """Test message formatting."""
         if hasattr(managers, 'create_logging_manager'):
             manager = managers.create_logging_manager()
@@ -193,7 +193,7 @@ class TestLoggingManager:
 class TestResourceManager:
     """Test ResourceManager functionality."""
     
-    def test_resource_manager_creation(self):
+    def test_resource_manager_creation(self) -> None:
         """Test ResourceManager can be created."""
         if hasattr(managers, 'create_resource_manager'):
             manager = managers.create_resource_manager()
@@ -201,7 +201,7 @@ class TestResourceManager:
             assert hasattr(manager, 'allocate_resource')
             assert hasattr(manager, 'deallocate_resource')
     
-    def test_resource_manager_allocate_deallocate(self):
+    def test_resource_manager_allocate_deallocate(self) -> None:
         """Test resource allocation and deallocation."""
         if hasattr(managers, 'create_resource_manager'):
             manager = managers.create_resource_manager()
@@ -217,7 +217,7 @@ class TestResourceManager:
                 # Some implementations might require specific resource types
                 pass
     
-    def test_resource_manager_get_usage(self):
+    def test_resource_manager_get_usage(self) -> None:
         """Test getting resource usage information."""
         if hasattr(managers, 'create_resource_manager'):
             manager = managers.create_resource_manager()
@@ -231,7 +231,7 @@ class TestResourceManager:
                     # Some implementations might not provide usage info
                     pass
     
-    def test_resource_manager_set_limits(self):
+    def test_resource_manager_set_limits(self) -> None:
         """Test setting resource limits."""
         if hasattr(managers, 'create_resource_manager'):
             manager = managers.create_resource_manager()
@@ -243,7 +243,7 @@ class TestResourceManager:
                     # Some implementations might not support limits
                     pass
     
-    def test_resource_manager_cleanup(self):
+    def test_resource_manager_cleanup(self) -> None:
         """Test resource cleanup."""
         if hasattr(managers, 'create_resource_manager'):
             manager = managers.create_resource_manager()
@@ -259,13 +259,13 @@ class TestResourceManager:
 class TestPluginVersionManager:
     """Test PluginVersionManager functionality."""
     
-    def test_version_manager_creation(self):
+    def test_version_manager_creation(self) -> None:
         """Test PluginVersionManager can be created."""
         if hasattr(managers, 'PluginVersionManager'):
             manager = managers.PluginVersionManager()
             assert manager is not None
     
-    def test_version_manager_register_version(self):
+    def test_version_manager_register_version(self) -> None:
         """Test registering plugin versions."""
         if hasattr(managers, 'PluginVersionManager'):
             manager = managers.PluginVersionManager()
@@ -277,7 +277,7 @@ class TestPluginVersionManager:
                     # Some implementations might require valid plugin path
                     pass
     
-    def test_version_manager_get_latest_version(self):
+    def test_version_manager_get_latest_version(self) -> None:
         """Test getting latest plugin version."""
         if hasattr(managers, 'PluginVersionManager'):
             manager = managers.PluginVersionManager()
@@ -296,7 +296,7 @@ class TestPluginVersionManager:
                     # Some implementations might require valid plugin paths
                     pass
     
-    def test_version_manager_compatibility_check(self):
+    def test_version_manager_compatibility_check(self) -> None:
         """Test version compatibility checking."""
         if hasattr(managers, 'PluginVersionManager'):
             manager = managers.PluginVersionManager()
@@ -313,7 +313,7 @@ class TestPluginVersionManager:
 class TestManagerEnums:
     """Test manager-related enums."""
     
-    def test_configuration_scope_enum(self):
+    def test_configuration_scope_enum(self) -> None:
         """Test ConfigurationScope enum values."""
         if hasattr(managers, 'ConfigurationScope'):
             scopes = ['Global', 'Plugin', 'User', 'System']
@@ -322,7 +322,7 @@ class TestManagerEnums:
                     value = getattr(managers.ConfigurationScope, scope)
                     assert value is not None
     
-    def test_configuration_change_type_enum(self):
+    def test_configuration_change_type_enum(self) -> None:
         """Test ConfigurationChangeType enum values."""
         if hasattr(managers, 'ConfigurationChangeType'):
             types = ['Added', 'Modified', 'Removed']
@@ -331,7 +331,7 @@ class TestManagerEnums:
                     value = getattr(managers.ConfigurationChangeType, change_type)
                     assert value is not None
     
-    def test_log_level_enum(self):
+    def test_log_level_enum(self) -> None:
         """Test LogLevel enum values."""
         if hasattr(managers, 'LogLevel'):
             levels = ['Debug', 'Info', 'Warning', 'Error', 'Critical']
@@ -344,7 +344,7 @@ class TestManagerEnums:
 class TestConfigurationChangeNotification:
     """Test configuration change notification functionality."""
     
-    def test_configuration_change_listener(self):
+    def test_configuration_change_listener(self) -> None:
         """Test configuration change listeners."""
         if hasattr(managers, 'create_configuration_manager'):
             manager = managers.create_configuration_manager()
@@ -352,7 +352,7 @@ class TestConfigurationChangeNotification:
             if hasattr(manager, 'add_change_listener'):
                 change_received = False
                 
-                def change_listener(key, old_value, new_value):
+                def change_listener(key, old_value, new_value) -> None:
                     nonlocal change_received
                     change_received = True
                 
@@ -369,7 +369,7 @@ class TestConfigurationChangeNotification:
                     # Some implementations might not support change listeners
                     pass
     
-    def test_configuration_change_event(self):
+    def test_configuration_change_event(self) -> None:
         """Test configuration change events."""
         if hasattr(managers, 'ConfigurationChangeEvent'):
             if hasattr(managers, 'ConfigurationChangeType') and hasattr(managers.ConfigurationChangeType, 'Modified'):
@@ -392,7 +392,7 @@ class TestConfigurationChangeNotification:
 class TestManagerErrorHandling:
     """Test error handling in manager bindings."""
     
-    def test_configuration_invalid_operations(self):
+    def test_configuration_invalid_operations(self) -> None:
         """Test handling invalid configuration operations."""
         if hasattr(managers, 'create_configuration_manager'):
             manager = managers.create_configuration_manager()
@@ -401,7 +401,7 @@ class TestManagerErrorHandling:
             with pytest.raises((ValueError, RuntimeError, TypeError)):
                 manager.set_value("test.key", None)
     
-    def test_logging_invalid_operations(self):
+    def test_logging_invalid_operations(self) -> None:
         """Test handling invalid logging operations."""
         if hasattr(managers, 'create_logging_manager'):
             manager = managers.create_logging_manager()
@@ -410,7 +410,7 @@ class TestManagerErrorHandling:
             with pytest.raises((ValueError, RuntimeError, TypeError)):
                 manager.log(None, "test message")
     
-    def test_resource_invalid_operations(self):
+    def test_resource_invalid_operations(self) -> None:
         """Test handling invalid resource operations."""
         if hasattr(managers, 'create_resource_manager'):
             manager = managers.create_resource_manager()
@@ -423,7 +423,7 @@ class TestManagerErrorHandling:
 class TestManagerIntegration:
     """Test integration between different managers."""
     
-    def test_configuration_logging_integration(self):
+    def test_configuration_logging_integration(self) -> None:
         """Test integration between configuration and logging managers."""
         if (hasattr(managers, 'create_configuration_manager') and 
             hasattr(managers, 'create_logging_manager')):
@@ -441,7 +441,7 @@ class TestManagerIntegration:
                 # Some implementations might not support this integration
                 pass
     
-    def test_resource_configuration_integration(self):
+    def test_resource_configuration_integration(self) -> None:
         """Test integration between resource and configuration managers."""
         if (hasattr(managers, 'create_resource_manager') and 
             hasattr(managers, 'create_configuration_manager')):
@@ -463,7 +463,7 @@ class TestManagerIntegration:
 class TestManagerPersistence:
     """Test manager persistence functionality."""
     
-    def test_configuration_persistence(self):
+    def test_configuration_persistence(self) -> None:
         """Test configuration persistence."""
         if hasattr(managers, 'create_configuration_manager'):
             manager = managers.create_configuration_manager()
@@ -483,7 +483,7 @@ class TestManagerPersistence:
                     finally:
                         os.unlink(config_file.name)
     
-    def test_configuration_loading(self):
+    def test_configuration_loading(self) -> None:
         """Test configuration loading."""
         if hasattr(managers, 'create_configuration_manager'):
             manager = managers.create_configuration_manager()

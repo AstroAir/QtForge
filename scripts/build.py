@@ -16,7 +16,7 @@ from typing import List, Dict, Optional, Any
 class BuildConfig:
     """Build configuration management"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.system = platform.system().lower()
         self.machine = platform.machine().lower()
 
@@ -95,7 +95,7 @@ class BuildConfig:
 class QtPluginBuilder:
     """Main builder class"""
 
-    def __init__(self, source_dir: Path, build_dir: Path, install_dir: Path):
+    def __init__(self, source_dir: Path, build_dir: Path, install_dir: Path) -> None:
         self.source_dir = source_dir
         self.build_dir = build_dir
         self.install_dir = install_dir
@@ -303,7 +303,7 @@ class QtPluginBuilder:
             print(f"❌ Installation failed: {e}")
             return False
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description='QtPlugin Cross-Platform Build Script')
     parser.add_argument('--source-dir', type=Path, default=Path.cwd(),
                        help='Source directory (default: current directory)')

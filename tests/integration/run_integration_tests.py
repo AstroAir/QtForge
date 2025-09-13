@@ -12,29 +12,29 @@ import subprocess
 import time
 from pathlib import Path
 
-def print_header(title):
+def print_header(title) -> None:
     """Print a formatted header."""
     print("\n" + "="*60)
     print(f"🔧 {title}")
     print("="*60)
 
-def print_success(message):
+def print_success(message) -> None:
     """Print a success message."""
     print(f"✅ {message}")
 
-def print_warning(message):
+def print_warning(message) -> None:
     """Print a warning message."""
     print(f"⚠️  {message}")
 
-def print_error(message):
+def print_error(message) -> None:
     """Print an error message."""
     print(f"❌ {message}")
 
-def print_info(message):
+def print_info(message) -> None:
     """Print an info message."""
     print(f"📋 {message}")
 
-def run_python_integration_tests():
+def run_python_integration_tests() -> None:
     """Run Python integration tests."""
     print_header("Running Python Integration Tests")
     
@@ -71,7 +71,7 @@ def run_python_integration_tests():
         print_error(f"Failed to run Python integration tests: {e}")
         return False
 
-def run_lua_integration_tests():
+def run_lua_integration_tests() -> None:
     """Run Lua integration tests."""
     print_header("Running Lua Integration Tests")
     
@@ -111,7 +111,7 @@ def run_lua_integration_tests():
         print_error(f"Failed to run Lua integration tests: {e}")
         return False
 
-def check_prerequisites():
+def check_prerequisites() -> None:
     """Check if prerequisites are met for running integration tests."""
     print_header("Checking Prerequisites")
     
@@ -150,7 +150,7 @@ def check_prerequisites():
     
     return prerequisites_met
 
-def generate_summary_report(python_success, lua_success):
+def generate_summary_report(python_success, lua_success) -> None:
     """Generate a summary report of the integration tests."""
     print_header("Integration Test Summary Report")
     
@@ -216,7 +216,7 @@ def generate_summary_report(python_success, lua_success):
         print("• Verify dependencies are installed")
         print("• Run individual language tests for debugging")
 
-def main():
+def main() -> None:
     """Main function to run all integration tests."""
     print("QtForge Cross-Language Integration Test Runner")
     print("=" * 60)

@@ -27,20 +27,20 @@ except ImportError as e:
 class TestSecurityManager:
     """Test SecurityManager class functionality."""
     
-    def test_security_manager_creation(self):
+    def test_security_manager_creation(self) -> None:
         """Test SecurityManager can be created."""
         if hasattr(security, 'SecurityManager'):
             manager = security.SecurityManager()
             assert manager is not None
             assert isinstance(manager, security.SecurityManager)
     
-    def test_security_manager_create_function(self):
+    def test_security_manager_create_function(self) -> None:
         """Test create_security_manager function."""
         if hasattr(security, 'create_security_manager'):
             manager = security.create_security_manager()
             assert manager is not None
     
-    def test_security_manager_validate_plugin(self):
+    def test_security_manager_validate_plugin(self) -> None:
         """Test SecurityManager validate_plugin method."""
         if hasattr(security, 'SecurityManager'):
             manager = security.SecurityManager()
@@ -54,7 +54,7 @@ class TestSecurityManager:
                     # Method might require different parameters
                     pass
     
-    def test_security_manager_check_permissions(self):
+    def test_security_manager_check_permissions(self) -> None:
         """Test SecurityManager check_permissions method."""
         if hasattr(security, 'SecurityManager'):
             manager = security.SecurityManager()
@@ -67,7 +67,7 @@ class TestSecurityManager:
                     # Method might require different parameters
                     pass
     
-    def test_security_manager_grant_permission(self):
+    def test_security_manager_grant_permission(self) -> None:
         """Test SecurityManager grant_permission method."""
         if hasattr(security, 'SecurityManager'):
             manager = security.SecurityManager()
@@ -79,7 +79,7 @@ class TestSecurityManager:
                     # Method might require different parameters
                     pass
     
-    def test_security_manager_revoke_permission(self):
+    def test_security_manager_revoke_permission(self) -> None:
         """Test SecurityManager revoke_permission method."""
         if hasattr(security, 'SecurityManager'):
             manager = security.SecurityManager()
@@ -91,7 +91,7 @@ class TestSecurityManager:
                     # Method might require different parameters
                     pass
     
-    def test_security_manager_repr(self):
+    def test_security_manager_repr(self) -> None:
         """Test SecurityManager string representation."""
         if hasattr(security, 'SecurityManager'):
             manager = security.SecurityManager()
@@ -103,7 +103,7 @@ class TestSecurityManager:
 class TestPluginPermission:
     """Test PluginPermission enum or class."""
     
-    def test_plugin_permission_values(self):
+    def test_plugin_permission_values(self) -> None:
         """Test PluginPermission values exist."""
         if hasattr(security, 'PluginPermission'):
             permission_type = getattr(security, 'PluginPermission')
@@ -122,7 +122,7 @@ class TestPluginPermission:
             # At least some permissions should exist
             assert len(existing_permissions) > 0, "No permission values found"
     
-    def test_plugin_permission_values_are_different(self):
+    def test_plugin_permission_values_are_different(self) -> None:
         """Test that PluginPermission values are distinct."""
         if hasattr(security, 'PluginPermission'):
             permission_type = getattr(security, 'PluginPermission')
@@ -142,7 +142,7 @@ class TestPluginPermission:
 class TestTrustLevel:
     """Test TrustLevel enum or class."""
     
-    def test_trust_level_values(self):
+    def test_trust_level_values(self) -> None:
         """Test TrustLevel values exist."""
         if hasattr(security, 'TrustLevel'):
             trust_type = getattr(security, 'TrustLevel')
@@ -160,7 +160,7 @@ class TestTrustLevel:
             # At least some trust levels should exist
             assert len(existing_levels) > 0, "No trust level values found"
     
-    def test_trust_level_ordering(self):
+    def test_trust_level_ordering(self) -> None:
         """Test that TrustLevel values have logical ordering."""
         if hasattr(security, 'TrustLevel'):
             trust_type = getattr(security, 'TrustLevel')
@@ -186,14 +186,14 @@ class TestTrustLevel:
 class TestSecurityPolicy:
     """Test SecurityPolicy class functionality."""
     
-    def test_security_policy_creation(self):
+    def test_security_policy_creation(self) -> None:
         """Test SecurityPolicy can be created."""
         if hasattr(security, 'SecurityPolicy'):
             policy = security.SecurityPolicy()
             assert policy is not None
             assert isinstance(policy, security.SecurityPolicy)
     
-    def test_security_policy_properties(self):
+    def test_security_policy_properties(self) -> None:
         """Test SecurityPolicy properties."""
         if hasattr(security, 'SecurityPolicy'):
             policy = security.SecurityPolicy()
@@ -219,7 +219,7 @@ class TestSecurityPolicy:
                         # Property might be read-only
                         pass
     
-    def test_security_policy_to_json(self):
+    def test_security_policy_to_json(self) -> None:
         """Test SecurityPolicy JSON serialization."""
         if hasattr(security, 'SecurityPolicy'):
             policy = security.SecurityPolicy()
@@ -231,7 +231,7 @@ class TestSecurityPolicy:
                     # Method might require policy to be properly configured
                     pass
     
-    def test_security_policy_from_json(self):
+    def test_security_policy_from_json(self) -> None:
         """Test SecurityPolicy JSON deserialization."""
         if hasattr(security, 'SecurityPolicy'):
             if hasattr(security.SecurityPolicy, 'from_json'):
@@ -251,14 +251,14 @@ class TestSecurityPolicy:
 class TestPluginSignature:
     """Test PluginSignature class functionality."""
     
-    def test_plugin_signature_creation(self):
+    def test_plugin_signature_creation(self) -> None:
         """Test PluginSignature can be created."""
         if hasattr(security, 'PluginSignature'):
             signature = security.PluginSignature()
             assert signature is not None
             assert isinstance(signature, security.PluginSignature)
     
-    def test_plugin_signature_properties(self):
+    def test_plugin_signature_properties(self) -> None:
         """Test PluginSignature properties."""
         if hasattr(security, 'PluginSignature'):
             signature = security.PluginSignature()
@@ -278,7 +278,7 @@ class TestPluginSignature:
                         # Property might not be accessible
                         pass
     
-    def test_plugin_signature_verify_method(self):
+    def test_plugin_signature_verify_method(self) -> None:
         """Test PluginSignature verify method."""
         if hasattr(security, 'PluginSignature'):
             signature = security.PluginSignature()
@@ -294,14 +294,14 @@ class TestPluginSignature:
 class TestSecurityValidator:
     """Test SecurityValidator class functionality."""
     
-    def test_security_validator_creation(self):
+    def test_security_validator_creation(self) -> None:
         """Test SecurityValidator can be created."""
         if hasattr(security, 'SecurityValidator'):
             validator = security.SecurityValidator()
             assert validator is not None
             assert isinstance(validator, security.SecurityValidator)
     
-    def test_security_validator_validate_plugin(self):
+    def test_security_validator_validate_plugin(self) -> None:
         """Test SecurityValidator validate_plugin method."""
         if hasattr(security, 'SecurityValidator'):
             validator = security.SecurityValidator()
@@ -313,7 +313,7 @@ class TestSecurityValidator:
                     # Method might require different parameters
                     pass
     
-    def test_security_validator_check_signature(self):
+    def test_security_validator_check_signature(self) -> None:
         """Test SecurityValidator check_signature method."""
         if hasattr(security, 'SecurityValidator'):
             validator = security.SecurityValidator()
@@ -325,7 +325,7 @@ class TestSecurityValidator:
                     # Method might require different parameters
                     pass
     
-    def test_security_validator_scan_for_threats(self):
+    def test_security_validator_scan_for_threats(self) -> None:
         """Test SecurityValidator scan_for_threats method."""
         if hasattr(security, 'SecurityValidator'):
             validator = security.SecurityValidator()
@@ -341,7 +341,7 @@ class TestSecurityValidator:
 class TestSecurityUtilities:
     """Test security utility functions."""
     
-    def test_utility_functions_exist(self):
+    def test_utility_functions_exist(self) -> None:
         """Test that utility functions exist."""
         utility_functions = [
             'create_security_manager', 'create_security_policy',
@@ -354,7 +354,7 @@ class TestSecurityUtilities:
                 func = getattr(security, func_name)
                 assert callable(func), f"{func_name} should be callable"
     
-    def test_create_functions_return_valid_objects(self):
+    def test_create_functions_return_valid_objects(self) -> None:
         """Test that create functions return valid objects."""
         create_functions = [
             ('create_security_manager', 'SecurityManager'),
@@ -376,7 +376,7 @@ class TestSecurityUtilities:
                     # Function might require parameters
                     pass
     
-    def test_verify_plugin_signature_function(self):
+    def test_verify_plugin_signature_function(self) -> None:
         """Test verify_plugin_signature function."""
         if hasattr(security, 'verify_plugin_signature'):
             try:
@@ -386,7 +386,7 @@ class TestSecurityUtilities:
                 # Function might require valid file path or different parameters
                 pass
     
-    def test_generate_plugin_hash_function(self):
+    def test_generate_plugin_hash_function(self) -> None:
         """Test generate_plugin_hash function."""
         if hasattr(security, 'generate_plugin_hash'):
             try:
@@ -396,7 +396,7 @@ class TestSecurityUtilities:
                 # Function might require valid file path or different parameters
                 pass
     
-    def test_check_plugin_integrity_function(self):
+    def test_check_plugin_integrity_function(self) -> None:
         """Test check_plugin_integrity function."""
         if hasattr(security, 'check_plugin_integrity'):
             try:
@@ -410,7 +410,7 @@ class TestSecurityUtilities:
 class TestSecurityErrorHandling:
     """Test error handling in security module."""
     
-    def test_invalid_plugin_path_handling(self):
+    def test_invalid_plugin_path_handling(self) -> None:
         """Test handling of invalid plugin paths."""
         functions_to_test = [
             'verify_plugin_signature', 'generate_plugin_hash', 'check_plugin_integrity'
@@ -444,7 +444,7 @@ class TestSecurityErrorHandling:
                     # These exceptions are acceptable
                     pass
     
-    def test_invalid_permission_handling(self):
+    def test_invalid_permission_handling(self) -> None:
         """Test handling of invalid permissions."""
         if hasattr(security, 'SecurityManager'):
             manager = security.SecurityManager()
@@ -466,7 +466,7 @@ class TestSecurityErrorHandling:
                     # These exceptions are acceptable
                     pass
     
-    def test_invalid_json_handling(self):
+    def test_invalid_json_handling(self) -> None:
         """Test handling of invalid JSON in security policies."""
         if hasattr(security, 'SecurityPolicy'):
             if hasattr(security.SecurityPolicy, 'from_json'):
@@ -490,12 +490,12 @@ class TestSecurityErrorHandling:
 class TestSecurityModuleStructure:
     """Test overall security module structure."""
     
-    def test_module_attributes(self):
+    def test_module_attributes(self) -> None:
         """Test that security module has expected attributes."""
         assert hasattr(security, '__name__')
         assert security.__name__ == 'qtforge.security'
     
-    def test_expected_classes_exist(self):
+    def test_expected_classes_exist(self) -> None:
         """Test that expected classes exist in the module."""
         expected_classes = [
             'SecurityManager', 'SecurityPolicy', 'SecurityValidator',
@@ -510,7 +510,7 @@ class TestSecurityModuleStructure:
         # At least some classes should exist
         assert len(existing_classes) > 0, "No security classes found"
     
-    def test_module_functions_are_callable(self):
+    def test_module_functions_are_callable(self) -> None:
         """Test that all module functions are callable."""
         for attr_name in dir(security):
             if not attr_name.startswith('_'):
@@ -519,7 +519,7 @@ class TestSecurityModuleStructure:
                     # Just verify it's callable
                     assert callable(attr)
     
-    def test_security_constants(self):
+    def test_security_constants(self) -> None:
         """Test security-related constants if they exist."""
         constants = [
             'DEFAULT_TRUST_LEVEL', 'MAX_SIGNATURE_SIZE', 'SUPPORTED_ALGORITHMS'
@@ -534,7 +534,7 @@ class TestSecurityModuleStructure:
 class TestSecurityIntegration:
     """Test integration between security components."""
     
-    def test_security_manager_with_policy(self):
+    def test_security_manager_with_policy(self) -> None:
         """Test SecurityManager integration with SecurityPolicy."""
         if hasattr(security, 'SecurityManager') and hasattr(security, 'SecurityPolicy'):
             manager = security.SecurityManager()
@@ -549,7 +549,7 @@ class TestSecurityIntegration:
                     # Method might not exist or require different parameters
                     pass
     
-    def test_security_validator_with_signature(self):
+    def test_security_validator_with_signature(self) -> None:
         """Test SecurityValidator integration with PluginSignature."""
         if hasattr(security, 'SecurityValidator') and hasattr(security, 'PluginSignature'):
             validator = security.SecurityValidator()

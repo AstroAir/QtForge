@@ -2,6 +2,21 @@
 
 This document describes the reorganization of Lua test files that were previously scattered in the project root directory.
 
+## Recent Updates (v3.2.0)
+
+### Enhanced Test Suite
+- **test_lua_integration_comprehensive.cpp**: Comprehensive C++ test suite for Lua integration
+- **test_comprehensive_lua_suite.lua**: Pure Lua test script for testing bindings
+- Enhanced error handling and edge case testing
+- Performance baseline testing
+- Cross-language integration validation
+
+### Key Features
+- Tests work both with and without QTFORGE_LUA_BINDINGS enabled
+- Comprehensive error handling and edge case coverage
+- Performance and memory management testing
+- Cross-platform compatibility testing
+
 ## Changes Made
 
 ### Files Moved to `tests/lua/integration/`

@@ -25,12 +25,12 @@ except ImportError:
 class TestQtForgeBasics(unittest.TestCase):
     """Test basic QtForge functionality."""
     
-    def test_import(self):
+    def test_import(self) -> None:
         """Test that QtForge can be imported."""
         self.assertIsNotNone(qtforge)
         self.assertTrue(hasattr(qtforge, '__version__'))
     
-    def test_version_info(self):
+    def test_version_info(self) -> None:
         """Test version information."""
         version = qtforge.get_version()
         self.assertIsInstance(version, str)
@@ -41,27 +41,27 @@ class TestQtForgeBasics(unittest.TestCase):
         self.assertEqual(len(version_info), 3)
         self.assertTrue(all(isinstance(x, int) for x in version_info))
     
-    def test_connection(self):
+    def test_connection(self) -> None:
         """Test basic connection."""
         result = qtforge.test_connection()
         self.assertIsInstance(result, str)
         self.assertIn("QtForge", result)
     
-    def test_available_modules(self):
+    def test_available_modules(self) -> None:
         """Test module listing."""
         modules = qtforge.list_available_modules()
         self.assertIsInstance(modules, list)
         self.assertIn("core", modules)
         self.assertIn("utils", modules)
     
-    def test_build_info(self):
+    def test_build_info(self) -> None:
         """Test build information."""
         build_info = qtforge.get_build_info()
         self.assertIsInstance(build_info, dict)
         self.assertIn("version", build_info)
         self.assertIn("moduleInfo", build_info)
     
-    def test_help(self):
+    def test_help(self) -> None:
         """Test help function."""
         help_text = qtforge.get_help()
         self.assertIsInstance(help_text, str)
@@ -70,7 +70,7 @@ class TestQtForgeBasics(unittest.TestCase):
 class TestQtForgeCoreModule(unittest.TestCase):
     """Test QtForge core module functionality."""
     
-    def setUp(self):
+    def setUp(self) -> None:
         """Set up test fixtures."""
         try:
             from qtforge.core import (
@@ -88,7 +88,7 @@ class TestQtForgeCoreModule(unittest.TestCase):
         except ImportError:
             self.core_available = False
     
-    def test_core_module_import(self):
+    def test_core_module_import(self) -> None:
         """Test that core module can be imported."""
         if not self.core_available:
             self.skipTest("Core module not available")
@@ -96,7 +96,7 @@ class TestQtForgeCoreModule(unittest.TestCase):
         from qtforge import core
         self.assertIsNotNone(core)
     
-    def test_plugin_states(self):
+    def test_plugin_states(self) -> None:
         """Test plugin state enumeration."""
         if not self.core_available:
             self.skipTest("Core module not available")
@@ -112,7 +112,7 @@ class TestQtForgeCoreModule(unittest.TestCase):
         for state in states:
             self.assertIsNotNone(state)
     
-    def test_plugin_capabilities(self):
+    def test_plugin_capabilities(self) -> None:
         """Test plugin capability enumeration."""
         if not self.core_available:
             self.skipTest("Core module not available")
@@ -127,7 +127,7 @@ class TestQtForgeCoreModule(unittest.TestCase):
         for capability in capabilities:
             self.assertIsNotNone(capability)
     
-    def test_plugin_priorities(self):
+    def test_plugin_priorities(self) -> None:
         """Test plugin priority enumeration."""
         if not self.core_available:
             self.skipTest("Core module not available")
@@ -143,7 +143,7 @@ class TestQtForgeCoreModule(unittest.TestCase):
         for priority in priorities:
             self.assertIsNotNone(priority)
     
-    def test_version_creation(self):
+    def test_version_creation(self) -> None:
         """Test version object creation and comparison."""
         if not self.core_available:
             self.skipTest("Core module not available")
@@ -159,7 +159,7 @@ class TestQtForgeCoreModule(unittest.TestCase):
         self.assertFalse(v1 > v2)
         self.assertTrue(v1 != v2)
     
-    def test_plugin_metadata(self):
+    def test_plugin_metadata(self) -> None:
         """Test plugin metadata creation."""
         if not self.core_available:
             self.skipTest("Core module not available")
@@ -173,7 +173,7 @@ class TestQtForgeCoreModule(unittest.TestCase):
         self.assertEqual(metadata.description, "A test plugin")
         self.assertEqual(metadata.author, "Test Author")
     
-    def test_plugin_load_options(self):
+    def test_plugin_load_options(self) -> None:
         """Test plugin load options."""
         if not self.core_available:
             self.skipTest("Core module not available")
@@ -185,7 +185,7 @@ class TestQtForgeCoreModule(unittest.TestCase):
         self.assertTrue(options.validate_signature)
         self.assertFalse(options.check_dependencies)
     
-    def test_plugin_manager_creation(self):
+    def test_plugin_manager_creation(self) -> None:
         """Test plugin manager creation."""
         if not self.core_available:
             self.skipTest("Core module not available")
@@ -203,7 +203,7 @@ class TestQtForgeCoreModule(unittest.TestCase):
 class TestQtForgeUtilsModule(unittest.TestCase):
     """Test QtForge utils module functionality."""
     
-    def test_utils_module_import(self):
+    def test_utils_module_import(self) -> None:
         """Test that utils module can be imported."""
         try:
             from qtforge import utils
@@ -211,7 +211,7 @@ class TestQtForgeUtilsModule(unittest.TestCase):
         except ImportError:
             self.skipTest("Utils module not available")
     
-    def test_utils_test_function(self):
+    def test_utils_test_function(self) -> None:
         """Test utils test function."""
         try:
             from qtforge import utils
@@ -224,7 +224,7 @@ class TestQtForgeUtilsModule(unittest.TestCase):
 class TestQtForgeOptionalModules(unittest.TestCase):
     """Test optional QtForge modules."""
     
-    def test_optional_modules(self):
+    def test_optional_modules(self) -> None:
         """Test that optional modules can be imported if available."""
         optional_modules = [
             'communication', 'security', 'managers', 'orchestration',
@@ -252,7 +252,7 @@ class TestQtForgeOptionalModules(unittest.TestCase):
 class TestQtForgeConvenienceFunctions(unittest.TestCase):
     """Test QtForge convenience functions."""
     
-    def test_create_plugin_manager(self):
+    def test_create_plugin_manager(self) -> None:
         """Test plugin manager creation convenience function."""
         try:
             manager = qtforge.create_plugin_manager()
@@ -260,7 +260,7 @@ class TestQtForgeConvenienceFunctions(unittest.TestCase):
         except Exception as e:
             self.skipTest(f"Plugin manager creation not available: {e}")
     
-    def test_create_version(self):
+    def test_create_version(self) -> None:
         """Test version creation convenience function."""
         try:
             version = qtforge.create_version(1, 2, 3)
@@ -269,7 +269,7 @@ class TestQtForgeConvenienceFunctions(unittest.TestCase):
         except Exception as e:
             self.skipTest(f"Version creation not available: {e}")
     
-    def test_create_metadata(self):
+    def test_create_metadata(self) -> None:
         """Test metadata creation convenience function."""
         try:
             metadata = qtforge.create_metadata("TestPlugin", "Test description")
@@ -279,7 +279,7 @@ class TestQtForgeConvenienceFunctions(unittest.TestCase):
         except Exception as e:
             self.skipTest(f"Metadata creation not available: {e}")
 
-def run_tests():
+def run_tests() -> None:
     """Run all tests and return results."""
     # Create test suite
     loader = unittest.TestLoader()

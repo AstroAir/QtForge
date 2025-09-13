@@ -24,7 +24,7 @@ sys.path.insert(0, '../../../build_test')
 class QtForgeCompleteExample:
     """Complete demonstration of QtForge Python bindings"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the example"""
         self.qtforge = None
         self.plugin_manager = None
@@ -294,7 +294,7 @@ class QtForgeCompleteExample:
             print("❌ No tests passed. QtForge Python integration needs attention.")
             return 1
 
-def main():
+def main() -> None:
     """Main entry point"""
     try:
         example = QtForgeCompleteExample()

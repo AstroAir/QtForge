@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 
 
-def validate_test_structure():
+def validate_test_structure() -> None:
     """Validate the new modular test structure."""
     test_dir = Path(__file__).parent
     errors = []

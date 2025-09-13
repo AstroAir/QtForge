@@ -28,7 +28,7 @@ pytestmark = pytest.mark.skipif(not BINDINGS_AVAILABLE, reason="QtForge bindings
 class TestSecurityManager:
     """Test SecurityManager functionality."""
     
-    def test_security_manager_creation(self):
+    def test_security_manager_creation(self) -> None:
         """Test SecurityManager can be created."""
         if hasattr(security, 'create_security_manager'):
             manager = security.create_security_manager()
@@ -36,7 +36,7 @@ class TestSecurityManager:
             assert hasattr(manager, 'validate_plugin')
             assert hasattr(manager, 'check_permissions')
     
-    def test_security_manager_validate_plugin(self):
+    def test_security_manager_validate_plugin(self) -> None:
         """Test plugin validation."""
         if hasattr(security, 'create_security_manager'):
             manager = security.create_security_manager()
@@ -50,7 +50,7 @@ class TestSecurityManager:
                 # Exception is acceptable for non-existent plugin
                 pass
     
-    def test_security_manager_check_permissions(self):
+    def test_security_manager_check_permissions(self) -> None:
         """Test permission checking."""
         if hasattr(security, 'create_security_manager'):
             manager = security.create_security_manager()
@@ -65,7 +65,7 @@ class TestSecurityManager:
                         # Some implementations might require plugin to be loaded first
                         pass
     
-    def test_security_manager_set_security_level(self):
+    def test_security_manager_set_security_level(self) -> None:
         """Test setting security level."""
         if hasattr(security, 'create_security_manager'):
             manager = security.create_security_manager()
@@ -82,14 +82,14 @@ class TestSecurityManager:
 class TestSecurityValidator:
     """Test SecurityValidator functionality."""
     
-    def test_security_validator_creation(self):
+    def test_security_validator_creation(self) -> None:
         """Test SecurityValidator can be created."""
         if hasattr(security, 'create_security_validator'):
             validator = security.create_security_validator()
             assert validator is not None
             assert hasattr(validator, 'validate')
     
-    def test_security_validator_validate_file(self):
+    def test_security_validator_validate_file(self) -> None:
         """Test validating a file."""
         if hasattr(security, 'create_security_validator'):
             validator = security.create_security_validator()
@@ -108,7 +108,7 @@ class TestSecurityValidator:
                 finally:
                     os.unlink(temp_file.name)
     
-    def test_security_validator_validate_invalid_file(self):
+    def test_security_validator_validate_invalid_file(self) -> None:
         """Test validating non-existent file."""
         if hasattr(security, 'create_security_validator'):
             validator = security.create_security_validator()
@@ -120,14 +120,14 @@ class TestSecurityValidator:
 class TestSignatureVerifier:
     """Test SignatureVerifier functionality."""
     
-    def test_signature_verifier_creation(self):
+    def test_signature_verifier_creation(self) -> None:
         """Test SignatureVerifier can be created."""
         if hasattr(security, 'create_signature_verifier'):
             verifier = security.create_signature_verifier()
             assert verifier is not None
             assert hasattr(verifier, 'verify')
     
-    def test_signature_verifier_verify_file(self):
+    def test_signature_verifier_verify_file(self) -> None:
         """Test verifying file signature."""
         if hasattr(security, 'create_signature_verifier'):
             verifier = security.create_signature_verifier()
@@ -148,7 +148,7 @@ class TestSignatureVerifier:
                 finally:
                     os.unlink(temp_file.name)
     
-    def test_signature_verifier_verify_with_signature(self):
+    def test_signature_verifier_verify_with_signature(self) -> None:
         """Test verifying file with signature."""
         if hasattr(security, 'create_signature_verifier'):
             verifier = security.create_signature_verifier()
@@ -177,7 +177,7 @@ class TestSignatureVerifier:
 class TestPermissionManager:
     """Test PermissionManager functionality."""
     
-    def test_permission_manager_creation(self):
+    def test_permission_manager_creation(self) -> None:
         """Test PermissionManager can be created."""
         if hasattr(security, 'create_permission_manager'):
             manager = security.create_permission_manager()
@@ -186,7 +186,7 @@ class TestPermissionManager:
             assert hasattr(manager, 'revoke_permission')
             assert hasattr(manager, 'has_permission')
     
-    def test_permission_manager_grant_permission(self):
+    def test_permission_manager_grant_permission(self) -> None:
         """Test granting permissions."""
         if hasattr(security, 'create_permission_manager'):
             manager = security.create_permission_manager()
@@ -198,7 +198,7 @@ class TestPermissionManager:
                     # Some implementations might require plugin to be registered first
                     pass
     
-    def test_permission_manager_revoke_permission(self):
+    def test_permission_manager_revoke_permission(self) -> None:
         """Test revoking permissions."""
         if hasattr(security, 'create_permission_manager'):
             manager = security.create_permission_manager()
@@ -212,7 +212,7 @@ class TestPermissionManager:
                     # Some implementations might require plugin to be registered first
                     pass
     
-    def test_permission_manager_has_permission(self):
+    def test_permission_manager_has_permission(self) -> None:
         """Test checking permissions."""
         if hasattr(security, 'create_permission_manager'):
             manager = security.create_permission_manager()
@@ -229,14 +229,14 @@ class TestPermissionManager:
 class TestSecurityPolicyEngine:
     """Test SecurityPolicyEngine functionality."""
     
-    def test_security_policy_engine_creation(self):
+    def test_security_policy_engine_creation(self) -> None:
         """Test SecurityPolicyEngine can be created."""
         if hasattr(security, 'create_security_policy_engine'):
             engine = security.create_security_policy_engine()
             assert engine is not None
             assert hasattr(engine, 'evaluate_policy')
     
-    def test_security_policy_engine_evaluate_policy(self):
+    def test_security_policy_engine_evaluate_policy(self) -> None:
         """Test policy evaluation."""
         if hasattr(security, 'create_security_policy_engine'):
             engine = security.create_security_policy_engine()
@@ -249,7 +249,7 @@ class TestSecurityPolicyEngine:
                 # Some implementations might require policy to be loaded first
                 pass
     
-    def test_security_policy_engine_load_policy(self):
+    def test_security_policy_engine_load_policy(self) -> None:
         """Test loading security policy."""
         if hasattr(security, 'create_security_policy_engine'):
             engine = security.create_security_policy_engine()
@@ -272,7 +272,7 @@ class TestSecurityPolicyEngine:
 class TestSecurityEnums:
     """Test security-related enums."""
     
-    def test_security_level_enum(self):
+    def test_security_level_enum(self) -> None:
         """Test SecurityLevel enum values."""
         if hasattr(security, 'SecurityLevel'):
             levels = ['None', 'Low', 'Medium', 'High', 'Maximum']
@@ -281,7 +281,7 @@ class TestSecurityEnums:
                     value = getattr(security.SecurityLevel, level)
                     assert value is not None
     
-    def test_plugin_permission_enum(self):
+    def test_plugin_permission_enum(self) -> None:
         """Test PluginPermission enum values."""
         if hasattr(security, 'PluginPermission'):
             permissions = ['FileSystemRead', 'FileSystemWrite', 'NetworkAccess', 'ProcessCreation', 'SystemAccess']
@@ -290,7 +290,7 @@ class TestSecurityEnums:
                     value = getattr(security.PluginPermission, permission)
                     assert value is not None
     
-    def test_trust_level_enum(self):
+    def test_trust_level_enum(self) -> None:
         """Test TrustLevel enum values."""
         if hasattr(security, 'TrustLevel'):
             levels = ['Untrusted', 'Limited', 'Trusted', 'FullyTrusted']
@@ -303,13 +303,13 @@ class TestSecurityEnums:
 class TestSecurityContext:
     """Test security context functionality."""
     
-    def test_security_context_creation(self):
+    def test_security_context_creation(self) -> None:
         """Test creating security context."""
         if hasattr(security, 'SecurityContext'):
             context = security.SecurityContext()
             assert context is not None
     
-    def test_security_context_set_trust_level(self):
+    def test_security_context_set_trust_level(self) -> None:
         """Test setting trust level in context."""
         if hasattr(security, 'SecurityContext') and hasattr(security, 'TrustLevel'):
             context = security.SecurityContext()
@@ -321,7 +321,7 @@ class TestSecurityContext:
                     level = context.get_trust_level()
                     assert level == security.TrustLevel.Trusted
     
-    def test_security_context_add_permission(self):
+    def test_security_context_add_permission(self) -> None:
         """Test adding permissions to context."""
         if hasattr(security, 'SecurityContext') and hasattr(security, 'PluginPermission'):
             context = security.SecurityContext()
@@ -337,7 +337,7 @@ class TestSecurityContext:
 class TestSecurityValidationResult:
     """Test security validation result functionality."""
     
-    def test_validation_result_creation(self):
+    def test_validation_result_creation(self) -> None:
         """Test creating validation result."""
         if hasattr(security, 'ValidationResult'):
             result = security.ValidationResult(True, "Validation passed")
@@ -348,7 +348,7 @@ class TestSecurityValidationResult:
             if hasattr(result, 'message'):
                 assert result.message == "Validation passed"
     
-    def test_validation_result_failure(self):
+    def test_validation_result_failure(self) -> None:
         """Test creating failure validation result."""
         if hasattr(security, 'ValidationResult'):
             result = security.ValidationResult(False, "Validation failed")
@@ -363,7 +363,7 @@ class TestSecurityValidationResult:
 class TestSecurityErrorHandling:
     """Test error handling in security bindings."""
     
-    def test_invalid_plugin_path(self):
+    def test_invalid_plugin_path(self) -> None:
         """Test handling invalid plugin paths."""
         if hasattr(security, 'create_security_manager'):
             manager = security.create_security_manager()
@@ -376,7 +376,7 @@ class TestSecurityErrorHandling:
             with pytest.raises((ValueError, RuntimeError)):
                 manager.validate_plugin("")
     
-    def test_invalid_permission_operations(self):
+    def test_invalid_permission_operations(self) -> None:
         """Test handling invalid permission operations."""
         if hasattr(security, 'create_permission_manager'):
             manager = security.create_permission_manager()
@@ -386,7 +386,7 @@ class TestSecurityErrorHandling:
                 with pytest.raises((ValueError, RuntimeError, TypeError)):
                     manager.grant_permission(None, security.PluginPermission.FileSystemRead)
     
-    def test_security_exception_handling(self):
+    def test_security_exception_handling(self) -> None:
         """Test security exception handling."""
         if hasattr(security, 'SecurityException'):
             # Test creating security exception
@@ -398,7 +398,7 @@ class TestSecurityErrorHandling:
 class TestSecurityIntegration:
     """Test integration between security components."""
     
-    def test_manager_validator_integration(self):
+    def test_manager_validator_integration(self) -> None:
         """Test integration between SecurityManager and SecurityValidator."""
         if hasattr(security, 'create_security_manager') and hasattr(security, 'create_security_validator'):
             manager = security.create_security_manager()
@@ -412,7 +412,7 @@ class TestSecurityIntegration:
                     # Some implementations might not support this pattern
                     pass
     
-    def test_manager_permission_integration(self):
+    def test_manager_permission_integration(self) -> None:
         """Test integration between SecurityManager and PermissionManager."""
         if hasattr(security, 'create_security_manager') and hasattr(security, 'create_permission_manager'):
             manager = security.create_security_manager()
@@ -430,13 +430,13 @@ class TestSecurityIntegration:
 class TestSecurityConfiguration:
     """Test security configuration functionality."""
     
-    def test_security_config_creation(self):
+    def test_security_config_creation(self) -> None:
         """Test creating security configuration."""
         if hasattr(security, 'SecurityConfig'):
             config = security.SecurityConfig()
             assert config is not None
     
-    def test_security_config_properties(self):
+    def test_security_config_properties(self) -> None:
         """Test security configuration properties."""
         if hasattr(security, 'SecurityConfig'):
             config = security.SecurityConfig()

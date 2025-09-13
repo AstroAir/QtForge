@@ -57,6 +57,14 @@ function(qtforge_define_options)
     # Security component option
     option(QTFORGE_BUILD_SECURITY "Build security component" ON)
 
+    # Remote plugin options
+    cmake_dependent_option(QTFORGE_BUILD_REMOTE_PLUGINS
+        "Build remote plugin support"
+        ON
+        "QTFORGE_BUILD_NETWORK;QTFORGE_BUILD_SECURITY"
+        OFF
+    )
+
     # Sandbox options
     option(QTFORGE_ENABLE_SANDBOX "Enable plugin sandboxing functionality" ON)
     cmake_dependent_option(QTFORGE_SANDBOX_PROCESS_ISOLATION
@@ -255,6 +263,9 @@ function(qtforge_print_configuration_summary)
     message(STATUS "  Network Support: ${QTFORGE_BUILD_NETWORK}")
     message(STATUS "  UI Support: ${QTFORGE_BUILD_UI}")
     message(STATUS "  Security Support: ${QTFORGE_BUILD_SECURITY}")
+    if(DEFINED QTFORGE_BUILD_REMOTE_PLUGINS)
+        message(STATUS "  Remote Plugin Support: ${QTFORGE_BUILD_REMOTE_PLUGINS}")
+    endif()
     if(DEFINED QTFORGE_BUILD_SQL)
         message(STATUS "  SQL Support: ${QTFORGE_BUILD_SQL}")
     endif()

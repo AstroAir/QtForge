@@ -22,7 +22,7 @@ sys.path.insert(0, '../../../build_test')
 class SimpleQtForgePlugin:
     """A simple Python plugin for QtForge"""
     
-    def __init__(self, plugin_id: str = "simple_python_plugin"):
+    def __init__(self, plugin_id: str = "simple_python_plugin") -> None:
         """Initialize the plugin"""
         self.plugin_id = plugin_id
         self.name = "Simple Python Plugin"
@@ -186,7 +186,7 @@ class SimpleQtForgePlugin:
 class QtForgePluginExample:
     """Example demonstrating QtForge Python plugin integration"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the example"""
         self.qtforge = None
         self.plugin = None
@@ -317,7 +317,7 @@ class QtForgePluginExample:
         
         return 0
 
-def main():
+def main() -> None:
     """Main entry point"""
     import time
     

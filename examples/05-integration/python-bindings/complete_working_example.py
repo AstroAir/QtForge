@@ -15,7 +15,7 @@ import os
 # Add build directory to path
 sys.path.insert(0, '../../../build_progressive_python')
 
-def main():
+def main() -> None:
     """Demonstrate complete QtForge Python integration"""
     
     print("🎉 QtForge Complete Python Integration - WORKING EXAMPLE")

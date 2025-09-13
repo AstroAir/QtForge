@@ -38,7 +38,7 @@ class ComprehensivePythonDemo:
     Comprehensive demonstration of QtForge features from Python
     """
 
-    def __init__(self, config: DemoConfig):
+    def __init__(self, config: DemoConfig) -> None:
         self.config = config
         self.plugin_manager = None
         self.message_bus = None
@@ -110,13 +110,13 @@ class ComprehensivePythonDemo:
             self.errors_encountered += 1
             return False
 
-    def setup_message_handlers(self):
+    def setup_message_handlers(self) -> None:
         """Setup message bus event handlers"""
-        def on_plugin_message(topic: str, message: dict):
+        def on_plugin_message(topic: str, message: dict) -> None:
             self.messages_processed += 1
             print(f"📨 Message received on {topic}: {message}")
 
-        def on_system_message(topic: str, message: dict):
+        def on_system_message(topic: str, message: dict) -> None:
             self.messages_processed += 1
             print(f"🔧 System message on {topic}: {message}")
 
@@ -158,7 +158,7 @@ class ComprehensivePythonDemo:
             self.errors_encountered += 1
             return False
 
-    def demonstrate_core_features(self):
+    def demonstrate_core_features(self) -> None:
         """Demonstrate core plugin management features"""
         print("\n--- Core Features Demo ---")
 
@@ -198,7 +198,7 @@ class ComprehensivePythonDemo:
             print(f"❌ Core features demo failed: {e}")
             self.errors_encountered += 1
 
-    def demonstrate_communication(self):
+    def demonstrate_communication(self) -> None:
         """Demonstrate communication features"""
         print("\n--- Communication Demo ---")
 
@@ -228,7 +228,7 @@ class ComprehensivePythonDemo:
             print(f"❌ Communication demo failed: {e}")
             self.errors_encountered += 1
 
-    def demonstrate_security(self):
+    def demonstrate_security(self) -> None:
         """Demonstrate security features"""
         if not self.config.enable_security or not self.security_manager:
             print("\n--- Security Demo (Skipped - disabled) ---")
@@ -260,7 +260,7 @@ class ComprehensivePythonDemo:
             print(f"❌ Security demo failed: {e}")
             self.errors_encountered += 1
 
-    def demonstrate_monitoring(self):
+    def demonstrate_monitoring(self) -> None:
         """Demonstrate monitoring and metrics"""
         if not self.config.enable_monitoring or not self.metrics_collector:
             print("\n--- Monitoring Demo (Skipped - disabled) ---")
@@ -291,7 +291,7 @@ class ComprehensivePythonDemo:
             print(f"❌ Monitoring demo failed: {e}")
             self.errors_encountered += 1
 
-    def demonstrate_workflows(self):
+    def demonstrate_workflows(self) -> None:
         """Demonstrate workflow orchestration"""
         print("\n--- Workflow Demo ---")
 
@@ -319,7 +319,7 @@ class ComprehensivePythonDemo:
             print(f"❌ Workflow demo failed: {e}")
             self.errors_encountered += 1
 
-    def demonstrate_transactions(self):
+    def demonstrate_transactions(self) -> None:
         """Demonstrate transaction management"""
         print("\n--- Transaction Demo ---")
 
@@ -343,7 +343,7 @@ class ComprehensivePythonDemo:
             print(f"❌ Transaction demo failed: {e}")
             self.errors_encountered += 1
 
-    def demonstrate_marketplace(self):
+    def demonstrate_marketplace(self) -> None:
         """Demonstrate marketplace features"""
         print("\n--- Marketplace Demo ---")
 
@@ -362,7 +362,7 @@ class ComprehensivePythonDemo:
             print(f"❌ Marketplace demo failed: {e}")
             self.errors_encountered += 1
 
-    def demonstrate_threading(self):
+    def demonstrate_threading(self) -> None:
         """Demonstrate threading capabilities"""
         print("\n--- Threading Demo ---")
 
@@ -382,7 +382,7 @@ class ComprehensivePythonDemo:
             print(f"❌ Threading demo failed: {e}")
             self.errors_encountered += 1
 
-    def run_comprehensive_demo(self):
+    def run_comprehensive_demo(self) -> None:
         """Run the complete comprehensive demo"""
         if not self.initialize():
             return False
@@ -404,7 +404,7 @@ class ComprehensivePythonDemo:
         self.print_final_summary()
         return True
 
-    def print_final_summary(self):
+    def print_final_summary(self) -> None:
         """Print final demo summary"""
         uptime = (datetime.now() - self.start_time).total_seconds()
 
@@ -426,7 +426,7 @@ class ComprehensivePythonDemo:
             print(f"⚠️ Demo completed with {self.errors_encountered} errors")
 
 
-def main():
+def main() -> None:
     """Main entry point"""
     if not QTFORGE_AVAILABLE:
         return 1

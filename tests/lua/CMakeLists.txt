@@ -33,34 +33,35 @@ set(LUA_TEST_SOURCES
     test_lua_plugin_loader.cpp
     test_qt_conversions.cpp
     test_lua_integration.cpp
+    test_lua_integration_comprehensive.cpp
 )
 
 # Create individual test executables
 foreach(test_source ${LUA_TEST_SOURCES})
     get_filename_component(test_name ${test_source} NAME_WE)
     set(full_test_name "QtForge_Lua_${test_name}")
-    
+
     add_executable(${full_test_name} ${test_source})
     target_link_libraries(${full_test_name} ${LUA_TEST_LIBRARIES})
-    
+
     # Set properties
     set_target_properties(${full_test_name} PROPERTIES
         CXX_STANDARD 20
         CXX_STANDARD_REQUIRED ON
         AUTOMOC ON
     )
-    
+
     # Add compile definitions
-    target_compile_definitions(${full_test_name} PRIVATE 
+    target_compile_definitions(${full_test_name} PRIVATE
         QTFORGE_LUA_BINDINGS
         QT_TESTCASE_BUILDDIR="${CMAKE_CURRENT_BINARY_DIR}"
     )
-    
+
     # Add Lua include directories if available
     if(LUA_INCLUDE_DIR)
         target_include_directories(${full_test_name} PRIVATE ${LUA_INCLUDE_DIR})
     endif()
-    
+
     # Register test with CTest
     add_test(NAME ${full_test_name} COMMAND ${full_test_name})
     set_tests_properties(${full_test_name} PROPERTIES
@@ -86,7 +87,7 @@ set_target_properties(QtForge_Lua_TestSuite PROPERTIES
     AUTOMOC ON
 )
 
-target_compile_definitions(QtForge_Lua_TestSuite PRIVATE 
+target_compile_definitions(QtForge_Lua_TestSuite PRIVATE
     QTFORGE_LUA_BINDINGS
     QT_TESTCASE_BUILDDIR="${CMAKE_CURRENT_BINARY_DIR}"
 )
@@ -190,15 +191,15 @@ file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/test_plugins/minimal_plugin.lua
 if(QTFORGE_BUILD_PERFORMANCE_TESTS)
     add_executable(QtForge_Lua_PerformanceTests test_lua_performance.cpp)
     target_link_libraries(QtForge_Lua_PerformanceTests ${LUA_TEST_LIBRARIES})
-    
+
     set_target_properties(QtForge_Lua_PerformanceTests PROPERTIES
         CXX_STANDARD 20
         CXX_STANDARD_REQUIRED ON
         AUTOMOC ON
     )
-    
+
     target_compile_definitions(QtForge_Lua_PerformanceTests PRIVATE QTFORGE_LUA_BINDINGS)
-    
+
     add_test(NAME QtForge_Lua_Performance COMMAND QtForge_Lua_PerformanceTests)
     set_tests_properties(QtForge_Lua_Performance PROPERTIES
         TIMEOUT 900
@@ -227,15 +228,15 @@ endif()
 # Test coverage (if enabled)
 if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     option(QTFORGE_LUA_ENABLE_COVERAGE "Enable Lua test coverage reporting" OFF)
-    
+
     if(QTFORGE_LUA_ENABLE_COVERAGE)
         find_program(GCOV_PATH gcov)
         find_program(LCOV_PATH lcov)
         find_program(GENHTML_PATH genhtml)
-        
+
         if(GCOV_PATH AND LCOV_PATH AND GENHTML_PATH)
             message(STATUS "Lua test coverage reporting enabled")
-            
+
             # Add coverage flags to Lua tests
             foreach(test_source ${LUA_TEST_SOURCES})
                 get_filename_component(test_name ${test_source} NAME_WE)
@@ -243,7 +244,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clan
                 target_compile_options(${full_test_name} PRIVATE --coverage)
                 target_link_options(${full_test_name} PRIVATE --coverage)
             endforeach()
-            
+
             # Coverage target for Lua tests
             add_custom_target(lua_coverage
                 COMMAND ${LCOV_PATH} --directory . --capture --output-file lua_coverage.info

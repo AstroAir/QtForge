@@ -30,7 +30,7 @@ class Colors:
     BOLD = '\033[1m'
     END = '\033[0m'
 
-def print_status(message, status="info"):
+def print_status(message, status="info") -> None:
     """Print colored status messages"""
     colors = {
         "success": Colors.GREEN + "✅ ",
@@ -40,7 +40,7 @@ def print_status(message, status="info"):
     }
     print(f"{colors.get(status, '')}{message}{Colors.END}")
 
-def run_command(cmd, cwd=None, verbose=False):
+def run_command(cmd, cwd=None, verbose=False) -> None:
     """Run a command and return success status"""
     if verbose:
         print_status(f"Running: {' '.join(cmd)}", "info")
@@ -68,7 +68,7 @@ def run_command(cmd, cwd=None, verbose=False):
         print_status(f"Command execution failed: {e}", "error")
         return False
 
-def get_build_configs():
+def get_build_configs() -> None:
     """Get available build configurations"""
     return {
         "stable": {
@@ -126,7 +126,7 @@ def get_build_configs():
         }
     }
 
-def clean_build_directory(verbose=False):
+def clean_build_directory(verbose=False) -> None:
     """Clean the build directory"""
     print_status("Cleaning build directory...", "info")
     
@@ -144,7 +144,7 @@ def clean_build_directory(verbose=False):
         print_status("Build directory doesn't exist, nothing to clean", "info")
         return True
 
-def configure_build(config_name, verbose=False):
+def configure_build(config_name, verbose=False) -> None:
     """Configure the build with CMake"""
     print_status(f"Configuring build with '{config_name}' configuration...", "info")
     
@@ -167,7 +167,7 @@ def configure_build(config_name, verbose=False):
     
     return success
 
-def build_project(parallel_jobs=4, verbose=False):
+def build_project(parallel_jobs=4, verbose=False) -> None:
     """Build the project"""
     print_status(f"Building project with {parallel_jobs} parallel jobs...", "info")
     
@@ -184,7 +184,7 @@ def build_project(parallel_jobs=4, verbose=False):
     
     return success
 
-def run_tests(verbose=False):
+def run_tests(verbose=False) -> None:
     """Run validation tests"""
     print_status("Running validation tests...", "info")
     
@@ -200,7 +200,7 @@ def run_tests(verbose=False):
     
     return run_command(test_cmd, verbose=verbose)
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="Quick build script for QtForge")
     parser.add_argument("--config", "-c", default="stable", 
                        help="Build configuration (stable, all, dev, release)")

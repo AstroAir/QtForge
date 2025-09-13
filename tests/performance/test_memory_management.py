@@ -31,13 +31,13 @@ except ImportError as e:
 class MemoryTracker:
     """Helper class to track memory usage during tests."""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.start_memory = 0
         self.peak_memory = 0
         self.end_memory = 0
         self.tracemalloc_started = False
     
-    def start_tracking(self):
+    def start_tracking(self) -> None:
         """Start memory tracking."""
         if not self.tracemalloc_started:
             tracemalloc.start()
@@ -48,7 +48,7 @@ class MemoryTracker:
         self.start_memory = current
         self.peak_memory = peak
     
-    def stop_tracking(self):
+    def stop_tracking(self) -> None:
         """Stop memory tracking and return statistics."""
         if self.tracemalloc_started:
             current, peak = tracemalloc.get_traced_memory()
@@ -65,7 +65,7 @@ class MemoryTracker:
             'peak_delta': self.peak_memory - self.start_memory
         }
     
-    def get_current_memory(self):
+    def get_current_memory(self) -> None:
         """Get current memory usage."""
         if self.tracemalloc_started:
             current, _ = tracemalloc.get_traced_memory()
@@ -76,20 +76,20 @@ class MemoryTracker:
 class PerformanceTimer:
     """Helper class to measure execution time."""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.start_time = 0
         self.end_time = 0
     
-    def start(self):
+    def start(self) -> None:
         """Start timing."""
         self.start_time = time.perf_counter()
     
-    def stop(self):
+    def stop(self) -> None:
         """Stop timing and return elapsed time."""
         self.end_time = time.perf_counter()
         return self.end_time - self.start_time
     
-    def elapsed(self):
+    def elapsed(self) -> None:
         """Get elapsed time without stopping."""
         return time.perf_counter() - self.start_time
 
@@ -97,7 +97,7 @@ class PerformanceTimer:
 class TestMemoryManagement:
     """Test memory management and resource cleanup."""
     
-    def test_object_lifecycle(self):
+    def test_object_lifecycle(self) -> None:
         """Test object creation and destruction."""
         print("\n🔍 Testing object lifecycle...")
         
@@ -148,7 +148,7 @@ class TestMemoryManagement:
         else:
             print(f"⚠️  Potential memory leak: {stats['memory_delta']:,} bytes")
     
-    def test_weak_references(self):
+    def test_weak_references(self) -> None:
         """Test weak reference behavior for proper cleanup."""
         print("\n🔗 Testing weak references...")
         
@@ -190,7 +190,7 @@ class TestMemoryManagement:
         except Exception as e:
             print(f"❌ Weak reference test failed: {e}")
     
-    def test_circular_reference_handling(self):
+    def test_circular_reference_handling(self) -> None:
         """Test handling of circular references."""
         print("\n🔄 Testing circular reference handling...")
         
@@ -234,7 +234,7 @@ class TestMemoryManagement:
         except Exception as e:
             print(f"❌ Circular reference test failed: {e}")
     
-    def test_thread_safety_memory(self):
+    def test_thread_safety_memory(self) -> None:
         """Test memory management in multi-threaded scenarios."""
         print("\n🧵 Testing thread safety and memory management...")
         
@@ -248,7 +248,7 @@ class TestMemoryManagement:
         results = []
         exceptions = []
         
-        def worker_thread(thread_id, iterations=20):
+        def worker_thread(thread_id, iterations=20) -> None:
             """Worker thread that creates and destroys objects."""
             try:
                 local_objects = 0
@@ -303,7 +303,7 @@ class TestMemoryManagement:
         else:
             print(f"⚠️  Potential thread-related memory issues: {stats['memory_delta']:,} bytes")
     
-    def test_large_object_handling(self):
+    def test_large_object_handling(self) -> None:
         """Test handling of large numbers of objects."""
         print("\n📈 Testing large object handling...")
         
@@ -370,7 +370,7 @@ class TestMemoryManagement:
 class TestPerformanceCharacteristics:
     """Test performance characteristics of QtForge bindings."""
     
-    def test_object_creation_performance(self):
+    def test_object_creation_performance(self) -> None:
         """Test object creation performance."""
         print("\n⚡ Testing object creation performance...")
         
@@ -422,7 +422,7 @@ class TestPerformanceCharacteristics:
             except Exception as e:
                 print(f"    ❌ {object_type} performance test failed: {e}")
     
-    def test_method_call_performance(self):
+    def test_method_call_performance(self) -> None:
         """Test method call performance."""
         print("\n📞 Testing method call performance...")
         
@@ -459,7 +459,7 @@ class TestPerformanceCharacteristics:
         except Exception as e:
             print(f"❌ Method call performance test failed: {e}")
     
-    def test_memory_efficiency(self):
+    def test_memory_efficiency(self) -> None:
         """Test memory efficiency of bindings."""
         print("\n💾 Testing memory efficiency...")
         
@@ -517,7 +517,7 @@ class TestPerformanceCharacteristics:
             print(f"❌ Memory efficiency test failed: {e}")
 
 
-def main():
+def main() -> None:
     """Run memory management and performance tests."""
     print("QtForge Python Bindings - Memory Management and Performance Tests")
     print("=" * 70)

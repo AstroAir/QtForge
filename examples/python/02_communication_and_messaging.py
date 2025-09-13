@@ -29,7 +29,7 @@ except ImportError as e:
     sys.exit(1)
 
 
-def demonstrate_message_bus_creation():
+def demonstrate_message_bus_creation() -> None:
     """Demonstrate creating and configuring a message bus."""
     print("\n" + "="*50)
     print("📡 Creating Message Bus")
@@ -57,7 +57,7 @@ def demonstrate_message_bus_creation():
         return None
 
 
-def demonstrate_basic_messaging(bus):
+def demonstrate_basic_messaging(bus) -> None:
     """Demonstrate basic publish/subscribe messaging."""
     print("\n" + "="*50)
     print("📨 Basic Publish/Subscribe Messaging")
@@ -70,7 +70,7 @@ def demonstrate_basic_messaging(bus):
     # Storage for received messages
     received_messages = []
     
-    def message_callback(message):
+    def message_callback(message) -> None:
         """Callback function for received messages."""
         print(f"📥 Received message: {message}")
         received_messages.append(message)
@@ -125,7 +125,7 @@ def demonstrate_basic_messaging(bus):
         print(f"❌ Basic messaging demonstration failed: {e}")
 
 
-def demonstrate_message_properties():
+def demonstrate_message_properties() -> None:
     """Demonstrate message properties and metadata."""
     print("\n" + "="*50)
     print("🏷️  Message Properties and Metadata")
@@ -189,7 +189,7 @@ def demonstrate_message_properties():
         return None
 
 
-def demonstrate_message_priorities():
+def demonstrate_message_priorities() -> None:
     """Demonstrate message priorities and delivery modes."""
     print("\n" + "="*50)
     print("⚡ Message Priorities and Delivery Modes")
@@ -248,7 +248,7 @@ def demonstrate_message_priorities():
             print(f"❌ Priority/delivery mode demonstration failed: {e}")
 
 
-def demonstrate_service_contracts():
+def demonstrate_service_contracts() -> None:
     """Demonstrate service contracts and discovery."""
     print("\n" + "="*50)
     print("📋 Service Contracts and Discovery")
@@ -325,7 +325,7 @@ def demonstrate_service_contracts():
                 print(f"  • {capability}: {value}")
 
 
-def demonstrate_request_response():
+def demonstrate_request_response() -> None:
     """Demonstrate request-response communication patterns."""
     print("\n" + "="*50)
     print("🔄 Request-Response Communication")
@@ -387,7 +387,7 @@ def demonstrate_request_response():
             print(f"⚠️  Request-response failed: {e} (this is expected if no service is running)")
 
 
-def demonstrate_async_communication():
+def demonstrate_async_communication() -> None:
     """Demonstrate asynchronous communication patterns."""
     print("\n" + "="*50)
     print("🔀 Asynchronous Communication")
@@ -426,11 +426,11 @@ def demonstrate_async_communication():
     
     messages_received = []
     
-    def threaded_subscriber(topic_suffix):
+    def threaded_subscriber(topic_suffix) -> None:
         """Function to run in separate thread for message handling."""
         topic = f"async.test.{topic_suffix}"
         
-        def callback(message):
+        def callback(message) -> None:
             messages_received.append(f"Thread-{topic_suffix}: {message}")
         
         try:
@@ -470,7 +470,7 @@ def demonstrate_async_communication():
         print(f"  📥 {msg}")
 
 
-def main():
+def main() -> None:
     """Main demonstration function."""
     print("QtForge Python Bindings - Communication and Messaging Example")
     print("=" * 65)

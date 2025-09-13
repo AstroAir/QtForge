@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 
 
-def verify_complete_coverage():
+def verify_complete_coverage() -> None:
     """Verify complete test coverage for all QtForge modules."""
     test_dir = Path(__file__).parent
     src_dir = test_dir.parent / "src"

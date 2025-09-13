@@ -27,7 +27,7 @@ except ImportError as e:
 class TestPluginState:
     """Test PluginState enum."""
     
-    def test_plugin_state_values(self):
+    def test_plugin_state_values(self) -> None:
         """Test all PluginState enum values exist."""
         assert hasattr(core, 'PluginState')
         assert hasattr(core.PluginState, 'Unloaded')
@@ -37,7 +37,7 @@ class TestPluginState:
         assert hasattr(core.PluginState, 'Stopped')
         assert hasattr(core.PluginState, 'Error')
     
-    def test_plugin_state_values_are_different(self):
+    def test_plugin_state_values_are_different(self) -> None:
         """Test that PluginState enum values are distinct."""
         states = [
             core.PluginState.Unloaded,
@@ -49,7 +49,7 @@ class TestPluginState:
         ]
         assert len(set(states)) == len(states), "PluginState values should be unique"
     
-    def test_plugin_state_string_representation(self):
+    def test_plugin_state_string_representation(self) -> None:
         """Test string representation of PluginState values."""
         assert str(core.PluginState.Unloaded) == "PluginState.Unloaded"
         assert str(core.PluginState.Running) == "PluginState.Running"
@@ -58,7 +58,7 @@ class TestPluginState:
 class TestPluginCapability:
     """Test PluginCapability enum."""
     
-    def test_plugin_capability_values(self):
+    def test_plugin_capability_values(self) -> None:
         """Test all PluginCapability enum values exist."""
         assert hasattr(core, 'PluginCapability')
         assert hasattr(core.PluginCapability, 'None')
@@ -68,7 +68,7 @@ class TestPluginCapability:
         assert hasattr(core.PluginCapability, 'DataProcessor')
         assert hasattr(core.PluginCapability, 'Scripting')
     
-    def test_plugin_capability_values_are_different(self):
+    def test_plugin_capability_values_are_different(self) -> None:
         """Test that PluginCapability enum values are distinct."""
         capabilities = [
             core.PluginCapability.None,
@@ -84,7 +84,7 @@ class TestPluginCapability:
 class TestPluginPriority:
     """Test PluginPriority enum."""
     
-    def test_plugin_priority_values(self):
+    def test_plugin_priority_values(self) -> None:
         """Test all PluginPriority enum values exist."""
         assert hasattr(core, 'PluginPriority')
         assert hasattr(core.PluginPriority, 'Lowest')
@@ -93,7 +93,7 @@ class TestPluginPriority:
         assert hasattr(core.PluginPriority, 'High')
         assert hasattr(core.PluginPriority, 'Highest')
     
-    def test_plugin_priority_ordering(self):
+    def test_plugin_priority_ordering(self) -> None:
         """Test that PluginPriority values have correct ordering."""
         priorities = [
             core.PluginPriority.Lowest,
@@ -110,7 +110,7 @@ class TestPluginPriority:
 class TestPluginLifecycleEvent:
     """Test PluginLifecycleEvent enum."""
     
-    def test_lifecycle_event_values(self):
+    def test_lifecycle_event_values(self) -> None:
         """Test all PluginLifecycleEvent enum values exist."""
         assert hasattr(core, 'PluginLifecycleEvent')
         events = [
@@ -126,42 +126,42 @@ class TestPluginLifecycleEvent:
 class TestPluginRegistry:
     """Test PluginRegistry class."""
     
-    def test_plugin_registry_creation(self):
+    def test_plugin_registry_creation(self) -> None:
         """Test PluginRegistry can be created."""
         registry = core.PluginRegistry()
         assert registry is not None
         assert isinstance(registry, core.PluginRegistry)
     
-    def test_plugin_registry_initial_state(self):
+    def test_plugin_registry_initial_state(self) -> None:
         """Test PluginRegistry initial state."""
         registry = core.PluginRegistry()
         assert registry.size() == 0
         assert len(registry.get_all_plugins()) == 0
     
-    def test_plugin_registry_clear(self):
+    def test_plugin_registry_clear(self) -> None:
         """Test PluginRegistry clear method."""
         registry = core.PluginRegistry()
         registry.clear()
         assert registry.size() == 0
     
-    def test_plugin_registry_has_plugin_empty(self):
+    def test_plugin_registry_has_plugin_empty(self) -> None:
         """Test has_plugin on empty registry."""
         registry = core.PluginRegistry()
         assert not registry.has_plugin("nonexistent")
     
-    def test_plugin_registry_get_plugin_empty(self):
+    def test_plugin_registry_get_plugin_empty(self) -> None:
         """Test get_plugin on empty registry returns None."""
         registry = core.PluginRegistry()
         plugin = registry.get_plugin("nonexistent")
         assert plugin is None
     
-    def test_plugin_registry_get_plugins_by_capability_empty(self):
+    def test_plugin_registry_get_plugins_by_capability_empty(self) -> None:
         """Test get_plugins_by_capability on empty registry."""
         registry = core.PluginRegistry()
         plugins = registry.get_plugins_by_capability(core.PluginCapability.Service)
         assert len(plugins) == 0
     
-    def test_plugin_registry_repr(self):
+    def test_plugin_registry_repr(self) -> None:
         """Test PluginRegistry string representation."""
         registry = core.PluginRegistry()
         repr_str = repr(registry)
@@ -172,38 +172,38 @@ class TestPluginRegistry:
 class TestPluginLoader:
     """Test PluginLoader class."""
     
-    def test_plugin_loader_creation(self):
+    def test_plugin_loader_creation(self) -> None:
         """Test PluginLoader can be created."""
         loader = core.PluginLoader()
         assert loader is not None
         assert isinstance(loader, core.PluginLoader)
     
-    def test_plugin_loader_initial_state(self):
+    def test_plugin_loader_initial_state(self) -> None:
         """Test PluginLoader initial state."""
         loader = core.PluginLoader()
         plugins = loader.get_loaded_plugins()
         assert len(plugins) == 0
     
-    def test_plugin_loader_is_plugin_loaded_empty(self):
+    def test_plugin_loader_is_plugin_loaded_empty(self) -> None:
         """Test is_plugin_loaded on empty loader."""
         loader = core.PluginLoader()
         assert not loader.is_plugin_loaded("nonexistent")
     
-    def test_plugin_loader_load_nonexistent_plugin(self):
+    def test_plugin_loader_load_nonexistent_plugin(self) -> None:
         """Test loading nonexistent plugin returns error."""
         loader = core.PluginLoader()
         result = loader.load_plugin("/nonexistent/path.so")
         # Should return an error result
         assert result is not None
     
-    def test_plugin_loader_unload_nonexistent_plugin(self):
+    def test_plugin_loader_unload_nonexistent_plugin(self) -> None:
         """Test unloading nonexistent plugin."""
         loader = core.PluginLoader()
         result = loader.unload_plugin("nonexistent")
         # Should handle gracefully
         assert result is not None
     
-    def test_plugin_loader_repr(self):
+    def test_plugin_loader_repr(self) -> None:
         """Test PluginLoader string representation."""
         loader = core.PluginLoader()
         repr_str = repr(loader)
@@ -213,48 +213,48 @@ class TestPluginLoader:
 class TestPluginManager:
     """Test PluginManager class."""
     
-    def test_plugin_manager_creation(self):
+    def test_plugin_manager_creation(self) -> None:
         """Test PluginManager can be created."""
         manager = core.PluginManager()
         assert manager is not None
         assert isinstance(manager, core.PluginManager)
     
-    def test_plugin_manager_create_static(self):
+    def test_plugin_manager_create_static(self) -> None:
         """Test PluginManager static create method."""
         manager = core.PluginManager.create()
         assert manager is not None
         assert isinstance(manager, core.PluginManager)
     
-    def test_plugin_manager_initial_state(self):
+    def test_plugin_manager_initial_state(self) -> None:
         """Test PluginManager initial state."""
         manager = core.PluginManager()
         assert manager.get_plugin_count() == 0
         assert len(manager.get_all_plugins()) == 0
     
-    def test_plugin_manager_has_plugin_empty(self):
+    def test_plugin_manager_has_plugin_empty(self) -> None:
         """Test has_plugin on empty manager."""
         manager = core.PluginManager()
         assert not manager.has_plugin("nonexistent")
     
-    def test_plugin_manager_get_plugin_empty(self):
+    def test_plugin_manager_get_plugin_empty(self) -> None:
         """Test get_plugin on empty manager."""
         manager = core.PluginManager()
         plugin = manager.get_plugin("nonexistent")
         assert plugin is None
     
-    def test_plugin_manager_get_plugins_by_capability_empty(self):
+    def test_plugin_manager_get_plugins_by_capability_empty(self) -> None:
         """Test get_plugins_by_capability on empty manager."""
         manager = core.PluginManager()
         plugins = manager.get_plugins_by_capability(core.PluginCapability.Service)
         assert len(plugins) == 0
     
-    def test_plugin_manager_clear(self):
+    def test_plugin_manager_clear(self) -> None:
         """Test PluginManager clear method."""
         manager = core.PluginManager()
         manager.clear()
         assert manager.get_plugin_count() == 0
     
-    def test_plugin_manager_repr(self):
+    def test_plugin_manager_repr(self) -> None:
         """Test PluginManager string representation."""
         manager = core.PluginManager()
         repr_str = repr(manager)
@@ -265,13 +265,13 @@ class TestPluginManager:
 class TestDependencyNode:
     """Test DependencyNode class."""
     
-    def test_dependency_node_creation(self):
+    def test_dependency_node_creation(self) -> None:
         """Test DependencyNode can be created."""
         node = core.DependencyNode()
         assert node is not None
         assert isinstance(node, core.DependencyNode)
     
-    def test_dependency_node_attributes(self):
+    def test_dependency_node_attributes(self) -> None:
         """Test DependencyNode attributes."""
         node = core.DependencyNode()
         
@@ -288,7 +288,7 @@ class TestDependencyNode:
         assert node.plugin_id == "test_plugin"
         assert node.load_order == 5
     
-    def test_dependency_node_repr(self):
+    def test_dependency_node_repr(self) -> None:
         """Test DependencyNode string representation."""
         node = core.DependencyNode()
         node.plugin_id = "test_plugin"
@@ -303,18 +303,18 @@ class TestDependencyNode:
 class TestPluginDependencyResolver:
     """Test PluginDependencyResolver class."""
     
-    def test_dependency_resolver_creation(self):
+    def test_dependency_resolver_creation(self) -> None:
         """Test PluginDependencyResolver can be created."""
         resolver = core.PluginDependencyResolver()
         assert resolver is not None
         assert isinstance(resolver, core.PluginDependencyResolver)
     
-    def test_dependency_resolver_with_parent(self):
+    def test_dependency_resolver_with_parent(self) -> None:
         """Test PluginDependencyResolver creation with parent."""
         resolver = core.PluginDependencyResolver(None)
         assert resolver is not None
     
-    def test_dependency_resolver_initial_state(self):
+    def test_dependency_resolver_initial_state(self) -> None:
         """Test PluginDependencyResolver initial state."""
         resolver = core.PluginDependencyResolver()
         
@@ -327,33 +327,33 @@ class TestPluginDependencyResolver:
         
         assert not resolver.has_circular_dependencies()
     
-    def test_dependency_resolver_clear(self):
+    def test_dependency_resolver_clear(self) -> None:
         """Test PluginDependencyResolver clear method."""
         resolver = core.PluginDependencyResolver()
         resolver.clear()
         # Should not crash
         assert True
     
-    def test_dependency_resolver_can_unload_safely(self):
+    def test_dependency_resolver_can_unload_safely(self) -> None:
         """Test can_unload_safely method."""
         resolver = core.PluginDependencyResolver()
         # Should handle nonexistent plugin gracefully
         result = resolver.can_unload_safely("nonexistent")
         assert isinstance(result, bool)
     
-    def test_dependency_resolver_get_dependents(self):
+    def test_dependency_resolver_get_dependents(self) -> None:
         """Test get_dependents method."""
         resolver = core.PluginDependencyResolver()
         dependents = resolver.get_dependents("nonexistent")
         assert isinstance(dependents, list)
     
-    def test_dependency_resolver_get_dependencies(self):
+    def test_dependency_resolver_get_dependencies(self) -> None:
         """Test get_dependencies method."""
         resolver = core.PluginDependencyResolver()
         dependencies = resolver.get_dependencies("nonexistent")
         assert isinstance(dependencies, list)
     
-    def test_dependency_resolver_repr(self):
+    def test_dependency_resolver_repr(self) -> None:
         """Test PluginDependencyResolver string representation."""
         resolver = core.PluginDependencyResolver()
         repr_str = repr(resolver)
@@ -363,13 +363,13 @@ class TestPluginDependencyResolver:
 class TestPluginLifecycleConfig:
     """Test PluginLifecycleConfig class."""
     
-    def test_lifecycle_config_creation(self):
+    def test_lifecycle_config_creation(self) -> None:
         """Test PluginLifecycleConfig can be created."""
         config = core.PluginLifecycleConfig()
         assert config is not None
         assert isinstance(config, core.PluginLifecycleConfig)
     
-    def test_lifecycle_config_attributes(self):
+    def test_lifecycle_config_attributes(self) -> None:
         """Test PluginLifecycleConfig attributes."""
         config = core.PluginLifecycleConfig()
         
@@ -391,7 +391,7 @@ class TestPluginLifecycleConfig:
         assert config.enable_graceful_shutdown == True
         assert config.max_restart_attempts == 3
     
-    def test_lifecycle_config_json_serialization(self):
+    def test_lifecycle_config_json_serialization(self) -> None:
         """Test PluginLifecycleConfig JSON serialization."""
         config = core.PluginLifecycleConfig()
         config.initialization_timeout = 5000
@@ -406,7 +406,7 @@ class TestPluginLifecycleConfig:
         assert config2 is not None
         assert isinstance(config2, core.PluginLifecycleConfig)
     
-    def test_lifecycle_config_repr(self):
+    def test_lifecycle_config_repr(self) -> None:
         """Test PluginLifecycleConfig string representation."""
         config = core.PluginLifecycleConfig()
         repr_str = repr(config)

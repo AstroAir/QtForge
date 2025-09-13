@@ -41,13 +41,13 @@ except ImportError as e:
 class CommunicationExample:
     """Comprehensive example of communication system operations."""
     
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the communication example."""
         self.message_bus = None
         self.messages_received = []
         self.setup_components()
     
-    def setup_components(self):
+    def setup_components(self) -> None:
         """Set up the communication components."""
         print("\n🔧 Setting up communication components...")
         
@@ -66,7 +66,7 @@ class CommunicationExample:
             print(f"❌ Failed to setup communication components: {e}")
             raise
     
-    def demonstrate_message_creation(self):
+    def demonstrate_message_creation(self) -> None:
         """Demonstrate message creation and manipulation."""
         print("\n📨 Demonstrating message creation...")
         
@@ -114,7 +114,7 @@ class CommunicationExample:
         
         return messages
     
-    def demonstrate_message_publishing(self):
+    def demonstrate_message_publishing(self) -> None:
         """Demonstrate message publishing."""
         print("\n📤 Demonstrating message publishing...")
         
@@ -151,7 +151,7 @@ class CommunicationExample:
             except Exception as e:
                 print(f"Publishing error for '{msg_data['topic']}': {e}")
     
-    def demonstrate_message_subscription(self):
+    def demonstrate_message_subscription(self) -> None:
         """Demonstrate message subscription."""
         print("\n📥 Demonstrating message subscription...")
         
@@ -160,7 +160,7 @@ class CommunicationExample:
             return
         
         # Define callback function
-        def message_callback(message):
+        def message_callback(message) -> None:
             """Callback function for received messages."""
             try:
                 topic = getattr(message, 'topic', 'unknown') if hasattr(message, 'topic') else 'unknown'
@@ -191,7 +191,7 @@ class CommunicationExample:
             except Exception as e:
                 print(f"Subscription error for '{topic}': {e}")
     
-    def demonstrate_request_response(self):
+    def demonstrate_request_response(self) -> None:
         """Demonstrate request/response patterns."""
         print("\n🔄 Demonstrating request/response patterns...")
         
@@ -247,7 +247,7 @@ class CommunicationExample:
                 except Exception as e:
                     print(f"Request {i+1} serialization error: {e}")
     
-    def demonstrate_service_contracts(self):
+    def demonstrate_service_contracts(self) -> None:
         """Demonstrate service contracts."""
         print("\n📋 Demonstrating service contracts...")
         
@@ -284,7 +284,7 @@ class CommunicationExample:
         else:
             print("⚠️  ServiceContract not available")
     
-    def demonstrate_message_bus_operations(self):
+    def demonstrate_message_bus_operations(self) -> None:
         """Demonstrate advanced MessageBus operations."""
         print("\n🚌 Demonstrating MessageBus operations...")
         
@@ -316,7 +316,7 @@ class CommunicationExample:
             except Exception as e:
                 print(f"Unsubscribe error: {e}")
     
-    def demonstrate_threading_safety(self):
+    def demonstrate_threading_safety(self) -> None:
         """Demonstrate thread-safe communication operations."""
         print("\n🧵 Demonstrating threading safety...")
         
@@ -327,7 +327,7 @@ class CommunicationExample:
         results = []
         errors = []
         
-        def worker_thread(thread_id):
+        def worker_thread(thread_id) -> None:
             """Worker thread for testing thread safety."""
             try:
                 # Create and publish messages from multiple threads
@@ -364,7 +364,7 @@ class CommunicationExample:
         else:
             print("✅ No threading errors detected")
     
-    def demonstrate_error_handling(self):
+    def demonstrate_error_handling(self) -> None:
         """Demonstrate communication error handling."""
         print("\n⚠️  Demonstrating communication error handling...")
         
@@ -383,7 +383,7 @@ class CommunicationExample:
             except Exception as e:
                 print(f"Exception caught: {type(e).__name__}: {e}")
     
-    def cleanup(self):
+    def cleanup(self) -> None:
         """Clean up communication resources."""
         print("\n🧹 Cleaning up communication resources...")
         
@@ -398,7 +398,7 @@ class CommunicationExample:
         
         print("✅ Communication cleanup completed")
     
-    def run_complete_example(self):
+    def run_complete_example(self) -> None:
         """Run the complete communication example."""
         print("🚀 QtForge Python Bindings - Communication System Example")
         print("=" * 70)
@@ -429,7 +429,7 @@ class CommunicationExample:
         return 0
 
 
-def main():
+def main() -> None:
     """Main entry point for the example."""
     try:
         example = CommunicationExample()

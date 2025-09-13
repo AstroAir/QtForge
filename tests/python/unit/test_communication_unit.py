@@ -28,20 +28,20 @@ except ImportError as e:
 class TestMessageBus:
     """Test MessageBus class functionality."""
     
-    def test_message_bus_creation(self):
+    def test_message_bus_creation(self) -> None:
         """Test MessageBus can be created."""
         if hasattr(comm, 'MessageBus'):
             bus = comm.MessageBus()
             assert bus is not None
             assert isinstance(bus, comm.MessageBus)
     
-    def test_message_bus_create_function(self):
+    def test_message_bus_create_function(self) -> None:
         """Test create_message_bus function."""
         if hasattr(comm, 'create_message_bus'):
             bus = comm.create_message_bus()
             assert bus is not None
     
-    def test_message_bus_publish_method(self):
+    def test_message_bus_publish_method(self) -> None:
         """Test MessageBus publish method."""
         if hasattr(comm, 'MessageBus'):
             bus = comm.MessageBus()
@@ -57,7 +57,7 @@ class TestMessageBus:
                     # Method might require specific message format
                     pass
     
-    def test_message_bus_subscribe_method(self):
+    def test_message_bus_subscribe_method(self) -> None:
         """Test MessageBus subscribe method."""
         if hasattr(comm, 'MessageBus'):
             bus = comm.MessageBus()
@@ -70,7 +70,7 @@ class TestMessageBus:
                     # Method might require specific callback format
                     pass
     
-    def test_message_bus_unsubscribe_method(self):
+    def test_message_bus_unsubscribe_method(self) -> None:
         """Test MessageBus unsubscribe method."""
         if hasattr(comm, 'MessageBus'):
             bus = comm.MessageBus()
@@ -83,7 +83,7 @@ class TestMessageBus:
                     # Method might require specific parameters
                     pass
     
-    def test_message_bus_repr(self):
+    def test_message_bus_repr(self) -> None:
         """Test MessageBus string representation."""
         if hasattr(comm, 'MessageBus'):
             bus = comm.MessageBus()
@@ -95,14 +95,14 @@ class TestMessageBus:
 class TestMessage:
     """Test Message class functionality."""
     
-    def test_message_creation(self):
+    def test_message_creation(self) -> None:
         """Test Message can be created."""
         if hasattr(comm, 'Message'):
             message = comm.Message()
             assert message is not None
             assert isinstance(message, comm.Message)
     
-    def test_message_with_topic_and_payload(self):
+    def test_message_with_topic_and_payload(self) -> None:
         """Test Message creation with topic and payload."""
         if hasattr(comm, 'Message'):
             try:
@@ -118,7 +118,7 @@ class TestMessage:
                     # Default constructor only
                     pass
     
-    def test_message_create_function(self):
+    def test_message_create_function(self) -> None:
         """Test create_message function."""
         if hasattr(comm, 'create_message'):
             try:
@@ -128,7 +128,7 @@ class TestMessage:
                 # Function might have different signature
                 pass
     
-    def test_message_topic_property(self):
+    def test_message_topic_property(self) -> None:
         """Test Message topic property."""
         if hasattr(comm, 'Message'):
             message = comm.Message()
@@ -145,7 +145,7 @@ class TestMessage:
                     # Property might be read-only
                     pass
     
-    def test_message_payload_property(self):
+    def test_message_payload_property(self) -> None:
         """Test Message payload property."""
         if hasattr(comm, 'Message'):
             message = comm.Message()
@@ -162,7 +162,7 @@ class TestMessage:
                     # Property might be read-only
                     pass
     
-    def test_message_timestamp_property(self):
+    def test_message_timestamp_property(self) -> None:
         """Test Message timestamp property."""
         if hasattr(comm, 'Message'):
             message = comm.Message()
@@ -170,7 +170,7 @@ class TestMessage:
                 timestamp = message.timestamp
                 assert isinstance(timestamp, (int, float)) or timestamp is None
     
-    def test_message_to_json_method(self):
+    def test_message_to_json_method(self) -> None:
         """Test Message to_json method."""
         if hasattr(comm, 'Message'):
             message = comm.Message()
@@ -182,7 +182,7 @@ class TestMessage:
                     # Method might require message to be properly initialized
                     pass
     
-    def test_message_from_json_method(self):
+    def test_message_from_json_method(self) -> None:
         """Test Message from_json method."""
         if hasattr(comm, 'Message'):
             message = comm.Message()
@@ -195,7 +195,7 @@ class TestMessage:
                     # Method might require specific JSON format
                     pass
     
-    def test_message_repr(self):
+    def test_message_repr(self) -> None:
         """Test Message string representation."""
         if hasattr(comm, 'Message'):
             message = comm.Message()
@@ -207,14 +207,14 @@ class TestMessage:
 class TestRequest:
     """Test Request class functionality."""
     
-    def test_request_creation(self):
+    def test_request_creation(self) -> None:
         """Test Request can be created."""
         if hasattr(comm, 'Request'):
             request = comm.Request()
             assert request is not None
             assert isinstance(request, comm.Request)
     
-    def test_request_with_method_and_params(self):
+    def test_request_with_method_and_params(self) -> None:
         """Test Request creation with method and parameters."""
         if hasattr(comm, 'Request'):
             try:
@@ -224,7 +224,7 @@ class TestRequest:
                 # Constructor might have different signature
                 pass
     
-    def test_request_create_function(self):
+    def test_request_create_function(self) -> None:
         """Test create_request function."""
         if hasattr(comm, 'create_request'):
             try:
@@ -234,7 +234,7 @@ class TestRequest:
                 # Function might have different signature
                 pass
     
-    def test_request_method_property(self):
+    def test_request_method_property(self) -> None:
         """Test Request method property."""
         if hasattr(comm, 'Request'):
             request = comm.Request()
@@ -249,7 +249,7 @@ class TestRequest:
                     # Property might be read-only
                     pass
     
-    def test_request_params_property(self):
+    def test_request_params_property(self) -> None:
         """Test Request params property."""
         if hasattr(comm, 'Request'):
             request = comm.Request()
@@ -264,7 +264,7 @@ class TestRequest:
                     # Property might be read-only
                     pass
     
-    def test_request_id_property(self):
+    def test_request_id_property(self) -> None:
         """Test Request id property."""
         if hasattr(comm, 'Request'):
             request = comm.Request()
@@ -276,14 +276,14 @@ class TestRequest:
 class TestResponse:
     """Test Response class functionality."""
     
-    def test_response_creation(self):
+    def test_response_creation(self) -> None:
         """Test Response can be created."""
         if hasattr(comm, 'Response'):
             response = comm.Response()
             assert response is not None
             assert isinstance(response, comm.Response)
     
-    def test_response_with_result(self):
+    def test_response_with_result(self) -> None:
         """Test Response creation with result."""
         if hasattr(comm, 'Response'):
             try:
@@ -293,7 +293,7 @@ class TestResponse:
                 # Constructor might have different signature
                 pass
     
-    def test_response_result_property(self):
+    def test_response_result_property(self) -> None:
         """Test Response result property."""
         if hasattr(comm, 'Response'):
             response = comm.Response()
@@ -308,7 +308,7 @@ class TestResponse:
                     # Property might be read-only
                     pass
     
-    def test_response_error_property(self):
+    def test_response_error_property(self) -> None:
         """Test Response error property."""
         if hasattr(comm, 'Response'):
             response = comm.Response()
@@ -323,7 +323,7 @@ class TestResponse:
                     # Property might be read-only
                     pass
     
-    def test_response_id_property(self):
+    def test_response_id_property(self) -> None:
         """Test Response id property."""
         if hasattr(comm, 'Response'):
             response = comm.Response()
@@ -335,14 +335,14 @@ class TestResponse:
 class TestServiceContract:
     """Test ServiceContract class functionality."""
     
-    def test_service_contract_creation(self):
+    def test_service_contract_creation(self) -> None:
         """Test ServiceContract can be created."""
         if hasattr(comm, 'ServiceContract'):
             contract = comm.ServiceContract()
             assert contract is not None
             assert isinstance(contract, comm.ServiceContract)
     
-    def test_service_contract_properties(self):
+    def test_service_contract_properties(self) -> None:
         """Test ServiceContract properties."""
         if hasattr(comm, 'ServiceContract'):
             contract = comm.ServiceContract()
@@ -378,7 +378,7 @@ class TestServiceContract:
 class TestCommunicationUtilities:
     """Test communication utility functions."""
     
-    def test_utility_functions_exist(self):
+    def test_utility_functions_exist(self) -> None:
         """Test that utility functions exist."""
         utility_functions = [
             'create_message_bus', 'create_message', 'create_request',
@@ -390,7 +390,7 @@ class TestCommunicationUtilities:
                 func = getattr(comm, func_name)
                 assert callable(func), f"{func_name} should be callable"
     
-    def test_create_functions_return_valid_objects(self):
+    def test_create_functions_return_valid_objects(self) -> None:
         """Test that create functions return valid objects."""
         create_functions = [
             ('create_message_bus', 'MessageBus'),
@@ -430,7 +430,7 @@ class TestCommunicationUtilities:
 class TestCommunicationErrorHandling:
     """Test error handling in communication module."""
     
-    def test_invalid_topic_handling(self):
+    def test_invalid_topic_handling(self) -> None:
         """Test handling of invalid topics."""
         if hasattr(comm, 'MessageBus'):
             bus = comm.MessageBus()
@@ -453,7 +453,7 @@ class TestCommunicationErrorHandling:
                     # These exceptions are acceptable
                     pass
     
-    def test_invalid_callback_handling(self):
+    def test_invalid_callback_handling(self) -> None:
         """Test handling of invalid callbacks."""
         if hasattr(comm, 'MessageBus'):
             bus = comm.MessageBus()
@@ -475,7 +475,7 @@ class TestCommunicationErrorHandling:
                     # These exceptions are acceptable
                     pass
     
-    def test_invalid_message_handling(self):
+    def test_invalid_message_handling(self) -> None:
         """Test handling of invalid messages."""
         if hasattr(comm, 'MessageBus') and hasattr(comm, 'Message'):
             bus = comm.MessageBus()
@@ -489,7 +489,7 @@ class TestCommunicationErrorHandling:
                     # These exceptions are acceptable
                     pass
     
-    def test_json_serialization_errors(self):
+    def test_json_serialization_errors(self) -> None:
         """Test JSON serialization error handling."""
         if hasattr(comm, 'Message'):
             message = comm.Message()
@@ -515,7 +515,7 @@ class TestCommunicationErrorHandling:
 class TestCommunicationPerformance:
     """Test performance aspects of communication module."""
     
-    def test_message_creation_performance(self):
+    def test_message_creation_performance(self) -> None:
         """Test message creation performance."""
         if hasattr(comm, 'Message'):
             start_time = time.time()
@@ -535,7 +535,7 @@ class TestCommunicationPerformance:
             # Should be able to create 100 messages quickly
             assert elapsed < 1.0, f"Message creation too slow: {elapsed}s for 100 messages"
     
-    def test_message_bus_subscription_performance(self):
+    def test_message_bus_subscription_performance(self) -> None:
         """Test message bus subscription performance."""
         if hasattr(comm, 'MessageBus'):
             bus = comm.MessageBus()
@@ -560,12 +560,12 @@ class TestCommunicationPerformance:
 class TestCommunicationModuleStructure:
     """Test overall communication module structure."""
     
-    def test_module_attributes(self):
+    def test_module_attributes(self) -> None:
         """Test that communication module has expected attributes."""
         assert hasattr(comm, '__name__')
         assert comm.__name__ == 'qtforge.communication'
     
-    def test_expected_classes_exist(self):
+    def test_expected_classes_exist(self) -> None:
         """Test that expected classes exist in the module."""
         expected_classes = [
             'MessageBus', 'Message', 'Request', 'Response', 'ServiceContract'
@@ -579,7 +579,7 @@ class TestCommunicationModuleStructure:
         # At least some classes should exist
         assert len(existing_classes) > 0, "No communication classes found"
     
-    def test_module_functions_are_callable(self):
+    def test_module_functions_are_callable(self) -> None:
         """Test that all module functions are callable."""
         for attr_name in dir(comm):
             if not attr_name.startswith('_'):
