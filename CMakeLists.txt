@@ -78,7 +78,6 @@ set(QTFORGE_CORE_SOURCES
     $<$<BOOL:${QTFORGE_ENABLE_SANDBOX}>:src/security/sandbox/plugin_sandbox.cpp>
     $<$<BOOL:${QTFORGE_ENABLE_SANDBOX}>:src/security/sandbox/resource_monitor.cpp>
     $<$<BOOL:${QTFORGE_ENABLE_SANDBOX}>:src/security/sandbox/security_enforcer.cpp>
-    src/orchestration/advanced/plugin_orchestrator_v2.cpp
     src/marketplace/plugin_marketplace.cpp
 )
 
@@ -130,7 +129,6 @@ set(QTFORGE_CORE_HEADERS
     include/qtplugin/core/dynamic_plugin_interface.hpp
     include/qtplugin/bridges/python_plugin_bridge.hpp
     $<$<BOOL:${QTFORGE_ENABLE_SANDBOX}>:include/qtplugin/security/sandbox/plugin_sandbox.hpp>
-    include/qtplugin/orchestration/advanced/plugin_orchestrator_v2.hpp
     include/qtplugin/marketplace/plugin_marketplace.hpp
 )
 

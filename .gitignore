@@ -200,10 +200,6 @@ _templates/
 # Log files
 *.log
 
-# Core dumps
-core
-core.*
-
 # Profiling
 *.prof
 *.gprof

@@ -2,6 +2,53 @@
 
 This comprehensive guide helps you diagnose and resolve common issues with QtForge v3.2.0, including new multilingual plugin support and enhanced security features. For quick answers to common questions, see the [FAQ](../appendix/faq.md).
 
+## 🚨 Emergency Quick Fixes
+
+### Plugin Won't Load
+```bash
+# 1. Check if plugin file exists and has correct permissions
+ls -la /path/to/plugin.dll
+chmod 755 /path/to/plugin.dll  # Linux/macOS
+
+# 2. Verify plugin dependencies
+ldd /path/to/plugin.dll  # Linux
+otool -L /path/to/plugin.dll  # macOS
+dumpbin /dependents plugin.dll  # Windows
+
+# 3. Test with minimal example
+./qtforge_test_plugin /path/to/plugin.dll
+```
+
+### Application Crashes on Startup
+```cpp
+// Add this to your main() function for debugging
+#include <qtforge/debug.hpp>
+
+int main() {
+    qtforge::enable_crash_handler();
+    qtforge::Logger::set_level(qtforge::LogLevel::Debug);
+
+    // Your application code here
+}
+```
+
+### Performance Issues
+```cpp
+// Enable performance monitoring
+auto& monitor = manager->performance_monitor();
+monitor.enable_profiling(true);
+monitor.set_sampling_interval(std::chrono::milliseconds(100));
+
+// Check plugin load times
+auto stats = monitor.get_plugin_stats();
+for (const auto& [name, stat] : stats) {
+    if (stat.load_time > std::chrono::seconds(1)) {
+        std::cout << "Slow plugin: " << name << " ("
+                  << stat.load_time.count() << "ms)" << std::endl;
+    }
+}
+```
+
 ## Quick Diagnostics
 
 ### System Check
@@ -13,7 +60,7 @@ Run this diagnostic code to check your QtForge installation:
 #include <iostream>
 
 void run_diagnostics() {
-    std::cout << "=== QtPlugin Diagnostics ===" << std::endl;
+    std::cout << "=== QtForge Diagnostics ===" << std::endl;
 
     // 1. Check library initialization
     std::cout << "1. Library initialization..." << std::endl;

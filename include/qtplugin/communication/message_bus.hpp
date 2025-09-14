@@ -9,6 +9,8 @@
 #include <QJsonObject>
 #include <QObject>
 #include <QString>
+#include <QTimer>
+#include <QThreadPool>
 
 #include <any>
 #include <atomic>
@@ -41,7 +43,8 @@ enum class DeliveryMode {
     Queued,     ///< Queue for later delivery (asynchronous)
     Broadcast,  ///< Broadcast to all subscribers
     Unicast,    ///< Send to specific recipient
-    Multicast   ///< Send to multiple specific recipients
+    Multicast,  ///< Send to multiple specific recipients
+    Targeted    ///< Send to targeted recipients
 };
 
 /**
@@ -156,13 +159,16 @@ struct Subscription {
     std::function<bool(const IMessage&)> filter;
     bool is_active = true;
     std::chrono::system_clock::time_point created_at;
+    std::chrono::system_clock::time_point last_message_time;
     uint64_t message_count = 0;
+    uint64_t messages_received = 0;
 
     Subscription(std::string_view id, std::type_index type, std::any h)
         : subscriber_id(id),
           message_type(type),
           handler(std::move(h)),
-          created_at(std::chrono::system_clock::now()) {}
+          created_at(std::chrono::system_clock::now()),
+          last_message_time(std::chrono::system_clock::now()) {}
 };
 
 /**
@@ -228,10 +234,18 @@ public:
             };
         }
 
+        // Create a generic handler wrapper
+        auto generic_handler = std::function<qtplugin::expected<void, PluginError>(std::shared_ptr<IMessage>)>(
+            [handler](std::shared_ptr<IMessage> msg) -> qtplugin::expected<void, PluginError> {
+                if (auto typed_msg = std::dynamic_pointer_cast<MessageType>(msg)) {
+                    return handler(*typed_msg);
+                }
+                return make_error<void>(PluginErrorCode::InvalidParameters, "Message type mismatch");
+            });
+
         return subscribe_impl(
             subscriber_id, std::type_index(typeid(MessageType)),
-            std::make_any<std::function<qtplugin::expected<void, PluginError>(
-                const MessageType&)>>(handler),
+            std::make_any<std::function<qtplugin::expected<void, PluginError>(std::shared_ptr<IMessage>)>>(generic_handler),
             generic_filter);
     }
 
@@ -381,7 +395,7 @@ protected:
 private:
     mutable std::shared_mutex m_subscriptions_mutex;
     std::unordered_map<std::type_index,
-                       std::vector<std::unique_ptr<Subscription>>>
+                       std::vector<std::shared_ptr<Subscription>>>
         m_subscriptions;
     std::unordered_map<std::string, std::unordered_set<std::type_index>>
         m_subscriber_types;
@@ -396,6 +410,10 @@ private:
     std::atomic<uint64_t> m_messages_delivered{0};
     std::atomic<uint64_t> m_delivery_failures{0};
 
+    // Delivery infrastructure
+    QTimer* m_cleanup_timer = nullptr;
+    QThreadPool m_delivery_thread_pool;
+
     void log_message(const IMessage& message,
                      const std::vector<std::string>& recipients);
     qtplugin::expected<void, PluginError> deliver_message(
@@ -403,6 +421,19 @@ private:
     std::vector<std::string> find_recipients(
         std::type_index message_type,
         const std::vector<std::string>& specific_recipients) const;
+
+    // Additional private methods
+    qtplugin::expected<void, PluginError> deliver_sync(
+        std::shared_ptr<IMessage> message,
+        const std::vector<std::string>& recipients);
+    qtplugin::expected<void, PluginError> deliver_async(
+        std::shared_ptr<IMessage> message,
+        const std::vector<std::string>& recipients);
+    std::vector<std::string> get_all_subscribers(std::type_index message_type) const;
+    void cleanup_expired_messages();
+    QJsonObject get_detailed_statistics() const;
+    size_t get_total_subscription_count() const;
+    size_t get_active_subscription_count() const;
 };
 
 }  // namespace qtplugin

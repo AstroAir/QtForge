@@ -1,6 +1,32 @@
 # Installation Guide
 
-This guide covers all the ways to install QtForge on different platforms and build systems.
+This comprehensive guide covers the installation and setup of QtForge v3.2.0, a modern C++ plugin framework built on Qt with comprehensive multilingual support.
+
+## Prerequisites
+
+### System Requirements
+
+- **Operating System**: Windows 10/11, macOS 10.15+, or Linux (Ubuntu 20.04+)
+- **Compiler**:
+  - GCC 10+ (Linux)
+  - Clang 12+ (macOS)
+  - MSVC 2019+ (Windows)
+- **CMake**: Version 3.20 or higher
+- **Qt**: Version 6.2 or higher
+
+### Development Tools
+
+- **Git**: For version control and dependency management
+- **Python**: 3.8+ (for build scripts and Python bindings)
+- **Lua**: 5.4+ (for Lua plugin support)
+- **pkg-config**: For dependency resolution (Linux/macOS)
+
+### New in v3.2.0
+
+- **Enhanced Python Bindings**: Complete API coverage with type stubs
+- **Lua Plugin Bridge**: Full Lua plugin support with sol2 integration
+- **Advanced Security**: Enhanced sandboxing and policy validation
+- **Hot Reload**: Dynamic plugin reloading capabilities
 
 ## Quick Installation
 
@@ -29,11 +55,11 @@ This guide covers all the ways to install QtForge on different platforms and bui
     # Add the remote (if not already added)
     conan remote add qtforge https://api.bintray.com/conan/qtforge/conan
 
-    # Install QtForge
-    conan install qtforge/3.0.0@qtforge/stable
+    # Add QtForge repository
+    conan remote add qtforge https://conan.qtforge.io
 
-    # With options
-    conan install qtforge/3.0.0@qtforge/stable -o qtforge:network=True -o qtforge:ui=True
+    # Install QtForge
+    conan install qtforge/1.0@qtforge/stable
     ```
 
 === "Homebrew (macOS)"
@@ -59,7 +85,7 @@ include(FetchContent)
 FetchContent_Declare(
     QtForge
     GIT_REPOSITORY https://github.com/AstroAir/QtForge.git
-    GIT_TAG        v3.0.0  # or main for latest
+    GIT_TAG        v3.2.0  # or main for latest
 )
 
 FetchContent_MakeAvailable(QtForge)
@@ -71,6 +97,49 @@ target_link_libraries(your_app
     QtForge::Network   # optional
     QtForge::UI        # optional
 )
+```
+
+## Build from Source
+
+### Clone the Repository
+
+```bash
+git clone https://github.com/AstroAir/QtForge.git
+cd QtForge
+git submodule update --init --recursive
+```
+
+### Configure Build
+
+```bash
+# Create build directory
+mkdir build && cd build
+
+# Configure with CMake
+cmake .. -DCMAKE_BUILD_TYPE=Release \
+         -DQTFORGE_BUILD_EXAMPLES=ON \
+         -DQTFORGE_BUILD_TESTS=ON \
+         -DQTFORGE_ENABLE_PYTHON=ON
+```
+
+### Build Options
+
+| Option                   | Default | Description            |
+| ------------------------ | ------- | ---------------------- |
+| `QTFORGE_BUILD_EXAMPLES` | `OFF`   | Build example plugins  |
+| `QTFORGE_BUILD_TESTS`    | `OFF`   | Build unit tests       |
+| `QTFORGE_ENABLE_PYTHON`  | `OFF`   | Enable Python bindings |
+| `QTFORGE_ENABLE_LUA`     | `OFF`   | Enable Lua scripting   |
+| `QTFORGE_BUILD_DOCS`     | `OFF`   | Build documentation    |
+
+### Compile
+
+```bash
+# Build the project
+cmake --build . --config Release
+
+# Install (optional)
+cmake --install . --prefix /usr/local
 ```
 
 ## Platform-Specific Installation

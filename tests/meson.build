@@ -91,15 +91,15 @@ endif
 if get_option('install_tests')
   # Install test metadata files
   install_data([
-    'mock_metadata.json',
-    'test_metadata.json'
-  ], install_dir: get_option('datadir') / 'qtforge' / 'tests')
+    'utils/mock_metadata.json',
+    'utils/test_metadata.json'
+  ], install_dir: get_option('datadir') / 'qtforge' / 'tests' / 'utils')
 
   # Install test validation scripts
   install_data([
-    'validate_structure.py',
-    'verify_complete_coverage.py'
-  ], install_dir: get_option('datadir') / 'qtforge' / 'tests')
+    'utils/validate_structure.py',
+    'utils/verify_complete_coverage.py'
+  ], install_dir: get_option('datadir') / 'qtforge' / 'tests' / 'utils')
 
   # Install test README
   install_data('README.md',

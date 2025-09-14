@@ -1,0 +1,518 @@
+{
+  "plugins": [
+    {
+      "id": "402ae5b0-d2b2-47df-b083-0caa0a70e829",
+      "name": "TestPlugin1",
+      "version": "1.0.0",
+      "type": "native",
+      "description": "Test plugin TestPlugin1",
+      "author": "QtForge Test Suite",
+      "license": "MIT",
+      "created": "2025-09-14T23:42:07.258475",
+      "api_version": "3.2.0",
+      "dependencies": {},
+      "capabilities": {
+        "supports_hot_reload": false,
+        "thread_safe": false,
+        "supports_configuration": true,
+        "supports_events": true
+      },
+      "interfaces": [
+        "IPlugin",
+        "IAdvancedPlugin"
+      ],
+      "configuration_schema": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "default": true
+          },
+          "log_level": {
+            "type": "string",
+            "default": "info"
+          },
+          "timeout": {
+            "type": "integer",
+            "default": 30000
+          }
+        }
+      },
+      "commands": [
+        "status",
+        "configure",
+        "test"
+      ],
+      "resources": {
+        "memory_limit": "100MB",
+        "cpu_limit": "50%",
+        "file_access": [
+          "read",
+          "write"
+        ]
+      }
+    },
+    {
+      "id": "b2f714b3-8397-40a7-8b56-795bda57d546",
+      "name": "TestPlugin2",
+      "version": "1.1.0",
+      "type": "python",
+      "description": "Test plugin TestPlugin2",
+      "author": "QtForge Test Suite",
+      "license": "MIT",
+      "created": "2025-09-14T23:42:07.258475",
+      "api_version": "3.2.0",
+      "dependencies": {},
+      "capabilities": {
+        "supports_hot_reload": true,
+        "thread_safe": true,
+        "supports_configuration": true,
+        "supports_events": true
+      },
+      "interfaces": [
+        "IPlugin"
+      ],
+      "configuration_schema": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "default": true
+          },
+          "log_level": {
+            "type": "string",
+            "default": "info"
+          },
+          "timeout": {
+            "type": "integer",
+            "default": 30000
+          }
+        }
+      },
+      "commands": [
+        "status",
+        "configure",
+        "test"
+      ],
+      "resources": {
+        "memory_limit": "100MB",
+        "cpu_limit": "50%",
+        "file_access": [
+          "read",
+          "write"
+        ]
+      }
+    },
+    {
+      "id": "9c827a51-040e-4f84-8e55-9168df3d9ab9",
+      "name": "TestPlugin3",
+      "version": "1.2.0",
+      "type": "lua",
+      "description": "Test plugin TestPlugin3",
+      "author": "QtForge Test Suite",
+      "license": "MIT",
+      "created": "2025-09-14T23:42:07.258475",
+      "api_version": "3.2.0",
+      "dependencies": {},
+      "capabilities": {
+        "supports_hot_reload": false,
+        "thread_safe": true,
+        "supports_configuration": true,
+        "supports_events": true
+      },
+      "interfaces": [
+        "IPlugin"
+      ],
+      "configuration_schema": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "default": true
+          },
+          "log_level": {
+            "type": "string",
+            "default": "info"
+          },
+          "timeout": {
+            "type": "integer",
+            "default": 30000
+          }
+        }
+      },
+      "commands": [
+        "status",
+        "configure",
+        "test"
+      ],
+      "resources": {
+        "memory_limit": "100MB",
+        "cpu_limit": "50%",
+        "file_access": [
+          "read",
+          "write"
+        ]
+      }
+    },
+    {
+      "id": "acf6be37-d2d1-4eec-a4b9-20f5585c329f",
+      "name": "TestPlugin4",
+      "version": "1.3.0",
+      "type": "remote",
+      "description": "Test plugin TestPlugin4",
+      "author": "QtForge Test Suite",
+      "license": "MIT",
+      "created": "2025-09-14T23:42:07.258475",
+      "api_version": "3.2.0",
+      "dependencies": {},
+      "capabilities": {
+        "supports_hot_reload": true,
+        "thread_safe": false,
+        "supports_configuration": true,
+        "supports_events": true
+      },
+      "interfaces": [
+        "IPlugin",
+        "IAdvancedPlugin"
+      ],
+      "configuration_schema": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "default": true
+          },
+          "log_level": {
+            "type": "string",
+            "default": "info"
+          },
+          "timeout": {
+            "type": "integer",
+            "default": 30000
+          }
+        }
+      },
+      "commands": [
+        "status",
+        "configure",
+        "test"
+      ],
+      "resources": {
+        "memory_limit": "100MB",
+        "cpu_limit": "50%",
+        "file_access": [
+          "read",
+          "write"
+        ]
+      }
+    },
+    {
+      "id": "31a172ee-9a4b-4f4e-a869-c590feb0713e",
+      "name": "TestPlugin5",
+      "version": "1.4.0",
+      "type": "native",
+      "description": "Test plugin TestPlugin5",
+      "author": "QtForge Test Suite",
+      "license": "MIT",
+      "created": "2025-09-14T23:42:07.258475",
+      "api_version": "3.2.0",
+      "dependencies": {},
+      "capabilities": {
+        "supports_hot_reload": false,
+        "thread_safe": true,
+        "supports_configuration": true,
+        "supports_events": true
+      },
+      "interfaces": [
+        "IPlugin"
+      ],
+      "configuration_schema": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "default": true
+          },
+          "log_level": {
+            "type": "string",
+            "default": "info"
+          },
+          "timeout": {
+            "type": "integer",
+            "default": 30000
+          }
+        }
+      },
+      "commands": [
+        "status",
+        "configure",
+        "test"
+      ],
+      "resources": {
+        "memory_limit": "100MB",
+        "cpu_limit": "50%",
+        "file_access": [
+          "read",
+          "write"
+        ]
+      }
+    },
+    {
+      "id": "7722bcaa-6e34-457c-ab14-4a4d60d7e7d4",
+      "name": "TestPlugin6",
+      "version": "1.5.0",
+      "type": "python",
+      "description": "Test plugin TestPlugin6",
+      "author": "QtForge Test Suite",
+      "license": "MIT",
+      "created": "2025-09-14T23:42:07.258475",
+      "api_version": "3.2.0",
+      "dependencies": {},
+      "capabilities": {
+        "supports_hot_reload": true,
+        "thread_safe": true,
+        "supports_configuration": true,
+        "supports_events": true
+      },
+      "interfaces": [
+        "IPlugin"
+      ],
+      "configuration_schema": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "default": true
+          },
+          "log_level": {
+            "type": "string",
+            "default": "info"
+          },
+          "timeout": {
+            "type": "integer",
+            "default": 30000
+          }
+        }
+      },
+      "commands": [
+        "status",
+        "configure",
+        "test"
+      ],
+      "resources": {
+        "memory_limit": "100MB",
+        "cpu_limit": "50%",
+        "file_access": [
+          "read",
+          "write"
+        ]
+      }
+    },
+    {
+      "id": "42cb4898-ec2e-46a5-b59f-c2195024ebe2",
+      "name": "TestPlugin7",
+      "version": "1.6.0",
+      "type": "lua",
+      "description": "Test plugin TestPlugin7",
+      "author": "QtForge Test Suite",
+      "license": "MIT",
+      "created": "2025-09-14T23:42:07.258475",
+      "api_version": "3.2.0",
+      "dependencies": {},
+      "capabilities": {
+        "supports_hot_reload": false,
+        "thread_safe": false,
+        "supports_configuration": true,
+        "supports_events": true
+      },
+      "interfaces": [
+        "IPlugin",
+        "IAdvancedPlugin"
+      ],
+      "configuration_schema": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "default": true
+          },
+          "log_level": {
+            "type": "string",
+            "default": "info"
+          },
+          "timeout": {
+            "type": "integer",
+            "default": 30000
+          }
+        }
+      },
+      "commands": [
+        "status",
+        "configure",
+        "test"
+      ],
+      "resources": {
+        "memory_limit": "100MB",
+        "cpu_limit": "50%",
+        "file_access": [
+          "read",
+          "write"
+        ]
+      }
+    },
+    {
+      "id": "4e5df5c3-1719-464b-9a37-e4d5d1827187",
+      "name": "TestPlugin8",
+      "version": "1.7.0",
+      "type": "remote",
+      "description": "Test plugin TestPlugin8",
+      "author": "QtForge Test Suite",
+      "license": "MIT",
+      "created": "2025-09-14T23:42:07.258475",
+      "api_version": "3.2.0",
+      "dependencies": {},
+      "capabilities": {
+        "supports_hot_reload": true,
+        "thread_safe": true,
+        "supports_configuration": true,
+        "supports_events": true
+      },
+      "interfaces": [
+        "IPlugin"
+      ],
+      "configuration_schema": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "default": true
+          },
+          "log_level": {
+            "type": "string",
+            "default": "info"
+          },
+          "timeout": {
+            "type": "integer",
+            "default": 30000
+          }
+        }
+      },
+      "commands": [
+        "status",
+        "configure",
+        "test"
+      ],
+      "resources": {
+        "memory_limit": "100MB",
+        "cpu_limit": "50%",
+        "file_access": [
+          "read",
+          "write"
+        ]
+      }
+    },
+    {
+      "id": "02e604ff-009d-4ba5-bbf0-29f07ac8ddb8",
+      "name": "TestPlugin9",
+      "version": "1.8.0",
+      "type": "native",
+      "description": "Test plugin TestPlugin9",
+      "author": "QtForge Test Suite",
+      "license": "MIT",
+      "created": "2025-09-14T23:42:07.258475",
+      "api_version": "3.2.0",
+      "dependencies": {},
+      "capabilities": {
+        "supports_hot_reload": false,
+        "thread_safe": true,
+        "supports_configuration": true,
+        "supports_events": true
+      },
+      "interfaces": [
+        "IPlugin"
+      ],
+      "configuration_schema": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "default": true
+          },
+          "log_level": {
+            "type": "string",
+            "default": "info"
+          },
+          "timeout": {
+            "type": "integer",
+            "default": 30000
+          }
+        }
+      },
+      "commands": [
+        "status",
+        "configure",
+        "test"
+      ],
+      "resources": {
+        "memory_limit": "100MB",
+        "cpu_limit": "50%",
+        "file_access": [
+          "read",
+          "write"
+        ]
+      }
+    },
+    {
+      "id": "766d2ce8-200a-42f2-84f4-c332f8217b76",
+      "name": "TestPlugin10",
+      "version": "1.9.0",
+      "type": "python",
+      "description": "Test plugin TestPlugin10",
+      "author": "QtForge Test Suite",
+      "license": "MIT",
+      "created": "2025-09-14T23:42:07.258475",
+      "api_version": "3.2.0",
+      "dependencies": {},
+      "capabilities": {
+        "supports_hot_reload": true,
+        "thread_safe": false,
+        "supports_configuration": true,
+        "supports_events": true
+      },
+      "interfaces": [
+        "IPlugin",
+        "IAdvancedPlugin"
+      ],
+      "configuration_schema": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "default": true
+          },
+          "log_level": {
+            "type": "string",
+            "default": "info"
+          },
+          "timeout": {
+            "type": "integer",
+            "default": 30000
+          }
+        }
+      },
+      "commands": [
+        "status",
+        "configure",
+        "test"
+      ],
+      "resources": {
+        "memory_limit": "100MB",
+        "cpu_limit": "50%",
+        "file_access": [
+          "read",
+          "write"
+        ]
+      }
+    }
+  ]
+}

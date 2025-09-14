@@ -1,0 +1,16 @@
+{
+  "IID": "qtplugin.IPlugin/3.0",
+  "className": "TestPlugin",
+  "name": "Test Plugin",
+  "description": "Test plugin for PluginManager comprehensive testing",
+  "version": "1.0.0",
+  "author": "QtForge Test Suite",
+  "category": "Testing",
+  "dependencies": [],
+  "capabilities": ["testing", "mock", "lifecycle"],
+  "metadata": {
+    "test": true,
+    "mock": true,
+    "comprehensive": true
+  }
+}

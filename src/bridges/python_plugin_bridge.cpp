@@ -351,7 +351,7 @@ PythonExecutionEnvironment::send_request(const QJsonObject& request) {
     const int expected_id = ++m_request_id;
     QJsonObject modified_request = request;
     modified_request["id"] = expected_id;
-    
+
     // Send request (do this outside of mutex to avoid deadlock)
     QJsonDocument doc(modified_request);
     QByteArray data = doc.toJson(QJsonDocument::Compact) + "\n";
@@ -448,7 +448,7 @@ std::string PythonPluginBridge::id() const noexcept { return "python-bridge"; }
 qtplugin::expected<void, qtplugin::PluginError>
 PythonPluginBridge::initialize() {
     qCDebug(pythonBridgeLog) << "PythonPluginBridge::initialize() starting";
-    
+
     // Initialize the Python environment
     qCDebug(pythonBridgeLog) << "Initializing Python environment...";
     auto env_result = m_environment->initialize();
@@ -473,25 +473,7 @@ PythonPluginBridge::initialize() {
         auto info_response = m_environment->get_plugin_info(m_current_plugin_id);
         if (info_response && info_response.value()["success"].toBool()) {
             QJsonObject response_data = info_response.value();
-            
-            // Extract metadata
-            if (response_data.contains("metadata")) {
-                m_metadata = response_data["metadata"].toObject();
-            }
-
-            // Extract available methods
-            if (response_data.contains("methods")) {
-                QJsonArray methods = response_data["methods"].toArray();
-                m_available_methods.clear();
-                for (const QJsonValue& method : methods) {
-                    if (method.isObject()) {
-                        QString method_name = method.toObject()["name"].toString();
-                        if (!method_name.isEmpty()) {
-                            m_available_methods.push_back(method_name);
-                        }
-                    }
-                }
-            }
+            extract_plugin_info_from_response(response_data);
 
             // Extract available properties
             if (response_data.contains("properties")) {
@@ -632,16 +614,16 @@ PythonPluginBridge::hot_reload() {
     }
 
     QString plugin_path;
-    
+
     // Get plugin path from loaded plugins or m_plugin_path
     if (!m_current_plugin_id.isEmpty()) {
         plugin_path = m_loaded_plugins.value(m_current_plugin_id);
     }
-    
+
     if (plugin_path.isEmpty()) {
         plugin_path = m_plugin_path;
     }
-    
+
     if (plugin_path.isEmpty()) {
         return make_error<void>(PluginErrorCode::InvalidState,
                                 "No plugin path available for reload");
@@ -651,7 +633,7 @@ PythonPluginBridge::hot_reload() {
 
     // Save current state
     QString old_plugin_id = m_current_plugin_id;
-    
+
     // Clear current plugin state
     m_current_plugin_id.clear();
     m_available_methods.clear();
@@ -677,39 +659,7 @@ PythonPluginBridge::hot_reload() {
     auto info_response = m_environment->get_plugin_info(m_current_plugin_id);
     if (info_response && info_response.value()["success"].toBool()) {
         QJsonObject response_data = info_response.value();
-        
-        // Extract metadata
-        if (response_data.contains("metadata")) {
-            m_metadata = response_data["metadata"].toObject();
-        }
-
-        // Extract available methods
-        if (response_data.contains("methods")) {
-            QJsonArray methods = response_data["methods"].toArray();
-            m_available_methods.clear();
-            for (const QJsonValue& method : methods) {
-                if (method.isObject()) {
-                    QString method_name = method.toObject()["name"].toString();
-                    if (!method_name.isEmpty()) {
-                        m_available_methods.push_back(method_name);
-                    }
-                }
-            }
-        }
-
-        // Extract available properties
-        if (response_data.contains("properties")) {
-            QJsonArray properties = response_data["properties"].toArray();
-            m_available_properties.clear();
-            for (const QJsonValue& property : properties) {
-                if (property.isObject()) {
-                    QString prop_name = property.toObject()["name"].toString();
-                    if (!prop_name.isEmpty()) {
-                        m_available_properties.push_back(prop_name);
-                    }
-                }
-            }
-        }
+        extract_plugin_info_from_response(response_data);
     } else {
         qCWarning(pythonBridgeLog) << "Failed to get plugin info after reload";
         return make_error<void>(PluginErrorCode::LoadFailed,
@@ -718,7 +668,7 @@ PythonPluginBridge::hot_reload() {
 
     m_state = qtplugin::PluginState::Running;
     qCDebug(pythonBridgeLog) << "Hot reload completed for plugin:" << plugin_path;
-    
+
     return make_success();
 }
 
@@ -810,7 +760,7 @@ PythonPluginBridge::invoke_method(const QString& method_name,
     auto result = m_environment->call_plugin_method(m_current_plugin_id, method_name, params);
     if (result) {
         QJsonObject response = result.value();
-        
+
         // Check if the method call was successful
         if (response["success"].toBool()) {
             if (response.contains("result")) {
@@ -825,17 +775,17 @@ PythonPluginBridge::invoke_method(const QString& method_name,
             if (error_msg.isEmpty()) {
                 error_msg = "Method invocation failed";
             }
-            
+
             // Determine appropriate error code based on the error message
             PluginErrorCode error_code = PluginErrorCode::ExecutionFailed;
-            if (error_msg.contains("not found", Qt::CaseInsensitive) || 
+            if (error_msg.contains("not found", Qt::CaseInsensitive) ||
                 error_msg.contains("AttributeError", Qt::CaseInsensitive)) {
                 error_code = PluginErrorCode::CommandNotFound;
-            } else if (error_msg.contains("not callable", Qt::CaseInsensitive) || 
+            } else if (error_msg.contains("not callable", Qt::CaseInsensitive) ||
                        error_msg.contains("TypeError", Qt::CaseInsensitive)) {
                 error_code = PluginErrorCode::InvalidParameters;
             }
-            
+
             return make_error<QVariant>(error_code, error_msg.toStdString());
         }
     }
@@ -1055,6 +1005,41 @@ void PythonPluginBridge::handle_environment_error() {
     }
 }
 
+void PythonPluginBridge::extract_plugin_info_from_response(const QJsonObject& response_data) {
+    // Extract metadata
+    if (response_data.contains("metadata")) {
+        m_metadata = response_data["metadata"].toObject();
+    }
+
+    // Extract available methods
+    if (response_data.contains("methods")) {
+        QJsonArray methods = response_data["methods"].toArray();
+        m_available_methods.clear();
+        for (const QJsonValue& method : methods) {
+            if (method.isObject()) {
+                QString method_name = method.toObject()["name"].toString();
+                if (!method_name.isEmpty()) {
+                    m_available_methods.push_back(method_name);
+                }
+            }
+        }
+    }
+
+    // Extract available properties
+    if (response_data.contains("properties")) {
+        QJsonArray properties = response_data["properties"].toArray();
+        m_available_properties.clear();
+        for (const QJsonValue& property : properties) {
+            if (property.isObject()) {
+                QString prop_name = property.toObject()["name"].toString();
+                if (!prop_name.isEmpty()) {
+                    m_available_properties.push_back(prop_name);
+                }
+            }
+        }
+    }
+}
+
 qtplugin::expected<void, qtplugin::PluginError>
 PythonPluginBridge::discover_methods_and_properties() {
     if (!m_environment || !m_environment->is_running()) {
@@ -1158,38 +1143,65 @@ std::optional<QJsonObject> PythonPluginBridge::get_method_signature(
         return std::nullopt;
     }
 
-    // Get method signature from Python using inspect module
+    // Use shared utilities for method signature analysis
     QString code = QString(R"(
 import json
-import inspect
 try:
-    method = getattr(plugin, '%1', None)
-    if method and callable(method):
-        sig = inspect.signature(method)
-        result = {
-            'name': '%1',
-            'signature': str(sig),
-            'parameters': []
-        }
+    # Try to use shared utilities if available
+    try:
+        import sys
+        import os
+        from pathlib import Path
 
-        for param_name, param in sig.parameters.items():
-            param_info = {
-                'name': param_name,
-                'kind': str(param.kind),
-                'default': str(param.default) if param.default != inspect.Parameter.empty else None,
-                'annotation': str(param.annotation) if param.annotation != inspect.Parameter.empty else None
+        # Add shared utilities to path
+        shared_path = Path(__file__).parent.parent / "src" / "python" / "shared"
+        if shared_path.exists():
+            sys.path.insert(0, str(shared_path))
+
+        from qtforge_plugin_utils import analyze_method_signature
+
+        # Get the method
+        method = getattr(plugin, '%1', None)
+        if method and callable(method):
+            method_sig = analyze_method_signature(method)
+            result = method_sig.to_dict()
+            param_names = [p['name'] for p in method_sig.parameters] if hasattr(method_sig, 'parameters') else []
+            result['signature'] = method_sig.name + '(' + ', '.join(param_names) + ')'
+            json.dumps(result)
+        else:
+            json.dumps(None)
+
+    except ImportError:
+        # Fallback to original implementation if shared utilities not available
+        import inspect
+        method = getattr(plugin, '%1', None)
+        if method and callable(method):
+            sig = inspect.signature(method)
+            result = {
+                'name': '%1',
+                'signature': str(sig),
+                'parameters': []
             }
-            result['parameters'].append(param_info)
 
-        if sig.return_annotation != inspect.Parameter.empty:
-            result['return_type'] = str(sig.return_annotation)
+            for param_name, param in sig.parameters.items():
+                param_info = {
+                    'name': param_name,
+                    'kind': str(param.kind),
+                    'default': str(param.default) if param.default != inspect.Parameter.empty else None,
+                    'annotation': str(param.annotation) if param.annotation != inspect.Parameter.empty else None
+                }
+                result['parameters'].append(param_info)
 
-        if hasattr(method, '__doc__') and method.__doc__:
-            result['docstring'] = method.__doc__.strip()
+            if sig.return_annotation != inspect.Parameter.empty:
+                result['return_type'] = str(sig.return_annotation)
 
-        json.dumps(result)
-    else:
-        json.dumps(None)
+            if hasattr(method, '__doc__') and method.__doc__:
+                result['docstring'] = method.__doc__.strip()
+
+            json.dumps(result)
+        else:
+            json.dumps(None)
+
 except Exception as e:
     json.dumps({'error': str(e)})
 )").arg(method_name);

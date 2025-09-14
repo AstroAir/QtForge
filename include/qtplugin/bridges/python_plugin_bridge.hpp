@@ -927,6 +927,14 @@ private slots:
      */
     void handle_environment_error();
 
+    /**
+     * @brief Extract plugin information from response data
+     *
+     * Extract plugin information from response data to avoid code duplication.
+     * Updates m_metadata, m_available_methods, and m_available_properties.
+     */
+    void extract_plugin_info_from_response(const QJsonObject& response_data);
+
 private:
     QString m_plugin_path;   ///< Path to plugin file
     QString m_plugin_id;     ///< Unique plugin identifier

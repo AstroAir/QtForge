@@ -1,18 +1,18 @@
 # QtForge Documentation
 
 !!! info "Documentation Overview"
-**Version**: QtForge v3.0+
-**Last Updated**: December 2024
+**Version**: QtForge v3.2.0
+**Last Updated**: September 2024
 **Status**: Complete and up-to-date
 
-Welcome to the comprehensive QtForge documentation. This documentation covers everything from basic plugin development to advanced orchestration and marketplace integration.
+Welcome to the comprehensive QtForge documentation. This documentation covers everything from basic plugin development to advanced orchestration and marketplace integration, including the new multilingual plugin support.
 
 ## Quick Start
 
 New to QtForge? Start here:
 
 - **[Getting Started Tutorial](tutorials/getting-started-tutorial.md)** - Complete step-by-step tutorial
-- **[Installation Guide](installation.md)** - Set up your development environment
+- **[Installation Guide](getting-started/installation.md)** - Set up your development environment
 - **[Basic Plugin Examples](examples/basic-plugin-examples.md)** - Working code examples
 
 ## 📚 Documentation Structure

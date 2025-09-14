@@ -11,6 +11,10 @@
 #include <system_error>
 #include <type_traits>
 #include <variant>
+#include <chrono>
+#include <vector>
+
+#include <QJsonObject>
 
 // Simple expected implementation for C++20 compatibility
 namespace qtplugin {
@@ -29,6 +33,7 @@ private:
 template <typename T, typename E>
 class expected {
 public:
+    expected() : m_data(T{}) {}
     expected(T value) : m_data(std::move(value)) {}
     expected(unexpected<E> error) : m_data(std::move(error)) {}
 
@@ -157,9 +162,23 @@ enum class PluginErrorCode {
     FileSystemError,
     ThreadingError,
     TimeoutError,
+    Timeout,
 
     // Generic errors
-    UnknownError = 999
+    Unknown = 998,
+    UnknownError = 999,
+    OperationNotSupported = 1000
+};
+
+/**
+ * @brief Error severity levels
+ */
+enum class ErrorSeverity {
+    Info = 0,
+    Warning = 1,
+    Error = 2,
+    Critical = 3,
+    Fatal = 4
 };
 
 /**
@@ -281,6 +300,9 @@ struct PluginError {
     PluginErrorCode code;
     std::string message;
     std::string details;
+    std::string plugin_id;
+    std::string context;
+    std::chrono::system_clock::time_point timestamp;
     std::source_location location;
 
     /**
@@ -288,6 +310,7 @@ struct PluginError {
      */
     PluginError()
         : code(PluginErrorCode::UnknownError),
+          timestamp(std::chrono::system_clock::now()),
           location(std::source_location::current()) {}
 
     /**
@@ -298,6 +321,7 @@ struct PluginError {
         std::source_location loc = std::source_location::current())
         : code(ec),
           message(plugin_error_category().message(static_cast<int>(ec))),
+          timestamp(std::chrono::system_clock::now()),
           location(loc) {}
 
     /**
@@ -305,14 +329,14 @@ struct PluginError {
      */
     PluginError(PluginErrorCode ec, std::string_view msg,
                 std::source_location loc = std::source_location::current())
-        : code(ec), message(msg), location(loc) {}
+        : code(ec), message(msg), timestamp(std::chrono::system_clock::now()), location(loc) {}
 
     /**
      * @brief Constructor with error code, message, and details
      */
     PluginError(PluginErrorCode ec, std::string_view msg, std::string_view det,
                 std::source_location loc = std::source_location::current())
-        : code(ec), message(msg), details(det), location(loc) {}
+        : code(ec), message(msg), details(det), timestamp(std::chrono::system_clock::now()), location(loc) {}
 
     /**
      * @brief Get formatted error message with location information
@@ -488,6 +512,88 @@ inline PluginResult<T> make_error(
  * @brief Convert error code to string
  */
 const char* error_code_to_string(PluginErrorCode code) noexcept;
+
+/**
+ * @brief Convert error severity to string
+ */
+const char* error_severity_to_string(ErrorSeverity severity) noexcept;
+
+/**
+ * @brief Get error severity for error code
+ */
+inline ErrorSeverity get_error_severity(PluginErrorCode code) {
+    switch (code) {
+        case PluginErrorCode::Success:
+            return ErrorSeverity::Info;
+
+        case PluginErrorCode::ConfigurationError:
+        case PluginErrorCode::InvalidParameters:
+        case PluginErrorCode::StateError:
+            return ErrorSeverity::Warning;
+
+        case PluginErrorCode::FileNotFound:
+        case PluginErrorCode::InvalidFormat:
+        case PluginErrorCode::SymbolNotFound:
+        case PluginErrorCode::PluginNotFound:
+        case PluginErrorCode::DependencyMissing:
+        case PluginErrorCode::VersionMismatch:
+        case PluginErrorCode::CommandNotFound:
+        case PluginErrorCode::NotFound:
+        case PluginErrorCode::NotImplemented:
+            return ErrorSeverity::Error;
+
+        case PluginErrorCode::LoadFailed:
+        case PluginErrorCode::UnloadFailed:
+        case PluginErrorCode::InitializationFailed:
+        case PluginErrorCode::ExecutionFailed:
+        case PluginErrorCode::SecurityViolation:
+        case PluginErrorCode::PermissionDenied:
+        case PluginErrorCode::SignatureInvalid:
+        case PluginErrorCode::UntrustedSource:
+        case PluginErrorCode::NetworkError:
+        case PluginErrorCode::ThreadingError:
+        case PluginErrorCode::TimeoutError:
+            return ErrorSeverity::Critical;
+
+        case PluginErrorCode::OutOfMemory:
+        case PluginErrorCode::ResourceExhausted:
+        case PluginErrorCode::FileSystemError:
+        case PluginErrorCode::UnknownError:
+        default:
+            return ErrorSeverity::Fatal;
+    }
+}
+
+/**
+ * @brief Record an error in the global error log
+ */
+void record_error(const PluginError& error);
+
+/**
+ * @brief Create a PluginError with additional context
+ */
+PluginError make_error(PluginErrorCode code, const std::string& message = "",
+                      const std::string& plugin_id = "", const std::string& context = "");
+
+/**
+ * @brief Generate error report as string
+ */
+std::string generate_error_report();
+
+/**
+ * @brief Generate error report as JSON
+ */
+QJsonObject generate_error_report_json();
+
+/**
+ * @brief Filter errors by plugin ID
+ */
+std::vector<PluginError> filter_errors_by_plugin(const std::string& plugin_id, size_t max_count = 100);
+
+/**
+ * @brief Filter errors by severity
+ */
+std::vector<PluginError> filter_errors_by_severity(ErrorSeverity severity, size_t max_count = 100);
 
 /**
  * @brief Exception class for plugin errors (for compatibility with

@@ -5,6 +5,7 @@ This example demonstrates how to create user interface plugins using Qt widgets 
 ## Overview
 
 UI plugins in QtForge enable:
+
 - Custom widget creation and integration
 - QML-based user interfaces
 - Data binding and model-view patterns
@@ -49,7 +50,7 @@ public:
     std::string description() const override {
         return "Custom Qt widget plugin with data visualization and controls";
     }
-    
+
     std::vector<std::string> dependencies() const override {
         return {"CorePlugin >= 1.0.0"};
     }
@@ -179,7 +180,7 @@ private:
 
 CustomWidgetPlugin::CustomWidgetPlugin(QObject* parent)
     : QObject(parent), currentState_(qtforge::PluginState::Unloaded) {
-    
+
     refreshTimer_ = new QTimer(this);
     refreshTimer_->setInterval(5000); // 5 second refresh
     connect(refreshTimer_, &QTimer::timeout, this, &CustomWidgetPlugin::onRefreshRequested);
@@ -192,18 +193,18 @@ CustomWidgetPlugin::~CustomWidgetPlugin() {
 qtforge::expected<void, qtforge::Error> CustomWidgetPlugin::initialize() {
     try {
         qtforge::Logger::info(name(), "Initializing custom widget plugin...");
-        
+
         // Setup UI components
         setupUI();
-        
+
         // Setup message handlers
         setupMessageHandlers();
-        
+
         currentState_ = qtforge::PluginState::Initialized;
         qtforge::Logger::info(name(), "Custom widget plugin initialized successfully");
-        
+
         return {};
-        
+
     } catch (const std::exception& e) {
         currentState_ = qtforge::PluginState::Error;
         return qtforge::Error("Custom widget plugin initialization failed: " + std::string(e.what()));
@@ -215,54 +216,54 @@ void CustomWidgetPlugin::setupUI() {
     mainWidget_ = std::make_unique<QWidget>();
     mainWidget_->setWindowTitle("Data Visualization Dashboard");
     mainWidget_->resize(1200, 800);
-    
+
     // Create splitter layout
     auto* splitter = new QSplitter(Qt::Horizontal, mainWidget_.get());
-    
+
     // Create data visualization widget
     dataWidget_ = std::make_unique<DataVisualizationWidget>();
     splitter->addWidget(dataWidget_.get());
-    
+
     // Create control panel widget
     controlWidget_ = std::make_unique<ControlPanelWidget>();
     splitter->addWidget(controlWidget_.get());
-    
+
     // Set splitter proportions
     splitter->setStretchFactor(0, 3); // Data widget gets 75%
     splitter->setStretchFactor(1, 1); // Control widget gets 25%
-    
+
     // Main layout
     auto* mainLayout = new QVBoxLayout(mainWidget_.get());
     mainLayout->addWidget(splitter);
-    
+
     // Connect signals
     connect(dataWidget_.get(), &DataVisualizationWidget::dataPointClicked,
             this, [this](const QVariant& value) {
                 qtforge::Logger::info(name(), "Data point clicked: " + value.toString().toStdString());
             });
-    
+
     connect(controlWidget_.get(), &ControlPanelWidget::controlValueChanged,
             this, &CustomWidgetPlugin::onControlValueChanged);
-    
+
     connect(controlWidget_.get(), &ControlPanelWidget::refreshRequested,
             this, &CustomWidgetPlugin::onRefreshRequested);
-    
+
     connect(controlWidget_.get(), &ControlPanelWidget::exportRequested,
             this, &CustomWidgetPlugin::onExportRequested);
-    
+
     // Setup default controls
     controlWidget_->addControl("Chart Type", "combo", QStringList{"Bar", "Line", "Pie"});
     controlWidget_->addControl("Animation", "checkbox", true);
     controlWidget_->addControl("Refresh Rate", "slider", 5);
     controlWidget_->addControl("Color Scheme", "color", QColor(Qt::blue));
-    
+
     // Apply default theme
     applyTheme("default");
 }
 
 void CustomWidgetPlugin::setupMessageHandlers() {
     auto& messageBus = qtforge::MessageBus::instance();
-    
+
     // Subscribe to data updates
     subscriptions_.emplace_back(
         messageBus.subscribe<qtforge::DataUpdateMessage>("ui.data.update",
@@ -275,7 +276,7 @@ void CustomWidgetPlugin::setupMessageHandlers() {
                 onDataReceived(data);
             })
     );
-    
+
     // Subscribe to theme changes
     subscriptions_.emplace_back(
         messageBus.subscribe<qtforge::ThemeChangeMessage>("ui.theme.change",
@@ -287,10 +288,10 @@ void CustomWidgetPlugin::setupMessageHandlers() {
 
 void CustomWidgetPlugin::onDataReceived(const QVariantMap& data) {
     qtforge::Logger::debug(name(), "Received data update with " + std::to_string(data.size()) + " items");
-    
+
     // Update visualization
     updateVisualization(data);
-    
+
     // Publish data received event
     auto& messageBus = qtforge::MessageBus::instance();
     qtforge::UIEventMessage event;
@@ -298,14 +299,14 @@ void CustomWidgetPlugin::onDataReceived(const QVariantMap& data) {
     event.source = name();
     event.timestamp = std::chrono::system_clock::now();
     event.data["item_count"] = data.size();
-    
+
     messageBus.publish("ui.events", event);
 }
 
 void CustomWidgetPlugin::updateVisualization(const QVariantMap& data) {
     if (dataWidget_) {
         dataWidget_->setData(data);
-        
+
         // Update chart type based on control
         QString chartType = controlWidget_->getControlValue("Chart Type").toString();
         dataWidget_->setVisualizationType(chartType);
@@ -315,9 +316,9 @@ void CustomWidgetPlugin::updateVisualization(const QVariantMap& data) {
 // DataVisualizationWidget Implementation
 DataVisualizationWidget::DataVisualizationWidget(QWidget* parent)
     : QWidget(parent), visualizationType_("Bar"), animated_(true), animationProgress_(0.0) {
-    
+
     setMinimumSize(400, 300);
-    
+
     // Setup colors
     colors_ << QColor(52, 152, 219)   // Blue
             << QColor(46, 204, 113)   // Green
@@ -325,11 +326,11 @@ DataVisualizationWidget::DataVisualizationWidget(QWidget* parent)
             << QColor(241, 196, 15)   // Yellow
             << QColor(155, 89, 182)   // Purple
             << QColor(230, 126, 34);  // Orange
-    
+
     // Setup fonts
     titleFont_ = QFont("Arial", 14, QFont::Bold);
     labelFont_ = QFont("Arial", 10);
-    
+
     // Animation timer
     animationTimer_ = new QTimer(this);
     animationTimer_->setInterval(16); // ~60 FPS
@@ -345,7 +346,7 @@ DataVisualizationWidget::DataVisualizationWidget(QWidget* parent)
 
 void DataVisualizationWidget::setData(const QVariantMap& data) {
     data_ = data;
-    
+
     if (animated_) {
         animationProgress_ = 0.0;
         animationTimer_->start();
@@ -358,10 +359,10 @@ void DataVisualizationWidget::setData(const QVariantMap& data) {
 void DataVisualizationWidget::paintEvent(QPaintEvent* event) {
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
-    
+
     // Clear background
     painter.fillRect(rect(), QColor(248, 249, 250));
-    
+
     if (data_.isEmpty()) {
         // Draw "No Data" message
         painter.setFont(titleFont_);
@@ -369,7 +370,7 @@ void DataVisualizationWidget::paintEvent(QPaintEvent* event) {
         painter.drawText(rect(), Qt::AlignCenter, "No Data Available");
         return;
     }
-    
+
     // Draw chart based on type
     drawChart(painter);
 }
@@ -386,54 +387,54 @@ void DataVisualizationWidget::drawChart(QPainter& painter) {
 
 void DataVisualizationWidget::drawBarChart(QPainter& painter) {
     QRect chartArea = getChartArea();
-    
+
     if (data_.isEmpty()) return;
-    
+
     // Calculate bar dimensions
     int barCount = data_.size();
     int barWidth = chartArea.width() / barCount * 0.8;
     int barSpacing = chartArea.width() / barCount * 0.2;
-    
+
     // Find max value for scaling
     double maxValue = 0;
     for (auto it = data_.begin(); it != data_.end(); ++it) {
         maxValue = std::max(maxValue, it.value().toDouble());
     }
-    
+
     // Draw bars
     int x = chartArea.left() + barSpacing / 2;
     int colorIndex = 0;
-    
+
     for (auto it = data_.begin(); it != data_.end(); ++it) {
         double value = it.value().toDouble();
         double normalizedValue = maxValue > 0 ? value / maxValue : 0;
-        
+
         // Apply animation
         double animatedValue = normalizedValue * animationProgress_;
-        
+
         int barHeight = static_cast<int>(chartArea.height() * animatedValue);
         int barY = chartArea.bottom() - barHeight;
-        
+
         // Draw bar
         QRect barRect(x, barY, barWidth, barHeight);
         painter.fillRect(barRect, colors_[colorIndex % colors_.size()]);
-        
+
         // Draw label
         painter.setFont(labelFont_);
         painter.setPen(QColor(73, 80, 87));
         QRect labelRect(x, chartArea.bottom() + 5, barWidth, 20);
         painter.drawText(labelRect, Qt::AlignCenter, it.key());
-        
+
         // Draw value
         if (barHeight > 20) {
             painter.setPen(Qt::white);
             painter.drawText(barRect, Qt::AlignCenter, QString::number(value, 'f', 1));
         }
-        
+
         x += barWidth + barSpacing;
         colorIndex++;
     }
-    
+
     // Draw title
     painter.setFont(titleFont_);
     painter.setPen(QColor(33, 37, 41));
@@ -447,34 +448,34 @@ QRect DataVisualizationWidget::getChartArea() const {
 // ControlPanelWidget Implementation
 ControlPanelWidget::ControlPanelWidget(QWidget* parent)
     : QWidget(parent) {
-    
+
     setFixedWidth(250);
     setupLayout();
 }
 
 void ControlPanelWidget::setupLayout() {
     mainLayout_ = new QVBoxLayout(this);
-    
+
     // Title
     auto* titleLabel = new QLabel("Control Panel");
     titleLabel->setStyleSheet("font-weight: bold; font-size: 14px; padding: 10px;");
     mainLayout_->addWidget(titleLabel);
-    
+
     // Controls will be added dynamically
-    
+
     // Spacer
     mainLayout_->addStretch();
-    
+
     // Action buttons
     refreshButton_ = new QPushButton("Refresh Data");
     exportButton_ = new QPushButton("Export Chart");
-    
+
     refreshButton_->setStyleSheet("QPushButton { padding: 8px; margin: 2px; }");
     exportButton_->setStyleSheet("QPushButton { padding: 8px; margin: 2px; }");
-    
+
     connect(refreshButton_, &QPushButton::clicked, this, &ControlPanelWidget::refreshRequested);
     connect(exportButton_, &QPushButton::clicked, this, &ControlPanelWidget::exportRequested);
-    
+
     mainLayout_->addWidget(refreshButton_);
     mainLayout_->addWidget(exportButton_);
 }
@@ -483,19 +484,19 @@ void ControlPanelWidget::addControl(const QString& name, const QString& type, co
     if (controls_.contains(name)) {
         return; // Control already exists
     }
-    
+
     // Create label
     auto* label = new QLabel(name + ":");
     label->setStyleSheet("font-weight: bold; margin-top: 10px;");
-    
+
     // Create control widget
     QWidget* control = createControl(type, defaultValue);
     if (!control) {
         return;
     }
-    
+
     controls_[name] = control;
-    
+
     // Insert before spacer and buttons
     int insertIndex = mainLayout_->count() - 3; // Before spacer and 2 buttons
     mainLayout_->insertWidget(insertIndex, label);
@@ -510,14 +511,14 @@ QWidget* ControlPanelWidget::createControl(const QString& type, const QVariant& 
         connect(combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
                 this, &ControlPanelWidget::onControlChanged);
         return combo;
-        
+
     } else if (type == "checkbox") {
         auto* checkbox = new QCheckBox();
         checkbox->setChecked(defaultValue.toBool());
         connect(checkbox, &QCheckBox::toggled,
                 this, &ControlPanelWidget::onControlChanged);
         return checkbox;
-        
+
     } else if (type == "slider") {
         auto* slider = new QSlider(Qt::Horizontal);
         slider->setRange(1, 60);
@@ -525,7 +526,7 @@ QWidget* ControlPanelWidget::createControl(const QString& type, const QVariant& 
         connect(slider, &QSlider::valueChanged,
                 this, &ControlPanelWidget::onControlChanged);
         return slider;
-        
+
     } else if (type == "color") {
         auto* button = new QPushButton();
         QColor color = defaultValue.value<QColor>();
@@ -542,14 +543,14 @@ QWidget* ControlPanelWidget::createControl(const QString& type, const QVariant& 
         });
         return button;
     }
-    
+
     return nullptr;
 }
 
 void ControlPanelWidget::onControlChanged() {
     QWidget* sender = qobject_cast<QWidget*>(QObject::sender());
     if (!sender) return;
-    
+
     // Find control name
     QString controlName;
     for (auto it = controls_.begin(); it != controls_.end(); ++it) {
@@ -558,12 +559,12 @@ void ControlPanelWidget::onControlChanged() {
             break;
         }
     }
-    
+
     if (controlName.isEmpty()) return;
-    
+
     // Get control value
     QVariant value = getControlValue(controlName);
-    
+
     // Emit signal
     emit controlValueChanged(controlName, value);
 }
@@ -571,7 +572,7 @@ void ControlPanelWidget::onControlChanged() {
 QVariant ControlPanelWidget::getControlValue(const QString& name) const {
     QWidget* control = controls_.value(name);
     if (!control) return QVariant();
-    
+
     if (auto* combo = qobject_cast<QComboBox*>(control)) {
         return combo->currentText();
     } else if (auto* checkbox = qobject_cast<QCheckBox*>(control)) {
@@ -581,7 +582,7 @@ QVariant ControlPanelWidget::getControlValue(const QString& name) const {
     } else if (auto* button = qobject_cast<QPushButton*>(control)) {
         return button->property("color");
     }
-    
+
     return QVariant();
 }
 ```
@@ -662,121 +663,121 @@ ApplicationWindow {
     height: 800
     visible: true
     title: "QtForge QML Dashboard"
-    
+
     Material.theme: Material.Light
     Material.primary: Material.Blue
     Material.accent: Material.Orange
-    
+
     property alias dataModel: dataView.model
-    
+
     header: ToolBar {
         RowLayout {
             anchors.fill: parent
-            
+
             Label {
                 text: "QtForge Dashboard"
                 font.pixelSize: 18
                 font.bold: true
                 Layout.fillWidth: true
             }
-            
+
             ToolButton {
                 text: "⚙️"
                 onClicked: settingsDrawer.open()
             }
-            
+
             ToolButton {
                 text: "📊"
                 onClicked: chartDialog.open()
             }
         }
     }
-    
+
     SplitView {
         anchors.fill: parent
         orientation: Qt.Horizontal
-        
+
         // Data Panel
         Rectangle {
             SplitView.minimumWidth: 300
             SplitView.preferredWidth: 400
             color: "#f8f9fa"
-            
+
             ColumnLayout {
                 anchors.fill: parent
                 anchors.margins: 10
-                
+
                 Label {
                     text: "Data Overview"
                     font.pixelSize: 16
                     font.bold: true
                 }
-                
+
                 ScrollView {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    
+
                     ListView {
                         id: dataView
                         model: dataModel
-                        
+
                         delegate: ItemDelegate {
                             width: dataView.width
                             height: 60
-                            
+
                             Rectangle {
                                 anchors.fill: parent
                                 anchors.margins: 2
                                 color: parent.hovered ? "#e9ecef" : "transparent"
                                 radius: 4
-                                
+
                                 RowLayout {
                                     anchors.fill: parent
                                     anchors.margins: 10
-                                    
+
                                     Rectangle {
                                         width: 40
                                         height: 40
                                         radius: 20
                                         color: model.color || Material.primary
-                                        
+
                                         Label {
                                             anchors.centerIn: parent
                                             text: model.icon || "📊"
                                             font.pixelSize: 16
                                         }
                                     }
-                                    
+
                                     ColumnLayout {
                                         Layout.fillWidth: true
                                         spacing: 2
-                                        
+
                                         Label {
                                             text: model.name || "Unknown"
                                             font.bold: true
                                         }
-                                        
+
                                         Label {
                                             text: model.value || "N/A"
                                             color: "#6c757d"
                                             font.pixelSize: 12
                                         }
                                     }
-                                    
+
                                     Label {
                                         text: model.trend || ""
                                         font.pixelSize: 20
                                     }
                                 }
                             }
-                            
+
                             onClicked: {
                                 uiController.onItemSelected(model.id)
                             }
                         }
                     }
                 }
-                
+
                 Button {
                     text: "Refresh Data"
                     Layout.fillWidth: true
@@ -784,52 +785,52 @@ ApplicationWindow {
                 }
             }
         }
-        
+
         // Visualization Panel
         Rectangle {
             SplitView.fillWidth: true
             color: "white"
-            
+
             ColumnLayout {
                 anchors.fill: parent
                 anchors.margins: 20
-                
+
                 Label {
                     text: "Data Visualization"
                     font.pixelSize: 18
                     font.bold: true
                 }
-                
+
                 ChartView {
                     id: chartView
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    
+
                     property var chartData: dataModel.chartData
-                    
+
                     onChartDataChanged: {
                         updateChart()
                     }
-                    
+
                     function updateChart() {
                         // Update chart with new data
                         // Implementation depends on chart type
                     }
                 }
-                
+
                 RowLayout {
                     Button {
                         text: "Export"
                         onClicked: uiController.exportChart()
                     }
-                    
+
                     Button {
                         text: "Settings"
                         onClicked: settingsDrawer.open()
                     }
-                    
+
                     Item { Layout.fillWidth: true }
-                    
+
                     ComboBox {
                         model: ["Bar Chart", "Line Chart", "Pie Chart"]
                         onCurrentTextChanged: {
@@ -840,38 +841,38 @@ ApplicationWindow {
             }
         }
     }
-    
+
     // Settings Drawer
     Drawer {
         id: settingsDrawer
         width: 300
         height: parent.height
         edge: Qt.RightEdge
-        
+
         ColumnLayout {
             anchors.fill: parent
             anchors.margins: 20
-            
+
             Label {
                 text: "Settings"
                 font.pixelSize: 18
                 font.bold: true
             }
-            
+
             GroupBox {
                 title: "Appearance"
                 Layout.fillWidth: true
-                
+
                 ColumnLayout {
                     anchors.fill: parent
-                    
+
                     Switch {
                         text: "Dark Theme"
                         onToggled: {
                             Material.theme = checked ? Material.Dark : Material.Light
                         }
                     }
-                    
+
                     RowLayout {
                         Label { text: "Primary Color:" }
                         Rectangle {
@@ -879,7 +880,7 @@ ApplicationWindow {
                             height: 30
                             color: Material.primary
                             radius: 4
-                            
+
                             MouseArea {
                                 anchors.fill: parent
                                 onClicked: colorDialog.open()
@@ -888,14 +889,14 @@ ApplicationWindow {
                     }
                 }
             }
-            
+
             GroupBox {
                 title: "Data"
                 Layout.fillWidth: true
-                
+
                 ColumnLayout {
                     anchors.fill: parent
-                    
+
                     RowLayout {
                         Label { text: "Refresh Rate:" }
                         SpinBox {
@@ -908,7 +909,7 @@ ApplicationWindow {
                             }
                         }
                     }
-                    
+
                     Switch {
                         text: "Auto Refresh"
                         checked: true
@@ -918,9 +919,9 @@ ApplicationWindow {
                     }
                 }
             }
-            
+
             Item { Layout.fillHeight: true }
-            
+
             Button {
                 text: "Close"
                 Layout.fillWidth: true

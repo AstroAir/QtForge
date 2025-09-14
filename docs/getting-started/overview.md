@@ -152,7 +152,7 @@ Now that you understand the basics, let's get QtPlugin installed and running:
 
 ### 🎯 Beginner Path
 
-1. [Installation](installation.md) - Get QtPlugin installed
+1. [Installation](installation.md) - Get QtForge installed
 2. [Quick Start](quick-start.md) - Basic usage example
 3. [First Plugin](first-plugin.md) - Create your first plugin
 4. [Examples](../examples/index.md) - Explore working examples
@@ -173,7 +173,7 @@ Now that you understand the basics, let's get QtPlugin installed and running:
 
 - **📖 Documentation**: Browse this comprehensive documentation
 - **💡 Examples**: Check out the [examples directory](../examples/index.md)
-- **🐛 Issues**: Report bugs on [GitHub Issues](https://github.com/QtForge/QtPlugin/issues)
-- **💬 Discussions**: Ask questions on [GitHub Discussions](https://github.com/QtForge/QtPlugin/discussions)
+- **🐛 Issues**: Report bugs on [GitHub Issues](https://github.com/AstroAir/QtForge/issues)
+- **💬 Discussions**: Ask questions on [GitHub Discussions](https://github.com/AstroAir/QtForge/discussions)
 
-Ready to install QtPlugin? Let's move on to the [Installation Guide](installation.md)!
+Ready to install QtForge? Let's move on to the [Installation Guide](installation.md)!

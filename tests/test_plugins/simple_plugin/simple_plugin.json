@@ -1,0 +1,19 @@
+{
+    "name": "Simple Test Plugin",
+    "id": "simple_test_plugin",
+    "version": "1.0.0",
+    "description": "A simple test plugin for validating the plugin system",
+    "author": "QtForge Test Suite",
+    "license": "MIT",
+    "category": "Testing",
+    "tags": ["test", "simple", "example"],
+    "dependencies": [],
+    "capabilities": {
+        "hot_reload": true,
+        "health_check": true,
+        "configuration": true,
+        "thread_safe": true
+    },
+    "min_qt_version": "5.15.0",
+    "min_system_version": "1.0.0"
+}

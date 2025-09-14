@@ -1,11 +1,11 @@
-site_name: QtPlugin Documentation
+site_name: QtForge Documentation
 site_description: Modern C++ Plugin System for Qt Applications
 site_author: QtForge Team
-site_url: https://qtforge.github.io/QtPlugin/
+site_url: https://qtforge.github.io/QtForge/
 
 # Repository
-repo_name: QtForge/QtPlugin
-repo_url: https://github.com/QtForge/QtPlugin
+repo_name: AstroAir/QtForge
+repo_url: https://github.com/AstroAir/QtForge
 edit_uri: edit/main/docs/
 
 # Copyright
@@ -87,7 +87,7 @@ extra:
     provider: mike
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/QtForge/QtPlugin
+      link: https://github.com/AstroAir/QtForge
     - icon: fontawesome/brands/twitter
       link: https://twitter.com/QtForge
 
@@ -121,8 +121,8 @@ markdown_extensions:
   - pymdownx.magiclink:
       normalize_issue_symbols: true
       repo_url_shorthand: true
-      user: QtForge
-      repo: QtPlugin
+      user: AstroAir
+      repo: QtForge
   - pymdownx.mark
   - pymdownx.smartsymbols
   - pymdownx.snippets:
@@ -146,7 +146,6 @@ markdown_extensions:
 # Page tree
 nav:
   - Home: index.md
-  - Installation: installation.md
   - Getting Started:
     - Overview: getting-started/overview.md
     - Installation: getting-started/installation.md
@@ -154,7 +153,6 @@ nav:
     - First Plugin: getting-started/first-plugin.md
   - User Guide:
     - Plugin Management: user-guide/plugin-management.md
-    - Plugin Development: user-guide/plugin-development.md
     - Plugin Architecture: user-guide/plugin-architecture.md
     - Python Integration: user-guide/python-integration.md
     - Security Configuration: user-guide/security-configuration.md
@@ -166,7 +164,7 @@ nav:
   - Guides:
     - readme.md: guides/readme.md
     - Architecture: guides/architecture.md
-    - Plugin Development: guides/plugin-development.md
+    - Plugin Development: developer-guide/plugin-development.md
   - API Reference:
     - Overview: api/index.md
     - API Overview: api/overview.md
@@ -198,7 +196,6 @@ nav:
       - Plugin Metrics Collector: api/monitoring/plugin-metrics-collector.md
       - Resource Monitor: api/monitoring/resource-monitor.md
     - Orchestration:
-      - Advanced Orchestrator: api/orchestration/advanced-orchestrator.md
       - Plugin Orchestrator: api/orchestration/plugin-orchestrator.md
     - Python:
       - Overview: api/python/overview.md
@@ -218,16 +215,15 @@ nav:
     - Python Integration Tutorial: tutorials/python-integration-tutorial.md
   - Examples:
     - Overview: examples/index.md
-    - Basic Plugin: examples/basic-plugin.md
+    - Basic Plugin Examples: examples/basic-plugin-examples.md
     - Service Plugin: examples/service-plugin.md
     - Network Plugin: examples/network-plugin.md
     - UI Plugin: examples/ui-plugin.md
+    - Advanced Patterns: examples/advanced-patterns.md
+    - Advanced Plugin Examples: examples/advanced-plugin-examples.md
     - Python Examples: examples/python-examples.md
     - Orchestration Examples: examples/orchestration-examples.md
     - Marketplace Examples: examples/marketplace-examples.md
-    - Advanced Examples: examples/advanced.md
-    - Basic Plugin Examples: examples/basic-plugin-examples.md
-    - Advanced Plugin Examples: examples/advanced-plugin-examples.md
     - Composition Examples: examples/composition-examples.md
     - Hot Reload Examples: examples/hot-reload-examples.md
     - Metrics Examples: examples/metrics-examples.md
@@ -239,31 +235,18 @@ nav:
     - Advanced Patterns: developer-guide/advanced-patterns.md
   - Architecture:
     - System Design: architecture/system-design.md
-  - User Guide:
-    - Plugin Architecture: user-guide/plugin-architecture.md
-    - Plugin Development: user-guide/plugin-development.md
-    - Plugin Management: user-guide/plugin-management.md
-    - Configuration: user-guide/configuration.md
-    - Security Configuration: user-guide/security-configuration.md
-    - Workflow Orchestration: user-guide/workflow-orchestration.md
-    - Marketplace Integration: user-guide/marketplace-integration.md
-    - Python Integration: user-guide/python-integration.md
-    - Advanced Plugin Development: user-guide/advanced-plugin-development.md
+  - Advanced Topics:
     - Plugin Composition: user-guide/plugin-composition.md
     - Advanced Security: user-guide/advanced-security.md
     - Advanced Orchestration: user-guide/advanced-orchestration.md
     - Transaction Management: user-guide/transaction-management.md
-    - Performance: user-guide/performance.md
     - Performance Optimization: user-guide/performance-optimization.md
     - Monitoring: user-guide/monitoring.md
     - Threading: user-guide/threading.md
+    - Workflow Orchestration: user-guide/workflow-orchestration.md
     - Troubleshooting: user-guide/troubleshooting.md
   - Bindings:
     - Multilingual Bindings Guide: bindings/multilingual-bindings-guide.md
-    - Binding Consistency Report: bindings/binding-consistency-report.md
-    - Binding Updates Summary: bindings/binding-updates-summary.md
-    - Binding Updates v3.2: bindings/binding-updates-v3-2.md
-    - Multilingual Bindings Update Report: bindings/multilingual-bindings-update-report.md
   - Contributing:
     - Overview: contributing/index.md
     - Testing: contributing/testing.md
@@ -271,9 +254,10 @@ nav:
     - FAQ: appendix/faq.md
     - License: appendix/license.md
   - Additional Resources:
-    - readme.md: readme.md
-    - Project README: project-readme.md
-    - Project Contributing: project-contributing.md
+    - Documentation Index: documentation-index.md
     - Security: security.md
-    - Documentation Update Report: documentation-update-report.md
     - Version Management: version-management.md
+    - Migration Guide: migration-v3-2.md
+    - Quick Reference: quick-reference-v3-2.md
+    - Lua Plugin Bridge: lua-plugin-bridge.md
+    - Plugin Loading Optimizations: plugin-loading-optimizations.md

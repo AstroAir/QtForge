@@ -430,8 +430,7 @@ local qtforge_core_sources = {
 
 -- Sources that require specific Qt components
 local qtforge_widgets_sources = {
-    -- Advanced plugin composition (v3.2.0) - requires QGraphicsScene
-    "src/orchestration/advanced/plugin_orchestrator_v2.cpp"
+    -- No widget-specific sources currently
 }
 
 local qtforge_network_sources = {
@@ -525,8 +524,6 @@ local qtforge_core_headers = {
     "include/qtplugin/core/dynamic_plugin_interface.hpp",
     -- Multi-language plugin bridge headers (v3.2.0)
     "include/qtplugin/bridges/python_plugin_bridge.hpp",
-    -- Enhanced plugin composition headers (v3.2.0)
-    "include/qtplugin/orchestration/advanced/plugin_orchestrator_v2.hpp",
     -- Plugin marketplace integration headers (v3.2.0)
     "include/qtplugin/marketplace/plugin_marketplace.hpp"
 }

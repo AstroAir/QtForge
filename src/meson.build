@@ -53,8 +53,6 @@ conditional_sources = [
   # 'core/dynamic_plugin_interface.cpp',
   # Multi-language plugin bridges (v3.2.0) - temporarily disabled due to MOC issues
   # 'bridges/python_plugin_bridge.cpp',
-  # Advanced orchestration (v3.2.0) - temporarily disabled due to MOC issues
-  # 'orchestration/advanced/plugin_orchestrator_v2.cpp',
   # Plugin marketplace integration (v3.2.0) - temporarily disabled due to MOC issues
   # 'marketplace/plugin_marketplace.cpp'
 ]
@@ -151,8 +149,6 @@ conditional_headers = [
   '../include/qtplugin/core/dynamic_plugin_interface.hpp',
   # Multi-language plugin bridge headers (v3.2.0)
   '../include/qtplugin/bridges/python_plugin_bridge.hpp',
-  # Enhanced plugin composition headers (v3.2.0)
-  '../include/qtplugin/orchestration/advanced/plugin_orchestrator_v2.hpp',
   # Plugin marketplace integration headers (v3.2.0)
   '../include/qtplugin/marketplace/plugin_marketplace.hpp'
 ]

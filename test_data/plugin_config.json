@@ -1,0 +1,39 @@
+{
+  "scope": "plugin",
+  "plugin_id": "test_plugin_1",
+  "timestamp": "2025-09-14T23:42:07.263566",
+  "logging": {
+    "level": "debug",
+    "output": [
+      "console",
+      "file"
+    ],
+    "file_path": "test_logs.log",
+    "max_file_size": "10MB",
+    "rotation": true
+  },
+  "security": {
+    "validation_enabled": true,
+    "signature_verification": true,
+    "sandbox_enabled": true,
+    "trust_level": "medium"
+  },
+  "performance": {
+    "max_plugins": 100,
+    "load_timeout": 30000,
+    "hot_reload_enabled": true,
+    "metrics_collection": true
+  },
+  "communication": {
+    "message_bus_enabled": true,
+    "max_message_size": "1MB",
+    "message_timeout": 5000,
+    "compression_enabled": false
+  },
+  "plugin_specific": {
+    "enabled": true,
+    "auto_start": true,
+    "priority": "normal",
+    "custom_settings": {}
+  }
+}

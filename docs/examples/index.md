@@ -2,6 +2,38 @@
 
 This section provides comprehensive examples demonstrating QtForge v3.2.0's capabilities, including the new multilingual plugin support. Each example includes complete source code, detailed explanations, and practical use cases.
 
+## 🎯 Quick Start Example
+
+Here's a minimal "Hello World" plugin to get you started:
+
+```cpp
+// hello_plugin.hpp
+#pragma once
+#include <qtforge/plugin_interface.hpp>
+
+class HelloPlugin : public qtforge::IPlugin {
+public:
+    std::string name() const override { return "HelloPlugin"; }
+    std::string version() const override { return "1.0.0"; }
+
+    qtforge::expected<void, std::string> initialize() override {
+        std::cout << "Hello from QtForge plugin!" << std::endl;
+        return {};
+    }
+
+    qtforge::expected<void, std::string> execute(const std::string& command) override {
+        if (command == "greet") {
+            std::cout << "Greetings from " << name() << "!" << std::endl;
+            return {};
+        }
+        return qtforge::unexpected("Unknown command: " + command);
+    }
+};
+
+// Export the plugin
+QTFORGE_EXPORT_PLUGIN(HelloPlugin)
+```
+
 ## 📚 Example Categories
 
 ### 🎯 Getting Started Examples
@@ -10,11 +42,11 @@ Perfect for beginners learning QtForge fundamentals:
 
 <div class="grid cards" markdown>
 
-- :material-hand-wave: **[Basic Plugin](basic-plugin.md)**
+- :material-hand-wave: **[Basic Plugin Examples](basic-plugin-examples.md)**
 
   ***
 
-  Simple "Hello World" plugin demonstrating core concepts
+  Collection of basic plugins from "Hello World" to advanced features
 
   **Features:**
 
@@ -22,8 +54,9 @@ Perfect for beginners learning QtForge fundamentals:
   - Command execution
   - Configuration management
   - Lifecycle handling
+  - Multiple example patterns
 
-  **Difficulty:** Beginner
+  **Difficulty:** Beginner to Intermediate
 
 - :material-cog: **[Service Plugin](service-plugin.md)**
 
@@ -139,7 +172,7 @@ Demonstrating advanced architectural patterns:
 
 <div class="grid cards" markdown>
 
-- :material-puzzle-plus: **[Plugin Composition](advanced.md#plugin-composition)**
+- :material-puzzle-plus: **[Plugin Composition](advanced-patterns.md#plugin-composition)**
 
   ***
 
@@ -152,7 +185,7 @@ Demonstrating advanced architectural patterns:
   - Service registration
   - Event coordination
 
-- :material-message-processing: **[Message Bus Usage](advanced.md#message-bus)**
+- :material-message-processing: **[Message Bus Usage](advanced-patterns.md#message-bus)**
 
   ***
 

@@ -533,7 +533,6 @@ After completing this guide, you might want to:
 
 - [PluginOrchestrator API](../api/orchestration/plugin-orchestrator.md) - Detailed API reference
 - [Workflow API](../api/orchestration/workflow.md) - Workflow definition reference
-- [Advanced Orchestrator API](../api/orchestration/advanced-orchestrator.md) - Enhanced orchestration features
 
 ### Examples
 

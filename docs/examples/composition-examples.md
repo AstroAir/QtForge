@@ -14,14 +14,14 @@ A basic example of combining multiple plugins into a single composite:
 
 class DataProcessingComposite : public CompositePlugin {
     Q_OBJECT
-    
+
 public:
     DataProcessingComposite(QObject* parent = nullptr);
-    
+
     PluginMetadata getMetadata() const override;
     bool initialize(PluginContext* context) override;
     bool shutdown() override;
-    
+
 private:
     void setupPipeline();
 };
@@ -35,12 +35,12 @@ DataProcessingComposite::DataProcessingComposite(QObject* parent)
 void DataProcessingComposite::setupPipeline() {
     // Add input plugin
     addSubPlugin(std::make_unique<DataInputPlugin>());
-    
+
     // Add transformation plugins
     addSubPlugin(std::make_unique<DataValidationPlugin>());
     addSubPlugin(std::make_unique<DataTransformPlugin>());
     addSubPlugin(std::make_unique<DataEnrichmentPlugin>());
-    
+
     // Add output plugin
     addSubPlugin(std::make_unique<DataOutputPlugin>());
 }
@@ -63,34 +63,34 @@ Combining multiple services into a unified interface:
 ```cpp
 class UnifiedServiceComposite : public ServicePlugin {
     Q_OBJECT
-    
+
 public:
     class UnifiedService : public QObject {
         Q_OBJECT
-        
+
     public:
         // Authentication service methods
         bool authenticate(const QString& username, const QString& password);
         void logout();
-        
+
         // Data service methods
         QVariant getData(const QString& key);
         bool setData(const QString& key, const QVariant& value);
-        
+
         // Notification service methods
         void sendNotification(const QString& message);
         void subscribeToNotifications(QObject* receiver);
-        
+
     private:
         AuthenticationService* m_authService;
         DataService* m_dataService;
         NotificationService* m_notificationService;
     };
-    
+
     QObject* getService() override {
         return &m_unifiedService;
     }
-    
+
 private:
     UnifiedService m_unifiedService;
 };
@@ -108,29 +108,29 @@ public:
     bool initialize(PluginContext* context) override {
         // Get system capabilities
         SystemInfo info = context->getSystemInfo();
-        
+
         // Add core plugins
         addSubPlugin(std::make_unique<CorePlugin>());
-        
+
         // Add optional plugins based on system capabilities
         if (info.hasGPU()) {
             addSubPlugin(std::make_unique<GPUAcceleratedPlugin>());
         } else {
             addSubPlugin(std::make_unique<CPUOptimizedPlugin>());
         }
-        
+
         if (info.hasNetworkAccess()) {
             addSubPlugin(std::make_unique<NetworkSyncPlugin>());
         } else {
             addSubPlugin(std::make_unique<OfflineStoragePlugin>());
         }
-        
+
         // Add plugins based on user preferences
         UserPreferences prefs = context->getUserPreferences();
         if (prefs.enableAdvancedFeatures()) {
             addSubPlugin(std::make_unique<AdvancedFeaturesPlugin>());
         }
-        
+
         return CompositePlugin::initialize(context);
     }
 };
@@ -150,14 +150,14 @@ public:
         uiComposite->addSubPlugin(std::make_unique<ToolbarPlugin>());
         uiComposite->addSubPlugin(std::make_unique<StatusBarPlugin>());
         addSubPlugin(std::move(uiComposite));
-        
+
         // Create data composite
         auto dataComposite = std::make_unique<DataComposite>();
         dataComposite->addSubPlugin(std::make_unique<DatabasePlugin>());
         dataComposite->addSubPlugin(std::make_unique<CachePlugin>());
         dataComposite->addSubPlugin(std::make_unique<SyncPlugin>());
         addSubPlugin(std::move(dataComposite));
-        
+
         // Create service composite
         auto serviceComposite = std::make_unique<ServiceComposite>();
         serviceComposite->addSubPlugin(std::make_unique<AuthServicePlugin>());
@@ -183,11 +183,11 @@ public:
         QStringList outputTargets;
         QVariantMap parameters;
     };
-    
+
     void configure(const PipelineConfig& config) {
         // Clear existing pipeline
         clearSubPlugins();
-        
+
         // Add input plugins
         for (const QString& source : config.inputSources) {
             auto plugin = createInputPlugin(source);
@@ -195,7 +195,7 @@ public:
                 addSubPlugin(std::move(plugin));
             }
         }
-        
+
         // Add transformation plugins
         for (const QString& transform : config.transformations) {
             auto plugin = createTransformPlugin(transform);
@@ -204,7 +204,7 @@ public:
                 addSubPlugin(std::move(plugin));
             }
         }
-        
+
         // Add output plugins
         for (const QString& target : config.outputTargets) {
             auto plugin = createOutputPlugin(target);
@@ -213,7 +213,7 @@ public:
             }
         }
     }
-    
+
 private:
     std::unique_ptr<PluginInterface> createInputPlugin(const QString& type) {
         if (type == "file") return std::make_unique<FileInputPlugin>();
@@ -221,14 +221,14 @@ private:
         if (type == "network") return std::make_unique<NetworkInputPlugin>();
         return nullptr;
     }
-    
+
     std::unique_ptr<PluginInterface> createTransformPlugin(const QString& type) {
         if (type == "filter") return std::make_unique<FilterPlugin>();
         if (type == "aggregate") return std::make_unique<AggregatePlugin>();
         if (type == "enrich") return std::make_unique<EnrichmentPlugin>();
         return nullptr;
     }
-    
+
     std::unique_ptr<PluginInterface> createOutputPlugin(const QString& type) {
         if (type == "file") return std::make_unique<FileOutputPlugin>();
         if (type == "database") return std::make_unique<DatabaseOutputPlugin>();
@@ -248,10 +248,10 @@ void setupDataPipeline() {
         {"aggregate_function", "sum"},
         {"enrich_source", "external_api"}
     };
-    
+
     auto pipeline = std::make_unique<DataPipeline>();
     pipeline->configure(config);
-    
+
     PluginManager::instance()->loadPlugin(std::move(pipeline));
 }
 ```
@@ -269,17 +269,17 @@ public:
         QStringList dependencies;
         bool optional = false;
     };
-    
+
     void defineWorkflow(const QList<WorkflowStep>& steps) {
         m_workflowSteps = steps;
         buildComposition();
     }
-    
+
 private:
     void buildComposition() {
         // Sort steps by dependencies
         auto sortedSteps = topologicalSort(m_workflowSteps);
-        
+
         for (const auto& step : sortedSteps) {
             auto plugin = PluginFactory::instance()->createPlugin(step.pluginId);
             if (plugin) {
@@ -287,20 +287,20 @@ private:
                 if (auto configurable = qobject_cast<ConfigurablePlugin*>(plugin.get())) {
                     configurable->configure(step.configuration);
                 }
-                
+
                 addSubPlugin(std::move(plugin));
             } else if (!step.optional) {
                 throw std::runtime_error("Required plugin not found: " + step.pluginId.toStdString());
             }
         }
     }
-    
+
     QList<WorkflowStep> topologicalSort(const QList<WorkflowStep>& steps) {
         // Implement topological sorting based on dependencies
         // ... sorting logic ...
         return steps; // Simplified
     }
-    
+
     QList<WorkflowStep> m_workflowSteps;
 };
 ```
@@ -316,12 +316,12 @@ class DynamicComposite : public CompositePlugin {
 public:
     void loadFromConfiguration(const QJsonObject& config) {
         QJsonArray plugins = config["plugins"].toArray();
-        
+
         for (const auto& value : plugins) {
             QJsonObject pluginConfig = value.toObject();
             QString pluginId = pluginConfig["id"].toString();
             bool enabled = pluginConfig["enabled"].toBool(true);
-            
+
             if (enabled) {
                 auto plugin = createAndConfigurePlugin(pluginId, pluginConfig);
                 if (plugin) {
@@ -330,25 +330,25 @@ public:
             }
         }
     }
-    
+
 private:
     std::unique_ptr<PluginInterface> createAndConfigurePlugin(
         const QString& pluginId, const QJsonObject& config) {
-        
+
         auto plugin = PluginFactory::instance()->createPlugin(pluginId);
         if (!plugin) {
             return nullptr;
         }
-        
+
         // Apply configuration
         if (config.contains("configuration")) {
             QJsonObject pluginConfig = config["configuration"].toObject();
             applyConfiguration(plugin.get(), pluginConfig);
         }
-        
+
         return plugin;
     }
-    
+
     void applyConfiguration(PluginInterface* plugin, const QJsonObject& config) {
         if (auto configurable = qobject_cast<ConfigurablePlugin*>(plugin)) {
             QVariantMap configMap;
@@ -402,59 +402,59 @@ public:
             [&oldPluginId](const auto& plugin) {
                 return plugin->getMetadata().id == oldPluginId;
             });
-        
+
         if (it == m_subPlugins.end()) {
             return false; // Plugin not found
         }
-        
+
         // Create new plugin
         auto newPlugin = PluginFactory::instance()->createPlugin(newPluginId);
         if (!newPlugin) {
             return false; // Failed to create new plugin
         }
-        
+
         // Initialize new plugin
         if (!newPlugin->initialize(m_context)) {
             return false; // Failed to initialize
         }
-        
+
         // Shutdown old plugin
         (*it)->shutdown();
-        
+
         // Replace plugin
         *it = std::move(newPlugin);
-        
+
         emit pluginReplaced(oldPluginId, newPluginId);
         return true;
     }
-    
+
     bool addPluginAtRuntime(std::unique_ptr<PluginInterface> plugin) {
         if (!plugin->initialize(m_context)) {
             return false;
         }
-        
+
         addSubPlugin(std::move(plugin));
         emit pluginAdded(plugin->getMetadata().id);
         return true;
     }
-    
+
     bool removePluginAtRuntime(const QString& pluginId) {
         auto it = std::find_if(m_subPlugins.begin(), m_subPlugins.end(),
             [&pluginId](const auto& plugin) {
                 return plugin->getMetadata().id == pluginId;
             });
-        
+
         if (it == m_subPlugins.end()) {
             return false;
         }
-        
+
         (*it)->shutdown();
         m_subPlugins.erase(it);
-        
+
         emit pluginRemoved(pluginId);
         return true;
     }
-    
+
 signals:
     void pluginReplaced(const QString& oldId, const QString& newId);
     void pluginAdded(const QString& pluginId);
@@ -469,37 +469,37 @@ signals:
 ```cpp
 class CompositePluginTest : public QObject {
     Q_OBJECT
-    
+
 private slots:
     void testBasicComposition() {
         auto composite = std::make_unique<DataProcessingComposite>();
-        
+
         // Verify sub-plugins are added
         QCOMPARE(composite->getSubPluginCount(), 5);
-        
+
         // Test initialization
         MockPluginContext context;
         QVERIFY(composite->initialize(&context));
-        
+
         // Verify all sub-plugins are initialized
         for (int i = 0; i < composite->getSubPluginCount(); ++i) {
             auto plugin = composite->getSubPlugin(i);
             QVERIFY(plugin->isInitialized());
         }
     }
-    
+
     void testFailureHandling() {
         auto composite = std::make_unique<TestComposite>();
-        
+
         // Add a plugin that will fail to initialize
         composite->addSubPlugin(std::make_unique<FailingPlugin>());
         composite->addSubPlugin(std::make_unique<WorkingPlugin>());
-        
+
         MockPluginContext context;
-        
+
         // Initialization should fail
         QVERIFY(!composite->initialize(&context));
-        
+
         // Verify cleanup occurred
         QVERIFY(!composite->isInitialized());
     }
@@ -523,12 +523,12 @@ private slots:
 class LazyComposite : public CompositePlugin {
 private:
     QList<std::function<std::unique_ptr<PluginInterface>()>> m_pluginFactories;
-    
+
 public:
     void addPluginFactory(std::function<std::unique_ptr<PluginInterface>()> factory) {
         m_pluginFactories.append(factory);
     }
-    
+
     PluginInterface* getPlugin(int index) override {
         if (index >= m_initializedPlugins.size()) {
             // Lazy initialization

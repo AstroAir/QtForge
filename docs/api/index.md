@@ -114,19 +114,6 @@ Plugin orchestration and workflow management:
   - Event-driven orchestration
   - Error handling and recovery
 
-- :material-format-list-bulleted-type: **[Advanced Orchestrator](orchestration/advanced-orchestrator.md)**
-
-  ***
-
-  Advanced orchestration patterns and features
-
-  **Key Features:**
-
-  - Complex workflow patterns
-  - Conditional execution
-  - Parallel processing
-  - Advanced error handling
-
 </div>
 
 ## Monitoring System
@@ -333,10 +320,10 @@ if (result) {
 
 ## Getting Started
 
-New to QtPlugin? Start with these guides:
+New to QtForge? Start with these guides:
 
 1. **[Getting Started](../getting-started/overview.md)** - Overview and concepts
-2. **[Installation](../getting-started/installation.md)** - Install QtPlugin
+2. **[Installation](../getting-started/installation.md)** - Install QtForge
 3. **[Quick Start](../getting-started/quick-start.md)** - First application
 4. **[First Plugin](../getting-started/first-plugin.md)** - Create a plugin
 

@@ -529,7 +529,6 @@ def monitor_multiple_workflows(orchestrator, execution_ids):
 
 - [Workflow Python API](workflow.md)
 - [WorkflowStep Python API](workflow-step.md)
-- [Advanced Orchestrator Python API](advanced-orchestrator.md)
 - [Orchestration User Guide](../../../user-guide/workflow-orchestration.md)
 
 ---

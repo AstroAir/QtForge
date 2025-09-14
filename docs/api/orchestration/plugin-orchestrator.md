@@ -657,7 +657,6 @@ execution_id = orchestrator.execute_workflow("data_pipeline")
 - **[PluginManager](../core/plugin-manager.md)**: Core plugin management
 - **[MessageBus](../communication/message-bus.md)**: Inter-plugin communication
 - **[TransactionManager](../transactions/transaction-manager.md)**: Transaction support
-- **[AdvancedOrchestrator](advanced-orchestrator.md)**: Enhanced orchestration features
 
 ## Migration Notes
 

@@ -1,6 +1,6 @@
 # Plugin Development Guide
 
-This comprehensive guide covers everything you need to know about developing plugins for QtForge, from basic concepts to advanced patterns and best practices.
+This comprehensive guide covers everything you need to know about developing plugins for QtForge v3.2.0, from basic concepts to advanced patterns and best practices, including the new advanced plugin interfaces and multilingual support.
 
 ## Overview
 
@@ -12,6 +12,20 @@ QtForge provides a powerful and flexible plugin architecture that enables develo
 - Testing and debugging strategies
 - Performance optimization
 - Security considerations
+- New v3.2.0 features and capabilities
+
+## Plugin Types and Interfaces (v3.2.0)
+
+QtForge v3.2.0 supports multiple plugin types and interfaces:
+
+- **Native C++ Plugins**: Implement `IPlugin`, `IAdvancedPlugin`, or `IDynamicPlugin`
+- **Python Plugins**: Written in Python using QtForge Python bindings
+- **Lua Plugins**: Written in Lua using the enhanced Lua Plugin Bridge
+- **JavaScript Plugins**: Planned for future releases
+- **Remote Plugins**: Plugins running in separate processes
+- **Composite Plugins**: Combinations of multiple plugin types
+
+Plugins are loaded at runtime and can extend application functionality without requiring recompilation.
 
 ## Plugin Architecture Fundamentals
 

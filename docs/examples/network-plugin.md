@@ -5,6 +5,7 @@ This example demonstrates how to create network-enabled plugins that can communi
 ## Overview
 
 Network plugins in QtForge enable:
+
 - HTTP client and server functionality
 - WebSocket communication
 - REST API integration
@@ -41,7 +42,7 @@ public:
     std::string description() const override {
         return "HTTP client plugin for REST API communication";
     }
-    
+
     std::vector<std::string> dependencies() const override {
         return {"CorePlugin >= 1.0.0"};
     }
@@ -59,17 +60,17 @@ public:
     qtforge::expected<std::string, qtforge::Error> get(
         const std::string& url,
         const std::map<std::string, std::string>& headers = {});
-    
+
     qtforge::expected<std::string, qtforge::Error> post(
         const std::string& url,
         const std::string& data,
         const std::map<std::string, std::string>& headers = {});
-    
+
     qtforge::expected<std::string, qtforge::Error> put(
         const std::string& url,
         const std::string& data,
         const std::map<std::string, std::string>& headers = {});
-    
+
     qtforge::expected<std::string, qtforge::Error> deleteRequest(
         const std::string& url,
         const std::map<std::string, std::string>& headers = {});
@@ -81,7 +82,7 @@ private slots:
 private:
     void setupMessageHandlers();
     void handleHttpRequest(const qtforge::HttpRequestMessage& message);
-    QNetworkRequest createRequest(const std::string& url, 
+    QNetworkRequest createRequest(const std::string& url,
                                  const std::map<std::string, std::string>& headers);
 
     qtforge::PluginState currentState_;
@@ -115,23 +116,23 @@ HttpClientPlugin::~HttpClientPlugin() {
 qtforge::expected<void, qtforge::Error> HttpClientPlugin::initialize() {
     try {
         qtforge::Logger::info(name(), "Initializing HTTP client plugin...");
-        
+
         // Create network access manager
         networkManager_ = std::make_unique<QNetworkAccessManager>(this);
-        
+
         // Configure SSL
         QSslConfiguration sslConfig = QSslConfiguration::defaultConfiguration();
         sslConfig.setProtocol(QSsl::TlsV1_2OrLater);
         QSslConfiguration::setDefaultConfiguration(sslConfig);
-        
+
         // Setup message handlers
         setupMessageHandlers();
-        
+
         currentState_ = qtforge::PluginState::Initialized;
         qtforge::Logger::info(name(), "HTTP client plugin initialized successfully");
-        
+
         return {};
-        
+
     } catch (const std::exception& e) {
         currentState_ = qtforge::PluginState::Error;
         return qtforge::Error("HTTP client plugin initialization failed: " + std::string(e.what()));
@@ -141,52 +142,52 @@ qtforge::expected<void, qtforge::Error> HttpClientPlugin::initialize() {
 qtforge::expected<std::string, qtforge::Error> HttpClientPlugin::get(
     const std::string& url,
     const std::map<std::string, std::string>& headers) {
-    
+
     try {
         QNetworkRequest request = createRequest(url, headers);
-        
+
         QEventLoop loop;
         QTimer timeoutTimer;
         timeoutTimer.setSingleShot(true);
         timeoutTimer.setInterval(30000); // 30 second timeout
-        
+
         QNetworkReply* reply = networkManager_->get(request);
-        
+
         // Connect signals
         connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
         connect(&timeoutTimer, &QTimer::timeout, &loop, &QEventLoop::quit);
         connect(reply, QOverload<const QList<QSslError>&>::of(&QNetworkReply::sslErrors),
                 this, &HttpClientPlugin::onSslErrors);
-        
+
         timeoutTimer.start();
         loop.exec();
-        
+
         if (!timeoutTimer.isActive()) {
             reply->deleteLater();
             return qtforge::Error("Request timeout");
         }
-        
+
         timeoutTimer.stop();
-        
+
         if (reply->error() != QNetworkReply::NoError) {
             QString errorString = reply->errorString();
             reply->deleteLater();
             return qtforge::Error("Network error: " + errorString.toStdString());
         }
-        
+
         QByteArray responseData = reply->readAll();
         int statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-        
+
         reply->deleteLater();
-        
+
         if (statusCode >= 400) {
-            return qtforge::Error("HTTP error " + std::to_string(statusCode) + ": " + 
+            return qtforge::Error("HTTP error " + std::to_string(statusCode) + ": " +
                                 responseData.toStdString());
         }
-        
+
         qtforge::Logger::debug(name(), "GET request successful: " + url);
         return responseData.toStdString();
-        
+
     } catch (const std::exception& e) {
         return qtforge::Error("GET request failed: " + std::string(e.what()));
     }
@@ -196,56 +197,56 @@ qtforge::expected<std::string, qtforge::Error> HttpClientPlugin::post(
     const std::string& url,
     const std::string& data,
     const std::map<std::string, std::string>& headers) {
-    
+
     try {
         QNetworkRequest request = createRequest(url, headers);
-        
+
         // Set content type if not specified
         if (headers.find("Content-Type") == headers.end()) {
             request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
         }
-        
+
         QEventLoop loop;
         QTimer timeoutTimer;
         timeoutTimer.setSingleShot(true);
         timeoutTimer.setInterval(30000);
-        
+
         QNetworkReply* reply = networkManager_->post(request, QByteArray::fromStdString(data));
-        
+
         connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
         connect(&timeoutTimer, &QTimer::timeout, &loop, &QEventLoop::quit);
         connect(reply, QOverload<const QList<QSslError>&>::of(&QNetworkReply::sslErrors),
                 this, &HttpClientPlugin::onSslErrors);
-        
+
         timeoutTimer.start();
         loop.exec();
-        
+
         if (!timeoutTimer.isActive()) {
             reply->deleteLater();
             return qtforge::Error("Request timeout");
         }
-        
+
         timeoutTimer.stop();
-        
+
         if (reply->error() != QNetworkReply::NoError) {
             QString errorString = reply->errorString();
             reply->deleteLater();
             return qtforge::Error("Network error: " + errorString.toStdString());
         }
-        
+
         QByteArray responseData = reply->readAll();
         int statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-        
+
         reply->deleteLater();
-        
+
         if (statusCode >= 400) {
-            return qtforge::Error("HTTP error " + std::to_string(statusCode) + ": " + 
+            return qtforge::Error("HTTP error " + std::to_string(statusCode) + ": " +
                                 responseData.toStdString());
         }
-        
+
         qtforge::Logger::debug(name(), "POST request successful: " + url);
         return responseData.toStdString();
-        
+
     } catch (const std::exception& e) {
         return qtforge::Error("POST request failed: " + std::string(e.what()));
     }
@@ -253,7 +254,7 @@ qtforge::expected<std::string, qtforge::Error> HttpClientPlugin::post(
 
 void HttpClientPlugin::setupMessageHandlers() {
     auto& messageBus = qtforge::MessageBus::instance();
-    
+
     // Handle HTTP request messages
     subscriptions_.emplace_back(
         messageBus.subscribe<qtforge::HttpRequestMessage>("http.request",
@@ -267,7 +268,7 @@ void HttpClientPlugin::handleHttpRequest(const qtforge::HttpRequestMessage& mess
     try {
         std::string response;
         qtforge::Error error;
-        
+
         if (message.method == "GET") {
             auto result = get(message.url, message.headers);
             if (result) {
@@ -285,7 +286,7 @@ void HttpClientPlugin::handleHttpRequest(const qtforge::HttpRequestMessage& mess
         } else {
             error = qtforge::Error("Unsupported HTTP method: " + message.method);
         }
-        
+
         // Publish response
         auto& messageBus = qtforge::MessageBus::instance();
         qtforge::HttpResponseMessage responseMsg;
@@ -293,9 +294,9 @@ void HttpClientPlugin::handleHttpRequest(const qtforge::HttpRequestMessage& mess
         responseMsg.success = error.message().empty();
         responseMsg.response = response;
         responseMsg.error = error.message();
-        
+
         messageBus.publish("http.response", responseMsg);
-        
+
     } catch (const std::exception& e) {
         qtforge::Logger::error(name(), "HTTP request handling failed: " + std::string(e.what()));
     }
@@ -304,31 +305,31 @@ void HttpClientPlugin::handleHttpRequest(const qtforge::HttpRequestMessage& mess
 QNetworkRequest HttpClientPlugin::createRequest(
     const std::string& url,
     const std::map<std::string, std::string>& headers) {
-    
+
     QNetworkRequest request(QUrl(QString::fromStdString(url)));
-    
+
     // Set default headers
     request.setHeader(QNetworkRequest::UserAgentHeader, "QtForge-HttpClient/1.0");
-    request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, 
+    request.setAttribute(QNetworkRequest::RedirectPolicyAttribute,
                         QNetworkRequest::NoLessSafeRedirectPolicy);
-    
+
     // Set custom headers
     for (const auto& header : headers) {
         request.setRawHeader(QByteArray::fromStdString(header.first),
                            QByteArray::fromStdString(header.second));
     }
-    
+
     return request;
 }
 
 void HttpClientPlugin::onSslErrors(const QList<QSslError>& errors) {
     QNetworkReply* reply = qobject_cast<QNetworkReply*>(sender());
     if (!reply) return;
-    
+
     for (const auto& error : errors) {
         qtforge::Logger::warning(name(), "SSL Error: " + error.errorString().toStdString());
     }
-    
+
     // In production, you should validate SSL certificates properly
     // For development, you might want to ignore certain SSL errors
     // reply->ignoreSslErrors();
@@ -426,14 +427,14 @@ WebSocketPlugin::~WebSocketPlugin() {
 qtforge::expected<void, qtforge::Error> WebSocketPlugin::initialize() {
     try {
         qtforge::Logger::info(name(), "Initializing WebSocket plugin...");
-        
+
         // Create WebSocket
         webSocket_ = std::make_unique<QWebSocket>();
-        
+
         // Connect signals
-        connect(webSocket_.get(), &QWebSocket::connected, 
+        connect(webSocket_.get(), &QWebSocket::connected,
                 this, &WebSocketPlugin::onConnected);
-        connect(webSocket_.get(), &QWebSocket::disconnected, 
+        connect(webSocket_.get(), &QWebSocket::disconnected,
                 this, &WebSocketPlugin::onDisconnected);
         connect(webSocket_.get(), &QWebSocket::textMessageReceived,
                 this, &WebSocketPlugin::onTextMessageReceived);
@@ -443,21 +444,21 @@ qtforge::expected<void, qtforge::Error> WebSocketPlugin::initialize() {
                 this, &WebSocketPlugin::onError);
         connect(webSocket_.get(), &QWebSocket::sslErrors,
                 this, &WebSocketPlugin::onSslErrors);
-        
+
         // Create heartbeat timer
         heartbeatTimer_ = std::make_unique<QTimer>(this);
         heartbeatTimer_->setInterval(30000); // 30 seconds
         connect(heartbeatTimer_.get(), &QTimer::timeout,
                 this, &WebSocketPlugin::onPingTimeout);
-        
+
         // Setup message handlers
         setupMessageHandlers();
-        
+
         currentState_ = qtforge::PluginState::Initialized;
         qtforge::Logger::info(name(), "WebSocket plugin initialized successfully");
-        
+
         return {};
-        
+
     } catch (const std::exception& e) {
         currentState_ = qtforge::PluginState::Error;
         return qtforge::Error("WebSocket plugin initialization failed: " + std::string(e.what()));
@@ -469,15 +470,15 @@ qtforge::expected<void, qtforge::Error> WebSocketPlugin::connectToServer(const s
         if (isConnected()) {
             return qtforge::Error("Already connected to WebSocket server");
         }
-        
+
         currentUrl_ = url;
         reconnectAttempts_ = 0;
-        
+
         qtforge::Logger::info(name(), "Connecting to WebSocket server: " + url);
         webSocket_->open(QUrl(QString::fromStdString(url)));
-        
+
         return {};
-        
+
     } catch (const std::exception& e) {
         return qtforge::Error("WebSocket connection failed: " + std::string(e.what()));
     }
@@ -488,15 +489,15 @@ qtforge::expected<void, qtforge::Error> WebSocketPlugin::sendMessage(const std::
         if (!isConnected()) {
             return qtforge::Error("WebSocket not connected");
         }
-        
+
         qint64 bytesSent = webSocket_->sendTextMessage(QString::fromStdString(message));
         if (bytesSent == -1) {
             return qtforge::Error("Failed to send WebSocket message");
         }
-        
+
         qtforge::Logger::debug(name(), "WebSocket message sent: " + std::to_string(bytesSent) + " bytes");
         return {};
-        
+
     } catch (const std::exception& e) {
         return qtforge::Error("WebSocket send failed: " + std::string(e.what()));
     }
@@ -504,42 +505,42 @@ qtforge::expected<void, qtforge::Error> WebSocketPlugin::sendMessage(const std::
 
 void WebSocketPlugin::onConnected() {
     qtforge::Logger::info(name(), "WebSocket connected to: " + currentUrl_);
-    
+
     reconnectAttempts_ = 0;
     startHeartbeat();
-    
+
     // Publish connection event
     auto& messageBus = qtforge::MessageBus::instance();
     qtforge::WebSocketEventMessage event;
     event.type = "connected";
     event.url = currentUrl_;
     event.timestamp = std::chrono::system_clock::now();
-    
+
     messageBus.publish("websocket.event", event);
 }
 
 void WebSocketPlugin::onDisconnected() {
     qtforge::Logger::info(name(), "WebSocket disconnected from: " + currentUrl_);
-    
+
     stopHeartbeat();
-    
+
     // Publish disconnection event
     auto& messageBus = qtforge::MessageBus::instance();
     qtforge::WebSocketEventMessage event;
     event.type = "disconnected";
     event.url = currentUrl_;
     event.timestamp = std::chrono::system_clock::now();
-    
+
     messageBus.publish("websocket.event", event);
-    
+
     // Auto-reconnect if enabled
     if (autoReconnect_ && reconnectAttempts_ < maxReconnectAttempts_) {
         reconnectAttempts_++;
-        
-        qtforge::Logger::info(name(), "Attempting to reconnect (" + 
-                            std::to_string(reconnectAttempts_) + "/" + 
+
+        qtforge::Logger::info(name(), "Attempting to reconnect (" +
+                            std::to_string(reconnectAttempts_) + "/" +
                             std::to_string(maxReconnectAttempts_) + ")");
-        
+
         QTimer::singleShot(5000, [this]() {
             connectToServer(currentUrl_);
         });
@@ -548,34 +549,34 @@ void WebSocketPlugin::onDisconnected() {
 
 void WebSocketPlugin::onTextMessageReceived(const QString& message) {
     qtforge::Logger::debug(name(), "WebSocket message received: " + message.toStdString());
-    
+
     // Publish received message
     auto& messageBus = qtforge::MessageBus::instance();
     qtforge::WebSocketMessageEvent messageEvent;
     messageEvent.type = "text";
     messageEvent.data = message.toStdString();
     messageEvent.timestamp = std::chrono::system_clock::now();
-    
+
     messageBus.publish("websocket.message", messageEvent);
 }
 
 void WebSocketPlugin::onError(QAbstractSocket::SocketError error) {
     QString errorString = webSocket_->errorString();
     qtforge::Logger::error(name(), "WebSocket error: " + errorString.toStdString());
-    
+
     // Publish error event
     auto& messageBus = qtforge::MessageBus::instance();
     qtforge::WebSocketEventMessage event;
     event.type = "error";
     event.error = errorString.toStdString();
     event.timestamp = std::chrono::system_clock::now();
-    
+
     messageBus.publish("websocket.event", event);
 }
 
 void WebSocketPlugin::setupMessageHandlers() {
     auto& messageBus = qtforge::MessageBus::instance();
-    
+
     // Handle WebSocket connection requests
     subscriptions_.emplace_back(
         messageBus.subscribe<qtforge::WebSocketConnectMessage>("websocket.connect",
@@ -583,7 +584,7 @@ void WebSocketPlugin::setupMessageHandlers() {
                 handleWebSocketConnect(msg);
             })
     );
-    
+
     // Handle WebSocket send requests
     subscriptions_.emplace_back(
         messageBus.subscribe<qtforge::WebSocketSendMessage>("websocket.send",
@@ -681,10 +682,10 @@ private:
     std::unique_ptr<QUdpSocket> multicastSocket_;
     std::unique_ptr<QTimer> announcementTimer_;
     std::unique_ptr<QTimer> cleanupTimer_;
-    
+
     std::map<std::string, NetworkService> announcedServices_;
     std::map<std::string, NetworkService> discoveredServices_;
-    
+
     static constexpr quint16 multicastPort_ = 45454;
     static const QHostAddress multicastAddress_;
     static constexpr int announcementInterval_ = 30000; // 30 seconds
@@ -712,21 +713,21 @@ protected:
             char** argv = nullptr;
             app_ = std::make_unique<QCoreApplication>(argc, argv);
         }
-        
+
         httpPlugin_ = std::make_unique<HttpClientPlugin>();
         httpPlugin_->initialize();
         httpPlugin_->activate();
-        
+
         wsPlugin_ = std::make_unique<WebSocketPlugin>();
         wsPlugin_->initialize();
         wsPlugin_->activate();
     }
-    
+
     void TearDown() override {
         httpPlugin_->cleanup();
         wsPlugin_->cleanup();
     }
-    
+
     std::unique_ptr<QCoreApplication> app_;
     std::unique_ptr<HttpClientPlugin> httpPlugin_;
     std::unique_ptr<WebSocketPlugin> wsPlugin_;
@@ -736,7 +737,7 @@ TEST_F(NetworkPluginTest, HttpGetRequest) {
     // Test HTTP GET request
     auto result = httpPlugin_->get("https://httpbin.org/get");
     EXPECT_TRUE(result.has_value());
-    
+
     if (result.has_value()) {
         std::string response = result.value();
         EXPECT_FALSE(response.empty());
@@ -749,10 +750,10 @@ TEST_F(NetworkPluginTest, HttpPostRequest) {
     std::string jsonData = R"({"test": "data", "number": 42})";
     std::map<std::string, std::string> headers;
     headers["Content-Type"] = "application/json";
-    
+
     auto result = httpPlugin_->post("https://httpbin.org/post", jsonData, headers);
     EXPECT_TRUE(result.has_value());
-    
+
     if (result.has_value()) {
         std::string response = result.value();
         EXPECT_FALSE(response.empty());
@@ -765,18 +766,18 @@ TEST_F(NetworkPluginTest, WebSocketConnection) {
     // Test WebSocket connection (using a test WebSocket server)
     auto connectResult = wsPlugin_->connectToServer("wss://echo.websocket.org");
     EXPECT_TRUE(connectResult.has_value());
-    
+
     // Wait for connection
     QEventLoop loop;
     QTimer::singleShot(5000, &loop, &QEventLoop::quit);
     loop.exec();
-    
+
     EXPECT_TRUE(wsPlugin_->isConnected());
-    
+
     // Test sending message
     auto sendResult = wsPlugin_->sendMessage("Hello WebSocket!");
     EXPECT_TRUE(sendResult.has_value());
-    
+
     // Disconnect
     auto disconnectResult = wsPlugin_->disconnect();
     EXPECT_TRUE(disconnectResult.has_value());

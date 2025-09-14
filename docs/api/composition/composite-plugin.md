@@ -649,7 +649,7 @@ pipeline = qtforge.composition.create_pipeline_composition("data_pipeline", ["re
 ## Related Components
 
 - **[PluginManager](../core/plugin-manager.md)**: Core plugin management for component loading
-- **[AdvancedOrchestrator](../orchestration/advanced-orchestrator.md)**: Workflow integration with compositions
+- **[PluginOrchestrator](../orchestration/plugin-orchestrator.md)**: Workflow integration with compositions
 - **[MessageBus](../communication/message-bus.md)**: Inter-plugin communication within compositions
 - **[ServiceContracts](../contracts/service-contracts.md)**: Service contract aggregation
 

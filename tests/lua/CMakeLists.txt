@@ -33,7 +33,7 @@ set(LUA_TEST_SOURCES
     test_lua_plugin_loader.cpp
     test_qt_conversions.cpp
     test_lua_integration.cpp
-    test_lua_integration_comprehensive.cpp
+    test_lua_integration_advanced.cpp
 )
 
 # Create individual test executables
@@ -70,7 +70,7 @@ foreach(test_source ${LUA_TEST_SOURCES})
     )
 endforeach()
 
-# Create comprehensive Lua test suite
+# Create advanced Lua test suite
 add_executable(QtForge_Lua_TestSuite
     test_lua_bindings.cpp
     test_lua_plugin_bridge.cpp
@@ -96,11 +96,11 @@ if(LUA_INCLUDE_DIR)
     target_include_directories(QtForge_Lua_TestSuite PRIVATE ${LUA_INCLUDE_DIR})
 endif()
 
-# Register comprehensive test
-add_test(NAME QtForge_Lua_ComprehensiveSuite COMMAND QtForge_Lua_TestSuite)
-set_tests_properties(QtForge_Lua_ComprehensiveSuite PROPERTIES
+# Register advanced test
+add_test(NAME QtForge_Lua_AdvancedSuite COMMAND QtForge_Lua_TestSuite)
+set_tests_properties(QtForge_Lua_AdvancedSuite PROPERTIES
     TIMEOUT 600
-    LABELS "Lua;Comprehensive"
+    LABELS "Lua;Advanced"
 )
 
 # Custom test targets

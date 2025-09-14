@@ -1,0 +1,16 @@
+{
+  "IID": "qtplugin.IPlugin/3.0",
+  "className": "MockPlugin",
+  "name": "Mock Plugin",
+  "description": "Mock plugin for IPlugin interface comprehensive testing",
+  "version": "1.0.0",
+  "author": "QtForge Test Suite",
+  "category": "Testing",
+  "dependencies": [],
+  "capabilities": ["testing", "mock", "interface"],
+  "metadata": {
+    "test": true,
+    "mock": true,
+    "interface_test": true
+  }
+}

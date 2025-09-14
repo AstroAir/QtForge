@@ -95,17 +95,17 @@ BackgroundProcessorPlugin::BackgroundProcessorPlugin(QObject* parent)
 
 bool BackgroundProcessorPlugin::initialize(PluginContext* context) {
     m_workerThread = new WorkerThread(this);
-    
+
     connect(m_workerThread, &WorkerThread::dataProcessed,
             this, &BackgroundProcessorPlugin::dataProcessed);
     connect(m_workerThread, &WorkerThread::progressUpdate,
             this, &BackgroundProcessorPlugin::processingProgress);
     connect(m_workerThread, &WorkerThread::errorOccurred,
             this, &BackgroundProcessorPlugin::processingError);
-    
+
     m_workerThread->start();
     m_processing = true;
-    
+
     return true;
 }
 
@@ -133,31 +133,31 @@ public:
     // Service interface
     class MicroserviceInterface : public QObject {
         Q_OBJECT
-        
+
     public:
         Q_INVOKABLE QVariant callService(const QString& endpoint, const QVariantMap& params);
         Q_INVOKABLE bool isServiceAvailable() const;
         Q_INVOKABLE QStringList getAvailableEndpoints() const;
         Q_INVOKABLE void setServiceConfiguration(const QVariantMap& config);
-        
+
     signals:
         void serviceResponse(const QString& endpoint, const QVariant& response);
         void serviceError(const QString& endpoint, const QString& error);
         void serviceStatusChanged(bool available);
-        
+
     private:
         QNetworkAccessManager* m_networkManager;
         QString m_baseUrl;
         QStringList m_endpoints;
         QVariantMap m_configuration;
         bool m_available;
-        
+
         void checkServiceHealth();
         QNetworkRequest createRequest(const QString& endpoint) const;
     };
 
     MicroservicePlugin(QObject* parent = nullptr);
-    
+
     // ServicePlugin implementation
     QObject* getService() override;
     bool startService() override;
@@ -172,20 +172,20 @@ private:
 // Advanced service implementation
 QVariant MicroservicePlugin::MicroserviceInterface::callService(
     const QString& endpoint, const QVariantMap& params) {
-    
+
     if (!m_available) {
         emit serviceError(endpoint, "Service not available");
         return QVariant();
     }
-    
+
     QNetworkRequest request = createRequest(endpoint);
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-    
+
     QJsonDocument doc = QJsonDocument::fromVariant(params);
     QByteArray data = doc.toJson();
-    
+
     QNetworkReply* reply = m_networkManager->post(request, data);
-    
+
     // Handle response asynchronously
     connect(reply, &QNetworkReply::finished, [this, endpoint, reply]() {
         if (reply->error() == QNetworkReply::NoError) {
@@ -196,7 +196,7 @@ QVariant MicroservicePlugin::MicroserviceInterface::callService(
         }
         reply->deleteLater();
     });
-    
+
     return QVariant(); // Async operation
 }
 ```
@@ -248,48 +248,48 @@ private:
     void setupStateMachine();
     void processDataEvent(const Event& event);
     void handleErrorEvent(const Event& event);
-    
+
     QStateMachine* m_stateMachine;
     QState* m_idleState;
     QState* m_processingState;
     QState* m_errorState;
-    
+
     QQueue<Event> m_eventQueue;
     QMutex m_queueMutex;
     QTimer* m_processingTimer;
-    
+
     // Event handlers
     QMap<EventType, std::function<void(const Event&)>> m_eventHandlers;
 };
 
 void EventDrivenPlugin::setupStateMachine() {
     m_stateMachine = new QStateMachine(this);
-    
+
     m_idleState = new QState(m_stateMachine);
     m_processingState = new QState(m_stateMachine);
     m_errorState = new QState(m_stateMachine);
-    
+
     // State transitions
     m_idleState->addTransition(this, &EventDrivenPlugin::eventProcessed, m_processingState);
     m_processingState->addTransition(this, &EventDrivenPlugin::eventProcessed, m_idleState);
     m_processingState->addTransition(this, &EventDrivenPlugin::eventFailed, m_errorState);
     m_errorState->addTransition(this, &EventDrivenPlugin::eventProcessed, m_idleState);
-    
+
     // State actions
     connect(m_idleState, &QState::entered, [this]() {
         qDebug() << "Plugin entered idle state";
         processEventQueue();
     });
-    
+
     connect(m_processingState, &QState::entered, [this]() {
         qDebug() << "Plugin entered processing state";
     });
-    
+
     connect(m_errorState, &QState::entered, [this]() {
         qDebug() << "Plugin entered error state";
         // Implement error recovery logic
     });
-    
+
     m_stateMachine->setInitialState(m_idleState);
     m_stateMachine->start();
 }
@@ -317,7 +317,7 @@ public:
         virtual bool isOpen() const = 0;
         virtual void close() = 0;
     };
-    
+
     class ProcessingPipeline {
     public:
         class Stage {
@@ -326,11 +326,11 @@ public:
             virtual QByteArray process(const QByteArray& input) = 0;
             virtual QString getName() const = 0;
         };
-        
+
         void addStage(std::unique_ptr<Stage> stage);
         QByteArray process(const QByteArray& input);
         void clearStages();
-        
+
     private:
         QList<std::unique_ptr<Stage>> m_stages;
     };
@@ -352,7 +352,7 @@ signals:
 private:
     ProcessingPipeline m_pipeline;
     QMap<QString, std::function<std::unique_ptr<ProcessingPipeline::Stage>(const QVariantMap&)>> m_stageFactories;
-    
+
     void registerBuiltInStages();
     void processStreamChunk(const QByteArray& chunk, DataStream* output);
 };
@@ -361,13 +361,13 @@ private:
 class CompressionStage : public StreamProcessorPlugin::ProcessingPipeline::Stage {
 public:
     CompressionStage(int compressionLevel = 6) : m_compressionLevel(compressionLevel) {}
-    
+
     QByteArray process(const QByteArray& input) override {
         return qCompress(input, m_compressionLevel);
     }
-    
+
     QString getName() const override { return "compression"; }
-    
+
 private:
     int m_compressionLevel;
 };
@@ -375,7 +375,7 @@ private:
 class EncryptionStage : public StreamProcessorPlugin::ProcessingPipeline::Stage {
 public:
     EncryptionStage(const QByteArray& key) : m_key(key) {}
-    
+
     QByteArray process(const QByteArray& input) override {
         // Implement encryption logic
         QByteArray encrypted = input;
@@ -384,9 +384,9 @@ public:
         }
         return encrypted;
     }
-    
+
     QString getName() const override { return "encryption"; }
-    
+
 private:
     QByteArray m_key;
 };
@@ -408,55 +408,55 @@ class IntegrationPlugin : public PluginInterface {
 public:
     class ExternalSystemConnector : public QObject {
         Q_OBJECT
-        
+
     public:
         virtual ~ExternalSystemConnector() = default;
         virtual bool connect() = 0;
         virtual void disconnect() = 0;
         virtual bool isConnected() const = 0;
         virtual QVariant sendRequest(const QVariantMap& request) = 0;
-        
+
     signals:
         void connected();
         void disconnected();
         void dataReceived(const QVariant& data);
         void errorOccurred(const QString& error);
     };
-    
+
     class WebSocketConnector : public ExternalSystemConnector {
         Q_OBJECT
-        
+
     public:
         WebSocketConnector(const QUrl& url, QObject* parent = nullptr);
-        
+
         bool connect() override;
         void disconnect() override;
         bool isConnected() const override;
         QVariant sendRequest(const QVariantMap& request) override;
-        
+
     private slots:
         void onConnected();
         void onDisconnected();
         void onTextMessageReceived(const QString& message);
         void onError(QAbstractSocket::SocketError error);
-        
+
     private:
         QWebSocket* m_webSocket;
         QUrl m_url;
         QMap<QString, QVariantMap> m_pendingRequests;
     };
-    
+
     class DatabaseConnector : public ExternalSystemConnector {
         Q_OBJECT
-        
+
     public:
         DatabaseConnector(const QString& connectionString, QObject* parent = nullptr);
-        
+
         bool connect() override;
         void disconnect() override;
         bool isConnected() const override;
         QVariant sendRequest(const QVariantMap& request) override;
-        
+
     private:
         QSqlDatabase m_database;
         QString m_connectionString;
@@ -481,7 +481,7 @@ signals:
 private:
     QMap<QString, std::unique_ptr<ExternalSystemConnector>> m_connectors;
     QMap<QString, std::function<std::unique_ptr<ExternalSystemConnector>(const QVariantMap&)>> m_connectorFactories;
-    
+
     void registerConnectorTypes();
     void setupConnectorSignals(const QString& name, ExternalSystemConnector* connector);
 };

@@ -51,7 +51,6 @@ Enhanced plugin validation, sandboxing, and trust management:
 Workflow and process management:
 
 - **[PluginOrchestrator](orchestration/plugin-orchestrator.md)**: Workflow coordination
-- **[AdvancedOrchestrator](orchestration/advanced-orchestrator.md)**: Complex workflows
 
 ### Monitoring Module (`qtforge::monitoring`)
 

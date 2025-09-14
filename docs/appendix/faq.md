@@ -1,12 +1,12 @@
 # Frequently Asked Questions
 
-This page answers common questions about QtPlugin. If you don't find your answer here, check the [Troubleshooting Guide](../user-guide/troubleshooting.md) or ask on [GitHub Discussions](https://github.com/QtForge/QtPlugin/discussions).
+This page answers common questions about QtForge. If you don't find your answer here, check the [Troubleshooting Guide](../user-guide/troubleshooting.md) or ask on [GitHub Discussions](https://github.com/AstroAir/QtForge/discussions).
 
 ## General Questions
 
-### What is QtPlugin?
+### What is QtForge?
 
-QtPlugin is a modern, enterprise-grade C++ plugin system built specifically for Qt applications. It provides a robust, type-safe, and performant way to add extensibility to your applications through dynamic plugin loading.
+QtForge is a modern, enterprise-grade C++ plugin system built specifically for Qt applications. It provides a robust, type-safe, and performant way to add extensibility to your applications through dynamic plugin loading.
 
 **Key Features:**
 
@@ -17,9 +17,9 @@ QtPlugin is a modern, enterprise-grade C++ plugin system built specifically for 
 - Comprehensive security system
 - Cross-platform compatibility
 
-### How is QtPlugin different from Qt's built-in plugin system?
+### How is QtForge different from Qt's built-in plugin system?
 
-| Feature            | QtPlugin               | Qt Built-in              |
+| Feature            | QtForge                | Qt Built-in              |
 | ------------------ | ---------------------- | ------------------------ |
 | **C++ Standard**   | C++20                  | C++11/14                 |
 | **Error Handling** | `expected<T,E>`        | Exceptions/null pointers |
@@ -29,9 +29,9 @@ QtPlugin is a modern, enterprise-grade C++ plugin system built specifically for 
 | **Communication**  | Message bus system     | Manual implementation    |
 | **Dependencies**   | Qt6::Core only         | Various Qt modules       |
 
-### Is QtPlugin production-ready?
+### Is QtForge production-ready?
 
-Yes! QtPlugin v3.0.0 is production-ready with:
+Yes! QtForge v3.2.0 is production-ready with:
 
 - ✅ **100% test coverage** (181/181 tests passing)
 - ✅ **Cross-platform support** (Windows, Linux, macOS)

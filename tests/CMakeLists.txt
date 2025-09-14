@@ -83,6 +83,13 @@ add_subdirectory(marketplace)
 add_subdirectory(transactions)
 add_subdirectory(python)
 
+# Additional test directories
+add_subdirectory(benchmark)
+add_subdirectory(performance)
+add_subdirectory(remote)
+add_subdirectory(test_plugins)
+add_subdirectory(unit)
+
 # Lua tests (conditional)
 if(QTFORGE_LUA_BINDINGS)
     add_subdirectory(lua)
