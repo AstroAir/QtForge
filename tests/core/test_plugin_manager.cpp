@@ -19,7 +19,7 @@
 #include "qtplugin/managers/resource_lifecycle_impl.hpp"
 #include "qtplugin/managers/resource_manager_impl.hpp"
 #include "qtplugin/managers/resource_monitor_impl.hpp"
-#include "qtplugin/security/security_manager.hpp"
+// Security components removed
 #include "qtplugin/utils/error_handling.hpp"
 
 class TestPluginManager : public QObject {
@@ -96,10 +96,8 @@ void TestPluginManager::testPluginManagerCreation() {
     // Test creation with custom components
     auto loader = std::make_unique<qtplugin::QtPluginLoader>();
     auto message_bus = std::make_unique<qtplugin::MessageBus>();
-    auto security_manager = std::make_unique<qtplugin::SecurityManager>();
-
-    auto custom_manager = std::make_unique<qtplugin::PluginManager>(
-        std::move(loader), std::move(message_bus), std::move(security_manager));
+    // Create manager without security component (removed)
+    auto custom_manager = std::make_unique<qtplugin::PluginManager>();
     QVERIFY(custom_manager != nullptr);
 }
 

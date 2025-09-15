@@ -29,7 +29,7 @@ namespace qtforge_lua {
     void register_threading_bindings(sol::state& lua);
     void register_transaction_bindings(sol::state& lua);
     void register_composition_bindings(sol::state& lua);
-    void register_marketplace_bindings(sol::state& lua);
+
 }
 #endif
 
@@ -289,7 +289,7 @@ void LuaExecutionEnvironment::register_qt_bindings() {
         qtforge_lua::register_threading_bindings(*m_lua_state);
         qtforge_lua::register_transaction_bindings(*m_lua_state);
         qtforge_lua::register_composition_bindings(*m_lua_state);
-        qtforge_lua::register_marketplace_bindings(*m_lua_state);
+
 
         qCDebug(luaBridgeLog) << "Full QtForge Lua bindings registered";
 

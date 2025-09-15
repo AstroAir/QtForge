@@ -38,7 +38,7 @@ QJsonObject PropertyMetadata::to_json() const {
     json["validation_type"] = static_cast<int>(validation_type);
     json["is_required"] = is_required;
     json["is_readonly"] = is_readonly;
-    json["is_advanced"] = is_advanced;
+    json["is_specialized"] = is_specialized;
     json["units"] = units;
     json["custom_attributes"] = custom_attributes;
     return json;
@@ -64,7 +64,7 @@ PropertyMetadata PropertyMetadata::from_json(const QJsonObject& json) {
         static_cast<PropertyValidationType>(json["validation_type"].toInt());
     metadata.is_required = json["is_required"].toBool();
     metadata.is_readonly = json["is_readonly"].toBool();
-    metadata.is_advanced = json["is_advanced"].toBool();
+    metadata.is_specialized = json["is_specialized"].toBool();
     metadata.units = json["units"].toString();
     metadata.custom_attributes = json["custom_attributes"].toObject();
 

@@ -2,7 +2,7 @@
   "remote_plugin_test_configuration": {
     "version": "3.2.0",
     "description": "Comprehensive test configuration for QtForge remote plugin system",
-    
+
     "test_categories": {
       "functional": {
         "enabled": true,
@@ -17,7 +17,7 @@
           "configuration_management"
         ]
       },
-      
+
       "performance": {
         "enabled": true,
         "timeout_seconds": 60,
@@ -38,7 +38,7 @@
           "resource_cleanup"
         ]
       },
-      
+
       "security": {
         "enabled": true,
         "timeout_seconds": 45,
@@ -53,7 +53,7 @@
           "trust_boundary_validation"
         ]
       },
-      
+
       "integration": {
         "enabled": true,
         "timeout_seconds": 90,
@@ -68,7 +68,7 @@
         ]
       }
     },
-    
+
     "test_data": {
       "mock_plugins": {
         "small_plugin": {
@@ -102,16 +102,8 @@
           "valid": false
         }
       },
-      
-      "mock_marketplace": {
-        "base_url": "https://mock.marketplace.qtforge.com",
-        "api_version": "v1",
-        "endpoints": {
-          "search": "/api/v1/plugins/search",
-          "details": "/api/v1/plugins/{id}",
-          "download": "/api/v1/plugins/{id}/download",
-          "install": "/api/v1/plugins/{id}/install"
-        },
+
+
         "sample_plugins": [
           {
             "id": "com.example.testplugin",
@@ -143,7 +135,7 @@
           }
         ]
       },
-      
+
       "network_scenarios": {
         "normal": {
           "latency_ms": 50,
@@ -171,7 +163,7 @@
         }
       }
     },
-    
+
     "security_configuration": {
       "test_certificates": {
         "valid_ca": {
@@ -187,7 +179,7 @@
           "description": "Self-signed certificate for testing"
         }
       },
-      
+
       "signature_keys": {
         "valid_key": {
           "path": "test_data/keys/valid_signing_key.pem",
@@ -198,7 +190,7 @@
           "description": "Revoked signing key for negative testing"
         }
       },
-      
+
       "malicious_patterns": [
         "eval(",
         "system(",
@@ -210,31 +202,31 @@
         "require("
       ]
     },
-    
+
     "performance_thresholds": {
       "load_times": {
         "small_plugin_ms": 500,
         "medium_plugin_ms": 2000,
         "large_plugin_ms": 10000
       },
-      
+
       "concurrent_operations": {
         "max_concurrent": 10,
         "total_time_multiplier": 1.5
       },
-      
+
       "memory_usage": {
         "baseline_mb": 50,
         "per_plugin_mb": 10,
         "max_total_mb": 200
       },
-      
+
       "cache_efficiency": {
         "hit_ratio_percent": 90,
         "cache_speedup_factor": 2.0
       }
     },
-    
+
     "error_injection": {
       "network_errors": [
         "connection_timeout",
@@ -243,14 +235,14 @@
         "http_500",
         "ssl_handshake_failure"
       ],
-      
+
       "plugin_errors": [
         "corrupted_download",
         "invalid_format",
         "missing_dependencies",
         "version_conflict"
       ],
-      
+
       "system_errors": [
         "insufficient_disk_space",
         "permission_denied",
@@ -258,7 +250,7 @@
         "concurrent_access_conflict"
       ]
     },
-    
+
     "reporting": {
       "output_formats": ["junit", "json", "html"],
       "include_performance_metrics": true,
@@ -266,7 +258,7 @@
       "include_coverage_report": true,
       "generate_benchmark_comparison": true
     },
-    
+
     "environment": {
       "temp_directory": "/tmp/qtforge_remote_plugin_tests",
       "cache_directory": "/tmp/qtforge_remote_plugin_cache",

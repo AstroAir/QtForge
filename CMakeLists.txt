@@ -50,11 +50,7 @@ set(QTFORGE_CORE_SOURCES
     src/communication/request_response_system.cpp
     src/utils/version.cpp
     src/utils/error_handling.cpp
-    src/security/security_manager.cpp
-    src/security/components/security_validator.cpp
-    src/security/components/signature_verifier.cpp
-    src/security/components/permission_manager.cpp
-    src/security/components/security_policy_engine.cpp
+
     src/managers/configuration_manager.cpp
     src/managers/components/configuration_storage.cpp
     src/managers/components/configuration_validator.cpp
@@ -66,19 +62,17 @@ set(QTFORGE_CORE_SOURCES
     src/managers/components/resource_pool.cpp
     src/managers/components/resource_allocator.cpp
     src/managers/resource_monitor.cpp
-    # Advanced plugin system sources (v3.1.0)
+    # Advanced plugin system sources (v3.1.0) - temporarily disabled
     src/communication/plugin_service_contracts.cpp
-    src/core/advanced_plugin_interface.cpp
+    # src/core/advanced_plugin_interface.cpp - removed
     src/orchestration/plugin_orchestrator.cpp
     src/composition/plugin_composition.cpp
-    src/transactions/plugin_transaction_manager.cpp
+    # src/transactions/plugin_transaction_manager.cpp - disabled (depends on advanced_plugin_interface)
     src/managers/plugin_version_manager.cpp
-    src/core/dynamic_plugin_interface.cpp
-    src/bridges/python_plugin_bridge.cpp
-    $<$<BOOL:${QTFORGE_ENABLE_SANDBOX}>:src/security/sandbox/plugin_sandbox.cpp>
-    $<$<BOOL:${QTFORGE_ENABLE_SANDBOX}>:src/security/sandbox/resource_monitor.cpp>
-    $<$<BOOL:${QTFORGE_ENABLE_SANDBOX}>:src/security/sandbox/security_enforcer.cpp>
-    src/marketplace/plugin_marketplace.cpp
+    # src/core/dynamic_plugin_interface.cpp - disabled (depends on advanced_plugin_interface)
+    # src/bridges/python_plugin_bridge.cpp - disabled (depends on advanced_plugin_interface)
+
+
 )
 
 # Core library headers
@@ -97,11 +91,7 @@ set(QTFORGE_CORE_HEADERS
     include/qtplugin/communication/request_response_system.hpp
     include/qtplugin/utils/version.hpp
     include/qtplugin/utils/error_handling.hpp
-    include/qtplugin/security/security_manager.hpp
-    include/qtplugin/security/components/security_validator.hpp
-    include/qtplugin/security/components/signature_verifier.hpp
-    include/qtplugin/security/components/permission_manager.hpp
-    include/qtplugin/security/components/security_policy_engine.hpp
+
     include/qtplugin/managers/configuration_manager.hpp
     include/qtplugin/managers/configuration_manager_impl.hpp
     include/qtplugin/managers/components/configuration_storage.hpp
@@ -121,15 +111,15 @@ set(QTFORGE_CORE_HEADERS
     include/qtplugin/qtplugin.hpp
     include/qtplugin/components.hpp
     include/qtplugin/communication/plugin_service_contracts.hpp
-    include/qtplugin/core/advanced_plugin_interface.hpp
+    # include/qtplugin/core/advanced_plugin_interface.hpp - removed
     include/qtplugin/orchestration/plugin_orchestrator.hpp
     include/qtplugin/composition/plugin_composition.hpp
-    include/qtplugin/transactions/plugin_transaction_manager.hpp
+    # include/qtplugin/transactions/plugin_transaction_manager.hpp - disabled
     include/qtplugin/managers/plugin_version_manager.hpp
-    include/qtplugin/core/dynamic_plugin_interface.hpp
-    include/qtplugin/bridges/python_plugin_bridge.hpp
-    $<$<BOOL:${QTFORGE_ENABLE_SANDBOX}>:include/qtplugin/security/sandbox/plugin_sandbox.hpp>
-    include/qtplugin/marketplace/plugin_marketplace.hpp
+    # include/qtplugin/core/dynamic_plugin_interface.hpp - disabled
+    # include/qtplugin/bridges/python_plugin_bridge.hpp - disabled
+
+
 )
 
 if(QTFORGE_BUILD_LUA_BINDINGS AND QTFORGE_LUA_FOUND AND QTFORGE_SOL2_FOUND)
@@ -191,29 +181,7 @@ if(QTFORGE_ENABLE_SANDBOX)
         target_link_libraries(QtForgeCore PRIVATE pdh psapi)
     endif()
 endif()
-if(QTFORGE_BUILD_SECURITY)
-    message(STATUS "QtForge: Building security component")
-
-    set(QTFORGE_SECURITY_SOURCES
-        src/security/security_manager.cpp
-    )
-
-    set(QTFORGE_SECURITY_HEADERS
-        include/qtplugin/security/security_manager.hpp
-    )
-
-    qtforge_add_library(
-        NAME QtForgeSecurity
-        SOURCES ${QTFORGE_SECURITY_SOURCES}
-        HEADERS ${QTFORGE_SECURITY_HEADERS}
-        QT_COMPONENTS Core
-        DEPENDENCIES QtForge::Core
-        EXPORT_NAME Security
-        OUTPUT_NAME qtforge-security
-    )
-else()
-    message(STATUS "QtForge: Security component disabled")
-endif()
+message(STATUS "QtForge: Security component removed")
 
 # Remote Plugin System
 if(QTFORGE_BUILD_REMOTE_PLUGINS)
@@ -345,11 +313,7 @@ if(QTFORGE_BUILD_PYTHON_BINDINGS AND QTFORGE_PYTHON_FOUND AND QTFORGE_PYBIND11_F
         src/python/utils/utils_bindings.cpp
     )
 
-    # Additional modules to be enabled as compilation issues are resolved
-    if(QTFORGE_PYTHON_ENABLE_SECURITY_MODULE)
-        list(APPEND QTFORGE_PYTHON_SOURCES src/python/security/security_bindings.cpp)
-        message(STATUS "QtForge: Including security bindings")
-    endif()
+    # Security bindings removed
 
     if(QTFORGE_PYTHON_ENABLE_MANAGERS_MODULE)
         list(APPEND QTFORGE_PYTHON_SOURCES src/python/managers/managers_bindings.cpp)
@@ -386,10 +350,7 @@ if(QTFORGE_BUILD_PYTHON_BINDINGS AND QTFORGE_PYTHON_FOUND AND QTFORGE_PYBIND11_F
         message(STATUS "QtForge: Including composition bindings")
     endif()
 
-    if(QTFORGE_PYTHON_ENABLE_MARKETPLACE_MODULE)
-        list(APPEND QTFORGE_PYTHON_SOURCES src/python/marketplace/marketplace_bindings.cpp)
-        message(STATUS "QtForge: Including marketplace bindings")
-    endif()
+
 
     # Communication module is already included above if Qt Network is available
 
@@ -479,9 +440,7 @@ if(QTFORGE_BUILD_PYTHON_BINDINGS AND QTFORGE_PYTHON_FOUND AND QTFORGE_PYBIND11_F
         target_compile_definitions(qtforge_python PRIVATE QTFORGE_PYTHON_ENABLE_COMPOSITION_MODULE)
     endif()
 
-    if(QTFORGE_PYTHON_ENABLE_MARKETPLACE_MODULE)
-        target_compile_definitions(qtforge_python PRIVATE QTFORGE_PYTHON_ENABLE_MARKETPLACE_MODULE)
-    endif()
+
 
     if(QTFORGE_PYTHON_BINDINGS_INSTALL)
         configure_file(
@@ -527,13 +486,13 @@ if(QTFORGE_BUILD_LUA_BINDINGS AND QTFORGE_LUA_FOUND AND QTFORGE_SOL2_FOUND)
         src/lua/qtforge_lua.cpp
         src/lua/core/core_bindings.cpp
         src/lua/utils/utils_bindings.cpp
-        src/lua/security/security_bindings.cpp
+        # Security bindings removed
         src/lua/managers/managers_bindings.cpp
         src/lua/orchestration/orchestration_bindings.cpp
         src/lua/monitoring/monitoring_bindings.cpp
         src/lua/transactions/transaction_bindings.cpp
         src/lua/composition/composition_bindings.cpp
-        src/lua/marketplace/marketplace_bindings.cpp
+
         src/lua/threading/threading_bindings.cpp
     )
 

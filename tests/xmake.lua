@@ -417,24 +417,7 @@ if has_config("tests") then
     --     set_languages("c++20")
     -- target_end()
 
-    -- Marketplace module tests (temporarily disabled)
-    -- target("test_plugin_marketplace")
-    --     set_kind("binary")
-    --     set_basename("test_plugin_marketplace")
-    --     add_rules("qt.console")
-    --     add_files("marketplace/test_plugin_marketplace.cpp")
-    --     add_packages("qt6core")
-    --     if has_package("qt6test") then
-    --         add_packages("qt6test")
-    --     end
-    --     if has_package("qt6network") then
-    --         add_packages("qt6network")
-    --     end
-    --     add_deps("QtForgeCore")
-    --     set_default(false)
-    --     set_group("tests")
-    --     set_languages("c++20")
-    -- target_end()
+
 
     -- Transactions module tests (temporarily disabled)
     -- target("test_plugin_transaction_manager")

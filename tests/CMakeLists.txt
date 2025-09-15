@@ -58,18 +58,17 @@ if(WIN32)
     foreach(TEST_DIR ${TEST_DIRS})
         add_custom_command(TARGET copy_dlls_to_tests POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:QtForgeCore> ${CMAKE_CURRENT_BINARY_DIR}/${TEST_DIR}/
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:QtForgeSecurity> ${CMAKE_CURRENT_BINARY_DIR}/${TEST_DIR}/
             COMMENT "Copying QtForge DLLs to ${TEST_DIR}"
         )
     endforeach()
 
-    add_dependencies(copy_dlls_to_tests QtForgeCore QtForgeSecurity)
+    add_dependencies(copy_dlls_to_tests QtForgeCore)
 endif()
 
 # Include modular test directories
 add_subdirectory(core)
 add_subdirectory(communication)
-add_subdirectory(security)
+# Security tests removed
 add_subdirectory(managers)
 add_subdirectory(monitoring)
 add_subdirectory(orchestration)
@@ -79,14 +78,17 @@ add_subdirectory(integration)
 # add_subdirectory(build_system) # Temporarily disabled - causes configuration hang
 add_subdirectory(bridges)
 add_subdirectory(composition)
-add_subdirectory(marketplace)
+
 add_subdirectory(transactions)
 add_subdirectory(python)
 
 # Additional test directories
 add_subdirectory(benchmark)
 add_subdirectory(performance)
-add_subdirectory(remote)
+# Remote tests (conditional)
+if(QTFORGE_BUILD_REMOTE_PLUGINS)
+    add_subdirectory(remote)
+endif()
 add_subdirectory(test_plugins)
 add_subdirectory(unit)
 

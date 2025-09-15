@@ -315,24 +315,7 @@ def test_composition_bindings() -> None:
         traceback.print_exc()
         return False
 
-def test_marketplace_bindings() -> None:
-    """Test marketplace module bindings."""
-    print("Testing marketplace bindings...")
 
-    try:
-        import qtforge.marketplace as marketplace
-
-        # Test marketplace classes
-        print("  Testing marketplace classes...")
-        assert hasattr(marketplace, 'PluginMarketplace')
-
-        print("  Marketplace bindings test passed!")
-        return True
-
-    except Exception as e:
-        print(f"  Marketplace bindings test failed: {e}")
-        traceback.print_exc()
-        return False
 
 def main() -> None:
     """Run all binding tests."""
@@ -347,7 +330,7 @@ def main() -> None:
         test_monitoring_bindings,
         test_transactions_bindings,
         test_composition_bindings,
-        test_marketplace_bindings,
+
     ]
 
     passed = 0

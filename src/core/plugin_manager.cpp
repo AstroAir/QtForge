@@ -5,7 +5,9 @@
  */
 
 #include "../../include/qtplugin/core/plugin_manager.hpp"
+#include <QCryptographicHash>
 #include <QDebug>
+#include <QFile>
 #include <QFileSystemWatcher>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -28,9 +30,9 @@
 #include "../../include/qtplugin/managers/resource_monitor_impl.hpp"
 #include "../../include/qtplugin/monitoring/plugin_hot_reload_manager.hpp"
 #include "../../include/qtplugin/monitoring/plugin_metrics_collector.hpp"
-#include "../../include/qtplugin/security/security_manager.hpp"
 
-Q_LOGGING_CATEGORY(pluginLog, "qtplugin.manager")
+
+Q_LOGGING_CATEGORY(pluginManagerLog, "qtplugin.manager")
 
 namespace qtplugin {
 
@@ -70,7 +72,6 @@ QJsonObject PluginInfo::to_json() const {
 PluginManager::PluginManager(
     std::unique_ptr<IPluginLoader> loader,
     std::unique_ptr<IMessageBus> message_bus,
-    std::unique_ptr<ISecurityManager> security_manager,
     std::unique_ptr<IConfigurationManager> configuration_manager,
     std::unique_ptr<ILoggingManager> logging_manager,
     std::unique_ptr<IResourceManager> resource_manager,
@@ -92,9 +93,7 @@ PluginManager::PluginManager(
                       : PluginLoaderFactory::create_default_loader()),
       m_message_bus(message_bus ? std::move(message_bus)
                                 : std::make_unique<MessageBus>()),
-      m_security_manager(security_manager
-                             ? std::move(security_manager)
-                             : SecurityManagerFactory::create_default()),
+
       m_configuration_manager(configuration_manager
                                   ? std::move(configuration_manager)
                                   : create_configuration_manager(this)),
@@ -180,17 +179,17 @@ qtplugin::expected<std::string, PluginError> PluginManager::load_plugin(
         return qtplugin::unexpected<PluginError>{validation_result.error()};
     }
 
-    // Security validation
-    if (options.validate_signature) {
-        auto security_result = m_security_manager->validate_plugin(
-            file_path, options.security_level);
-        if (!security_result.is_valid) {
-            std::string error_msg = "Security validation failed: ";
-            for (const auto& error : security_result.errors) {
-                error_msg += error + "; ";
-            }
+    // SHA256 validation
+    if (options.validate_sha256 && !options.expected_sha256.empty()) {
+        std::string calculated_hash = calculate_file_sha256(file_path);
+        if (calculated_hash.empty()) {
             return make_error<std::string>(PluginErrorCode::SecurityViolation,
-                                           error_msg);
+                                           "Failed to calculate SHA256 hash");
+        }
+
+        if (!verify_file_sha256(file_path, options.expected_sha256)) {
+            return make_error<std::string>(PluginErrorCode::SecurityViolation,
+                                           "SHA256 hash verification failed");
         }
     }
 
@@ -598,7 +597,7 @@ qtplugin::expected<void, PluginError> PluginManager::reload_plugin(
                 {"error_count",
                  static_cast<int>(it->second->error_log.size())}};
         } catch (...) {
-            qCWarning(pluginLog)
+            qCWarning(pluginManagerLog)
                 << "Failed to save state for plugin:"
                 << QString::fromStdString(std::string(plugin_id));
         }
@@ -640,7 +639,7 @@ qtplugin::expected<void, PluginError> PluginManager::reload_plugin(
 
                 auto config_result = it->second->instance->configure(config);
                 if (!config_result) {
-                    qCWarning(pluginLog)
+                    qCWarning(pluginManagerLog)
                         << "Failed to restore configuration for plugin:"
                         << QString::fromStdString(std::string(plugin_id));
                 }
@@ -649,7 +648,7 @@ qtplugin::expected<void, PluginError> PluginManager::reload_plugin(
                 auto restore_result = it->second->instance->execute_command(
                     "restore_state", saved_state);
                 if (!restore_result) {
-                    qCWarning(pluginLog)
+                    qCWarning(pluginManagerLog)
                         << "Failed to restore state for plugin:"
                         << QString::fromStdString(std::string(plugin_id));
 
@@ -657,7 +656,7 @@ qtplugin::expected<void, PluginError> PluginManager::reload_plugin(
                     auto config_result =
                         it->second->instance->configure(saved_state);
                     if (!config_result) {
-                        qCWarning(pluginLog)
+                        qCWarning(pluginManagerLog)
                             << "Failed to restore state as configuration for "
                                "plugin:"
                             << QString::fromStdString(std::string(plugin_id));
@@ -669,7 +668,7 @@ qtplugin::expected<void, PluginError> PluginManager::reload_plugin(
             it->second->configuration = saved_state;
 
         } catch (...) {
-            qCWarning(pluginLog)
+            qCWarning(pluginManagerLog)
                 << "Exception during state restoration for plugin:"
                 << QString::fromStdString(std::string(plugin_id));
         }
@@ -1261,7 +1260,7 @@ void PluginManager::enable_health_monitoring(
 
     m_health_timer->start(interval.count());
 
-    qCDebug(pluginLog) << "Health monitoring enabled with interval:"
+    qCDebug(pluginManagerLog) << "Health monitoring enabled with interval:"
                        << interval.count() << "ms";
 }
 
@@ -1273,7 +1272,7 @@ void PluginManager::disable_health_monitoring() {
 
     m_auto_restart_unhealthy = false;
 
-    qCDebug(pluginLog) << "Health monitoring disabled";
+    qCDebug(pluginManagerLog) << "Health monitoring disabled";
 }
 
 // Configuration hot reload
@@ -1300,7 +1299,7 @@ PluginManager::update_plugin_config(
             plugin_info.last_activity = std::chrono::system_clock::now();
         }
 
-        qCDebug(pluginLog) << "Updated configuration for plugin:"
+        qCDebug(pluginManagerLog) << "Updated configuration for plugin:"
                           << QString::fromStdString(std::string(plugin_id));
     }
 
@@ -1318,6 +1317,47 @@ PluginManager::batch_update_configs(
     }
 
     return results;
+}
+
+// === SHA256 Validation Implementation ===
+
+std::string PluginManager::calculate_file_sha256(const std::filesystem::path& file_path) const {
+    try {
+        QFile file(QString::fromStdString(file_path.string()));
+        if (!file.open(QIODevice::ReadOnly)) {
+            return {};
+        }
+
+        QCryptographicHash hash(QCryptographicHash::Sha256);
+        if (hash.addData(&file)) {
+            return hash.result().toHex().toStdString();
+        }
+
+    } catch (...) {
+        // Return empty string on error
+    }
+
+    return {};
+}
+
+bool PluginManager::verify_file_sha256(const std::filesystem::path& file_path,
+                                       const std::string& expected_hash) const {
+    std::string calculated_hash = calculate_file_sha256(file_path);
+
+    if (calculated_hash.empty()) {
+        return false;
+    }
+
+    // Case-insensitive comparison
+    std::string expected_lower = expected_hash;
+    std::string calculated_lower = calculated_hash;
+
+    std::transform(expected_lower.begin(), expected_lower.end(),
+                   expected_lower.begin(), ::tolower);
+    std::transform(calculated_lower.begin(), calculated_lower.end(),
+                   calculated_lower.begin(), ::tolower);
+
+    return expected_lower == calculated_lower;
 }
 
 }  // namespace qtplugin

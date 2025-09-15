@@ -332,14 +332,7 @@ void ComprehensiveDemo::initializeTransactions() {
     qCInfo(demo) << "✅ Transaction system ready";
 }
 
-void ComprehensiveDemo::initializeMarketplace() {
-    qCInfo(demo) << "[MARKETPLACE] Initializing plugin marketplace...";
 
-    m_marketplace = std::make_unique<qtplugin::PluginMarketplace>();
-    m_marketplace->set_repository_url("https://marketplace.qtforge.org");
-
-    qCInfo(demo) << "✅ Marketplace system ready";
-}
 
 void ComprehensiveDemo::initializeThreading() {
     qCInfo(demo) << "[THREADING] Initializing thread pool...";

@@ -24,7 +24,6 @@
 #include <qtplugin/core/plugin_registry.hpp>
 #include <qtplugin/core/plugin_dependency_resolver.hpp>
 #include <qtplugin/core/plugin_lifecycle_manager.hpp>
-#include <qtplugin/core/advanced_plugin_interface.hpp>
 #include <qtplugin/core/dynamic_plugin_interface.hpp>
 #include <qtplugin/utils/version.hpp>
 #include <qtplugin/utils/error_handling.hpp>
@@ -129,8 +128,10 @@ void bind_core_components(py::module& module) {
     // === Plugin Load Options ===
     py::class_<PluginLoadOptions>(module, "PluginLoadOptions", "Plugin loading configuration")
         .def(py::init<>(), "Create default load options")
-        .def_readwrite("validate_signature", &PluginLoadOptions::validate_signature,
-                      "Whether to validate plugin signature")
+        .def_readwrite("validate_sha256", &PluginLoadOptions::validate_sha256,
+                      "Whether to validate plugin SHA256 checksum")
+        .def_readwrite("expected_sha256", &PluginLoadOptions::expected_sha256,
+                      "Expected SHA256 hash (if validation enabled)")
         .def_readwrite("check_dependencies", &PluginLoadOptions::check_dependencies,
                       "Whether to check plugin dependencies")
         .def_readwrite("initialize_immediately", &PluginLoadOptions::initialize_immediately,

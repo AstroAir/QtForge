@@ -2,23 +2,15 @@
 
 ## Overview
 
-This document describes the comprehensive testing strategy for QtForge's remote plugin system, including marketplace integration, security validation, performance testing, and end-to-end workflows.
+This document describes the comprehensive testing strategy for QtForge's remote plugin system, including security validation, performance testing, and end-to-end workflows.
 
 ## Test Suite Structure
 
 ### Core Remote Plugin Tests
 
-#### 1. **test_remote_plugin_marketplace_integration.cpp**
-- **Purpose**: Tests marketplace integration and plugin discovery
-- **Coverage**:
-  - Plugin search functionality with filters
-  - Plugin details retrieval
-  - Plugin installation workflows
-  - Error handling and recovery
-  - Cache management and performance
-  - End-to-end marketplace workflows
 
-#### 2. **test_remote_plugin_performance.cpp**
+
+#### 1. **test_remote_plugin_performance.cpp**
 - **Purpose**: Performance and stress testing for remote plugin operations
 - **Coverage**:
   - Single plugin load performance
@@ -29,7 +21,7 @@ This document describes the comprehensive testing strategy for QtForge's remote 
   - Memory usage stress testing
   - Resource cleanup performance
 
-#### 3. **test_remote_plugin_integration.cpp** (Enhanced)
+#### 2. **test_remote_plugin_integration.cpp** (Enhanced)
 - **Purpose**: Integration testing for complete remote plugin system
 - **Coverage**:
   - Remote plugin manager extension
@@ -128,11 +120,7 @@ python tests/run_tests_with_timeout_handling.py --critical-only --category remot
 
 ### Mock Components
 
-#### MockPluginMarketplace
-- Simulates marketplace API responses
-- Configurable success/failure scenarios
-- Performance testing support
-- Error injection capabilities
+
 
 #### MockNetworkAccessManager
 - Network request simulation

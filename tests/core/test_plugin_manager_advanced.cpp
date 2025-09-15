@@ -241,7 +241,7 @@ void TestPluginManager::testPluginLoading() {
 
     // Test loading with different options
     qtplugin::PluginLoadOptions options;
-    options.validate_signature = false;
+    // Security validation removed
     options.check_dependencies = false;
     options.initialize_immediately = false;
 
@@ -605,8 +605,7 @@ void TestPluginManager::testPluginValidation() {
 
     // Test with validation enabled
     qtplugin::PluginLoadOptions options;
-    options.validate_signature = true;
-    options.security_level = qtplugin::SecurityLevel::Standard;
+    // Security validation removed
 
     // Note: This test may fail if actual signature validation is implemented
     // For testing purposes, we assume validation passes or is mocked
@@ -625,35 +624,13 @@ void TestPluginManager::testSecurityLevels() {
     createTestPlugin(plugin_file);
     createTestMetadata(plugin_file + ".json");
 
-    // Test different security levels
-    std::vector<qtplugin::SecurityLevel> levels = {
-        qtplugin::SecurityLevel::Basic, qtplugin::SecurityLevel::Standard,
-        qtplugin::SecurityLevel::Strict};
-
-    for (auto level : levels) {
-        // Unload any existing plugin first
-        auto loaded = m_manager->loaded_plugins();
-        for (const auto& id : loaded) {
-            m_manager->unload_plugin(id);
-        }
-
-        qtplugin::PluginLoadOptions options;
-        options.security_level = level;
-
-        auto result =
-            m_manager->load_plugin(plugin_file.toStdString(), options);
-
-        // The behavior depends on the security implementation
-        // For testing, we just verify the call doesn't crash
-        if (result.has_value()) {
-            qDebug() << "Plugin loaded successfully with security level"
-                     << static_cast<int>(level);
-        } else {
-            qDebug() << "Plugin loading failed with security level"
-                     << static_cast<int>(level) << ":"
-                     << QString::fromStdString(result.error().message);
-        }
-    }
+    // Security levels removed - just test basic loading
+    qtplugin::PluginLoadOptions options;
+    auto result = m_manager->load_plugin(plugin_file.toStdString(), options);
+    
+    // Dummy files will fail to load
+    QVERIFY(!result.has_value());
+    qDebug() << "Plugin loading failed as expected:" << QString::fromStdString(result.error().message);
 }
 
 void TestPluginManager::testLoadingPerformance() {
@@ -944,11 +921,6 @@ void TestPluginManager::testPluginLoadOptions() {
     // Test different loading options
     qtplugin::PluginLoadOptions options;
 
-    // Test with signature validation disabled
-    options.validate_signature = false;
-    auto result1 = m_manager->load_plugin("/invalid/path.qtplugin", options);
-    QVERIFY(!result1.has_value()); // Still fails due to invalid path
-
     // Test with dependency checking disabled
     options.check_dependencies = false;
     auto result2 = m_manager->load_plugin("/invalid/path.qtplugin", options);
@@ -959,14 +931,10 @@ void TestPluginManager::testPluginLoadOptions() {
     auto result3 = m_manager->load_plugin("/invalid/path.qtplugin", options);
     QVERIFY(!result3.has_value());
 
-    // Test with different security levels
-    options.security_level = qtplugin::SecurityLevel::None;
+    // Security levels removed - test with hot reload enabled
+    options.enable_hot_reload = true;
     auto result4 = m_manager->load_plugin("/invalid/path.qtplugin", options);
     QVERIFY(!result4.has_value());
-
-    options.security_level = qtplugin::SecurityLevel::Strict;
-    auto result5 = m_manager->load_plugin("/invalid/path.qtplugin", options);
-    QVERIFY(!result5.has_value());
 }
 
 void TestPluginManager::testPluginInfo() {

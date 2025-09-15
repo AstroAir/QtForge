@@ -14,10 +14,7 @@ set(QTFORGE_MONITORING_COMPONENTS
 )
 
 set(QTFORGE_SECURITY_COMPONENTS
-    SecurityValidator
-    SignatureVerifier
-    PermissionManager
-    SecurityPolicyEngine
+    # Security components removed
 )
 
 set(QTFORGE_CONFIGURATION_COMPONENTS

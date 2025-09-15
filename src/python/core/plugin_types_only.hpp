@@ -11,7 +11,7 @@
 
 // Include the basic types we need
 #include <qtplugin/core/plugin_interface.hpp>
-#include <qtplugin/security/security_manager.hpp>
+// Security manager removed
 #include <qtplugin/utils/version.hpp>
 #include <qtplugin/utils/error_handling.hpp>
 
@@ -29,11 +29,11 @@ namespace qtplugin {
  * @brief Plugin loading options
  */
 struct PluginLoadOptions {
-    bool validate_signature = true;      ///< Validate plugin signature
+    bool validate_sha256 = false;        ///< Validate plugin SHA256 checksum
+    std::string expected_sha256;          ///< Expected SHA256 hash (if validation enabled)
     bool check_dependencies = true;      ///< Check plugin dependencies
     bool initialize_immediately = true;  ///< Initialize plugin after loading
     bool enable_hot_reload = false;      ///< Enable hot reloading for this plugin
-    SecurityLevel security_level = SecurityLevel::Standard;  ///< Security level for plugin
     std::chrono::milliseconds timeout = std::chrono::milliseconds(5000);  ///< Loading timeout
     std::vector<std::string> allowed_paths;  ///< Allowed paths for plugin files
     bool sandbox_enabled = true;  ///< Enable sandboxing for plugin

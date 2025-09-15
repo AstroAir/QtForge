@@ -343,24 +343,7 @@ class ComprehensivePythonDemo:
             print(f"❌ Transaction demo failed: {e}")
             self.errors_encountered += 1
 
-    def demonstrate_marketplace(self) -> None:
-        """Demonstrate marketplace features"""
-        print("\n--- Marketplace Demo ---")
 
-        try:
-            # Search for plugins (simulated)
-            search_filters = qtforge.create_search_filters("demo")
-            results = qtforge.search_free_plugins(
-                self.marketplace, "comprehensive")
-            print(f"🛒 Marketplace search returned {len(results)} results")
-
-            # Get top rated plugins
-            top_plugins = qtforge.get_top_rated_plugins(self.marketplace, 5)
-            print(f"⭐ Top rated plugins: {len(top_plugins)}")
-
-        except Exception as e:
-            print(f"❌ Marketplace demo failed: {e}")
-            self.errors_encountered += 1
 
     def demonstrate_threading(self) -> None:
         """Demonstrate threading capabilities"""

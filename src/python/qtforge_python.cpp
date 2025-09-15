@@ -55,9 +55,7 @@ void bind_transactions(pybind11::module& module);
 void bind_composition(pybind11::module& module);
 #endif
 
-#ifdef QTFORGE_PYTHON_ENABLE_MARKETPLACE_MODULE
-void bind_marketplace(pybind11::module& module);
-#endif
+
 }  // namespace qtforge_python
 
 PYBIND11_MODULE(qtforge, module) {
@@ -137,11 +135,7 @@ PYBIND11_MODULE(qtforge, module) {
         info["moduleInfo"]["composition"] = false;
 #endif
 
-#ifdef QTFORGE_PYTHON_ENABLE_MARKETPLACE_MODULE
-        info["moduleInfo"]["marketplace"] = true;
-#else
-        info["moduleInfo"]["marketplace"] = false;
-#endif
+
 
         return info;
     }, "Get build and module information");
@@ -196,10 +190,7 @@ PYBIND11_MODULE(qtforge, module) {
     qtforge_python::bind_composition(composition_module);
 #endif
 
-#ifdef QTFORGE_PYTHON_ENABLE_MARKETPLACE_MODULE
-    auto marketplace_module = module.def_submodule("marketplace", "Plugin marketplace and distribution system");
-    qtforge_python::bind_marketplace(marketplace_module);
-#endif
+
 
     // Add convenience functions for common operations
     module.def("test_connection", []() -> std::string {

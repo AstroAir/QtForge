@@ -48,8 +48,8 @@ expected<std::string, PluginError> SimplePluginManager::load_plugin(
     }
 
     // Simulate loading process
-    if (options.validate_signature) {
-        // Simulate signature validation
+    if (options.validate_sha256) {
+        // Simulate SHA256 validation
     }
 
     if (options.check_dependencies) {

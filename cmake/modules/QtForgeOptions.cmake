@@ -54,8 +54,8 @@ function(qtforge_define_options)
         OFF
     )
 
-    # Security component option
-    option(QTFORGE_BUILD_SECURITY "Build security component" ON)
+    # Security component removed
+    option(QTFORGE_BUILD_SECURITY "Build security component" OFF)
 
     # Remote plugin options
     cmake_dependent_option(QTFORGE_BUILD_REMOTE_PLUGINS
@@ -101,7 +101,7 @@ function(qtforge_define_options)
     option(QTFORGE_PYTHON_ENABLE_TYPE_STUBS "Generate Python type stubs (.pyi files)" ON)
 
     # Individual module controls for progressive enablement
-    option(QTFORGE_PYTHON_ENABLE_SECURITY_MODULE "Enable security module bindings" ON)
+    option(QTFORGE_PYTHON_ENABLE_SECURITY_MODULE "Enable security module bindings" OFF)
     option(QTFORGE_PYTHON_ENABLE_MANAGERS_MODULE "Enable managers module bindings" ON)
     option(QTFORGE_PYTHON_ENABLE_COMMUNICATION_MODULE "Enable communication module bindings" ON)
     option(QTFORGE_PYTHON_ENABLE_ORCHESTRATION_MODULE "Enable orchestration module bindings" ON)
@@ -110,7 +110,7 @@ function(qtforge_define_options)
     option(QTFORGE_PYTHON_ENABLE_THREADING_MODULE "Enable threading module bindings" OFF)
     option(QTFORGE_PYTHON_ENABLE_TRANSACTIONS_MODULE "Enable transactions module bindings" OFF)
     option(QTFORGE_PYTHON_ENABLE_COMPOSITION_MODULE "Enable composition module bindings" ON)
-    option(QTFORGE_PYTHON_ENABLE_MARKETPLACE_MODULE "Enable marketplace module bindings" ON)
+
 
     # Lua binding options
     option(QTFORGE_BUILD_LUA_BINDINGS "Build Lua bindings using sol2" OFF)

@@ -36,13 +36,7 @@ endif()
 
 # === NEW COMPREHENSIVE EXAMPLES ===
 
-# Security Plugin Example (comprehensive security features)
-if(QTPLUGIN_BUILD_SECURITY)
-    add_subdirectory(04-specialized/security)
-    message(STATUS "Security Plugin example included")
-else()
-    message(STATUS "Security Plugin example skipped (QTPLUGIN_BUILD_SECURITY=OFF)")
-endif()
+# Security Plugin Example removed
 
 # Monitoring Plugin Example (hot reload and metrics collection)
 if(QTPLUGIN_BUILD_MONITORING)
@@ -77,13 +71,7 @@ endif()
 #     message(STATUS "Composition Plugin example skipped (QTPLUGIN_BUILD_COMPOSITION=OFF)")
 # endif()
 
-# Marketplace Plugin Example (plugin management and distribution)
-# if(QTPLUGIN_BUILD_MARKETPLACE)
-#     add_subdirectory(marketplace_plugin)
-#     message(STATUS "Marketplace Plugin example included")
-# else()
-#     message(STATUS "Marketplace Plugin example skipped (QTPLUGIN_BUILD_MARKETPLACE=OFF)")
-# endif()
+
 
 # Bridge Plugin Example (cross-platform and language bridging)
 # if(QTPLUGIN_BUILD_BRIDGES)

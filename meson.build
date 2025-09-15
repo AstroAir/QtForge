@@ -547,6 +547,6 @@ summary({
   'Transactions': get_option('enable_transactions'),
   'Orchestration': get_option('enable_orchestration'),
   'Composition': get_option('enable_composition'),
-  'Marketplace': get_option('enable_marketplace'),
+
   'Plugin Sandbox': get_option('enable_plugin_sandbox'),
 }, section: 'QtForge Configuration')

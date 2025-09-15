@@ -29,7 +29,7 @@
 #include <vector>
 #include "../utils/error_handling.hpp"
 #include "../utils/version.hpp"
-#include "advanced_plugin_interface.hpp"
+#include "plugin_interface.hpp"
 
 namespace qtplugin {
 
@@ -113,7 +113,7 @@ struct PluginExecutionContext {
 /**
  * @brief Dynamic plugin interface with runtime adaptation
  */
-class IDynamicPlugin : public virtual IAdvancedPlugin {
+class IDynamicPlugin : public virtual IPlugin {
 public:
     ~IDynamicPlugin() override = default;
 

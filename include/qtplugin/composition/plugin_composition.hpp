@@ -21,7 +21,6 @@
 #include <vector>
 
 #include "../communication/plugin_service_contracts.hpp"
-#include "../core/advanced_plugin_interface.hpp"
 #include "../core/plugin_interface.hpp"
 #include "../utils/error_handling.hpp"
 
@@ -175,7 +174,7 @@ private:
  * A composite plugin that aggregates multiple plugins and presents
  * them as a single unified interface.
  */
-class CompositePlugin : public QObject, public virtual IAdvancedPlugin {
+class CompositePlugin : public QObject, public virtual IPlugin {
     Q_OBJECT
 
 public:

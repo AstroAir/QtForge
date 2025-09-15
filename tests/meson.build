@@ -60,9 +60,7 @@ if get_option('enable_composition')
   subdir('composition')
 endif
 
-if get_option('enable_marketplace')
-  subdir('marketplace')
-endif
+
 
 if get_option('enable_hot_reload')
   subdir('monitoring')

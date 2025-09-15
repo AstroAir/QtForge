@@ -10,7 +10,7 @@
 #include <memory>
 #include <chrono>
 
-#include <qtplugin/core/advanced_plugin_interface.hpp>
+// Advanced plugin interface merged into core plugin interface
 #include <qtplugin/communication/service_contracts.hpp>
 #include <qtplugin/utils/error_handling.hpp>
 

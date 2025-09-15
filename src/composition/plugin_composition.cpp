@@ -505,13 +505,10 @@ std::vector<contracts::ServiceContract> CompositePlugin::get_service_contracts()
     std::vector<contracts::ServiceContract> all_contracts;
 
     for (const auto& [plugin_id, plugin] : m_component_plugins) {
-        // Try to cast to advanced plugin
-        if (auto advanced_plugin =
-                std::dynamic_pointer_cast<IAdvancedPlugin>(plugin)) {
-            auto contracts = advanced_plugin->get_service_contracts();
-            all_contracts.insert(all_contracts.end(), contracts.begin(),
-                                 contracts.end());
-        }
+        // Get service contracts from plugin
+        auto contracts = plugin->get_service_contracts();
+        all_contracts.insert(all_contracts.end(), contracts.begin(),
+                             contracts.end());
     }
 
     return all_contracts;
@@ -532,10 +529,7 @@ QJsonObject CompositePlugin::get_health_status() const {
         component_health["plugin_id"] = plugin_id;
         component_health["state"] = static_cast<int>(plugin->state());
 
-        if (auto advanced_plugin =
-                std::dynamic_pointer_cast<IAdvancedPlugin>(plugin)) {
-            component_health["health"] = advanced_plugin->get_health_status();
-        }
+        component_health["health"] = plugin->get_health_status();
 
         components_health.append(component_health);
     }
@@ -544,7 +538,7 @@ QJsonObject CompositePlugin::get_health_status() const {
     return health;
 }
 
-// === IAdvancedPlugin service delegation to component plugins ===
+// === IPlugin service delegation to component plugins ===
 qtplugin::expected<QJsonObject, PluginError> CompositePlugin::call_service(
     const QString& service_name, const QString& method_name,
     const QJsonObject& parameters, std::chrono::milliseconds timeout) {

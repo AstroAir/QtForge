@@ -1,6 +1,6 @@
 /**
  * @file plugin_lifecycle_manager.hpp
- * @brief Advanced plugin lifecycle management with state transitions and event
+ * @brief Plugin lifecycle management with state transitions and event
  * notifications
  * @version 3.0.0
  */

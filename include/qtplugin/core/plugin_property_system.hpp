@@ -74,8 +74,8 @@ struct PropertyMetadata {
         PropertyValidationType::None;  ///< Validation type
     bool is_required = false;          ///< Whether property is required
     bool is_readonly = false;          ///< Whether property is read-only
-    bool is_advanced =
-        false;      ///< Whether property is advanced (hidden by default)
+    bool is_specialized =
+        false;      ///< Whether property is specialized (hidden by default)
     QString units;  ///< Property units (e.g., "ms", "px", "%")
     QJsonObject custom_attributes;  ///< Custom attributes
 
@@ -158,7 +158,7 @@ using PropertyValidationCallback =
 /**
  * @brief Plugin property system
  *
- * This class provides advanced property management for plugins using Qt's
+ * This class provides comprehensive property management for plugins using Qt's
  * property system, including dynamic configuration, property binding,
  * validation, and change notifications.
  */
@@ -382,11 +382,11 @@ public:
     /**
      * @brief Export plugin configuration
      * @param plugin_id Plugin identifier
-     * @param include_advanced Whether to include advanced properties
+     * @param include_specialized Whether to include specialized properties
      * @return Configuration as JSON object
      */
     QJsonObject export_plugin_configuration(
-        const QString& plugin_id, bool include_advanced = false) const;
+        const QString& plugin_id, bool include_specialized = false) const;
 
     /**
      * @brief Import plugin configuration

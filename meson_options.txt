@@ -160,11 +160,7 @@ option('enable_plugin_sandbox',
   description: 'Enable experimental plugin sandboxing features'
 )
 
-option('enable_marketplace',
-  type: 'boolean',
-  value: false,  # Temporarily disabled due to missing headers
-  description: 'Enable plugin marketplace integration features'
-)
+
 
 option('enable_hot_reload',
   type: 'boolean',

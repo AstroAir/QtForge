@@ -26,7 +26,7 @@ lua_binding_sources = [
 #   'monitoring/monitoring_bindings.cpp',
 #   'transactions/transaction_bindings.cpp',
 #   'composition/composition_bindings.cpp',
-#   'marketplace/marketplace_bindings.cpp',
+
 #   'threading/threading_bindings.cpp'
 # ]
 

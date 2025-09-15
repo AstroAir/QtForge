@@ -302,28 +302,7 @@ local function test_composition_bindings()
     return success
 end
 
-local function test_marketplace_bindings()
-    print("Testing marketplace bindings...")
 
-    local success, err = pcall(function()
-        -- Test that marketplace module is available
-        assert_not_nil(qtforge.marketplace, "qtforge.marketplace module should be available")
-
-        -- Test marketplace classes
-        print("  Testing marketplace classes...")
-        assert_not_nil(PluginMarketplace, "PluginMarketplace class should be available")
-
-        print("  Marketplace bindings test passed!")
-        return true
-    end)
-
-    if not success then
-        print("  Marketplace bindings test failed: " .. tostring(err))
-        return false
-    end
-
-    return success
-end
 
 -- Main test function
 local function main()
@@ -338,7 +317,7 @@ local function main()
         test_monitoring_bindings,
         test_transactions_bindings,
         test_composition_bindings,
-        test_marketplace_bindings,
+
     }
 
     local passed = 0

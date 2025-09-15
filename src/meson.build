@@ -23,11 +23,7 @@ conditional_sources = [
   'monitoring/plugin_metrics_collector.cpp',
   'communication/message_bus.cpp',
   'communication/request_response_system.cpp',
-  'security/security_manager.cpp',
-  'security/components/security_validator.cpp',
-  'security/components/signature_verifier.cpp',
-  'security/components/permission_manager.cpp',
-  'security/components/security_policy_engine.cpp',
+
   'managers/configuration_manager.cpp',
   'managers/components/configuration_storage.cpp',
   'managers/components/configuration_validator.cpp',
@@ -53,8 +49,7 @@ conditional_sources = [
   # 'core/dynamic_plugin_interface.cpp',
   # Multi-language plugin bridges (v3.2.0) - temporarily disabled due to MOC issues
   # 'bridges/python_plugin_bridge.cpp',
-  # Plugin marketplace integration (v3.2.0) - temporarily disabled due to MOC issues
-  # 'marketplace/plugin_marketplace.cpp'
+
 ]
 
 # Only add sources that actually exist
@@ -100,10 +95,7 @@ qtforge_core_moc_headers = [
   '../include/qtplugin/managers/components/resource_pool.hpp',  # Added for ResourcePoolBase
   '../include/qtplugin/monitoring/plugin_hot_reload_manager.hpp',
   '../include/qtplugin/monitoring/plugin_metrics_collector.hpp',
-  '../include/qtplugin/security/components/permission_manager.hpp',
-  '../include/qtplugin/security/components/security_policy_engine.hpp',
-  '../include/qtplugin/security/components/security_validator.hpp',
-  '../include/qtplugin/security/components/signature_verifier.hpp',
+
   # Add core headers back - we've fixed the signal emission issues
   '../include/qtplugin/core/plugin_registry.hpp',
   '../include/qtplugin/core/plugin_dependency_resolver.hpp',
@@ -129,7 +121,7 @@ qtforge_core_headers = qtforge_existing_moc_headers + [
   '../include/qtplugin/core/service_plugin_interface.hpp',
   '../include/qtplugin/utils/version.hpp',
   '../include/qtplugin/utils/error_handling.hpp',
-  '../include/qtplugin/security/security_manager.hpp',
+
   '../include/qtplugin/components.hpp'
 ]
 
@@ -149,8 +141,7 @@ conditional_headers = [
   '../include/qtplugin/core/dynamic_plugin_interface.hpp',
   # Multi-language plugin bridge headers (v3.2.0)
   '../include/qtplugin/bridges/python_plugin_bridge.hpp',
-  # Plugin marketplace integration headers (v3.2.0)
-  '../include/qtplugin/marketplace/plugin_marketplace.hpp'
+
 ]
 
 foreach header : conditional_headers
@@ -223,9 +214,7 @@ endif
 if get_option('enable_composition')
   qtforge_core_definitions += ['-DQTFORGE_ENABLE_COMPOSITION']
 endif
-if get_option('enable_marketplace')
-  qtforge_core_definitions += ['-DQTFORGE_ENABLE_MARKETPLACE']
-endif
+
 
 # Create QtForgeCore library
 qtforge_core_lib = library('qtforge-core',
@@ -247,40 +236,7 @@ qtforge_core_dep = declare_dependency(
   dependencies: qtforge_core_qt_deps
 )
 
-# Security library sources
-qtforge_security_sources = [
-  'security/security_manager.cpp'
-]
-
-# Security library headers
-qtforge_security_headers = [
-  '../include/qtplugin/security/security_manager.hpp'
-]
-
-# Security library compile definitions
-qtforge_security_definitions = []
-if get_option('default_library') == 'shared'
-  qtforge_security_definitions += ['-DQTFORGE_SECURITY_EXPORTS']
-endif
-
-# Create QtForgeSecurity library
-qtforge_security_lib = library('qtforge-security',
-  qtforge_security_sources,
-  include_directories: [inc_dir, src_inc_dir],
-  dependencies: [qtforge_core_dep, qt6_core_dep],
-  cpp_args: qtforge_security_definitions,
-  version: meson.project_version(),
-  soversion: version_major,
-  install: true,
-  install_dir: get_option('libdir')
-)
-
-# Create dependency object for QtForgeSecurity
-qtforge_security_dep = declare_dependency(
-  link_with: qtforge_security_lib,
-  include_directories: inc_dir,
-  dependencies: [qtforge_core_dep, qt6_core_dep]
-)
+# Security library removed
 
 # Generate pkg-config files
 pkgconfig.generate(qtforge_core_lib,
@@ -293,14 +249,7 @@ pkgconfig.generate(qtforge_core_lib,
   subdirs: ['qtplugin']
 )
 
-pkgconfig.generate(qtforge_security_lib,
-  name: 'QtForgeSecurity',
-  description: 'QtForge Security Library - Security components for QtForge plugin system',
-  url: project_url,
-  version: meson.project_version(),
-  requires: ['QtForgeCore', 'Qt6Core'],
-  subdirs: ['qtplugin']
-)
+
 
 # Python bindings (temporarily disabled due to binding issues)
 # if get_option('python_bindings') and python3_dep.found() and pybind11_dep.found()

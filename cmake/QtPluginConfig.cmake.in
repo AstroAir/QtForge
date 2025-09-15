@@ -70,12 +70,12 @@ if(QTFORGE_UI_FOUND)
     include("${CMAKE_CURRENT_LIST_DIR}/QtForgeUITargets.cmake")
 endif()
 
-include("${CMAKE_CURRENT_LIST_DIR}/QtForgeSecurityTargets.cmake")
+# Security targets removed
 
 # Handle components
 set(QtForge_FOUND TRUE)
 set(QtForge_Core_FOUND TRUE)
-set(QtForge_Security_FOUND TRUE)
+set(QtForge_Security_FOUND FALSE)
 
 if(QTFORGE_NETWORK_FOUND)
     set(QtForge_Network_FOUND TRUE)
@@ -88,7 +88,7 @@ endif()
 # Backward compatibility for component found variables
 set(QtPlugin_FOUND TRUE)
 set(QtPlugin_Core_FOUND TRUE)
-set(QtPlugin_Security_FOUND TRUE)
+set(QtPlugin_Security_FOUND FALSE)
 
 if(QTFORGE_NETWORK_FOUND)
     set(QtPlugin_Network_FOUND TRUE)

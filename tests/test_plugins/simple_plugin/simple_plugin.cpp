@@ -23,9 +23,7 @@ SimpleTestPlugin::SimpleTestPlugin()
 
 SimpleTestPlugin::~SimpleTestPlugin() {
     qDebug() << "SimpleTestPlugin destroyed";
-    if (m_initialized) {
-        shutdown();
-    }
+    shutdown(); // shutdown() is noexcept, so always safe to call
 }
 
 qtplugin::expected<void, qtplugin::PluginError> 
@@ -43,7 +41,7 @@ SimpleTestPlugin::initialize() {
     QThread::msleep(10);
     
     m_initialized = true;
-    m_state = qtplugin::PluginState::Active;
+    m_state = qtplugin::PluginState::Running;
     m_counter = 0;
     
     qDebug() << "SimpleTestPlugin initialized successfully";
@@ -51,13 +49,10 @@ SimpleTestPlugin::initialize() {
     return qtplugin::make_success();
 }
 
-qtplugin::expected<void, qtplugin::PluginError> 
-SimpleTestPlugin::shutdown() {
+void SimpleTestPlugin::shutdown() noexcept {
+    try {
     if (!m_initialized) {
-        return qtplugin::make_error<void>(
-            qtplugin::PluginErrorCode::NotLoaded,
-            "Plugin is not initialized"
-        );
+        return; // Already shut down, nothing to do
     }
     
     qDebug() << "SimpleTestPlugin::shutdown() called";
@@ -70,8 +65,9 @@ SimpleTestPlugin::shutdown() {
     m_current_config = QJsonObject();
     
     qDebug() << "SimpleTestPlugin shutdown successfully";
-    
-    return qtplugin::make_success();
+    } catch (...) {
+        // Ignore all exceptions in shutdown
+    }
 }
 
 qtplugin::expected<void, qtplugin::PluginError> 
@@ -129,72 +125,44 @@ SimpleTestPlugin::configure(const QJsonObject& config) {
     return qtplugin::make_success();
 }
 
-qtplugin::PluginMetadata SimpleTestPlugin::metadata() const {
-    qtplugin::PluginMetadata meta;
-    
-    meta.id = id();
-    meta.name = name();
-    meta.description = "A simple test plugin for validating the plugin system";
-    meta.author = "QtForge Test Suite";
-    meta.version = qtplugin::PluginVersion{1, 0, 0};
-    meta.category = "Testing";
-    meta.tags = {"test", "simple", "example"};
-    meta.license = "MIT";
-    meta.homepage = "https://qtforge.example.com/plugins/simple";
-    meta.dependencies = dependencies();
-    
-    // Capabilities
-    meta.capabilities["hot_reload"] = true;
-    meta.capabilities["health_check"] = true;
-    meta.capabilities["configuration"] = true;
-    meta.capabilities["thread_safe"] = true;
-    
-    // Requirements
-    meta.min_qt_version = qtplugin::PluginVersion{5, 15, 0};
-    meta.min_system_version = qtplugin::PluginVersion{1, 0, 0};
-    
-    return meta;
-}
-
-qtplugin::expected<qtplugin::PluginHealthStatus, qtplugin::PluginError> 
-SimpleTestPlugin::check_health() const {
-    qtplugin::PluginHealthStatus status;
-    
-    // Increment health check counter
-    const_cast<SimpleTestPlugin*>(this)->m_health_check_count++;
-    
-    // Simulate occasional failures for testing
-    if (m_current_config.contains("simulate_unhealthy")) {
-        int failure_rate = m_current_config["simulate_unhealthy"].toInt();
-        if ((m_health_check_count % failure_rate) == 0) {
-            m_simulated_failures++;
-            status.is_healthy = false;
-            status.status_message = "Simulated failure for testing";
-            status.consecutive_failures = m_simulated_failures;
-        } else {
-            m_simulated_failures = 0;
-            status.is_healthy = true;
-            status.status_message = "Plugin is healthy";
-            status.consecutive_failures = 0;
-        }
-    } else {
-        // Normal health check
-        if (!m_initialized) {
-            status.is_healthy = false;
-            status.status_message = "Plugin not initialized";
-        } else if (m_state != qtplugin::PluginState::Active) {
-            status.is_healthy = false;
-            status.status_message = "Plugin not in active state";
-        } else {
-            status.is_healthy = true;
-            status.status_message = "All systems operational";
-        }
-        status.consecutive_failures = 0;
+qtplugin::expected<QJsonObject, qtplugin::PluginError> 
+SimpleTestPlugin::execute_command(std::string_view command, const QJsonObject& params) {
+    if (!m_initialized) {
+        return qtplugin::make_error<QJsonObject>(
+            qtplugin::PluginErrorCode::InvalidState,
+            "Plugin must be initialized before executing commands"
+        );
     }
     
-    status.last_check_time = std::chrono::steady_clock::now();
+    QJsonObject result;
     
-    return status;
+    if (command == "increment") {
+        increment_counter();
+        result["counter"] = m_counter;
+        result["success"] = true;
+    } else if (command == "get_counter") {
+        result["counter"] = m_counter;
+        result["success"] = true;
+    } else if (command == "set_config") {
+        if (params.contains("value")) {
+            m_config_value = params["value"].toString();
+            result["config_value"] = m_config_value;
+            result["success"] = true;
+        } else {
+            return qtplugin::make_error<QJsonObject>(
+                qtplugin::PluginErrorCode::InvalidArgument,
+                "Missing 'value' parameter for set_config command"
+            );
+        }
+    } else {
+        return qtplugin::make_error<QJsonObject>(
+            qtplugin::PluginErrorCode::CommandNotFound,
+            std::string("Unknown command: ") + std::string(command)
+        );
+    }
+    
+    return result;
 }
+
 
 } // namespace qtforge::test

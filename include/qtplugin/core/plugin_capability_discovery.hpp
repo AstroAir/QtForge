@@ -1,6 +1,6 @@
 /**
  * @file plugin_capability_discovery.hpp
- * @brief Advanced plugin capability discovery using Qt's meta-object system
+ * @brief Plugin capability discovery using Qt's meta-object system
  * @version 3.0.0
  */
 

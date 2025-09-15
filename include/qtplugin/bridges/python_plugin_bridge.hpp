@@ -565,7 +565,7 @@ public:
      */
     std::vector<std::string> available_commands() const override;
 
-    // === IAdvancedPlugin Implementation ===
+    // === Advanced Plugin Features ===
 
     /**
      * @brief Hot-reload the plugin
@@ -873,7 +873,7 @@ public:
     qtplugin::expected<void, qtplugin::PluginError> emit_event(
         const QString& event_type, const QJsonObject& event_data) override;
 
-    // === IAdvancedPlugin Implementation ===
+    // === Service Contract Implementation ===
 
     /**
      * @brief Get service contracts provided by this plugin

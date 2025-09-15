@@ -27,11 +27,7 @@
 #include "monitoring/plugin_hot_reload_manager.hpp"
 #include "monitoring/plugin_metrics_collector.hpp"
 
-// Security components
-#include "security/components/permission_manager.hpp"
-#include "security/components/security_policy_engine.hpp"
-#include "security/components/security_validator.hpp"
-#include "security/components/signature_verifier.hpp"
+// Security components removed
 
 // Configuration components
 #include "managers/components/configuration_merger.hpp"

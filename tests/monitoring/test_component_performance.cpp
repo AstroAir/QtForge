@@ -43,11 +43,7 @@
 #include "qtplugin/managers/resource_monitor_impl.hpp"
 #include "qtplugin/monitoring/plugin_hot_reload_manager.hpp"
 #include "qtplugin/monitoring/plugin_metrics_collector.hpp"
-#include "qtplugin/security/components/permission_manager.hpp"
-#include "qtplugin/security/components/security_policy_engine.hpp"
-#include "qtplugin/security/components/security_validator.hpp"
-#include "qtplugin/security/components/signature_verifier.hpp"
-#include "qtplugin/security/security_manager.hpp"
+// Security components removed
 // #include "qtplugin/managers/components/resource_monitor.hpp"  // Conflicts
 // with resource_monitor_impl.hpp
 

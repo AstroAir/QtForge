@@ -28,7 +28,7 @@ void register_monitoring_bindings(sol::state& lua);
 void register_threading_bindings(sol::state& lua);
 void register_transaction_bindings(sol::state& lua);
 void register_composition_bindings(sol::state& lua);
-void register_marketplace_bindings(sol::state& lua);
+
 
 /**
  * @brief Global Lua state for QtForge bindings
@@ -117,9 +117,7 @@ bool initialize_qtforge_lua() {
         register_composition_bindings(*g_lua_state);
         printf("Composition bindings registered\n");
 
-        printf("Registering marketplace bindings...\n");
-        register_marketplace_bindings(*g_lua_state);
-        printf("Marketplace bindings registered\n");
+
 
         printf("QtForge Lua bindings initialized successfully!\n");
         return true;
@@ -332,7 +330,7 @@ extern "C" int luaopen_qtforge(lua_State* L) {
     qtforge_lua::register_threading_bindings(lua);
     qtforge_lua::register_transaction_bindings(lua);
     qtforge_lua::register_composition_bindings(lua);
-    qtforge_lua::register_marketplace_bindings(lua);
+
 
     // Push the qtforge table onto the stack
     qtforge.push(L);

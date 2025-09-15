@@ -21,7 +21,7 @@ bool initialize() {
     qRegisterMetaType<PluginState>("PluginState");
     qRegisterMetaType<PluginCapability>("PluginCapability");
     qRegisterMetaType<PluginPriority>("PluginPriority");
-    qRegisterMetaType<SecurityLevel>("SecurityLevel");
+    // SecurityLevel registration removed
 
     // Set up logging
     QLoggingCategory::setFilterRules("qtplugin.debug=true");

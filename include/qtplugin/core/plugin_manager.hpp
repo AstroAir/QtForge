@@ -27,7 +27,7 @@
 #include <unordered_set>
 #include <vector>
 #include "../managers/plugin_version_manager.hpp"
-#include "../security/security_manager.hpp"
+
 #include "../utils/concepts.hpp"
 #include "../utils/error_handling.hpp"
 #include "plugin_dependency_resolver.hpp"
@@ -44,7 +44,7 @@ class IPluginDependencyResolver;
 class IPluginHotReloadManager;
 class IPluginMetricsCollector;
 class IMessageBus;
-class ISecurityManager;
+
 class IConfigurationManager;
 class ILoggingManager;
 class IResourceManager;
@@ -74,15 +74,14 @@ struct IResourceMonitorDeleter {
  * @brief Plugin loading options
  */
 struct PluginLoadOptions {
-    bool validate_signature = true;      ///< Validate plugin signature
+    bool validate_sha256 = false;        ///< Validate plugin SHA256 checksum
+    std::string expected_sha256;          ///< Expected SHA256 hash (if validation enabled)
     bool check_dependencies = true;      ///< Check plugin dependencies
     bool initialize_immediately = true;  ///< Initialize plugin after loading
-    bool enable_hot_reload = false;  ///< Enable hot reloading for this plugin
-    SecurityLevel security_level =
-        SecurityLevel::Basic;  ///< Security level to apply
+    bool enable_hot_reload = false;      ///< Enable hot reloading for this plugin
     std::chrono::milliseconds timeout =
-        std::chrono::seconds{30};  ///< Loading timeout
-    QJsonObject configuration;     ///< Initial plugin configuration
+        std::chrono::seconds{30};         ///< Loading timeout
+    QJsonObject configuration;           ///< Initial plugin configuration
 };
 
 /**
@@ -122,7 +121,7 @@ public:
      * @brief Constructor with dependency injection
      * @param loader Custom plugin loader (optional)
      * @param message_bus Custom message bus (optional)
-     * @param security_manager Custom security manager (optional)
+
      * @param configuration_manager Custom configuration manager (optional)
      * @param logging_manager Custom logging manager (optional)
      * @param resource_manager Custom resource manager (optional)
@@ -134,7 +133,7 @@ public:
     explicit PluginManager(
         std::unique_ptr<IPluginLoader> loader = nullptr,
         std::unique_ptr<IMessageBus> message_bus = nullptr,
-        std::unique_ptr<ISecurityManager> security_manager = nullptr,
+
         std::unique_ptr<IConfigurationManager> configuration_manager = nullptr,
         std::unique_ptr<ILoggingManager> logging_manager = nullptr,
         std::unique_ptr<IResourceManager> resource_manager = nullptr,
@@ -235,9 +234,9 @@ public:
      * @return Number of successfully loaded plugins
      */
     int load_all_plugins(const PluginLoadOptions& options = {});
-    
+
     // === Enhanced Features (v3.2.0) ===
-    
+
     /**
      * @brief Transaction for atomic plugin operations
      */
@@ -245,24 +244,24 @@ public:
     public:
         using Operation = std::function<qtplugin::expected<void, PluginError>()>;
         using Rollback = std::function<void()>;
-        
-        void add_load(const std::filesystem::path& path, 
+
+        void add_load(const std::filesystem::path& path,
                      const PluginLoadOptions& options = {});
         void add_unload(std::string_view plugin_id, bool force = false);
         void add_reload(std::string_view plugin_id, bool preserve_state = true);
         void add_operation(Operation op, Rollback rollback);
-        
+
         qtplugin::expected<void, PluginError> commit();
         void rollback();
-        
+
         bool is_committed() const { return m_committed; }
         bool is_rolled_back() const { return m_rolled_back; }
         std::vector<std::string> loaded_plugins() const { return m_loaded_plugins; }
-        
+
     private:
         friend class PluginManager;
         PluginTransaction(PluginManager* manager);
-        
+
         PluginManager* m_manager;
         std::vector<std::pair<Operation, Rollback>> m_operations;
         std::vector<std::string> m_loaded_plugins;
@@ -270,24 +269,24 @@ public:
         bool m_committed = false;
         bool m_rolled_back = false;
     };
-    
+
     /**
      * @brief Begin a new transaction
      * @return Unique pointer to transaction
      */
     std::unique_ptr<PluginTransaction> begin_transaction();
-    
+
     /**
      * @brief Batch load multiple plugins
      * @param paths Plugin file paths
      * @param options Loading options for all plugins
      * @return Map of paths to results (plugin ID or error)
      */
-    std::unordered_map<std::filesystem::path, 
+    std::unordered_map<std::filesystem::path,
                        qtplugin::expected<std::string, PluginError>>
     batch_load(const std::vector<std::filesystem::path>& paths,
                const PluginLoadOptions& options = {});
-    
+
     /**
      * @brief Batch unload multiple plugins
      * @param plugin_ids Plugin identifiers
@@ -296,41 +295,41 @@ public:
      */
     std::unordered_map<std::string, qtplugin::expected<void, PluginError>>
     batch_unload(const std::vector<std::string>& plugin_ids, bool force = false);
-    
+
     // === Plugin Lifecycle Hooks ===
-    
+
     using PluginHook = std::function<qtplugin::expected<void, PluginError>(
         const std::string& plugin_id, std::shared_ptr<IPlugin>)>;
-    
+
     /**
      * @brief Register pre-load hook
      * @param hook Function called before plugin load
      * @return Hook ID for unregistration
      */
     std::string register_pre_load_hook(PluginHook hook);
-    
+
     /**
      * @brief Register post-load hook
      * @param hook Function called after successful plugin load
      * @return Hook ID for unregistration
      */
     std::string register_post_load_hook(PluginHook hook);
-    
+
     /**
      * @brief Register pre-unload hook
      * @param hook Function called before plugin unload
      * @return Hook ID for unregistration
      */
     std::string register_pre_unload_hook(PluginHook hook);
-    
+
     /**
      * @brief Unregister hook
      * @param hook_id Hook identifier
      */
     void unregister_hook(const std::string& hook_id);
-    
+
     // === Health Monitoring ===
-    
+
     /**
      * @brief Plugin health status
      */
@@ -341,20 +340,20 @@ public:
         int consecutive_failures = 0;
         QJsonObject diagnostics;
     };
-    
+
     /**
      * @brief Perform health check on plugin
      * @param plugin_id Plugin identifier
      * @return Health status
      */
     HealthStatus check_plugin_health(std::string_view plugin_id);
-    
+
     /**
      * @brief Perform health check on all plugins
      * @return Map of plugin IDs to health status
      */
     std::unordered_map<std::string, HealthStatus> check_all_plugin_health();
-    
+
     /**
      * @brief Enable automatic health monitoring
      * @param interval Check interval
@@ -362,14 +361,14 @@ public:
      */
     void enable_health_monitoring(std::chrono::milliseconds interval,
                                  bool auto_restart = false);
-    
+
     /**
      * @brief Disable automatic health monitoring
      */
     void disable_health_monitoring();
-    
+
     // === Configuration Hot Reload ===
-    
+
     /**
      * @brief Update plugin configuration without restart
      * @param plugin_id Plugin identifier
@@ -379,7 +378,7 @@ public:
     qtplugin::expected<void, PluginError> update_plugin_config(
         std::string_view plugin_id,
         const QJsonObject& config);
-    
+
     /**
      * @brief Batch update plugin configurations
      * @param configs Map of plugin IDs to new configurations
@@ -715,27 +714,23 @@ public:
     std::optional<PluginVersionInfo> get_plugin_active_version(
         std::string_view plugin_id) const;
 
-    // === Security ===
+    // === SHA256 Validation ===
 
     /**
-     * @brief Set global security level
-     * @param level Security level to apply
+     * @brief Calculate SHA256 hash of a file
+     * @param file_path Path to the file
+     * @return SHA256 hash as hex string, empty if error
      */
-    void set_security_level(SecurityLevel level);
+    std::string calculate_file_sha256(const std::filesystem::path& file_path) const;
 
     /**
-     * @brief Get current security level
-     * @return Current security level
+     * @brief Verify file SHA256 hash
+     * @param file_path Path to the file
+     * @param expected_hash Expected SHA256 hash
+     * @return true if hash matches, false otherwise
      */
-    SecurityLevel security_level() const;
-
-    /**
-     * @brief Validate plugin security
-     * @param plugin_id Plugin identifier
-     * @return Success or error information with security validation details
-     */
-    qtplugin::expected<void, PluginError> validate_plugin_security(
-        std::string_view plugin_id) const;
+    bool verify_file_sha256(const std::filesystem::path& file_path,
+                            const std::string& expected_hash) const;
 
 signals:
     void plugin_loaded(const QString& plugin_id);
@@ -754,7 +749,7 @@ private:
     // Components
     std::unique_ptr<IPluginLoader> m_loader;
     std::unique_ptr<IMessageBus> m_message_bus;
-    std::unique_ptr<ISecurityManager> m_security_manager;
+
     std::unique_ptr<IConfigurationManager> m_configuration_manager;
     std::unique_ptr<ILoggingManager> m_logging_manager;
     std::unique_ptr<IResourceManager> m_resource_manager;
@@ -771,9 +766,9 @@ private:
                     detail::IPluginMetricsCollectorDeleter>
         m_metrics_collector;
     std::unique_ptr<IPluginVersionManager> m_version_manager;
-    
+
     // === Enhanced Features (v3.2.0) ===
-    
+
     // Lifecycle hooks
     struct HookEntry {
         std::string id;
@@ -783,13 +778,13 @@ private:
     std::vector<HookEntry> m_post_load_hooks;
     std::vector<HookEntry> m_pre_unload_hooks;
     mutable std::shared_mutex m_hooks_mutex;
-    
+
     // Health monitoring
     std::unordered_map<std::string, HealthStatus> m_health_status;
     std::unique_ptr<QTimer> m_health_timer;
     bool m_auto_restart_unhealthy = false;
     mutable std::shared_mutex m_health_mutex;
-    
+
     // Transaction support
     std::vector<std::unique_ptr<PluginTransaction>> m_active_transactions;
     mutable std::mutex m_transaction_mutex;
@@ -815,8 +810,7 @@ private:
     std::atomic<bool> m_monitoring_active{false};
     std::unique_ptr<QTimer> m_monitoring_timer;
 
-    // Security
-    SecurityLevel m_security_level = SecurityLevel::Basic;
+
 
     // Helper methods
     qtplugin::expected<void, PluginError> validate_plugin_file(

@@ -240,14 +240,7 @@ Integrate QtForge with external systems and languages.
 - ✅ Migration strategies
 - ✅ Dependency management
 
-#### [marketplace/](05-integration/marketplace/)
 
-**Plugin discovery and installation** - Plugin ecosystem
-
-- ✅ Plugin discovery and search
-- ✅ Installation and updates
-- ✅ Marketplace integration
-- ✅ Plugin distribution
 
 ### 🚀 06-comprehensive/ - Complete Applications
 

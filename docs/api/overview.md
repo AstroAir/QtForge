@@ -71,11 +71,7 @@ Advanced plugin composition patterns:
 
 - **[CompositePlugin](composition/composite-plugin.md)**: Plugin aggregation
 
-### Marketplace Module (`qtforge::marketplace`)
 
-Plugin distribution and discovery:
-
-- **[PluginMarketplace](marketplace/plugin-marketplace.md)**: Plugin marketplace integration
 
 ## Language Bindings
 

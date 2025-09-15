@@ -5,7 +5,7 @@
  *
  * This header provides access to the new component-based architecture
  * of the QtPlugin library. Include this file to access individual
- * components for advanced usage scenarios.
+ * components for specialized usage scenarios.
  *
  * For basic usage, include qtplugin.hpp instead.
  */
@@ -20,11 +20,7 @@
 #include "monitoring/plugin_hot_reload_manager.hpp"
 #include "monitoring/plugin_metrics_collector.hpp"
 
-// Security components
-#include "security/components/permission_manager.hpp"
-#include "security/components/security_policy_engine.hpp"
-#include "security/components/security_validator.hpp"
-#include "security/components/signature_verifier.hpp"
+// Security components removed
 
 // Configuration components
 #include "managers/components/configuration_merger.hpp"
@@ -43,7 +39,7 @@
  *
  * This namespace contains all the individual components that make up
  * the QtPlugin system. These components can be used independently
- * for advanced scenarios or custom plugin system implementations.
+ * for specialized scenarios or custom plugin system implementations.
  */
 namespace qtplugin::components {
 

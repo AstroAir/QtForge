@@ -1,13 +1,20 @@
 /**
  * @file plugin_interface.cpp
- * @brief Implementation of core plugin interface
- * @version 3.0.0
+ * @brief Implementation of complete plugin interface with service contracts support
+ * @version 3.1.0
+ * @author QtPlugin Development Team
  */
 
+#include <QDateTime>
 #include <QJsonArray>
 #include <QJsonDocument>
+#include <QLoggingCategory>
 #include <QUuid>
+#include <future>
 #include <qtplugin/core/plugin_interface.hpp>
+#include "qtplugin/communication/request_response_system.hpp"
+
+Q_LOGGING_CATEGORY(pluginLog, "qtplugin.core")
 
 namespace qtplugin {
 

@@ -34,7 +34,6 @@
  *     // Create custom plugin system with specific components
  *     auto manager = qtplugin::PluginSystemBuilder()
  *         .with_plugin_registry(qtplugin::ComponentFactory::create_plugin_registry())
- *         .with_security_validator(qtplugin::ComponentFactory::create_security_validator())
  *         .build();
  *
  *     auto result = manager->load_plugin("path/to/plugin.so");
@@ -52,7 +51,7 @@
 #define QTPLUGIN_VERSION "3.2.0"
 
 // Core components
-#include "core/plugin_interface.hpp"
+// #include "core/plugin_interface.hpp" - included by plugin_lifecycle_manager.hpp
 #include "core/plugin_lifecycle_manager.hpp"  // Re-enabled with custom state machine
 #include "core/plugin_loader.hpp"
 #include "core/plugin_manager.hpp"  // Re-enabled after fixing MOC issues
@@ -97,7 +96,7 @@
 // #include "managers/resource_monitor.hpp"  // Temporarily disabled due to
 // conflicts
 
-// For advanced component usage, include:
+// For specialized component usage, include:
 // #include <qtplugin/components.hpp>
 
 // Utilities
@@ -105,8 +104,7 @@
 #include "utils/error_handling.hpp"
 #include "utils/version.hpp"
 
-// Security (always available)
-#include "security/security_manager.hpp"
+// Security components removed
 
 // UI components (if available) - using comprehensive interface from interfaces/
 // #ifdef QTPLUGIN_BUILD_UI

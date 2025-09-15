@@ -99,15 +99,7 @@
       "max_log_size_mb": 100
     }
   },
-  "marketplace": {
-    "enabled": true,
-    "repository_url": "https://marketplace.qtforge.org",
-    "auto_update_check": true,
-    "update_check_interval_hours": 24,
-    "download_timeout_ms": 300000,
-    "verify_signatures": true,
-    "cache_directory": "./cache/marketplace"
-  },
+
   "threading": {
     "thread_pool": {
       "min_threads": 2,

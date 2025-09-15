@@ -398,11 +398,7 @@ local qtforge_core_sources = {
     "src/monitoring/plugin_metrics_collector.cpp",
     "src/communication/message_bus.cpp",
     "src/communication/request_response_system.cpp",
-    "src/security/security_manager.cpp",
-    "src/security/components/security_validator.cpp",
-    "src/security/components/signature_verifier.cpp",
-    "src/security/components/permission_manager.cpp",
-    "src/security/components/security_policy_engine.cpp",
+
     "src/managers/configuration_manager.cpp",
     "src/managers/components/configuration_storage.cpp",
     "src/managers/components/configuration_validator.cpp",
@@ -434,8 +430,7 @@ local qtforge_widgets_sources = {
 }
 
 local qtforge_network_sources = {
-    -- Plugin marketplace integration (v3.2.0) - requires QNetworkAccessManager
-    "src/marketplace/plugin_marketplace.cpp"
+    -- No network-specific sources currently
 }
 
 -- Conditionally add Lua-related sources if Lua bindings are enabled
@@ -524,8 +519,7 @@ local qtforge_core_headers = {
     "include/qtplugin/core/dynamic_plugin_interface.hpp",
     -- Multi-language plugin bridge headers (v3.2.0)
     "include/qtplugin/bridges/python_plugin_bridge.hpp",
-    -- Plugin marketplace integration headers (v3.2.0)
-    "include/qtplugin/marketplace/plugin_marketplace.hpp"
+
 }
 
 -- Conditionally add Lua headers if enabled
@@ -707,7 +701,7 @@ if has_config("python_bindings") and has_package("python3") and has_package("pyb
         -- add_files("src/python/monitoring/monitoring_bindings.cpp")
         -- add_files("src/python/transactions/transaction_bindings.cpp")
         -- add_files("src/python/composition/composition_bindings.cpp")
-        -- add_files("src/python/marketplace/marketplace_bindings.cpp")
+
         -- add_files("src/python/threading/threading_bindings.cpp")
 
         -- Communication bindings (temporarily disabled in CMake)
@@ -764,7 +758,7 @@ if has_config("lua_bindings") and has_package("lua") and has_package("sol2") the
         -- add_files("src/lua/monitoring/monitoring_bindings.cpp")
         -- add_files("src/lua/transactions/transaction_bindings.cpp")
         -- add_files("src/lua/composition/composition_bindings.cpp")
-        -- add_files("src/lua/marketplace/marketplace_bindings.cpp")
+
         -- add_files("src/lua/threading/threading_bindings.cpp")
 
         -- Communication bindings (temporarily disabled in CMake)

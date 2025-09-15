@@ -265,12 +265,7 @@ Plugin composition and architectural patterns:
 - **[CompositePlugin](composition/composite-plugin.md)** - Plugin composition framework
 - **[PluginComposition](composition/plugin-composition.md)** - Composition definitions
 
-### Marketplace Module (`qtforge.marketplace`)
 
-Plugin discovery and installation:
-
-- **[PluginMarketplace](marketplace/plugin-marketplace.md)** - Marketplace client
-- **[MarketplaceManager](marketplace/marketplace-manager.md)** - Multi-marketplace management
 
 ### Threading Module (`qtforge.threading`)
 
