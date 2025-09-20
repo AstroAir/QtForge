@@ -12,8 +12,8 @@
 #include <qtplugin/core/dynamic_plugin_interface.hpp>
 #include <qtplugin/utils/error_handling.hpp>
 
-#include "../test_helpers.hpp"
-#include "../test_config_templates.hpp"
+#include "../utils/test_helpers.hpp"
+#include "../utils/test_config_templates.hpp"
 
 using namespace qtplugin;
 using namespace QtForgeTest;

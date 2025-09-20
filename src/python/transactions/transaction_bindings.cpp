@@ -10,12 +10,13 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include <qtplugin/transactions/plugin_transaction_manager.hpp>
+#include <qtplugin/workflow/transactions.hpp>
 
 #include "../qt_conversions.hpp"
 
 namespace py = pybind11;
 using namespace qtplugin;
+using namespace qtplugin::workflow::transactions;
 
 namespace qtforge_python {
 

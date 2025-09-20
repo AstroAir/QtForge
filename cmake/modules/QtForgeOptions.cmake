@@ -25,45 +25,24 @@ function(qtforge_define_options)
     option(QTFORGE_BUILD_SHARED "Build shared libraries" ON)
     option(QTFORGE_BUILD_STATIC "Build static libraries" OFF)
 
-    # Component options (auto-detect Qt components)
-    cmake_dependent_option(QTFORGE_BUILD_NETWORK
-        "Build network plugin support"
-        ON
-        "Qt6Network_FOUND"
-        OFF
-    )
+    # Component options (all enabled by default in v3.2.0)
+    option(QTFORGE_BUILD_NETWORK "Build network plugin support" ON)
+    option(QTFORGE_BUILD_UI "Build UI plugin support" ON)
+    option(QTFORGE_BUILD_SQL "Build SQL plugin support" ON)
+    option(QTFORGE_BUILD_CONCURRENT "Build concurrent plugin support" ON)
 
-    cmake_dependent_option(QTFORGE_BUILD_UI
-        "Build UI plugin support"
-        ON
-        "Qt6Widgets_FOUND"
-        OFF
-    )
+    # Security component enabled by default
+    option(QTFORGE_BUILD_SECURITY "Build security component" ON)
 
-    cmake_dependent_option(QTFORGE_BUILD_SQL
-        "Build SQL plugin support"
-        ON
-        "Qt6Sql_FOUND"
-        OFF
-    )
+    # Additional components enabled by default
+    option(QTFORGE_BUILD_SCRIPTING "Build scripting plugin support" ON)
+    option(QTFORGE_BUILD_PLATFORM "Build platform-specific components" ON)
+    option(QTFORGE_BUILD_WORKFLOW "Build workflow components" ON)
+    option(QTFORGE_BUILD_BRIDGES "Build language bridge components" ON)
+    option(QTFORGE_BUILD_THREADING "Build threading components" ON)
 
-    cmake_dependent_option(QTFORGE_BUILD_CONCURRENT
-        "Build concurrent plugin support"
-        ON
-        "Qt6Concurrent_FOUND"
-        OFF
-    )
-
-    # Security component removed
-    option(QTFORGE_BUILD_SECURITY "Build security component" OFF)
-
-    # Remote plugin options
-    cmake_dependent_option(QTFORGE_BUILD_REMOTE_PLUGINS
-        "Build remote plugin support"
-        ON
-        "QTFORGE_BUILD_NETWORK;QTFORGE_BUILD_SECURITY"
-        OFF
-    )
+    # Remote plugin options (enabled by default)
+    option(QTFORGE_BUILD_REMOTE_PLUGINS "Build remote plugin support" ON)
 
     # Sandbox options
     option(QTFORGE_ENABLE_SANDBOX "Enable plugin sandboxing functionality" ON)
@@ -258,20 +237,19 @@ function(qtforge_print_configuration_summary)
     message(STATUS "  Static Libraries: ${QTFORGE_BUILD_STATIC}")
     message(STATUS "")
 
-    # Components
-    message(STATUS "Components:")
+    # Components (all enabled by default in v3.2.0)
+    message(STATUS "Components (all enabled by default in v3.2.0):")
     message(STATUS "  Network Support: ${QTFORGE_BUILD_NETWORK}")
     message(STATUS "  UI Support: ${QTFORGE_BUILD_UI}")
     message(STATUS "  Security Support: ${QTFORGE_BUILD_SECURITY}")
-    if(DEFINED QTFORGE_BUILD_REMOTE_PLUGINS)
-        message(STATUS "  Remote Plugin Support: ${QTFORGE_BUILD_REMOTE_PLUGINS}")
-    endif()
-    if(DEFINED QTFORGE_BUILD_SQL)
-        message(STATUS "  SQL Support: ${QTFORGE_BUILD_SQL}")
-    endif()
-    if(DEFINED QTFORGE_BUILD_CONCURRENT)
-        message(STATUS "  Concurrent Support: ${QTFORGE_BUILD_CONCURRENT}")
-    endif()
+    message(STATUS "  Remote Plugin Support: ${QTFORGE_BUILD_REMOTE_PLUGINS}")
+    message(STATUS "  SQL Support: ${QTFORGE_BUILD_SQL}")
+    message(STATUS "  Concurrent Support: ${QTFORGE_BUILD_CONCURRENT}")
+    message(STATUS "  Scripting Support: ${QTFORGE_BUILD_SCRIPTING}")
+    message(STATUS "  Platform Components: ${QTFORGE_BUILD_PLATFORM}")
+    message(STATUS "  Workflow Components: ${QTFORGE_BUILD_WORKFLOW}")
+    message(STATUS "  Bridge Components: ${QTFORGE_BUILD_BRIDGES}")
+    message(STATUS "  Threading Components: ${QTFORGE_BUILD_THREADING}")
     message(STATUS "")
 
     # Sandbox features

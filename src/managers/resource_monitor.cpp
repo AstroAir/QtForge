@@ -325,12 +325,12 @@ qtplugin::expected<void, PluginError> ResourceMonitor::set_custom_quota(
     return make_success();
 }
 
-std::vector<PerformanceAlert> ResourceMonitor::get_performance_alerts(
+std::vector<ResourcePerformanceAlert> ResourceMonitor::get_performance_alerts(
     double severity_threshold,
     std::optional<std::chrono::system_clock::time_point> since_time) const {
     std::shared_lock<std::shared_mutex> lock(m_violations_mutex);
 
-    std::vector<PerformanceAlert> alerts;
+    std::vector<ResourcePerformanceAlert> alerts;
 
     for (const auto& alert : m_performance_alerts) {
         if (alert.severity >= severity_threshold &&
@@ -484,7 +484,7 @@ std::string ResourceMonitor::subscribe_to_quota_violations(
 }
 
 std::string ResourceMonitor::subscribe_to_performance_alerts(
-    std::function<void(const PerformanceAlert&)> callback,
+    std::function<void(const ResourcePerformanceAlert&)> callback,
     double severity_threshold) {
     std::unique_lock<std::shared_mutex> lock(m_subscriptions_mutex);
 
@@ -686,7 +686,7 @@ void ResourceMonitor::notify_quota_violation(const QuotaViolation& violation) {
         QString::fromStdString(violation.violation_type));
 }
 
-void ResourceMonitor::notify_performance_alert(const PerformanceAlert& alert) {
+void ResourceMonitor::notify_performance_alert(const ResourcePerformanceAlert& alert) {
     {
         std::unique_lock<std::shared_mutex> lock(m_violations_mutex);
         m_performance_alerts.push_back(alert);
@@ -748,7 +748,7 @@ void ResourceMonitor::check_resource_performance(
 
     // Check CPU usage
     if (metrics.cpu_usage_percent > m_config.cpu_usage_alert_threshold) {
-        PerformanceAlert alert(
+        ResourcePerformanceAlert alert(
             resource_id, metrics.plugin_id, metrics.resource_type, "high_cpu",
             metrics.cpu_usage_percent / 100.0, "High CPU usage detected");
         config_lock.unlock();
@@ -758,7 +758,7 @@ void ResourceMonitor::check_resource_performance(
 
     // Check memory usage
     if (metrics.memory_usage_bytes > m_config.memory_usage_alert_threshold) {
-        PerformanceAlert alert(resource_id, metrics.plugin_id,
+        ResourcePerformanceAlert alert(resource_id, metrics.plugin_id,
                                metrics.resource_type, "high_memory",
                                static_cast<double>(metrics.memory_usage_bytes) /
                                    m_config.memory_usage_alert_threshold,
@@ -773,7 +773,7 @@ void ResourceMonitor::check_resource_performance(
         double error_rate =
             static_cast<double>(metrics.error_count) / metrics.access_count;
         if (error_rate > m_config.error_rate_alert_threshold) {
-            PerformanceAlert alert(resource_id, metrics.plugin_id,
+            ResourcePerformanceAlert alert(resource_id, metrics.plugin_id,
                                    metrics.resource_type, "high_errors",
                                    error_rate, "High error rate detected");
             config_lock.unlock();
@@ -785,7 +785,7 @@ void ResourceMonitor::check_resource_performance(
     // Check efficiency
     double efficiency = metrics.calculate_efficiency_score();
     if (efficiency < m_config.efficiency_alert_threshold) {
-        PerformanceAlert alert(resource_id, metrics.plugin_id,
+        ResourcePerformanceAlert alert(resource_id, metrics.plugin_id,
                                metrics.resource_type, "low_efficiency",
                                1.0 - efficiency,
                                "Low resource efficiency detected");
@@ -812,7 +812,7 @@ void ResourceMonitor::cleanup_old_violations_and_alerts() {
     // Clean up old performance alerts
     m_performance_alerts.erase(
         std::remove_if(m_performance_alerts.begin(), m_performance_alerts.end(),
-                       [cutoff_time](const PerformanceAlert& alert) {
+                       [cutoff_time](const ResourcePerformanceAlert& alert) {
                            return alert.timestamp < cutoff_time;
                        }),
         m_performance_alerts.end());

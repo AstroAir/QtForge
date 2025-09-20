@@ -2,6 +2,10 @@
  * @file orchestration_bindings.cpp
  * @brief Orchestration bindings for Lua
  * @version 3.2.0
+ *
+ * NOTE: These bindings need to be updated to match the workflow orchestration API.
+ * The current bindings are for the old orchestration interface and will not work
+ * with the new workflow-based orchestration system.
  */
 
 #include <QDebug>
@@ -11,12 +15,15 @@
 #include <sol/sol.hpp>
 #endif
 
-#include <qtplugin/orchestration/plugin_orchestrator.hpp>
+#include <qtplugin/workflow/orchestration.hpp>
 #include "../qt_conversions.cpp"
 
 Q_LOGGING_CATEGORY(orchestrationBindingsLog, "qtforge.lua.orchestration");
 
 namespace qtforge_lua {
+
+// Namespace alias for convenience
+namespace orchestration = qtplugin::workflow::orchestration;
 
 #ifdef QTFORGE_LUA_BINDINGS
 
@@ -24,14 +31,14 @@ namespace qtforge_lua {
  * @brief Register StepStatus enum with Lua
  */
 void register_step_status_bindings(sol::state& lua) {
-    lua.new_enum<qtplugin::orchestration::StepStatus>("StepStatus", {
-        {"Pending", qtplugin::orchestration::StepStatus::Pending},
-        {"Running", qtplugin::orchestration::StepStatus::Running},
-        {"Completed", qtplugin::orchestration::StepStatus::Completed},
-        {"Failed", qtplugin::orchestration::StepStatus::Failed},
-        {"Skipped", qtplugin::orchestration::StepStatus::Skipped},
-        {"Cancelled", qtplugin::orchestration::StepStatus::Cancelled},
-        {"Retrying", qtplugin::orchestration::StepStatus::Retrying}
+    lua.new_enum<orchestration::StepStatus>("StepStatus", {
+        {"Pending", orchestration::StepStatus::Pending},
+        {"Running", orchestration::StepStatus::Running},
+        {"Completed", orchestration::StepStatus::Completed},
+        {"Failed", orchestration::StepStatus::Failed},
+        {"Skipped", orchestration::StepStatus::Skipped},
+        {"Cancelled", orchestration::StepStatus::Cancelled},
+        {"Retrying", orchestration::StepStatus::Retrying}
     });
 
     qCDebug(orchestrationBindingsLog) << "StepStatus bindings registered";
@@ -41,11 +48,11 @@ void register_step_status_bindings(sol::state& lua) {
  * @brief Register ExecutionMode enum with Lua
  */
 void register_execution_mode_bindings(sol::state& lua) {
-    lua.new_enum<qtplugin::orchestration::ExecutionMode>("ExecutionMode", {
-        {"Sequential", qtplugin::orchestration::ExecutionMode::Sequential},
-        {"Parallel", qtplugin::orchestration::ExecutionMode::Parallel},
-        {"Conditional", qtplugin::orchestration::ExecutionMode::Conditional},
-        {"Pipeline", qtplugin::orchestration::ExecutionMode::Pipeline}
+    lua.new_enum<orchestration::ExecutionMode>("ExecutionMode", {
+        {"Sequential", orchestration::ExecutionMode::Sequential},
+        {"Parallel", orchestration::ExecutionMode::Parallel},
+        {"Conditional", orchestration::ExecutionMode::Conditional},
+        {"Pipeline", orchestration::ExecutionMode::Pipeline}
     });
 
     qCDebug(orchestrationBindingsLog) << "ExecutionMode bindings registered";
@@ -55,29 +62,29 @@ void register_execution_mode_bindings(sol::state& lua) {
  * @brief Register WorkflowStep class with Lua
  */
 void register_workflow_step_bindings(sol::state& lua) {
-    auto step_type = lua.new_usertype<qtplugin::orchestration::WorkflowStep>("WorkflowStep",
+    auto step_type = lua.new_usertype<orchestration::WorkflowStep>("WorkflowStep",
         sol::constructors<
-            qtplugin::orchestration::WorkflowStep(),
-            qtplugin::orchestration::WorkflowStep(const QString&, const QString&, const QString&)
+            orchestration::WorkflowStep(),
+            orchestration::WorkflowStep(const QString&, const QString&, const QString&)
         >()
     );
 
-    step_type["id"] = &qtplugin::orchestration::WorkflowStep::id;
-    step_type["name"] = &qtplugin::orchestration::WorkflowStep::name;
-    step_type["description"] = &qtplugin::orchestration::WorkflowStep::description;
-    step_type["plugin_id"] = &qtplugin::orchestration::WorkflowStep::plugin_id;
-    step_type["service_name"] = &qtplugin::orchestration::WorkflowStep::service_name;
-    step_type["method_name"] = &qtplugin::orchestration::WorkflowStep::method_name;
-    step_type["dependencies"] = &qtplugin::orchestration::WorkflowStep::dependencies;
-    step_type["max_retries"] = &qtplugin::orchestration::WorkflowStep::max_retries;
-    step_type["critical"] = &qtplugin::orchestration::WorkflowStep::critical;
+    step_type["id"] = &orchestration::WorkflowStep::id;
+    step_type["name"] = &orchestration::WorkflowStep::name;
+    step_type["description"] = &orchestration::WorkflowStep::description;
+    step_type["plugin_id"] = &orchestration::WorkflowStep::plugin_id;
+    step_type["service_name"] = &orchestration::WorkflowStep::service_name;
+    step_type["method_name"] = &orchestration::WorkflowStep::method_name;
+    step_type["dependencies"] = &orchestration::WorkflowStep::dependencies;
+    step_type["max_retries"] = &orchestration::WorkflowStep::max_retries;
+    step_type["critical"] = &orchestration::WorkflowStep::critical;
 
     // Parameters and metadata (QJsonObject)
     step_type["parameters"] = sol::property(
-        [&lua](const qtplugin::orchestration::WorkflowStep& step) -> sol::object {
+        [&lua](const orchestration::WorkflowStep& step) -> sol::object {
             return qtforge_lua::qjson_to_lua(step.parameters, lua);
         },
-        [](qtplugin::orchestration::WorkflowStep& step, const sol::object& params) {
+        [](orchestration::WorkflowStep& step, const sol::object& params) {
             if (params.get_type() == sol::type::table) {
                 QJsonValue json_value = qtforge_lua::lua_to_qjson(params);
                 if (json_value.isObject()) {
@@ -88,10 +95,10 @@ void register_workflow_step_bindings(sol::state& lua) {
     );
 
     step_type["metadata"] = sol::property(
-        [&lua](const qtplugin::orchestration::WorkflowStep& step) -> sol::object {
+        [&lua](const orchestration::WorkflowStep& step) -> sol::object {
             return qtforge_lua::qjson_to_lua(step.metadata, lua);
         },
-        [](qtplugin::orchestration::WorkflowStep& step, const sol::object& metadata) {
+        [](orchestration::WorkflowStep& step, const sol::object& metadata) {
             if (metadata.get_type() == sol::type::table) {
                 QJsonValue json_value = qtforge_lua::lua_to_qjson(metadata);
                 if (json_value.isObject()) {
@@ -164,7 +171,7 @@ void register_orchestration_bindings(sol::state& lua) {
 
     // Create qtforge.orchestration namespace
     sol::table qtforge = lua["qtforge"];
-    sol::table orchestration = qtforge.get_or_create<sol::table>("orchestration");
+    sol::table orchestration = qtforge["orchestration"].get_or_create<sol::table>();
 
     // Register enums and classes
     register_step_status_bindings(lua);

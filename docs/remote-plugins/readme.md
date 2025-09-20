@@ -159,65 +159,47 @@ auto install_future = manager.install_plugin("com.example.advanced_calculator",
                                             QVersionNumber(2, 1, 0));
 ```
 
-## Security Configuration
+## Remote Plugin Verification
 
-### Trust Store Management
+### SHA256 Verification for Remote Plugins
+
+Remote plugins use the same SHA256 verification system as local plugins:
 
 ```cpp
-#include <qtplugin/remote/security/remote_security_manager.hpp>
+#include <qtplugin/core/plugin_manager.hpp>
 
-using namespace qtplugin::remote::security;
+// Download and verify remote plugin
+auto manager = PluginManager::instance();
 
-// Get the security manager
-RemoteSecurityManager& security = RemoteSecurityManager::instance();
+// Calculate SHA256 of downloaded plugin
+std::string calculated_hash = manager->calculate_file_sha256("./downloaded_plugin.dll");
 
-// Add trusted publisher
-QSslCertificate publisher_cert = loadCertificateFromFile("publisher.crt");
-auto trust_result = security.get_trust_store()->add_trusted_publisher(
-    "com.example.publisher",
-    publisher_cert,
-    PublisherTrustLevel::Trusted
-);
+// Verify against expected hash (from trusted source)
+std::string expected_hash = "your_expected_sha256_hash_here";
+bool is_valid = manager->verify_file_sha256("./downloaded_plugin.dll", expected_hash);
+
+if (is_valid) {
+    // Load the verified plugin
+    PluginLoadOptions options;
+    options.validate_sha256 = true;
+    options.expected_sha256 = expected_hash;
+
+    auto result = manager->load_plugin("./downloaded_plugin.dll", options);
+} else {
+    qWarning() << "Plugin SHA256 verification failed!";
+}
 ```
 
-### Security Configuration
+### HTTPS Download Security
 
 ```cpp
-RemoteSecurityConfig security_config;
-security_config.security_level = RemoteSecurityLevel::Strict;
-security_config.require_signatures = true;
-security_config.allow_self_signed = false;
-security_config.check_certificate_revocation = true;
-security_config.enable_sandbox = true;
-security_config.allow_http_sources = false;  // HTTPS only
-security_config.strict_tls_verification = true;
+// Remote plugins should be downloaded over HTTPS
+RemotePluginSource source;
+source.set_url("https://secure-plugins.example.com/my_plugin.dll");
+source.set_expected_sha256("your_expected_hash_here");
 
-// Network security
-security_config.network_timeout = std::chrono::seconds{30};
-security_config.max_redirects = 3;
-security_config.allowed_domains = {"plugins.qtforge.org", "secure-plugins.example.com"};
-security_config.blocked_domains = {"malicious-site.com"};
-
-// Trust settings
-security_config.minimum_trust_level = PublisherTrustLevel::Verified;
-security_config.allow_untrusted_development = false;
-
-// Initialize security manager with configuration
-auto security_result = security.initialize(security_config);
-```
-
-### Signature Verification
-
-```cpp
-// Verify plugin signature manually
-RemotePluginSignature signature_info;
-signature_info.algorithm = "RSA-SHA256";
-signature_info.signature = loadSignatureFromFile("plugin.sig");
-signature_info.certificate = loadCertificateFromFile("publisher.crt");
-signature_info.publisher_id = "com.example.publisher";
-
-QByteArray plugin_data = loadPluginFromFile("plugin.dll");
-auto validation_result = security.validate_plugin_data(plugin_data, signature_info);
+// The remote plugin system will verify SHA256 after download
+auto download_result = remote_manager.download_plugin(source);
 
 if (validation_result.is_valid) {
     qDebug() << "Plugin signature is valid";

@@ -444,7 +444,7 @@ void register_managers_bindings(sol::state& lua) {
 
     // Create qtforge.managers namespace
     sol::table qtforge = lua["qtforge"];
-    sol::table managers = qtforge.get_or_create<sol::table>("managers");
+    sol::table managers = qtforge["managers"].get_or_create<sol::table>();
 
     // Register all manager types
     register_plugin_load_options_bindings(lua);

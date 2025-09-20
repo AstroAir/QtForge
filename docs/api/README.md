@@ -294,31 +294,26 @@ public:
 };
 ```
 
-## Security System {#validation-system}
+## SHA256 Verification System {#validation-system}
 
-### Security Manager
+### Plugin Manager SHA256 Verification
 
-#### `qtplugin::SecurityManager`
+#### `qtplugin::PluginManager`
 
-Plugin security and validation.
+Built-in SHA256 verification for plugin integrity.
 
 ```cpp
-class SecurityManager {
+class PluginManager {
 public:
-    // Plugin validation
-    expected<void, SecurityError> validate_plugin(const std::string& path);
+    // SHA256 verification methods
+    std::string calculate_file_sha256(const std::filesystem::path& file_path) const;
+    bool verify_file_sha256(const std::filesystem::path& file_path,
+                            const std::string& expected_hash) const;
 
-    // Trust management
-    void add_trusted_publisher(const std::string& publisher);
-    void remove_trusted_publisher(const std::string& publisher);
-    bool is_trusted_publisher(const std::string& publisher) const;
-
-    // Security levels
-    void set_security_level(SecurityLevel level);
-    SecurityLevel get_security_level() const;
-
-    // Signature verification
-    expected<bool, SecurityError> verify_signature(const std::string& path);
+    // Plugin loading with SHA256 verification
+    expected<std::string, PluginError> load_plugin(
+        const std::filesystem::path& file_path,
+        const PluginLoadOptions& options = {});
 };
 
 enum class SecurityLevel {

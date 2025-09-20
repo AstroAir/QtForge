@@ -1,6 +1,11 @@
 #include "qtplugin/remote/unified_plugin_manager.hpp"
 #include "qtplugin/remote/remote_plugin_manager.hpp"
 #include "qtplugin/core/plugin_manager.hpp"
+#include "qtplugin/communication/message_bus.hpp"
+#include "qtplugin/managers/configuration_manager.hpp"
+#include "qtplugin/managers/logging_manager.hpp"
+#include "qtplugin/managers/resource_manager.hpp"
+#include "qtplugin/managers/resource_lifecycle.hpp"
 #include <QLoggingCategory>
 #include <QFileInfo>
 #include <QDir>
@@ -42,8 +47,10 @@ UnifiedPluginManager::UnifiedPluginManager(QObject* parent)
 {
     Q_D(UnifiedPluginManager);
     
-    // Initialize local plugin manager (placeholder)
-    d->localPluginManager = nullptr; // TODO: Integrate with actual local plugin system
+    // Initialize local plugin manager
+    d->localPluginManager = new qtplugin::PluginManager(
+        nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+        nullptr, nullptr, nullptr, nullptr, this);
     // Set default search paths
     d->searchPaths << "./plugins" << "./";
     d->searchPaths << QStandardPaths::writableLocation(QStandardPaths::ApplicationsLocation) + "/plugins";
@@ -52,16 +59,30 @@ UnifiedPluginManager::UnifiedPluginManager(QObject* parent)
     d->remotePluginManager = new RemotePluginManager(this);
     
     // Connect signals from local plugin manager
-    // TODO: Adapt to actual PluginManager interface
-    /*
-    connect(d->localPluginManager, &qtplugin::PluginManager::pluginLoaded, this, [this](const QString& path) {
+    connect(d->localPluginManager, &qtplugin::PluginManager::plugin_loaded, this, [this](const QString& plugin_id) {
         Q_D(UnifiedPluginManager);
-        QString pluginId = d->getPluginId(path);
-        d->pluginSources[pluginId] = PluginSource::Local;
-        d->pluginPaths[pluginId] = path;
-        emit pluginLoaded(pluginId, path);
+        d->pluginSources[plugin_id] = PluginSource::Local;
+        // Get plugin info to find the path
+        auto plugin_info = d->localPluginManager->get_plugin_info(plugin_id.toStdString());
+        if (plugin_info) {
+            QString path = QString::fromStdString(plugin_info->file_path.string());
+            d->pluginPaths[plugin_id] = path;
+            emit pluginLoaded(plugin_id, path);
+        }
     });
-    */
+
+    connect(d->localPluginManager, &qtplugin::PluginManager::plugin_unloaded, this, [this](const QString& plugin_id) {
+        Q_D(UnifiedPluginManager);
+        d->pluginSources.remove(plugin_id);
+        QString path = d->pluginPaths.take(plugin_id);
+        emit pluginUnloaded(plugin_id, path);
+    });
+
+    connect(d->localPluginManager, &qtplugin::PluginManager::plugin_error, this, [this](const QString& plugin_id, const QString& error) {
+        Q_D(UnifiedPluginManager);
+        QString path = d->pluginPaths.value(plugin_id);
+        emit pluginLoadFailed(plugin_id, path, error);
+    });
     
     // Connect signals from remote plugin manager
     connect(d->remotePluginManager, &RemotePluginManager::downloadProgress, this, &UnifiedPluginManager::downloadProgress);
@@ -180,7 +201,7 @@ bool UnifiedPluginManager::loadLocalPlugin(const QString& path)
     }
     
     try {
-        // TODO: Implement actual local plugin loading
+        // Implement actual local plugin loading
         if (!d->localPluginManager) {
             qCWarning(unifiedPluginLog) << "Local plugin manager not initialized";
             return false;

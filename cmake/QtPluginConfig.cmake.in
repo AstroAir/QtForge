@@ -8,10 +8,16 @@ set(QTFORGE_VERSION_MAJOR "@PROJECT_VERSION_MAJOR@")
 set(QTFORGE_VERSION_MINOR "@PROJECT_VERSION_MINOR@")
 set(QTFORGE_VERSION_PATCH "@PROJECT_VERSION_PATCH@")
 
-# Component availability
+# Component availability (all enabled by default in v3.2.0)
 set(QTFORGE_NETWORK_FOUND @QTFORGE_BUILD_NETWORK@)
 set(QTFORGE_UI_FOUND @QTFORGE_BUILD_UI@)
-set(QTFORGE_SECURITY_FOUND TRUE)  # Always available
+set(QTFORGE_SECURITY_FOUND @QTFORGE_BUILD_SECURITY@)
+set(QTFORGE_SCRIPTING_FOUND @QTFORGE_BUILD_SCRIPTING@)
+set(QTFORGE_PLATFORM_FOUND @QTFORGE_BUILD_PLATFORM@)
+set(QTFORGE_WORKFLOW_FOUND @QTFORGE_BUILD_WORKFLOW@)
+set(QTFORGE_BRIDGES_FOUND @QTFORGE_BUILD_BRIDGES@)
+set(QTFORGE_THREADING_FOUND @QTFORGE_BUILD_THREADING@)
+set(QTFORGE_REMOTE_FOUND @QTFORGE_BUILD_REMOTE_PLUGINS@)
 set(QTFORGE_COMPONENTS_FOUND TRUE)  # Component architecture always available
 
 # Backward compatibility with deprecation warnings
@@ -60,43 +66,35 @@ if(QTFORGE_UI_FOUND)
 endif()
 
 # Include target files
-include("${CMAKE_CURRENT_LIST_DIR}/QtForgeCoreTargets.cmake")
-
-if(QTFORGE_NETWORK_FOUND)
-    include("${CMAKE_CURRENT_LIST_DIR}/QtForgeNetworkTargets.cmake")
-endif()
-
-if(QTFORGE_UI_FOUND)
-    include("${CMAKE_CURRENT_LIST_DIR}/QtForgeUITargets.cmake")
-endif()
+include("${CMAKE_CURRENT_LIST_DIR}/QtForgeTargets.cmake")
 
 # Security targets removed
 
-# Handle components
+# Handle components (all available by default in v3.2.0)
 set(QtForge_FOUND TRUE)
 set(QtForge_Core_FOUND TRUE)
-set(QtForge_Security_FOUND FALSE)
-
-if(QTFORGE_NETWORK_FOUND)
-    set(QtForge_Network_FOUND TRUE)
-endif()
-
-if(QTFORGE_UI_FOUND)
-    set(QtForge_UI_FOUND TRUE)
-endif()
+set(QtForge_Security_FOUND ${QTFORGE_SECURITY_FOUND})
+set(QtForge_Network_FOUND ${QTFORGE_NETWORK_FOUND})
+set(QtForge_UI_FOUND ${QTFORGE_UI_FOUND})
+set(QtForge_Scripting_FOUND ${QTFORGE_SCRIPTING_FOUND})
+set(QtForge_Platform_FOUND ${QTFORGE_PLATFORM_FOUND})
+set(QtForge_Workflow_FOUND ${QTFORGE_WORKFLOW_FOUND})
+set(QtForge_Bridges_FOUND ${QTFORGE_BRIDGES_FOUND})
+set(QtForge_Threading_FOUND ${QTFORGE_THREADING_FOUND})
+set(QtForge_Remote_FOUND ${QTFORGE_REMOTE_FOUND})
 
 # Backward compatibility for component found variables
 set(QtPlugin_FOUND TRUE)
 set(QtPlugin_Core_FOUND TRUE)
-set(QtPlugin_Security_FOUND FALSE)
-
-if(QTFORGE_NETWORK_FOUND)
-    set(QtPlugin_Network_FOUND TRUE)
-endif()
-
-if(QTFORGE_UI_FOUND)
-    set(QtPlugin_UI_FOUND TRUE)
-endif()
+set(QtPlugin_Security_FOUND ${QTFORGE_SECURITY_FOUND})
+set(QtPlugin_Network_FOUND ${QTFORGE_NETWORK_FOUND})
+set(QtPlugin_UI_FOUND ${QTFORGE_UI_FOUND})
+set(QtPlugin_Scripting_FOUND ${QTFORGE_SCRIPTING_FOUND})
+set(QtPlugin_Platform_FOUND ${QTFORGE_PLATFORM_FOUND})
+set(QtPlugin_Workflow_FOUND ${QTFORGE_WORKFLOW_FOUND})
+set(QtPlugin_Bridges_FOUND ${QTFORGE_BRIDGES_FOUND})
+set(QtPlugin_Threading_FOUND ${QTFORGE_THREADING_FOUND})
+set(QtPlugin_Remote_FOUND ${QTFORGE_REMOTE_FOUND})
 
 # Check requested components
 if(QtPlugin_FIND_COMPONENTS)
@@ -114,20 +112,18 @@ endif()
 
 # Provide information about what was found
 if(QtForge_FOUND)
-    message(STATUS "Found QtForge ${QTFORGE_VERSION}")
+    message(STATUS "Found QtForge ${QTFORGE_VERSION} (all features enabled by default)")
     message(STATUS "  Core: YES")
-    message(STATUS "  Security: YES")
+    message(STATUS "  Security: ${QtForge_Security_FOUND}")
+    message(STATUS "  Network: ${QtForge_Network_FOUND}")
+    message(STATUS "  UI: ${QtForge_UI_FOUND}")
+    message(STATUS "  Scripting: ${QtForge_Scripting_FOUND}")
+    message(STATUS "  Platform: ${QtForge_Platform_FOUND}")
+    message(STATUS "  Workflow: ${QtForge_Workflow_FOUND}")
+    message(STATUS "  Bridges: ${QtForge_Bridges_FOUND}")
+    message(STATUS "  Threading: ${QtForge_Threading_FOUND}")
+    message(STATUS "  Remote: ${QtForge_Remote_FOUND}")
     message(STATUS "  Components: YES (modular architecture)")
-    if(QTFORGE_NETWORK_FOUND)
-        message(STATUS "  Network: YES")
-    else()
-        message(STATUS "  Network: NO")
-    endif()
-    if(QTFORGE_UI_FOUND)
-        message(STATUS "  UI: YES")
-    else()
-        message(STATUS "  UI: NO")
-    endif()
 endif()
 
 # Helper function to create plugins

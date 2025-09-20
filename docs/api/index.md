@@ -21,8 +21,8 @@ QtForge provides a modern, type-safe C++ plugin system with the following key co
 | [`IPlugin`](core/plugin-interface.md)             | Base plugin interface      | `qtplugin/core/plugin_interface.hpp`     |
 | [`CompositePlugin`](composition/composite-plugin.md) | Plugin composition system | `qtplugin/composition/composite_plugin.hpp` |
 
-| [`PluginOrchestrator`](orchestration/plugin-orchestrator.md) | Plugin orchestration | `qtplugin/orchestration/plugin_orchestrator.hpp` |
-| [`PluginTransactionManager`](transactions/plugin-transaction-manager.md) | Transaction management | `qtplugin/transactions/plugin_transaction_manager.hpp` |
+| [`PluginOrchestrator`](orchestration/plugin-orchestrator.md) | Plugin orchestration | `qtplugin/workflow/orchestration.hpp` |
+| [`PluginTransactionManager`](transactions/plugin-transaction-manager.md) | Transaction management | `qtplugin/workflow/transactions.hpp` |
 
 ### Key Types
 

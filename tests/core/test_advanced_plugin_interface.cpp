@@ -14,7 +14,7 @@
 #include <qtplugin/communication/service_contracts.hpp>
 #include <qtplugin/utils/error_handling.hpp>
 
-#include "../test_helpers.hpp"
+#include "../utils/test_helpers.hpp"
 #include "../mock_objects.hpp"
 
 using namespace qtplugin;

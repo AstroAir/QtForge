@@ -130,9 +130,9 @@ struct QuotaViolation {
 };
 
 /**
- * @brief Performance alert
+ * @brief Resource performance alert
  */
-struct PerformanceAlert {
+struct ResourcePerformanceAlert {
     std::string resource_id;
     std::string plugin_id;
     ResourceType resource_type;
@@ -143,8 +143,8 @@ struct PerformanceAlert {
     std::string message;
     QJsonObject details;
 
-    PerformanceAlert() = default;
-    PerformanceAlert(std::string_view res_id, std::string_view plugin,
+    ResourcePerformanceAlert() = default;
+    ResourcePerformanceAlert(std::string_view res_id, std::string_view plugin,
                      ResourceType type, std::string_view alert, double sev,
                      std::string_view msg)
         : resource_id(res_id),
@@ -312,7 +312,7 @@ public:
      * @param since_time Only alerts since this time (optional)
      * @return List of performance alerts
      */
-    virtual std::vector<PerformanceAlert> get_performance_alerts(
+    virtual std::vector<ResourcePerformanceAlert> get_performance_alerts(
         double severity_threshold = 0.5,
         std::optional<std::chrono::system_clock::time_point> since_time =
             std::nullopt) const = 0;
@@ -372,7 +372,7 @@ public:
      * @return Subscription ID for unsubscribing
      */
     virtual std::string subscribe_to_performance_alerts(
-        std::function<void(const PerformanceAlert&)> callback,
+        std::function<void(const ResourcePerformanceAlert&)> callback,
         double severity_threshold = 0.5) = 0;
 
     /**

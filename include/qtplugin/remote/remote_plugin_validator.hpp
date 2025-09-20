@@ -36,9 +36,9 @@ enum class ValidationLevel {
 };
 
 /**
- * @brief Validation result information
+ * @brief Remote validation result information
  */
-struct ValidationResult {
+struct RemoteValidationResult {
     ValidationLevel level = ValidationLevel::Failed;  ///< Validation level
     std::string message;                              ///< Validation message
     std::string details;                              ///< Validation details
@@ -73,9 +73,9 @@ struct ValidationResult {
     /**
      * @brief Create from JSON representation
      * @param json JSON object to parse
-     * @return ValidationResult instance
+     * @return RemoteValidationResult instance
      */
-    static ValidationResult from_json(const QJsonObject& json);
+    static RemoteValidationResult from_json(const QJsonObject& json);
 };
 
 /**
@@ -167,7 +167,7 @@ public:
      * @param configuration Remote plugin configuration
      */
     explicit RemotePluginValidator(
-        std::shared_ptr<ISecurityManager> security_manager = nullptr,
+        std::shared_ptr<SecurityManager> security_manager = nullptr,
         std::shared_ptr<RemotePluginConfiguration> configuration = nullptr);
 
     /**
@@ -182,7 +182,7 @@ public:
      * @param source Remote plugin source to validate
      * @return Validation result
      */
-    qtplugin::expected<ValidationResult, PluginError> validate_source(
+    qtplugin::expected<RemoteValidationResult, PluginError> validate_source(
         const RemotePluginSource& source);
 
     /**
@@ -191,7 +191,7 @@ public:
      * @param security_level Security level to apply
      * @return Validation result
      */
-    qtplugin::expected<ValidationResult, PluginError> validate_url(
+    qtplugin::expected<RemoteValidationResult, PluginError> validate_url(
         const QUrl& url,
         RemoteSecurityLevel security_level = RemoteSecurityLevel::Standard);
 
@@ -249,7 +249,7 @@ public:
      * @param expected_checksum Expected file checksum (optional)
      * @return Validation result
      */
-    qtplugin::expected<ValidationResult, PluginError> validate_plugin_file(
+    qtplugin::expected<RemoteValidationResult, PluginError> validate_plugin_file(
         const std::filesystem::path& file_path,
         const RemotePluginSource& source,
         const QString& expected_checksum = QString());
@@ -268,7 +268,7 @@ public:
      * @param source Source information
      * @return Validation result
      */
-    qtplugin::expected<ValidationResult, PluginError> validate_metadata(
+    qtplugin::expected<RemoteValidationResult, PluginError> validate_metadata(
         const QJsonObject& metadata, const RemotePluginSource& source);
 
     // === Reputation System ===
@@ -307,13 +307,13 @@ public:
      * @param security_manager Security manager instance
      */
     void set_security_manager(
-        std::shared_ptr<ISecurityManager> security_manager);
+        std::shared_ptr<SecurityManager> security_manager);
 
     /**
      * @brief Get security manager
      * @return Security manager instance
      */
-    std::shared_ptr<ISecurityManager> security_manager() const {
+    std::shared_ptr<SecurityManager> security_manager() const {
         return m_security_manager;
     }
 
@@ -352,14 +352,14 @@ public:
 
 private:
     /// Core components
-    std::shared_ptr<ISecurityManager> m_security_manager;  ///< Security manager
+    std::shared_ptr<SecurityManager> m_security_manager;  ///< Security manager
     std::shared_ptr<RemotePluginConfiguration>
         m_configuration;  ///< Configuration
 
     /// Validation cache
     mutable std::mutex
         m_validation_cache_mutex;  ///< Mutex for validation cache
-    std::unordered_map<QString, ValidationResult>
+    std::unordered_map<QString, RemoteValidationResult>
         m_validation_cache;  ///< Validation cache
 
     /// Reputation cache
@@ -379,18 +379,18 @@ private:
     QString generate_cache_key(const RemotePluginSource& source) const;
     QString generate_cache_key(const QUrl& url) const;
     bool is_validation_cached(const QString& cache_key) const;
-    std::optional<ValidationResult> get_cached_validation(
+    std::optional<RemoteValidationResult> get_cached_validation(
         const QString& cache_key) const;
     void cache_validation_result(const QString& cache_key,
-                                 const ValidationResult& result);
+                                 const RemoteValidationResult& result);
 
-    ValidationResult create_validation_result(
+    RemoteValidationResult create_validation_result(
         ValidationLevel level, const std::string& message,
         const std::string& details = "") const;
 
-    qtplugin::expected<ValidationResult, PluginError> validate_url_scheme(
+    qtplugin::expected<RemoteValidationResult, PluginError> validate_url_scheme(
         const QUrl& url) const;
-    qtplugin::expected<ValidationResult, PluginError> validate_url_security(
+    qtplugin::expected<RemoteValidationResult, PluginError> validate_url_security(
         const QUrl& url, RemoteSecurityLevel level) const;
 
     bool load_reputation_cache();

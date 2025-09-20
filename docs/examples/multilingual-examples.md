@@ -326,24 +326,21 @@ orchestration_example()
 ```python
 import qtforge
 
-def security_example():
-    # Create security manager
-    security = qtforge.security.SecurityManager()
+def sha256_verification_example():
+    # SHA256 verification example
+    manager = qtforge.create_plugin_manager()
 
-    # Configure security policy
-    policy = qtforge.security.SecurityPolicy()
-    policy.set_trust_level(qtforge.security.TrustLevel.MEDIUM)
-    policy.enable_signature_validation(True)
-    policy.enable_permission_checking(True)
+    # Calculate SHA256 hash for verification
+    plugin_path = "./plugins/my_plugin.so"
+    calculated_hash = manager.calculate_file_sha256(plugin_path)
+    print(f"Plugin SHA256: {calculated_hash}")
 
-    security.set_policy(policy)
+    # Load plugin with SHA256 verification
+    options = qtforge.PluginLoadOptions()
+    options.validate_sha256 = True
+    options.expected_sha256 = calculated_hash
 
-    # Create plugin validator
-    validator = qtforge.security.PluginValidator(security)
-
-    # Validate plugin before loading
-    plugin_path = "./plugins/untrusted_plugin.so"
-    validation_result = validator.validate_plugin(plugin_path)
+    result = manager.load_plugin(plugin_path, options)
 
     if validation_result.is_valid:
         print(f"Plugin validation passed:")

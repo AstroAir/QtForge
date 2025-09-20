@@ -1,10 +1,10 @@
 # QtForge Library Meson Build Configuration
 # Modern C++ Plugin System for Qt Applications with Modular Architecture
-# Version: 3.0.0
+# Version: 3.2.0
 
 project('QtForge',
   'cpp',
-  version: '3.0.0',
+  version: '3.2.0',
   license: 'Apache-2.0',
   meson_version: '>=0.63.0',
   default_options: [

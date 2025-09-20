@@ -1,9 +1,10 @@
 # CompositePlugin API Reference
 
 !!! info "Module Information"
-**Header**: `qtplugin/composition/plugin_composition.hpp`  
- **Namespace**: `qtplugin::composition`  
- **Since**: QtForge v3.1.0  
+**Header**: `qtplugin/composition/plugin_composition.hpp` (compatibility wrapper)
+**Implementation**: `qtplugin/workflow/composition.hpp`
+ **Namespace**: `qtplugin::composition` (redirects to `qtplugin::workflow::composition`)
+ **Since**: QtForge v3.1.0
  **Status**: Stable
 
 ## Overview

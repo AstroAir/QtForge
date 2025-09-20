@@ -268,13 +268,12 @@ undefined reference to 'Qt6::Core'
    ```cmake
    # Verify required components
    find_package(Qt6 REQUIRED COMPONENTS Core)
-   find_package(QtPlugin REQUIRED COMPONENTS Core Security)
+   find_package(QtPlugin REQUIRED COMPONENTS Core)
 
    # Link libraries
    target_link_libraries(your_target
        Qt6::Core
        QtPlugin::Core
-       QtPlugin::Security
    )
    ```
 
@@ -297,7 +296,6 @@ undefined symbol: _ZN8qtplugin13PluginManager6createEv
    # Ensure proper linking order
    target_link_libraries(your_target
        QtPlugin::Core      # Link QtPlugin first
-       QtPlugin::Security  # Then additional components
        Qt6::Core          # Then Qt
    )
    ```
@@ -594,25 +592,26 @@ Plugin blocked by security policy
    qDebug() << "Trust validation:" << config.require_trusted_publishers;
    ```
 
-2. **Adjust Security Settings**:
+2. **Disable SHA256 Verification** (if needed for development):
 
    ```cpp
-   SecurityConfiguration config;
-   config.level = SecurityLevel::Medium;  // Reduce from High
-   config.require_signatures = false;     // Disable signature requirement
-   config.allow_unsigned_plugins = true;  // Allow unsigned plugins
+   PluginLoadOptions options;
+   options.validate_sha256 = false;  // Disable SHA256 verification
 
-   security.configure(config);
+   auto result = manager->load_plugin("./plugins/my_plugin.so", options);
    ```
 
-3. **Add Trusted Publishers**:
+3. **Verify SHA256 Hash** (for production):
 
    ```cpp
-   // Add publisher to trust list
-   security.add_trusted_publisher("com.example.publisher");
+   // Calculate expected hash for your plugin
+   auto manager = PluginManager::instance();
+   std::string hash = manager->calculate_file_sha256("./plugins/my_plugin.so");
 
-   // Or trust specific plugin
-   security.add_trusted_plugin("com.example.specific-plugin");
+   // Use this hash in production
+   PluginLoadOptions options;
+   options.validate_sha256 = true;
+   options.expected_sha256 = hash;
    ```
 
 ### Permission Denied Errors

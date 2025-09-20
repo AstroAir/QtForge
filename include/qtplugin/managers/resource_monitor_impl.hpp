@@ -140,7 +140,7 @@ public:
         const std::string& plugin_id, ResourceType resource_type,
         const std::string& quota_name, double limit) override;
 
-    std::vector<PerformanceAlert> get_performance_alerts(
+    std::vector<ResourcePerformanceAlert> get_performance_alerts(
         double severity_threshold = 0.5,
         std::optional<std::chrono::system_clock::time_point> since_time =
             std::nullopt) const override;
@@ -163,7 +163,7 @@ public:
         const std::string& plugin_filter = {}) override;
 
     std::string subscribe_to_performance_alerts(
-        std::function<void(const PerformanceAlert&)> callback,
+        std::function<void(const ResourcePerformanceAlert&)> callback,
         double severity_threshold = 0.5) override;
 
     qtplugin::expected<void, PluginError> unsubscribe_from_events(
@@ -206,7 +206,7 @@ private:
 
     // Quota violations and alerts
     std::deque<QuotaViolation> m_quota_violations;
-    std::deque<PerformanceAlert> m_performance_alerts;
+    std::deque<ResourcePerformanceAlert> m_performance_alerts;
     mutable std::shared_mutex m_violations_mutex;
 
     // Custom quotas
@@ -236,7 +236,7 @@ private:
 
     // Helper methods
     void notify_quota_violation(const QuotaViolation& violation);
-    void notify_performance_alert(const PerformanceAlert& alert);
+    void notify_performance_alert(const ResourcePerformanceAlert& alert);
     std::string generate_subscription_id() const;
     void check_resource_quotas(const std::string& resource_id,
                                const ResourceMetrics& metrics);

@@ -1,36 +1,20 @@
 /**
  * @file qtplugin_components.hpp
  * @brief Component-based architecture headers for QtPlugin library
- * @version 3.0.0
+ * @version 3.2.0
  *
- * This header provides access to the new component-based architecture
- * of the QtPlugin library. Include this file to access individual
- * components for specialized usage scenarios.
+ * This header provides access to the component-based architecture
+ * of the QtPlugin library with factory and builder patterns for
+ * creating and configuring plugin systems.
  *
+ * For direct component access, include qtplugin/components.hpp instead.
  * For basic usage, include qtplugin.hpp instead.
  */
 
 #pragma once
 
-// Core component interfaces
-#include "core/plugin_dependency_resolver.hpp"
-#include "core/plugin_registry.hpp"
-
-// Monitoring components
-#include "monitoring/plugin_hot_reload_manager.hpp"
-#include "monitoring/plugin_metrics_collector.hpp"
-
-// Security components removed
-
-// Configuration components
-#include "managers/components/configuration_merger.hpp"
-#include "managers/components/configuration_storage.hpp"
-#include "managers/components/configuration_validator.hpp"
-#include "managers/components/configuration_watcher.hpp"
-
-// Resource components
-#include "managers/components/resource_allocator.hpp"
-#include "managers/components/resource_monitor.hpp"
+// Include all components
+#include "components.hpp"
 #include "managers/components/resource_pool.hpp"
 
 /**
@@ -60,12 +44,8 @@ public:
     static std::unique_ptr<IPluginHotReloadManager> create_hot_reload_manager();
     static std::unique_ptr<IPluginMetricsCollector> create_metrics_collector();
 
-    // Security components
-    static std::unique_ptr<ISecurityValidator> create_security_validator();
-    static std::unique_ptr<ISignatureVerifier> create_signature_verifier();
-    static std::unique_ptr<IPermissionManager> create_permission_manager();
-    static std::unique_ptr<ISecurityPolicyEngine>
-    create_security_policy_engine();
+    // Security components - Removed
+    // SHA256 verification functionality is preserved in PluginManager
 
     // Configuration components
     static std::unique_ptr<IConfigurationStorage>
@@ -78,7 +58,7 @@ public:
 
     // Resource components
     template <typename T>
-    static std::unique_ptr<ITypedResourcePool<T>> create_resource_pool(
+    static std::unique_ptr<ITypedComponentResourcePool<T>> create_resource_pool(
         const std::string& name, ResourceType type);
     static std::unique_ptr<IResourceAllocator> create_resource_allocator();
     static std::unique_ptr<IResourceMonitor> create_resource_monitor();
@@ -107,15 +87,7 @@ public:
     PluginSystemBuilder& with_metrics_collector(
         std::unique_ptr<IPluginMetricsCollector> collector);
 
-    // Security components configuration
-    PluginSystemBuilder& with_security_validator(
-        std::unique_ptr<ISecurityValidator> validator);
-    PluginSystemBuilder& with_signature_verifier(
-        std::unique_ptr<ISignatureVerifier> verifier);
-    PluginSystemBuilder& with_permission_manager(
-        std::unique_ptr<IPermissionManager> manager);
-    PluginSystemBuilder& with_security_policy_engine(
-        std::unique_ptr<ISecurityPolicyEngine> engine);
+    // Security components configuration - Removed
 
     // Configuration components configuration
     PluginSystemBuilder& with_configuration_storage(
@@ -189,9 +161,9 @@ using ComponentRegistry = components::ComponentRegistry;
  * @brief Component version information
  */
 #define QTPLUGIN_COMPONENTS_VERSION_MAJOR 3
-#define QTPLUGIN_COMPONENTS_VERSION_MINOR 0
+#define QTPLUGIN_COMPONENTS_VERSION_MINOR 2
 #define QTPLUGIN_COMPONENTS_VERSION_PATCH 0
-#define QTPLUGIN_COMPONENTS_VERSION "3.0.0"
+#define QTPLUGIN_COMPONENTS_VERSION "3.2.0"
 
 namespace qtplugin::components {
 
@@ -208,5 +180,19 @@ inline constexpr const char* version() noexcept {
  * @return true if component architecture is available
  */
 inline constexpr bool is_available() noexcept { return true; }
+
+/**
+ * @brief Check if all components are enabled
+ * @return true if all components are enabled by default
+ */
+inline constexpr bool all_components_enabled() noexcept { return true; }
+
+/**
+ * @brief Get component count
+ * @return Number of available components
+ */
+inline size_t get_component_count() noexcept {
+    return get_available_components().size();
+}
 
 }  // namespace qtplugin::components

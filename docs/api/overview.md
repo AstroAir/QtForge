@@ -39,12 +39,7 @@ Inter-plugin messaging and events:
 
 Enhanced plugin validation, sandboxing, and trust management:
 
-- **[SecurityManager](security/security-manager.md)**: Security policy enforcement and management
-- **[PluginValidator](security/plugin-validator.md)**: Plugin verification and validation
-- **[PluginSandbox](security/plugin-sandbox.md)**: Advanced plugin sandboxing with policy validation
-- **[SecurityPolicyValidator](security/security-policy-validator.md)**: Security policy integrity validation
-- **[ResourceMonitor](security/resource-monitor.md)**: Resource usage monitoring and threshold management
-- **[SecurityEnforcer](security/security-enforcer.md)**: Policy enforcement with signal handling
+- **SHA256 Verification**: Built-in plugin integrity verification using SHA256 hashing (see PluginManager documentation)
 
 ### Orchestration Module (`qtforge::orchestration`)
 

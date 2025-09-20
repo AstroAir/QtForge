@@ -1,5 +1,5 @@
 #include "qtplugin/remote/remote_plugin_manager.hpp"
-#include "qtplugin/remote/remote_security_manager.hpp"
+// Remote security manager include removed
 #include <QLoggingCategory>
 #include <QStandardPaths>
 #include <QDir>
@@ -71,8 +71,7 @@ RemotePluginManager::RemotePluginManager(QObject* parent)
     d->setupCacheDirectory();
     d->setupNetworkManager();
     
-    // Initialize security manager
-    d->securityManager = new RemoteSecurityManager(this);
+    // Security manager removed - SHA256 verification handled by core PluginManager
     
     // Setup automatic update check timer
     d->updateTimer = new QTimer(this);
@@ -300,11 +299,8 @@ QString RemotePluginManager::downloadPluginImpl(const QString& pluginId, const Q
         return QString();
     }
     
-    // Verify publisher is trusted
-    if (!d->securityManager->isPublisherTrusted(pluginInfo.publisherId)) {
-        qCWarning(remotePluginLog) << "Plugin from untrusted publisher:" << pluginInfo.publisherId;
-        return QString();
-    }
+    // Publisher trust verification removed - use SHA256 verification instead
+    qCDebug(remotePluginLog) << "Downloading plugin from publisher:" << pluginInfo.publisherId;
     
     // Download plugin file
     QNetworkRequest request{QUrl(pluginInfo.downloadUrl)};
@@ -354,12 +350,8 @@ QString RemotePluginManager::downloadPluginImpl(const QString& pluginId, const Q
     cacheFile.write(pluginData);
     cacheFile.close();
     
-    // Verify signature
-    if (!d->securityManager->verifyPluginSignature(cacheFilePath, pluginInfo.signature)) {
-        qCWarning(remotePluginLog) << "Signature verification failed for plugin" << pluginId;
-        QFile::remove(cacheFilePath);
-        return QString();
-    }
+    // Signature verification removed - SHA256 verification will be handled by core PluginManager
+    qCDebug(remotePluginLog) << "Plugin downloaded, SHA256 verification will be performed during loading";
     
     qCDebug(remotePluginLog) << "Successfully downloaded and cached plugin:" << pluginId;
     

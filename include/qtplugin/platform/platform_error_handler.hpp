@@ -70,16 +70,7 @@ enum class PlatformErrorType {
     CustomError       ///< Custom platform error
 };
 
-/**
- * @brief Error severity levels
- */
-enum class ErrorSeverity {
-    Info,      ///< Informational
-    Warning,   ///< Warning
-    Error,     ///< Error
-    Critical,  ///< Critical error
-    Fatal      ///< Fatal error
-};
+// ErrorSeverity enum is defined in utils/error_handling.hpp to avoid conflicts
 
 /**
  * @brief Platform-specific error information

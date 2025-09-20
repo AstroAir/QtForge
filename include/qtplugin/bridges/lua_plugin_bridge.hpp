@@ -45,7 +45,7 @@
 #include <functional>
 #include <memory>
 
-#include "qtplugin/core/dynamic_plugin_interface.hpp"
+#include "qtplugin/interfaces/core/dynamic_plugin_interface.hpp"
 
 // Forward declare sol types to avoid including sol2 in header
 namespace sol {
@@ -478,8 +478,8 @@ public:
      * @note Arguments are automatically converted to Lua types
      */
     qtplugin::expected<QVariant, PluginError> invoke_method(
-        const QString& method_name,
-        const QList<QVariant>& arguments = {}) override;
+        const QString& method_name, const QVariantList& parameters = {},
+        const QString& interface_id = {}) override;
 
     /**
      * @brief Get a property value
@@ -494,7 +494,7 @@ public:
      * @note This method is thread-safe
      */
     qtplugin::expected<QVariant, PluginError> get_property(
-        const QString& property_name) override;
+        const QString& property_name, const QString& interface_id = {}) override;
 
     /**
      * @brief Set a property value
@@ -512,7 +512,79 @@ public:
      * @note Value is automatically converted to appropriate Lua type
      */
     qtplugin::expected<void, PluginError> set_property(
-        const QString& property_name, const QVariant& value) override;
+        const QString& property_name, const QVariant& value,
+        const QString& interface_id = {}) override;
+
+    // === Multi-Language Support ===
+
+    /**
+     * @brief Get plugin type
+     * @return Plugin type (Lua)
+     */
+    PluginType get_plugin_type() const override;
+
+    /**
+     * @brief Get execution context
+     * @return Plugin execution context
+     */
+    PluginExecutionContext get_execution_context() const override;
+
+    /**
+     * @brief Execute code in plugin's runtime environment
+     * @param code Code to execute
+     * @param context Execution context
+     * @return Execution result or error
+     */
+    qtplugin::expected<QVariant, PluginError> execute_code(
+        const QString& code, const QJsonObject& context = {}) override;
+
+    // === Interface Discovery ===
+
+    /**
+     * @brief Get supported interface descriptors
+     * @return Vector of interface descriptors
+     */
+    std::vector<InterfaceDescriptor> get_interface_descriptors() const override;
+
+    /**
+     * @brief Check if plugin supports a specific interface
+     * @param interface_id Interface identifier
+     * @param min_version Minimum required version
+     * @return True if interface is supported
+     */
+    bool supports_interface(
+        const QString& interface_id,
+        const Version& min_version = Version{}) const override;
+
+    /**
+     * @brief Get interface descriptor by ID
+     * @param interface_id Interface identifier
+     * @return Interface descriptor or nullopt if not found
+     */
+    std::optional<InterfaceDescriptor> get_interface_descriptor(
+        const QString& interface_id) const override;
+
+    // === Runtime Adaptation ===
+
+    /**
+     * @brief Adapt to a specific interface version
+     * @param interface_id Interface identifier
+     * @param target_version Target version to adapt to
+     * @return Success or error information
+     */
+    qtplugin::expected<void, PluginError> adapt_to_interface(
+        const QString& interface_id, const Version& target_version) override;
+
+    /**
+     * @brief Negotiate capabilities with another plugin
+     * @param other_plugin_id Other plugin identifier
+     * @param requested_capabilities Requested capabilities
+     * @return Negotiated capabilities or error
+     */
+    qtplugin::expected<std::vector<InterfaceCapability>, PluginError>
+    negotiate_capabilities(
+        const QString& other_plugin_id,
+        const std::vector<InterfaceCapability>& requested_capabilities) override;
 
     /**
      * @brief List available methods
@@ -522,7 +594,7 @@ public:
      *
      * @note This method is thread-safe
      */
-    qtplugin::expected<QStringList, PluginError> list_methods() const override;
+    qtplugin::expected<QStringList, PluginError> list_methods() const;
 
     /**
      * @brief List available properties
@@ -532,8 +604,55 @@ public:
      *
      * @note This method is thread-safe
      */
-    qtplugin::expected<QStringList, PluginError> list_properties()
-        const override;
+    qtplugin::expected<QStringList, PluginError> list_properties() const;
+
+    // IDynamicPlugin interface implementation
+    std::vector<QString> get_available_methods(
+        const QString& interface_id = {}) const override;
+    std::vector<QString> get_available_properties(
+        const QString& interface_id = {}) const override;
+
+    /**
+     * @brief Get method signature
+     * @param method_name Method name
+     * @param interface_id Interface identifier
+     * @return Method signature as JSON schema
+     */
+    std::optional<QJsonObject> get_method_signature(
+        const QString& method_name, const QString& interface_id = {}) const override;
+
+    // === Event System ===
+
+    /**
+     * @brief Subscribe to events from another plugin
+     * @param source_plugin_id Source plugin identifier
+     * @param event_types Event types to subscribe to
+     * @param callback Event callback function
+     * @return Success or error information
+     */
+    qtplugin::expected<void, PluginError> subscribe_to_events(
+        const QString& source_plugin_id,
+        const std::vector<QString>& event_types,
+        std::function<void(const QString&, const QJsonObject&)> callback) override;
+
+    /**
+     * @brief Unsubscribe from events
+     * @param source_plugin_id Source plugin identifier
+     * @param event_types Event types to unsubscribe from
+     * @return Success or error information
+     */
+    qtplugin::expected<void, PluginError> unsubscribe_from_events(
+        const QString& source_plugin_id,
+        const std::vector<QString>& event_types = {}) override;
+
+    /**
+     * @brief Emit an event
+     * @param event_type Event type
+     * @param event_data Event data
+     * @return Success or error information
+     */
+    qtplugin::expected<void, PluginError> emit_event(
+        const QString& event_type, const QJsonObject& event_data) override;
 
     // === Lua-specific Methods ===
 
@@ -586,8 +705,6 @@ public:
      * }
      * @endcode
      */
-    qtplugin::expected<QVariant, PluginError> execute_code(
-        const QString& code, const QJsonObject& context = {});
 
     /**
      * @brief Get Lua execution environment

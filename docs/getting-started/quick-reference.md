@@ -55,12 +55,14 @@ for (const auto& path : plugins) {
 }
 ```
 
-### Security Configuration
+### SHA256 Verification
 
 ```cpp
-auto& security = manager->security_manager();
-security.set_trust_level(qtforge::TrustLevel::Trusted);
-security.add_trusted_path("./trusted_plugins/");
+// SHA256 verification is built into PluginManager
+PluginLoadOptions options;
+options.validate_sha256 = true;
+options.expected_sha256 = "your_expected_hash_here";
+auto result = manager->load_plugin("./plugins/my_plugin.so", options);
 ```
 
 ## CMake Integration

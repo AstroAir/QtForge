@@ -11,7 +11,7 @@
 #include <QLoggingCategory>
 #include <QUuid>
 #include <future>
-#include <qtplugin/core/plugin_interface.hpp>
+#include <qtplugin/interfaces/core/plugin_interface.hpp>
 #include "qtplugin/communication/request_response_system.hpp"
 
 Q_LOGGING_CATEGORY(pluginLog, "qtplugin.core")

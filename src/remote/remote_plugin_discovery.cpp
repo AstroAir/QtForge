@@ -3,10 +3,13 @@
  * @brief Implementation of remote plugin discovery system
  */
 
+#include <QXmlStreamReader>
+#include <QEventLoop>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QNetworkRequest>
 #include <QRegularExpression>
+#include <QTimer>
 #include <QUrlQuery>
 #include <QUuid>
 #include <algorithm>
@@ -649,38 +652,566 @@ qtplugin::expected<std::vector<RemotePluginDiscoveryResult>, PluginError>
 HttpDiscoveryEngine::discover_from_registry_api(
     const RemotePluginSource& /* source */,
     const PluginDiscoveryFilter& /* filter */) const {
-    // This is a placeholder implementation
-    // In a real implementation, this would make HTTP requests to registry APIs
-
     std::vector<RemotePluginDiscoveryResult> results;
 
-    // TODO: Implement actual registry API discovery
-    // This would involve:
-    // 1. Constructing the appropriate API endpoint URL
-    // 2. Making HTTP requests with proper authentication
-    // 3. Parsing the registry-specific response format
-    // 4. Applying filters to the results
+    try {
+        // Construct registry API endpoint URL
+        QUrl api_url = source.url();
+        QString path = api_url.path();
+
+        // Add standard registry API endpoints if not already specified
+        if (!path.endsWith("/api/plugins") && !path.contains("/api/")) {
+            if (!path.endsWith("/")) {
+                path += "/";
+            }
+            path += "api/plugins";
+            api_url.setPath(path);
+        }
+
+        // Build query parameters from filter
+        QUrlQuery query;
+        if (filter.name_pattern) {
+            query.addQueryItem("name", QString::fromStdString(*filter.name_pattern));
+        }
+        if (filter.category) {
+            query.addQueryItem("category", QString::fromStdString(*filter.category));
+        }
+        if (filter.author_pattern) {
+            query.addQueryItem("author", QString::fromStdString(*filter.author_pattern));
+        }
+        if (filter.license) {
+            query.addQueryItem("license", QString::fromStdString(*filter.license));
+        }
+        if (filter.min_rating) {
+            query.addQueryItem("min_rating", QString::number(*filter.min_rating));
+        }
+        if (filter.version_range) {
+            query.addQueryItem("version", QString::fromStdString(*filter.version_range));
+        }
+        if (filter.max_size_bytes) {
+            query.addQueryItem("max_size", QString::number(*filter.max_size_bytes));
+        }
+        if (filter.verified_only) {
+            query.addQueryItem("verified", "true");
+        }
+        if (filter.free_only) {
+            query.addQueryItem("free", "true");
+        }
+
+        // Add required tags
+        for (const auto& tag : filter.required_tags) {
+            query.addQueryItem("tag", QString::fromStdString(tag));
+        }
+
+        // Add excluded tags
+        for (const auto& tag : filter.excluded_tags) {
+            query.addQueryItem("exclude_tag", QString::fromStdString(tag));
+        }
+
+        api_url.setQuery(query);
+
+        // Create network request with proper headers
+        QNetworkRequest request(api_url);
+        request.setRawHeader("Accept", "application/json");
+        request.setRawHeader("User-Agent", "QtForge-PluginDiscovery/3.0.0");
+
+        // Apply authentication if configured
+        if (source.authentication().type != AuthenticationType::None) {
+            apply_authentication(request, source.authentication());
+        }
+
+        // Make synchronous request with timeout
+        QNetworkReply* reply = m_network_manager->get(request);
+        QEventLoop loop;
+        QTimer timeout_timer;
+        timeout_timer.setSingleShot(true);
+        timeout_timer.start(source.config().timeout);
+
+        QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+        QObject::connect(&timeout_timer, &QTimer::timeout, &loop, &QEventLoop::quit);
+        loop.exec();
+
+        if (!timeout_timer.isActive()) {
+            reply->abort();
+            reply->deleteLater();
+            return qtplugin::make_error<std::vector<RemotePluginDiscoveryResult>>(
+                PluginErrorCode::NetworkError, "Registry API request timed out");
+        }
+        timeout_timer.stop();
+
+        if (reply->error() != QNetworkReply::NoError) {
+            QString error_msg = reply->errorString();
+            reply->deleteLater();
+            return qtplugin::make_error<std::vector<RemotePluginDiscoveryResult>>(
+                PluginErrorCode::NetworkError,
+                "Registry API request failed: " + error_msg.toStdString());
+        }
+
+        // Parse JSON response
+        QByteArray response_data = reply->readAll();
+        reply->deleteLater();
+
+        QJsonParseError parse_error;
+        QJsonDocument doc = QJsonDocument::fromJson(response_data, &parse_error);
+        if (parse_error.error != QJsonParseError::NoError) {
+            return qtplugin::make_error<std::vector<RemotePluginDiscoveryResult>>(
+                PluginErrorCode::InvalidFormat,
+                "Invalid JSON response from registry API: " + parse_error.errorString().toStdString());
+        }
+
+        QJsonObject root = doc.object();
+
+        // Handle different registry API response formats
+        QJsonArray plugins_array;
+        if (root.contains("plugins")) {
+            plugins_array = root["plugins"].toArray();
+        } else if (root.contains("data")) {
+            plugins_array = root["data"].toArray();
+        } else if (root.contains("results")) {
+            plugins_array = root["results"].toArray();
+        } else if (doc.isArray()) {
+            plugins_array = doc.array();
+        } else {
+            return qtplugin::make_error<std::vector<RemotePluginDiscoveryResult>>(
+                PluginErrorCode::InvalidFormat,
+                "Unexpected registry API response format");
+        }
+
+        // Parse each plugin entry
+        for (const auto& plugin_value : plugins_array) {
+            if (!plugin_value.isObject()) {
+                continue;
+            }
+
+            QJsonObject plugin_obj = plugin_value.toObject();
+            RemotePluginDiscoveryResult result;
+
+            // Extract required fields
+            result.plugin_id = plugin_obj.value("id").toString().toStdString();
+            result.name = plugin_obj.value("name").toString().toStdString();
+            result.version = plugin_obj.value("version").toString().toStdString();
+            result.description = plugin_obj.value("description").toString().toStdString();
+            result.author = plugin_obj.value("author").toString().toStdString();
+            result.category = plugin_obj.value("category").toString().toStdString();
+
+            // Extract download URL
+            QString download_url = plugin_obj.value("download_url").toString();
+            if (download_url.isEmpty()) {
+                download_url = plugin_obj.value("url").toString();
+            }
+            if (!download_url.isEmpty()) {
+                result.download_url = QUrl(download_url);
+            }
+
+            // Extract optional fields
+            if (plugin_obj.contains("tags")) {
+                QJsonArray tags_array = plugin_obj["tags"].toArray();
+                for (const auto& tag_value : tags_array) {
+                    result.tags.push_back(tag_value.toString().toStdString());
+                }
+            }
+
+            if (plugin_obj.contains("checksum")) {
+                result.checksum = plugin_obj["checksum"].toString().toStdString();
+            }
+
+            if (plugin_obj.contains("size")) {
+                result.file_size = plugin_obj["size"].toInteger();
+            }
+
+            if (plugin_obj.contains("rating")) {
+                result.rating = plugin_obj["rating"].toDouble();
+            }
+
+            if (plugin_obj.contains("downloads")) {
+                result.download_count = plugin_obj["downloads"].toInt();
+            }
+
+            // Store source and metadata
+            result.source = source;
+            result.metadata = plugin_obj;
+
+            // Apply filter to result
+            if (filter.matches(result)) {
+                results.push_back(std::move(result));
+            }
+        }
+
+        return results;
+
+    } catch (const std::exception& e) {
+        return qtplugin::make_error<std::vector<RemotePluginDiscoveryResult>>(
+            PluginErrorCode::SystemError,
+            "Registry API discovery failed: " + std::string(e.what()));
+    }
+}
+
+qtplugin::expected<std::vector<RemotePluginDiscoveryResult>, PluginError>
+HttpDiscoveryEngine::discover_from_direct_url(
+    const RemotePluginSource& source,
+    const PluginDiscoveryFilter& filter) const {
+    std::vector<RemotePluginDiscoveryResult> results;
+
+    try {
+        QUrl url = source.url();
+
+        // Create network request
+        QNetworkRequest request(url);
+        request.setRawHeader("Accept", "application/json, text/html, application/xml, text/xml");
+        request.setRawHeader("User-Agent", "QtForge-PluginDiscovery/3.0.0");
+
+        // Apply authentication if configured
+        if (source.authentication().type != AuthenticationType::None) {
+            apply_authentication(request, source.authentication());
+        }
+
+        // Make synchronous request with timeout
+        QNetworkReply* reply = m_network_manager->get(request);
+        QEventLoop loop;
+        QTimer timeout_timer;
+        timeout_timer.setSingleShot(true);
+        timeout_timer.start(source.config().timeout);
+
+        QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+        QObject::connect(&timeout_timer, &QTimer::timeout, &loop, &QEventLoop::quit);
+        loop.exec();
+
+        if (!timeout_timer.isActive()) {
+            reply->abort();
+            reply->deleteLater();
+            return qtplugin::make_error<std::vector<RemotePluginDiscoveryResult>>(
+                PluginErrorCode::NetworkError, "Direct URL request timed out");
+        }
+        timeout_timer.stop();
+
+        if (reply->error() != QNetworkReply::NoError) {
+            QString error_msg = reply->errorString();
+            reply->deleteLater();
+            return qtplugin::make_error<std::vector<RemotePluginDiscoveryResult>>(
+                PluginErrorCode::NetworkError,
+                "Direct URL request failed: " + error_msg.toStdString());
+        }
+
+        // Get content type and data
+        QString content_type = reply->header(QNetworkRequest::ContentTypeHeader).toString().toLower();
+        QByteArray response_data = reply->readAll();
+        reply->deleteLater();
+
+        // Parse based on content type
+        if (content_type.contains("application/json") || content_type.contains("text/json")) {
+            // Parse as JSON
+            auto json_result = parse_json_plugin_metadata(response_data, source);
+            if (json_result) {
+                for (auto& result : *json_result) {
+                    if (filter.matches(result)) {
+                        results.push_back(std::move(result));
+                    }
+                }
+            } else {
+                return qtplugin::unexpected(json_result.error());
+            }
+        } else if (content_type.contains("text/html")) {
+            // Parse as HTML - extract plugin metadata from HTML content
+            auto html_result = parse_html_plugin_metadata(response_data, source);
+            if (html_result) {
+                for (auto& result : *html_result) {
+                    if (filter.matches(result)) {
+                        results.push_back(std::move(result));
+                    }
+                }
+            } else {
+                return qtplugin::unexpected(html_result.error());
+            }
+        } else if (content_type.contains("application/xml") || content_type.contains("text/xml")) {
+            // Parse as XML
+            auto xml_result = parse_xml_plugin_metadata(response_data, source);
+            if (xml_result) {
+                for (auto& result : *xml_result) {
+                    if (filter.matches(result)) {
+                        results.push_back(std::move(result));
+                    }
+                }
+            } else {
+                return qtplugin::unexpected(xml_result.error());
+            }
+        } else {
+            // Try to detect format from content
+            QString content_str = QString::fromUtf8(response_data);
+
+            // Try JSON first
+            if (content_str.trimmed().startsWith("{") || content_str.trimmed().startsWith("[")) {
+                auto json_result = parse_json_plugin_metadata(response_data, source);
+                if (json_result) {
+                    for (auto& result : *json_result) {
+                        if (filter.matches(result)) {
+                            results.push_back(std::move(result));
+                        }
+                    }
+                }
+            }
+            // Try XML
+            else if (content_str.trimmed().startsWith("<")) {
+                auto xml_result = parse_xml_plugin_metadata(response_data, source);
+                if (xml_result) {
+                    for (auto& result : *xml_result) {
+                        if (filter.matches(result)) {
+                            results.push_back(std::move(result));
+                        }
+                    }
+                }
+            } else {
+                return qtplugin::make_error<std::vector<RemotePluginDiscoveryResult>>(
+                    PluginErrorCode::InvalidFormat,
+                    "Unsupported content type for direct URL discovery: " + content_type.toStdString());
+            }
+        }
+
+        return results;
+
+    } catch (const std::exception& e) {
+        return qtplugin::make_error<std::vector<RemotePluginDiscoveryResult>>(
+            PluginErrorCode::SystemError,
+            "Direct URL discovery failed: " + std::string(e.what()));
+    }
+}
+
+qtplugin::expected<std::vector<RemotePluginDiscoveryResult>, PluginError>
+HttpDiscoveryEngine::parse_json_plugin_metadata(const QByteArray& data, const RemotePluginSource& source) const {
+    std::vector<RemotePluginDiscoveryResult> results;
+
+    QJsonParseError parse_error;
+    QJsonDocument doc = QJsonDocument::fromJson(data, &parse_error);
+    if (parse_error.error != QJsonParseError::NoError) {
+        return qtplugin::make_error<std::vector<RemotePluginDiscoveryResult>>(
+            PluginErrorCode::InvalidFormat,
+            "Invalid JSON in plugin metadata: " + parse_error.errorString().toStdString());
+    }
+
+    // Handle both single plugin object and array of plugins
+    QJsonArray plugins_array;
+    if (doc.isObject()) {
+        QJsonObject root = doc.object();
+        if (root.contains("plugins")) {
+            plugins_array = root["plugins"].toArray();
+        } else {
+            // Single plugin object
+            plugins_array.append(root);
+        }
+    } else if (doc.isArray()) {
+        plugins_array = doc.array();
+    }
+
+    for (const auto& plugin_value : plugins_array) {
+        if (!plugin_value.isObject()) {
+            continue;
+        }
+
+        QJsonObject plugin_obj = plugin_value.toObject();
+        RemotePluginDiscoveryResult result;
+
+        // Extract plugin information
+        result.plugin_id = plugin_obj.value("id").toString().toStdString();
+        result.name = plugin_obj.value("name").toString().toStdString();
+        result.version = plugin_obj.value("version").toString().toStdString();
+        result.description = plugin_obj.value("description").toString().toStdString();
+        result.author = plugin_obj.value("author").toString().toStdString();
+        result.category = plugin_obj.value("category").toString().toStdString();
+
+        // Extract download URL
+        QString download_url = plugin_obj.value("download_url").toString();
+        if (download_url.isEmpty()) {
+            download_url = plugin_obj.value("url").toString();
+        }
+        if (!download_url.isEmpty()) {
+            result.download_url = QUrl(download_url);
+        }
+
+        // Extract tags
+        if (plugin_obj.contains("tags")) {
+            QJsonArray tags_array = plugin_obj["tags"].toArray();
+            for (const auto& tag_value : tags_array) {
+                result.tags.push_back(tag_value.toString().toStdString());
+            }
+        }
+
+        // Extract optional fields
+        if (plugin_obj.contains("checksum")) {
+            result.checksum = plugin_obj["checksum"].toString().toStdString();
+        }
+        if (plugin_obj.contains("size")) {
+            result.file_size = plugin_obj["size"].toInteger();
+        }
+        if (plugin_obj.contains("rating")) {
+            result.rating = plugin_obj["rating"].toDouble();
+        }
+        if (plugin_obj.contains("downloads")) {
+            result.download_count = plugin_obj["downloads"].toInt();
+        }
+
+        result.source = source;
+        result.metadata = plugin_obj;
+
+        results.push_back(std::move(result));
+    }
 
     return results;
 }
 
 qtplugin::expected<std::vector<RemotePluginDiscoveryResult>, PluginError>
-HttpDiscoveryEngine::discover_from_direct_url(
-    const RemotePluginSource& /* source */,
-    const PluginDiscoveryFilter& /* filter */) const {
-    // This is a placeholder implementation
-    // In a real implementation, this would handle direct URL discovery
-
+HttpDiscoveryEngine::parse_html_plugin_metadata(const QByteArray& data, const RemotePluginSource& source) const {
     std::vector<RemotePluginDiscoveryResult> results;
 
-    // TODO: Implement direct URL discovery
-    // This would involve:
-    // 1. Fetching the content from the URL
-    // 2. Parsing plugin metadata (could be JSON, XML, or HTML)
-    // 3. Extracting plugin information
-    // 4. Creating discovery results
+    QString html_content = QString::fromUtf8(data);
+
+    // Look for JSON-LD structured data
+    QRegularExpression json_ld_regex(R"(<script[^>]*type\s*=\s*["\']application/ld\+json["\'][^>]*>(.*?)</script>)",
+                                     QRegularExpression::CaseInsensitiveOption | QRegularExpression::DotMatchesEverythingOption);
+
+    QRegularExpressionMatchIterator json_ld_matches = json_ld_regex.globalMatch(html_content);
+    while (json_ld_matches.hasNext()) {
+        QRegularExpressionMatch match = json_ld_matches.next();
+        QString json_content = match.captured(1);
+
+        auto json_result = parse_json_plugin_metadata(json_content.toUtf8(), source);
+        if (json_result) {
+            for (auto& result : *json_result) {
+                results.push_back(std::move(result));
+            }
+        }
+    }
+
+    // Look for meta tags with plugin information
+    if (results.empty()) {
+        RemotePluginDiscoveryResult result;
+        result.source = source;
+
+        // Extract plugin name from title or meta tags
+        QRegularExpression title_regex(R"(<title[^>]*>(.*?)</title>)", QRegularExpression::CaseInsensitiveOption);
+        QRegularExpressionMatch title_match = title_regex.match(html_content);
+        if (title_match.hasMatch()) {
+            result.name = title_match.captured(1).trimmed().toStdString();
+        }
+
+        // Extract description from meta description
+        QRegularExpression desc_regex(R"(<meta[^>]*name\s*=\s*["\']description["\'][^>]*content\s*=\s*["\']([^"']*)["\'])",
+                                      QRegularExpression::CaseInsensitiveOption);
+        QRegularExpressionMatch desc_match = desc_regex.match(html_content);
+        if (desc_match.hasMatch()) {
+            result.description = desc_match.captured(1).trimmed().toStdString();
+        }
+
+        // Only add if we found some meaningful information
+        if (!result.name.empty() || !result.description.empty()) {
+            result.plugin_id = source.url().toString().toStdString();
+            results.push_back(std::move(result));
+        }
+    }
 
     return results;
+}
+
+qtplugin::expected<std::vector<RemotePluginDiscoveryResult>, PluginError>
+HttpDiscoveryEngine::parse_xml_plugin_metadata(const QByteArray& data, const RemotePluginSource& source) const {
+    std::vector<RemotePluginDiscoveryResult> results;
+
+    QXmlStreamReader xml(data);
+    RemotePluginDiscoveryResult current_result;
+    bool in_plugin = false;
+    bool in_tags = false;
+    QString current_element;
+
+    while (!xml.atEnd()) {
+        xml.readNext();
+
+        if (xml.isStartElement()) {
+            current_element = xml.name().toString().toLower();
+
+            if (current_element == "plugin") {
+                in_plugin = true;
+                current_result = RemotePluginDiscoveryResult();
+                current_result.source = source;
+
+                // Extract attributes
+                QXmlStreamAttributes attributes = xml.attributes();
+                if (attributes.hasAttribute("id")) {
+                    current_result.plugin_id = attributes.value("id").toString().toStdString();
+                }
+            } else if (in_plugin && current_element == "tags") {
+                in_tags = true;
+            }
+        } else if (xml.isEndElement()) {
+            QString element_name = xml.name().toString().toLower();
+
+            if (element_name == "plugin" && in_plugin) {
+                // Finished parsing a plugin
+                if (!current_result.name.empty() || !current_result.plugin_id.empty()) {
+                    results.push_back(std::move(current_result));
+                }
+                in_plugin = false;
+            } else if (element_name == "tags") {
+                in_tags = false;
+            }
+
+            current_element.clear();
+        } else if (xml.isCharacters() && in_plugin && !current_element.isEmpty()) {
+            QString text = xml.text().toString().trimmed();
+            if (text.isEmpty()) {
+                continue;
+            }
+
+            if (in_tags && current_element == "tag") {
+                current_result.tags.push_back(text.toStdString());
+            } else if (current_element == "name") {
+                current_result.name = text.toStdString();
+            } else if (current_element == "version") {
+                current_result.version = text.toStdString();
+            } else if (current_element == "description") {
+                current_result.description = text.toStdString();
+            } else if (current_element == "author") {
+                current_result.author = text.toStdString();
+            } else if (current_element == "category") {
+                current_result.category = text.toStdString();
+            } else if (current_element == "download_url" || current_element == "url") {
+                current_result.download_url = QUrl(text);
+            } else if (current_element == "checksum") {
+                current_result.checksum = text.toStdString();
+            } else if (current_element == "size") {
+                current_result.file_size = text.toLongLong();
+            } else if (current_element == "rating") {
+                current_result.rating = text.toDouble();
+            } else if (current_element == "downloads") {
+                current_result.download_count = text.toInt();
+            }
+        }
+    }
+
+    if (xml.hasError()) {
+        return qtplugin::make_error<std::vector<RemotePluginDiscoveryResult>>(
+            PluginErrorCode::InvalidFormat,
+            "XML parsing error: " + xml.errorString().toStdString());
+    }
+
+    return results;
+}
+
+void HttpDiscoveryEngine::apply_authentication(QNetworkRequest& request, const AuthenticationCredentials& auth) const {
+    switch (auth.type) {
+        case AuthenticationType::Basic: {
+            QString credentials = auth.username + ":" + auth.password;
+            QByteArray encoded = credentials.toUtf8().toBase64();
+            request.setRawHeader("Authorization", "Basic " + encoded);
+            break;
+        }
+        case AuthenticationType::Bearer:
+            request.setRawHeader("Authorization", "Bearer " + auth.token.toUtf8());
+            break;
+        case AuthenticationType::ApiKey:
+            request.setRawHeader("X-API-Key", auth.api_key.toUtf8());
+            break;
+        default:
+            // Other authentication types not implemented for discovery
+            break;
+    }
 }
 
 void HttpDiscoveryEngine::cleanup_operation(const QString& operation_id) {

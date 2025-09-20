@@ -776,8 +776,23 @@ void HttpPluginLoader::apply_authentication(
         case AuthenticationType::ApiKey:
             request.setRawHeader("X-API-Key", auth.api_key.toUtf8());
             break;
+        case AuthenticationType::Certificate:
+            // Client certificate authentication would require SSL configuration
+            // For now, just log that it's not fully implemented
+            qWarning() << "Certificate authentication requires SSL configuration";
+            break;
+        case AuthenticationType::OAuth2:
+            // OAuth2 would require a full OAuth2 flow implementation
+            // For now, treat it as a bearer token if available
+            if (!auth.token.isEmpty()) {
+                request.setRawHeader("Authorization", "Bearer " + auth.token.toUtf8());
+            } else {
+                qWarning() << "OAuth2 authentication requires a valid token";
+            }
+            break;
         default:
-            // Other authentication types not implemented for HTTP requests
+            // Unknown authentication type
+            qWarning() << "Unknown authentication type:" << static_cast<int>(auth.type);
             break;
     }
 }

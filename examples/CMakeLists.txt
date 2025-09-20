@@ -4,23 +4,23 @@ cmake_minimum_required(VERSION 3.21)
 # Enhanced Basic Plugin Example
 add_subdirectory(01-fundamentals/basic-plugin)
 
-# Configuration Plugin Example (temporarily disabled due to interface changes)
-# add_subdirectory(01-fundamentals/configuration)
+# Configuration Plugin Example
+add_subdirectory(01-fundamentals/configuration)
 
-# Request-Response Communication Example (temporarily disabled due to interface changes)
-# add_subdirectory(02-communication/request-response)
+# Request-Response Communication Example
+add_subdirectory(02-communication/request-response)
 
 # Service Plugin Example (background processing and MessageBus integration)
 add_subdirectory(03-services/background-tasks)
 
 # UI Plugin Example (Qt Widgets integration and theme support)
-if(QTPLUGIN_BUILD_UI)
+if(QTFORGE_BUILD_UI)
     add_subdirectory(04-specialized/ui-integration)
 else()
-    message(STATUS "UI Plugin example skipped (QTPLUGIN_BUILD_UI=OFF)")
+    message(STATUS "UI Plugin example skipped (QTFORGE_BUILD_UI=OFF)")
 endif()
 
-# Communication Examples (advanced MessageBus patterns) - temporarily disabled due to complex dependencies
+# Communication Examples (advanced MessageBus patterns) - temporarily disabled due to interface issues
 # add_subdirectory(02-communication/event-driven)
 # add_subdirectory(02-communication/message-bus)
 

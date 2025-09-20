@@ -16,27 +16,12 @@ find_package(Qt6 REQUIRED COMPONENTS
     Test
 )
 
-# Find OpenSSL for cryptographic operations
+# Find OpenSSL for cryptographic operations (still needed for HTTPS)
 find_package(OpenSSL REQUIRED)
 
 # === Remote Plugin System Libraries ===
 
-# Security Manager
-add_library(QtForgeRemoteSecurity SHARED
-    security/remote_security_manager.cpp
-    security/remote_plugin_trust_store.cpp
-    security/remote_plugin_signature_verifier.cpp
-    ../../include/qtplugin/remote/security/remote_security_manager.hpp
-)
-
-target_link_libraries(QtForgeRemoteSecurity
-    Qt6::Core
-    Qt6::Network
-    Qt6::Concurrent
-    OpenSSL::SSL
-    OpenSSL::Crypto
-    QtForgeCore
-)
+# Security Manager - Removed (SHA256 verification preserved in core PluginManager)
 
 # Remote Plugin Manager
 add_library(QtForgeRemoteManager SHARED
@@ -51,7 +36,6 @@ target_link_libraries(QtForgeRemoteManager
     Qt6::Network
     Qt6::Concurrent
     QtForgeCore
-    QtForgeRemoteSecurity
 )
 
 # Unified Integration Layer
@@ -66,7 +50,6 @@ target_link_libraries(QtForgeRemoteIntegration
     Qt6::Network
     Qt6::Concurrent
     QtForgeCore
-    QtForgeRemoteSecurity
     QtForgeRemoteManager
 )
 
@@ -74,7 +57,6 @@ target_link_libraries(QtForgeRemoteIntegration
 add_library(QtForgeRemote SHARED)
 
 target_link_libraries(QtForgeRemote
-    QtForgeRemoteSecurity
     QtForgeRemoteManager
     QtForgeRemoteIntegration
 )
@@ -85,9 +67,8 @@ set_target_properties(QtForgeRemote PROPERTIES
 
 # === Installation ===
 if(QTFORGE_INSTALL)
-    install(TARGETS 
-        QtForgeRemoteSecurity 
-        QtForgeRemoteManager 
+    install(TARGETS
+        QtForgeRemoteManager
         QtForgeRemoteIntegration
         QtForgeRemote
         EXPORT QtForgeRemoteTargets
@@ -143,41 +124,9 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     endif()
 endif()
 
-# === Remote Security Manager ===
-set(REMOTE_SECURITY_SOURCES
-    security/remote_security_manager.cpp
-    security/remote_plugin_trust_store.cpp
-    security/remote_plugin_signature_verifier.cpp
-    security/remote_sandbox.cpp
-)
-
-set(REMOTE_SECURITY_HEADERS
-    ../../include/qtplugin/remote/security/remote_security_manager.hpp
-)
-
-add_library(QtForgeRemoteSecurity SHARED 
-    ${REMOTE_SECURITY_SOURCES}
-    ${REMOTE_SECURITY_HEADERS}
-)
-
-target_link_libraries(QtForgeRemoteSecurity
-    Qt6::Core
-    Qt6::Network
-    Qt6::Concurrent
-    OpenSSL::SSL
-    OpenSSL::Crypto
-    QtForgeCore
-)
-
-target_compile_definitions(QtForgeRemoteSecurity PRIVATE
-    QTFORGE_REMOTE_SECURITY_LIBRARY
-)
-
-set_target_properties(QtForgeRemoteSecurity PROPERTIES
-    VERSION ${QtForge_VERSION}
-    SOVERSION ${QtForge_VERSION_MAJOR}
-    EXPORT_NAME RemoteSecurity
-)
+# === Remote Security Manager - Removed ===
+# Security components have been removed from QtForge
+# SHA256 verification is preserved in the core PluginManager
 
 # === Remote Plugin Manager ===
 set(REMOTE_MANAGER_SOURCES
@@ -201,7 +150,6 @@ target_link_libraries(QtForgeRemoteManager
     Qt6::Network
     Qt6::Concurrent
     QtForgeCore
-    QtForgeRemoteSecurity
 )
 
 target_compile_definitions(QtForgeRemoteManager PRIVATE
@@ -235,7 +183,6 @@ target_link_libraries(QtForgeRemoteIntegration
     Qt6::Network
     Qt6::Concurrent
     QtForgeCore
-    QtForgeRemoteSecurity
     QtForgeRemoteManager
 )
 
@@ -253,7 +200,6 @@ set_target_properties(QtForgeRemoteIntegration PROPERTIES
 add_library(QtForgeRemote SHARED)
 
 target_link_libraries(QtForgeRemote
-    QtForgeRemoteSecurity
     QtForgeRemoteManager
     QtForgeRemoteIntegration
 )
@@ -267,9 +213,8 @@ set_target_properties(QtForgeRemote PROPERTIES
 # === Installation ===
 if(QTFORGE_INSTALL)
     # Install libraries
-    install(TARGETS 
-        QtForgeRemoteSecurity 
-        QtForgeRemoteManager 
+    install(TARGETS
+        QtForgeRemoteManager
         QtForgeRemoteIntegration
         QtForgeRemote
         EXPORT QtForgeRemoteTargets
@@ -332,7 +277,7 @@ endif()
 
 # === Summary ===
 message(STATUS "QtForge Remote Plugin System Configuration:")
-message(STATUS "  - Remote Security Library: QtForgeRemoteSecurity")
+message(STATUS "  - Remote Security Library: Removed (SHA256 preserved in core)")
 message(STATUS "  - Remote Manager Library: QtForgeRemoteManager")
 message(STATUS "  - Integration Library: QtForgeRemoteIntegration")
 message(STATUS "  - Unified Library: QtForgeRemote")
@@ -359,8 +304,7 @@ find_dependency(OpenSSL REQUIRED)
 include(\"\${CMAKE_CURRENT_LIST_DIR}/QtForgeRemoteTargets.cmake\")
 
 # Define convenience variables
-set(QtForgeRemote_LIBRARIES 
-    QtForge::RemoteSecurity
+set(QtForgeRemote_LIBRARIES
     QtForge::RemoteManager
     QtForge::RemoteIntegration
     QtForge::Remote
@@ -436,25 +380,8 @@ option(QTFORGE_REMOTE_ENABLE_OPENSSL "Enable OpenSSL support" ON)
 option(QTFORGE_REMOTE_ENABLE_SANDBOX "Enable plugin sandboxing" ON)
 
 # === Feature Configuration ===
-if(QTFORGE_REMOTE_ENABLE_OPENSSL)
-    target_compile_definitions(QtForgeRemoteSecurity PRIVATE QTFORGE_REMOTE_OPENSSL_ENABLED)
-endif()
-
-if(QTFORGE_REMOTE_ENABLE_SANDBOX)
-    target_compile_definitions(QtForgeRemoteSecurity PRIVATE QTFORGE_REMOTE_SANDBOX_ENABLED)
-    
-    # Platform-specific sandbox implementations
-    if(WIN32)
-        target_sources(QtForgeRemoteSecurity PRIVATE 
-            security/sandbox/windows_sandbox.cpp)
-    elseif(UNIX AND NOT APPLE)
-        target_sources(QtForgeRemoteSecurity PRIVATE 
-            security/sandbox/linux_sandbox.cpp)
-    elseif(APPLE)
-        target_sources(QtForgeRemoteSecurity PRIVATE 
-            security/sandbox/macos_sandbox.cpp)
-    endif()
-endif()
+# Security features removed - QtForgeRemoteSecurity library no longer exists
+# OpenSSL and sandbox features have been removed
 
 # === pkg-config Support ===
 if(QTFORGE_INSTALL AND NOT WIN32)

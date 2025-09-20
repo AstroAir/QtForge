@@ -40,7 +40,7 @@ void register_version_bindings(sol::state& lua) {
 void register_core_bindings(sol::state& lua) {
     // Create qtforge.core namespace
     sol::table qtforge = lua["qtforge"];
-    sol::table core = qtforge.get_or_create<sol::table>("core");
+    sol::table core = qtforge["core"].get_or_create<sol::table>();
 
     // Register only the Version class for now
     register_version_bindings(lua);

@@ -899,7 +899,7 @@ A plugin that demonstrates ACID transaction support.
 #pragma once
 
 #include <qtplugin/core/plugin_interface.hpp>
-#include <qtplugin/transactions/transaction_manager.hpp>
+#include <qtplugin/workflow/transactions.hpp>
 #include <QObject>
 #include <QJsonObject>
 

@@ -10,13 +10,17 @@
 
 #include <QDebug>
 #include <QLoggingCategory>
+#include <QMutexLocker>
+#include <limits>
 
 Q_LOGGING_CATEGORY(metricsCollectorLog, "qtplugin.metrics")
 
 namespace qtplugin {
 
 PluginMetricsCollector::PluginMetricsCollector(QObject* parent)
-    : QObject(parent), m_monitoring_timer(std::make_unique<QTimer>(this)) {
+    : QObject(parent),
+      m_monitoring_timer(std::make_unique<QTimer>(this)),
+      m_last_cleanup_time(std::chrono::system_clock::now()) {
     // Connect monitoring timer
     connect(m_monitoring_timer.get(), &QTimer::timeout, this,
             &PluginMetricsCollector::on_monitoring_timer);
@@ -31,8 +35,20 @@ PluginMetricsCollector::~PluginMetricsCollector() {
 
 void PluginMetricsCollector::start_monitoring(
     std::chrono::milliseconds interval) {
+    if (interval.count() <= 0) {
+        qCWarning(metricsCollectorLog)
+            << "Invalid monitoring interval:" << interval.count() << "ms";
+        return;
+    }
+
     if (m_monitoring_active.load()) {
         qCDebug(metricsCollectorLog) << "Monitoring already active";
+        return;
+    }
+
+    if (!is_ready_for_monitoring()) {
+        qCWarning(metricsCollectorLog)
+            << "Cannot start monitoring: plugin registry not set";
         return;
     }
 
@@ -65,6 +81,11 @@ bool PluginMetricsCollector::is_monitoring_active() const {
 qtplugin::expected<void, PluginError>
 PluginMetricsCollector::update_plugin_metrics(
     const std::string& plugin_id, IPluginRegistry* plugin_registry) {
+    if (plugin_id.empty()) {
+        return make_error<void>(PluginErrorCode::InvalidParameters,
+                                "Plugin ID cannot be empty");
+    }
+
     if (!plugin_registry) {
         return make_error<void>(PluginErrorCode::InvalidParameters,
                                 "Plugin registry cannot be null");
@@ -85,6 +106,9 @@ PluginMetricsCollector::update_plugin_metrics(
     // Calculate and update metrics
     QJsonObject metrics = calculate_plugin_metrics(plugin_id, plugin_registry);
 
+    // Store metrics in history
+    store_metrics_in_history(plugin_id, metrics);
+
     // Update plugin info with new metrics (this would need to be done through
     // the registry)
     auto update_result =
@@ -102,12 +126,28 @@ PluginMetricsCollector::update_plugin_metrics(
 
 QJsonObject PluginMetricsCollector::get_plugin_metrics(
     const std::string& plugin_id, IPluginRegistry* plugin_registry) const {
+    if (plugin_id.empty()) {
+        qCWarning(metricsCollectorLog) << "Plugin ID cannot be empty";
+        return QJsonObject();
+    }
+
+    // Try to get from cache first for better performance
+    {
+        QMutexLocker locker(&m_metrics_mutex);
+        auto cache_it = m_plugin_metrics_cache.find(plugin_id);
+        if (cache_it != m_plugin_metrics_cache.end()) {
+            return cache_it->second;
+        }
+    }
+
     if (!plugin_registry) {
+        qCWarning(metricsCollectorLog) << "Plugin registry cannot be null";
         return QJsonObject();
     }
 
     auto plugin_info_opt = plugin_registry->get_plugin_info(plugin_id);
     if (!plugin_info_opt) {
+        qCDebug(metricsCollectorLog) << "Plugin not found:" << QString::fromStdString(plugin_id);
         return QJsonObject();
     }
 
@@ -218,11 +258,37 @@ void PluginMetricsCollector::update_all_metrics(
 }
 
 void PluginMetricsCollector::clear_metrics() {
-    qCDebug(metricsCollectorLog) << "Metrics cleared";
+    QMutexLocker locker(&m_metrics_mutex);
+
+    // Clear all cached metrics
+    m_plugin_metrics_cache.clear();
+
+    // Clear metrics history
+    m_metrics_history.clear();
+
+    // Reset cleanup time
+    m_last_cleanup_time = std::chrono::system_clock::now();
+
+    qCDebug(metricsCollectorLog) << "All metrics data cleared";
 }
 
 void PluginMetricsCollector::set_monitoring_interval(
     std::chrono::milliseconds interval) {
+    if (interval.count() <= 0) {
+        qCWarning(metricsCollectorLog)
+            << "Invalid monitoring interval:" << interval.count() << "ms, ignoring";
+        return;
+    }
+
+    // Limit maximum interval to prevent overflow
+    const auto max_interval = std::chrono::milliseconds(std::numeric_limits<int>::max());
+    if (interval > max_interval) {
+        qCWarning(metricsCollectorLog)
+            << "Monitoring interval too large:" << interval.count()
+            << "ms, clamping to:" << max_interval.count() << "ms";
+        interval = max_interval;
+    }
+
     m_monitoring_interval = interval;
 
     if (m_monitoring_active.load()) {
@@ -238,12 +304,101 @@ std::chrono::milliseconds PluginMetricsCollector::get_monitoring_interval()
     return m_monitoring_interval;
 }
 
-void PluginMetricsCollector::on_monitoring_timer() {
-    if (!m_monitoring_active.load() || !m_plugin_registry) {
+void PluginMetricsCollector::set_plugin_registry(IPluginRegistry* plugin_registry) {
+    if (m_plugin_registry == plugin_registry) {
+        qCDebug(metricsCollectorLog) << "Plugin registry already set to the same instance";
         return;
     }
 
-    update_all_metrics(m_plugin_registry);
+    // If we're currently monitoring and changing registry, we should clear metrics
+    if (m_plugin_registry != nullptr && plugin_registry != m_plugin_registry) {
+        qCDebug(metricsCollectorLog) << "Plugin registry changed, clearing existing metrics";
+        clear_metrics();
+    }
+
+    m_plugin_registry = plugin_registry;
+
+    if (plugin_registry) {
+        qCDebug(metricsCollectorLog) << "Plugin registry set for metrics collection";
+    } else {
+        qCDebug(metricsCollectorLog) << "Plugin registry cleared";
+    }
+}
+
+IPluginRegistry* PluginMetricsCollector::get_plugin_registry() const {
+    return m_plugin_registry;
+}
+
+std::vector<QJsonObject> PluginMetricsCollector::get_plugin_metrics_history(
+    const std::string& plugin_id, size_t max_entries) const {
+    if (plugin_id.empty()) {
+        qCWarning(metricsCollectorLog) << "Plugin ID cannot be empty";
+        return {};
+    }
+
+    QMutexLocker locker(&m_metrics_mutex);
+
+    auto it = m_metrics_history.find(plugin_id);
+    if (it == m_metrics_history.end()) {
+        return {};
+    }
+
+    const auto& history = it->second;
+
+    if (max_entries == 0 || max_entries >= history.size()) {
+        return history;
+    }
+
+    // Return the most recent entries
+    size_t start_index = history.size() - max_entries;
+    return std::vector<QJsonObject>(history.begin() + start_index, history.end());
+}
+
+void PluginMetricsCollector::set_max_history_size(size_t max_size) {
+    if (max_size == 0) {
+        qCWarning(metricsCollectorLog) << "Maximum history size cannot be zero";
+        return;
+    }
+
+    QMutexLocker locker(&m_metrics_mutex);
+    m_max_history_size = max_size;
+
+    qCDebug(metricsCollectorLog) << "Maximum history size set to:" << max_size;
+
+    // Trigger cleanup to apply new limit
+    cleanup_old_metrics();
+}
+
+size_t PluginMetricsCollector::get_max_history_size() const {
+    QMutexLocker locker(&m_metrics_mutex);
+    return m_max_history_size;
+}
+
+bool PluginMetricsCollector::is_ready_for_monitoring() const {
+    return m_plugin_registry != nullptr;
+}
+
+void PluginMetricsCollector::on_monitoring_timer() {
+    if (!m_monitoring_active.load()) {
+        qCDebug(metricsCollectorLog) << "Monitoring timer fired but monitoring is not active";
+        return;
+    }
+
+    if (!m_plugin_registry) {
+        qCWarning(metricsCollectorLog) << "Monitoring timer fired but no plugin registry is set";
+        return;
+    }
+
+    try {
+        update_all_metrics(m_plugin_registry);
+
+        // Periodically cleanup old metrics
+        cleanup_old_metrics();
+    } catch (const std::exception& e) {
+        qCWarning(metricsCollectorLog) << "Exception during metrics collection:" << e.what();
+    } catch (...) {
+        qCWarning(metricsCollectorLog) << "Unknown exception during metrics collection";
+    }
 }
 
 std::string PluginMetricsCollector::plugin_state_to_string(int state) const {
@@ -320,6 +475,53 @@ QJsonObject PluginMetricsCollector::calculate_plugin_metrics(
         plugin_state_to_string(static_cast<int>(plugin_info.state)));
 
     return metrics;
+}
+
+void PluginMetricsCollector::cleanup_old_metrics() {
+    QMutexLocker locker(&m_metrics_mutex);
+
+    auto now = std::chrono::system_clock::now();
+
+    // Only cleanup every 5 minutes to avoid excessive overhead
+    if (now - m_last_cleanup_time < std::chrono::minutes(5)) {
+        return;
+    }
+
+    m_last_cleanup_time = now;
+
+    // Remove old metrics history entries
+    for (auto& [plugin_id, history] : m_metrics_history) {
+        if (history.size() > m_max_history_size) {
+            // Keep only the most recent entries
+            size_t excess = history.size() - m_max_history_size;
+            history.erase(history.begin(), history.begin() + excess);
+        }
+    }
+
+    qCDebug(metricsCollectorLog) << "Metrics cleanup completed";
+}
+
+void PluginMetricsCollector::store_metrics_in_history(
+    const std::string& plugin_id, const QJsonObject& metrics) {
+    QMutexLocker locker(&m_metrics_mutex);
+
+    // Store in cache
+    m_plugin_metrics_cache[plugin_id] = metrics;
+
+    // Add timestamp to metrics for history
+    QJsonObject timestamped_metrics = metrics;
+    timestamped_metrics["collection_timestamp"] =
+        QString::number(std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch()).count());
+
+    // Store in history
+    auto& history = m_metrics_history[plugin_id];
+    history.push_back(timestamped_metrics);
+
+    // Trigger cleanup if needed
+    if (history.size() > m_max_history_size * 1.2) {
+        cleanup_old_metrics();
+    }
 }
 
 }  // namespace qtplugin

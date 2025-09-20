@@ -299,77 +299,149 @@ void TestMessageBus::testSubscribeToTopic() {
 }
 
 void TestMessageBus::testUnsubscribeFromTopic() {
-    // Create topic and subscription
-    auto create_result = m_message_bus->create_topic("unsubscribe_test");
-    QVERIFY(create_result.has_value());
+    // Create a simple test message type
+    class TestMessage : public qtplugin::Message<TestMessage> {
+    public:
+        TestMessage() : qtplugin::Message<TestMessage>("test_sender") {}
+        std::string content = "test";
 
-    auto subscribe_result = m_message_bus->subscribe(
-        "unsubscribe_test", [](const Message& msg) { Q_UNUSED(msg) });
+        QJsonObject to_json() const override {
+            QJsonObject obj;
+            obj["type"] = QString::fromStdString(std::string(type()));
+            obj["sender"] = QString::fromStdString(std::string(sender()));
+            obj["content"] = QString::fromStdString(content);
+            obj["id"] = QString::fromStdString(id());
+            return obj;
+        }
+    };
+
+    // Subscribe to message type
+    auto subscribe_result = m_message_bus->subscribe<TestMessage>(
+        "test_subscriber", [](const TestMessage& msg) -> qtplugin::expected<void, qtplugin::PluginError> {
+            Q_UNUSED(msg);
+            return {};
+        });
     QVERIFY(subscribe_result.has_value());
 
-    auto subscription_id = subscribe_result.value();
-
     // Verify subscription exists
-    QCOMPARE(m_message_bus->get_subscription_count(), 1);
+    auto stats1 = m_message_bus->statistics();
+    QVERIFY(stats1.contains("total_subscriptions"));
+    QCOMPARE(stats1["total_subscriptions"].toInt(), 1);
 
     // Unsubscribe
-    auto unsubscribe_result = m_message_bus->unsubscribe(subscription_id);
+    auto unsubscribe_result = m_message_bus->unsubscribe("test_subscriber");
     QVERIFY(unsubscribe_result.has_value());
 
     // Verify subscription was removed
-    QCOMPARE(m_message_bus->get_subscription_count(), 0);
+    auto stats2 = m_message_bus->statistics();
+    QCOMPARE(stats2["total_subscriptions"].toInt(), 0);
 }
 
 void TestMessageBus::testCreateTopic() {
-    // Test creating a new topic
-    auto result = m_message_bus->create_topic("new_topic");
+    // Create a simple test message type
+    class NewTopicMessage : public qtplugin::Message<NewTopicMessage> {
+    public:
+        NewTopicMessage() : qtplugin::Message<NewTopicMessage>("test_sender") {}
+        std::string content = "new_topic_test";
+
+        QJsonObject to_json() const override {
+            QJsonObject obj;
+            obj["type"] = QString::fromStdString(std::string(type()));
+            obj["sender"] = QString::fromStdString(std::string(sender()));
+            obj["content"] = QString::fromStdString(content);
+            obj["id"] = QString::fromStdString(id());
+            return obj;
+        }
+    };
+
+    // Subscribe to message type (this implicitly "creates" the topic)
+    auto result = m_message_bus->subscribe<NewTopicMessage>(
+        "topic_subscriber", [](const NewTopicMessage& msg) -> qtplugin::expected<void, qtplugin::PluginError> {
+            Q_UNUSED(msg);
+            return {};
+        });
     QVERIFY(result.has_value());
 
-    // Verify topic was created
-    QVERIFY(m_message_bus->topic_exists("new_topic"));
-    QCOMPARE(m_message_bus->get_topic_count(), 1);
+    // Verify subscription exists
+    QVERIFY(m_message_bus->has_subscriber("topic_subscriber"));
+    auto stats = m_message_bus->statistics();
+    QVERIFY(stats.contains("total_subscriptions"));
+    QCOMPARE(stats["total_subscriptions"].toInt(), 1);
 
-    // Test creating duplicate topic
-    auto duplicate_result = m_message_bus->create_topic("new_topic");
-    QVERIFY(!duplicate_result.has_value());
-    QCOMPARE(duplicate_result.error().code, PluginErrorCode::AlreadyExists);
+    // Test subscribing with same ID (should work - multiple subscriptions allowed)
+    auto duplicate_result = m_message_bus->subscribe<NewTopicMessage>(
+        "topic_subscriber", [](const NewTopicMessage& msg) -> qtplugin::expected<void, qtplugin::PluginError> {
+            Q_UNUSED(msg);
+            return {};
+        });
+    QVERIFY(duplicate_result.has_value());
 }
 
 void TestMessageBus::testDeleteTopic() {
-    // Create a topic first
-    auto create_result = m_message_bus->create_topic("delete_test");
-    QVERIFY(create_result.has_value());
-    QVERIFY(m_message_bus->topic_exists("delete_test"));
+    // Create a simple test message type
+    class DeleteTestMessage : public qtplugin::Message<DeleteTestMessage> {
+    public:
+        DeleteTestMessage() : qtplugin::Message<DeleteTestMessage>("test_sender") {}
+        std::string content = "delete_test";
 
-    // Delete the topic
-    auto delete_result = m_message_bus->delete_topic("delete_test");
+        QJsonObject to_json() const override {
+            QJsonObject obj;
+            obj["type"] = QString::fromStdString(std::string(type()));
+            obj["sender"] = QString::fromStdString(std::string(sender()));
+            obj["content"] = QString::fromStdString(content);
+            obj["id"] = QString::fromStdString(id());
+            return obj;
+        }
+    };
+
+    // Subscribe to message type (this implicitly "creates" the topic)
+    auto create_result = m_message_bus->subscribe<DeleteTestMessage>(
+        "delete_subscriber", [](const DeleteTestMessage& msg) -> qtplugin::expected<void, qtplugin::PluginError> {
+            Q_UNUSED(msg);
+            return {};
+        });
+    QVERIFY(create_result.has_value());
+    QVERIFY(m_message_bus->has_subscriber("delete_subscriber"));
+
+    // "Delete" the topic by unsubscribing
+    auto delete_result = m_message_bus->unsubscribe("delete_subscriber");
     QVERIFY(delete_result.has_value());
 
-    // Verify topic was deleted
-    QVERIFY(!m_message_bus->topic_exists("delete_test"));
-    QCOMPARE(m_message_bus->get_topic_count(), 0);
+    // Verify subscription was removed
+    QVERIFY(!m_message_bus->has_subscriber("delete_subscriber"));
+    auto stats = m_message_bus->statistics();
+    QCOMPARE(stats["total_subscriptions"].toInt(), 0);
 }
 
 void TestMessageBus::testMessageDeliveryOrder() {
-    // Create topic
-    auto create_result = m_message_bus->create_topic("order_test");
-    QVERIFY(create_result.has_value());
+    // Create a simple test message type
+    class OrderTestMessage : public qtplugin::Message<OrderTestMessage> {
+    public:
+        OrderTestMessage(const std::string& content) : qtplugin::Message<OrderTestMessage>("test_sender"), content(content) {}
+        std::string content;
 
-    // Subscribe to topic
+        QJsonObject to_json() const override {
+            QJsonObject obj;
+            obj["type"] = QString::fromStdString(std::string(type()));
+            obj["sender"] = QString::fromStdString(std::string(sender()));
+            obj["content"] = QString::fromStdString(content);
+            obj["id"] = QString::fromStdString(id());
+            return obj;
+        }
+    };
+
+    // Subscribe to message type
     std::vector<std::string> received_messages;
-    auto subscribe_result = m_message_bus->subscribe(
-        "order_test", [&received_messages](const Message& msg) {
+    auto subscribe_result = m_message_bus->subscribe<OrderTestMessage>(
+        "order_subscriber", [&received_messages](const OrderTestMessage& msg) -> qtplugin::expected<void, qtplugin::PluginError> {
             received_messages.push_back(msg.content);
+            return {};
         });
     QVERIFY(subscribe_result.has_value());
 
     // Publish messages in order
     for (int i = 1; i <= 5; ++i) {
-        Message msg;
-        msg.topic = "order_test";
-        msg.content = "Message " + std::to_string(i);
-        msg.sender = "test_sender";
-
+        OrderTestMessage msg("Message " + std::to_string(i));
         auto publish_result = m_message_bus->publish(msg);
         QVERIFY(publish_result.has_value());
     }

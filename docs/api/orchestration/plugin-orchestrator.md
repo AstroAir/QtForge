@@ -1,10 +1,11 @@
 # PluginOrchestrator API Reference
 
 !!! info "Module Information"
-**Header**: `qtplugin/orchestration/plugin_orchestrator.hpp`  
- **Namespace**: `qtplugin::orchestration`  
- **Since**: QtForge v3.1.0  
- **Status**: Beta
+**Header**: `qtplugin/orchestration/plugin_orchestrator.hpp` (compatibility wrapper)
+**Implementation**: `qtplugin/workflow/orchestration.hpp`
+ **Namespace**: `qtplugin::orchestration` (redirects to `qtplugin::workflow::orchestration`)
+ **Since**: QtForge v3.1.0
+ **Status**: Stable
 
 ## Overview
 

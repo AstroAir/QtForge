@@ -1,10 +1,24 @@
 # CMakeLists.txt for Remote Plugin Tests
 cmake_minimum_required(VERSION 3.16)
 
-# Find required packages
-find_package(Qt6 REQUIRED COMPONENTS Core Network)
-find_package(GTest REQUIRED)
-find_package(GMock REQUIRED)
+# Use Qt6 components already found by the main CMakeLists.txt
+# Only find additional components if not already found
+if(NOT TARGET Qt6::Core)
+    find_package(Qt6 REQUIRED COMPONENTS Core Network)
+endif()
+if(NOT TARGET Qt6::Network)
+    find_package(Qt6 REQUIRED COMPONENTS Network)
+endif()
+
+# Find test frameworks - make them optional to avoid hard dependencies
+find_package(GTest QUIET)
+find_package(GMock QUIET)
+
+# If GTest/GMock not found, disable remote tests
+if(NOT GTest_FOUND OR NOT GMock_FOUND)
+    message(WARNING "GTest or GMock not found - remote plugin tests will be disabled")
+    return()
+endif()
 
 # Include directories
 include_directories(

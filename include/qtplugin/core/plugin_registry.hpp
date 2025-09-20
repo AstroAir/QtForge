@@ -9,7 +9,7 @@
 #include <QObject>
 #include <memory>
 #include <optional>
-#include <qtplugin/core/plugin_interface.hpp>
+#include <qtplugin/interfaces/core/plugin_interface.hpp>
 #include <qtplugin/utils/error_handling.hpp>
 #include <shared_mutex>
 #include <string>

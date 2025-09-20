@@ -33,7 +33,7 @@ class AboutDialog;
 class UIPluginCore : public QObject, public qtplugin::IUIPlugin {
     Q_OBJECT
     Q_INTERFACES(qtplugin::IUIPlugin)
-    Q_PLUGIN_METADATA(IID "qtplugin.IPlugin/1.0" FILE "../ui_plugin.json")
+    Q_PLUGIN_METADATA(IID "qtplugin.IPlugin/3.1" FILE "../ui_plugin.json")
 
 public:
     explicit UIPluginCore(QObject* parent = nullptr);

@@ -15,8 +15,8 @@
 #include <memory>
 #include <functional>
 
-#include <qtplugin/core/plugin_interface.hpp>
-#include <qtplugin/core/plugin_manager.hpp>
+#include <qtplugin/interfaces/core/plugin_interface.hpp>
+#include <qtplugin/managers/plugin_manager.hpp>
 #include <qtplugin/utils/error_handling.hpp>
 
 namespace QtForgeTest {
@@ -215,5 +215,3 @@ protected:
     } while(0)
 
 } // namespace QtForgeTest
-
-#include "test_helpers.moc"

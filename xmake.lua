@@ -1,14 +1,14 @@
 -- QtForge Library XMake Configuration
 -- Modern C++ Plugin System for Qt Applications with Modular Architecture
--- Version: 3.0.0
--- Updated to match CMake build system structure
+-- Version: 3.2.0
+-- Updated to match CMake build system structure with all features enabled
 
 -- Set minimum xmake version
 set_xmakever("3.0.1")
 
 -- Project configuration
 set_project("QtForge")
-set_version("3.0.0", {build = "%Y%m%d%H%M"})
+set_version("3.2.0", {build = "%Y%m%d%H%M"})
 
 -- Add build modes
 add_rules("mode.debug", "mode.release", "mode.releasedbg", "mode.minsizerel")
@@ -361,9 +361,9 @@ configure_qt_features()
 
 -- Version definitions (matching CMake configuration)
 add_defines("QTFORGE_VERSION_MAJOR=3")
-add_defines("QTFORGE_VERSION_MINOR=0")
+add_defines("QTFORGE_VERSION_MINOR=2")
 add_defines("QTFORGE_VERSION_PATCH=0")
-add_defines("QTFORGE_VERSION_STRING=\"3.0.0\"")
+add_defines("QTFORGE_VERSION_STRING=\"3.2.0\"")
 
 -- Export definitions for shared libraries
 if has_config("shared") then
@@ -413,8 +413,8 @@ local qtforge_core_sources = {
     -- Advanced plugin system sources (v3.1.0)
     "src/communication/plugin_service_contracts.cpp",
     "src/core/advanced_plugin_interface.cpp",
-    "src/orchestration/plugin_orchestrator.cpp",
-    "src/composition/plugin_composition.cpp",
+    -- "src/orchestration/plugin_orchestrator.cpp", -- moved to workflow module
+    -- "src/composition/plugin_composition.cpp", -- moved to workflow module
     "src/transactions/plugin_transaction_manager.cpp",
     -- Version management sources (v3.1.0)
     "src/managers/plugin_version_manager.cpp",
@@ -484,11 +484,7 @@ local qtforge_core_headers = {
     "include/qtplugin/communication/request_response_system.hpp",
     "include/qtplugin/utils/version.hpp",
     "include/qtplugin/utils/error_handling.hpp",
-    "include/qtplugin/security/security_manager.hpp",
-    "include/qtplugin/security/components/security_validator.hpp",
-    "include/qtplugin/security/components/signature_verifier.hpp",
-    "include/qtplugin/security/components/permission_manager.hpp",
-    "include/qtplugin/security/components/security_policy_engine.hpp",
+    -- Security headers removed
     "include/qtplugin/managers/configuration_manager.hpp",
     "include/qtplugin/managers/configuration_manager_impl.hpp",
     "include/qtplugin/managers/components/configuration_storage.hpp",
@@ -512,7 +508,7 @@ local qtforge_core_headers = {
     "include/qtplugin/core/advanced_plugin_interface.hpp",
     "include/qtplugin/orchestration/plugin_orchestrator.hpp",
     "include/qtplugin/composition/plugin_composition.hpp",
-    "include/qtplugin/transactions/plugin_transaction_manager.hpp",
+    "include/qtplugin/workflow/transactions.hpp",
     -- Version management headers (v3.1.0)
     "include/qtplugin/managers/plugin_version_manager.hpp",
     -- Dynamic plugin system headers (v3.2.0)
@@ -602,7 +598,7 @@ target("QtForgeCore")
     end
 
     -- Set version and properties
-    set_version("3.0.0")
+    set_version("3.2.0")
 
     -- Export symbols for shared library
     if has_config("shared") then
@@ -613,38 +609,9 @@ target("QtForgeCore")
     add_installfiles("include/(qtplugin/**.hpp)", {prefixdir = "include"})
 target_end()
 
--- QtForgeSecurity library target (matching CMake separate security library)
-target("QtForgeSecurity")
-    set_kind(has_config("shared") and "shared" or "static")
-    set_basename("qtforge-security")
-
-    -- Add Qt rules with MOC support (temporarily disabled)
-    -- add_rules("qt.shared")
-
-    -- Security library sources (minimal for now)
-    -- Temporarily disable security_manager.cpp as it has Qt dependencies
-    -- add_files("src/security/security_manager.cpp")
-
-    -- Use minimal security sources for testing
-    add_files("src/utils/version.cpp")  -- Placeholder to make library buildable
-
-    -- Security library headers (matching CMake QTFORGE_SECURITY_HEADERS)
-    -- add_headerfiles("include/qtplugin/security/security_manager.hpp")
-
-    -- Qt package integration (temporarily disabled)
-    -- add_packages("qt6core")
-
-    -- Add dependency on QtForgeCore (temporarily disabled for testing)
-    -- add_deps("QtForgeCore")
-
-    -- Set version
-    set_version("3.0.0")
-
-    -- Export symbols for shared library
-    if has_config("shared") then
-        add_defines("QTFORGE_SECURITY_EXPORTS")
-    end
-target_end()
+-- QtForgeSecurity library target - REMOVED
+-- Security components have been removed from QtForge
+-- SHA256 verification is preserved in the core PluginManager
 
 -- Optional QtForgeNetwork library (disabled in CMake, keeping for future use)
 -- Note: Network functionality is integrated into QtForgeCore in current CMake setup
@@ -695,7 +662,7 @@ if has_config("python_bindings") and has_package("python3") and has_package("pyb
 
         -- Optional binding sources (commented out in CMake for now)
         -- add_files("src/python/qt_conversions.cpp")  -- Temporarily disabled in CMake
-        -- add_files("src/python/security/security_bindings.cpp")
+        -- Security bindings removed
         -- add_files("src/python/managers/managers_bindings.cpp")
         -- add_files("src/python/orchestration/orchestration_bindings.cpp")
         -- add_files("src/python/monitoring/monitoring_bindings.cpp")
@@ -752,7 +719,7 @@ if has_config("lua_bindings") and has_package("lua") and has_package("sol2") the
         -- add_files("src/lua/qt_conversions.cpp")  -- Temporarily disabled due to Qt dependencies
         -- add_files("src/lua/core/metadata_bindings.cpp")  -- Temporarily disabled due to Qt dependencies
         -- add_files("src/lua/utils/error_handling_bindings.cpp")  -- Temporarily disabled due to Qt dependencies
-        -- add_files("src/lua/security/security_bindings.cpp")
+        -- Security bindings removed
         -- add_files("src/lua/managers/managers_bindings.cpp")
         -- add_files("src/lua/orchestration/orchestration_bindings.cpp")
         -- add_files("src/lua/monitoring/monitoring_bindings.cpp")
@@ -823,7 +790,7 @@ end
 -- Installation rules (matching CMake installation configuration)
 on_install(function (target)
     -- Install libraries (matching CMake QTFORGE_INSTALL_TARGETS)
-    if target:name() == "QtForgeCore" or target:name() == "QtForgeSecurity" then
+    if target:name() == "QtForgeCore" then
         os.cp(target:targetfile(), path.join(target:installdir(), "lib"))
     end
 
@@ -886,7 +853,7 @@ includedir=${prefix}/include
 Name: QtForge
 Description: Modern C++ Plugin System for Qt Applications with Modular Architecture
 Version: %s
-Libs: -L${libdir} -lqtforge-core -lqtforge-security
+Libs: -L${libdir} -lqtforge-core
 Cflags: -I${includedir}
 ]], target:installdir(), "3.0.0")
 

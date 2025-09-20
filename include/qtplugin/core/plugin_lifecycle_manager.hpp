@@ -10,7 +10,7 @@
 #include <QObject>
 #include <QTimer>
 #include "../utils/error_handling.hpp"
-#include "plugin_interface.hpp"
+#include "../interfaces/core/plugin_interface.hpp"
 
 // Custom state machine implementation - no QStateMachine dependency required
 #include <QJsonObject>

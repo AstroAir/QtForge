@@ -9,13 +9,13 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include <qtplugin/composition/plugin_composition.hpp>
+#include <qtplugin/workflow/composition.hpp>
 
 #include "../qt_conversions.hpp"
 
 namespace py = pybind11;
 using namespace qtplugin;
-using namespace qtplugin::composition;
+using namespace qtplugin::workflow::composition;
 
 namespace qtforge_python {
 

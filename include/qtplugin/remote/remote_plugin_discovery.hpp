@@ -243,6 +243,18 @@ private:
     discover_from_direct_url(const RemotePluginSource& source,
                              const PluginDiscoveryFilter& filter) const;
 
+    // Content parsing helpers
+    qtplugin::expected<std::vector<RemotePluginDiscoveryResult>, PluginError>
+    parse_json_plugin_metadata(const QByteArray& data, const RemotePluginSource& source) const;
+
+    qtplugin::expected<std::vector<RemotePluginDiscoveryResult>, PluginError>
+    parse_html_plugin_metadata(const QByteArray& data, const RemotePluginSource& source) const;
+
+    qtplugin::expected<std::vector<RemotePluginDiscoveryResult>, PluginError>
+    parse_xml_plugin_metadata(const QByteArray& data, const RemotePluginSource& source) const;
+
+    void apply_authentication(QNetworkRequest& request, const AuthenticationCredentials& auth) const;
+
     void cleanup_operation(const QString& operation_id);
 };
 

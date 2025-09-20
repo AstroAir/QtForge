@@ -25,7 +25,7 @@ void register_composition_bindings(sol::state& lua) {
 
     // Create qtforge.composition namespace
     sol::table qtforge = lua["qtforge"];
-    sol::table composition = qtforge.get_or_create<sol::table>("composition");
+    sol::table composition = qtforge["composition"].get_or_create<sol::table>();
 
     // Composition strategy enum
     lua.new_enum<qtplugin::CompositionStrategy>("CompositionStrategy", {

@@ -23,7 +23,7 @@
 #include <optional>
 #include <string_view>
 #include <vector>
-#include "../core/plugin_interface.hpp"
+#include "core/plugin_interface.hpp"
 
 namespace qtplugin {
 

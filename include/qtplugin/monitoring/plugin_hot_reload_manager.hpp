@@ -7,6 +7,7 @@
 #pragma once
 
 #include <QFileSystemWatcher>
+#include <QMutex>
 #include <QObject>
 #include <QTimer>
 #include <filesystem>
@@ -14,6 +15,7 @@
 #include <memory>
 #include <qtplugin/utils/error_handling.hpp>
 #include <string>
+#include <unordered_map>
 
 namespace qtplugin {
 
@@ -138,6 +140,7 @@ private slots:
 
 private:
     std::unique_ptr<QFileSystemWatcher> m_file_watcher;
+    mutable QMutex m_watched_files_mutex;
     std::unordered_map<std::string, std::filesystem::path> m_watched_files;
     std::function<void(const std::string&)> m_reload_callback;
     bool m_global_enabled = true;

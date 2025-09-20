@@ -8,6 +8,7 @@
 
 #include <QDebug>
 #include <QLoggingCategory>
+#include <QMutexLocker>
 
 #include <future>
 
@@ -37,17 +38,31 @@ qtplugin::expected<void, PluginError> PluginHotReloadManager::enable_hot_reload(
                                 "Plugin ID cannot be empty");
     }
 
-    if (file_path.empty() || !std::filesystem::exists(file_path)) {
+    if (file_path.empty()) {
+        return make_error<void>(PluginErrorCode::InvalidParameters,
+                                "Plugin file path cannot be empty");
+    }
+
+    if (!std::filesystem::exists(file_path)) {
         return make_error<void>(
             PluginErrorCode::FileNotFound,
             "Plugin file does not exist: " + file_path.string());
     }
 
+    if (!std::filesystem::is_regular_file(file_path)) {
+        return make_error<void>(
+            PluginErrorCode::InvalidParameters,
+            "Path is not a regular file: " + file_path.string());
+    }
+
     // Check if already watching this plugin
-    if (m_watched_files.find(plugin_id) != m_watched_files.end()) {
-        qCDebug(hotReloadLog) << "Hot reload already enabled for plugin:"
-                              << QString::fromStdString(plugin_id);
-        return make_success();
+    {
+        QMutexLocker locker(&m_watched_files_mutex);
+        if (m_watched_files.find(plugin_id) != m_watched_files.end()) {
+            qCDebug(hotReloadLog) << "Hot reload already enabled for plugin:"
+                                  << QString::fromStdString(plugin_id);
+            return make_success();
+        }
     }
 
     // Add file to watcher
@@ -58,7 +73,10 @@ qtplugin::expected<void, PluginError> PluginHotReloadManager::enable_hot_reload(
     }
 
     // Store the mapping
-    m_watched_files[plugin_id] = file_path;
+    {
+        QMutexLocker locker(&m_watched_files_mutex);
+        m_watched_files[plugin_id] = file_path;
+    }
 
     qCDebug(hotReloadLog) << "Hot reload enabled for plugin:"
                           << QString::fromStdString(plugin_id)
@@ -70,6 +88,8 @@ qtplugin::expected<void, PluginError> PluginHotReloadManager::enable_hot_reload(
 }
 
 void PluginHotReloadManager::disable_hot_reload(const std::string& plugin_id) {
+    QMutexLocker locker(&m_watched_files_mutex);
+
     auto it = m_watched_files.find(plugin_id);
     if (it == m_watched_files.end()) {
         qCDebug(hotReloadLog) << "Hot reload not enabled for plugin:"
@@ -92,17 +112,24 @@ void PluginHotReloadManager::disable_hot_reload(const std::string& plugin_id) {
 
 bool PluginHotReloadManager::is_hot_reload_enabled(
     const std::string& plugin_id) const {
+    QMutexLocker locker(&m_watched_files_mutex);
     return m_watched_files.find(plugin_id) != m_watched_files.end();
 }
 
 void PluginHotReloadManager::set_reload_callback(
     std::function<void(const std::string&)> callback) {
+    if (!callback) {
+        qCDebug(hotReloadLog) << "Reload callback cleared";
+    } else {
+        qCDebug(hotReloadLog) << "Reload callback set";
+    }
     m_reload_callback = std::move(callback);
-    qCDebug(hotReloadLog) << "Reload callback set";
 }
 
 std::vector<std::string> PluginHotReloadManager::get_hot_reload_plugins()
     const {
+    QMutexLocker locker(&m_watched_files_mutex);
+
     std::vector<std::string> plugin_ids;
     plugin_ids.reserve(m_watched_files.size());
 
@@ -114,6 +141,8 @@ std::vector<std::string> PluginHotReloadManager::get_hot_reload_plugins()
 }
 
 void PluginHotReloadManager::clear() {
+    QMutexLocker locker(&m_watched_files_mutex);
+
     if (!m_watched_files.empty()) {
         // Remove all paths from watcher
         QStringList paths;
@@ -167,7 +196,7 @@ void PluginHotReloadManager::on_file_changed(const QString& path) {
     // Call reload callback if set
     if (m_reload_callback) {
         // Execute reload asynchronously to avoid blocking the file watcher
-        static_cast<void>(std::async(std::launch::async, [this, plugin_id]() {
+        auto future = std::async(std::launch::async, [this, plugin_id]() {
             try {
                 m_reload_callback(plugin_id);
             } catch (const std::exception& e) {
@@ -177,12 +206,16 @@ void PluginHotReloadManager::on_file_changed(const QString& path) {
                 qCWarning(hotReloadLog)
                     << "Unknown exception in reload callback";
             }
-        }));
+        });
+        // Detach the future to avoid blocking
+        future.wait_for(std::chrono::milliseconds(0));
     }
 }
 
 std::string PluginHotReloadManager::find_plugin_by_path(
     const std::filesystem::path& file_path) const {
+    QMutexLocker locker(&m_watched_files_mutex);
+
     for (const auto& [plugin_id, watched_path] : m_watched_files) {
         if (watched_path == file_path) {
             return plugin_id;

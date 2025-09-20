@@ -18,7 +18,7 @@
 #include <memory>
 #include <unordered_map>
 #include <vector>
-#include "../core/plugin_interface.hpp"
+#include "../interfaces/core/plugin_interface.hpp"
 #include "../utils/error_handling.hpp"
 
 // Platform-specific includes

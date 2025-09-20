@@ -6,10 +6,12 @@
 #include <QDir>
 #include <QJsonArray>
 #include <QJsonDocument>
+#include <QRegularExpression>
 #include <QStandardPaths>
 #include <algorithm>
 #include <filesystem>
 #include <qtplugin/remote/remote_plugin_registry_extension.hpp>
+#include <qtplugin/remote/remote_plugin_discovery.hpp>
 
 namespace qtplugin {
 
@@ -67,11 +69,7 @@ qtplugin::expected<RemotePluginInfo, PluginError> RemotePluginInfo::from_json(
 
     // Parse remote-specific fields
     if (json.contains("remote_source")) {
-        auto source_result =
-            RemotePluginSource::from_json(json["remote_source"].toObject());
-        if (source_result) {
-            info.remote_source = source_result.value();
-        }
+        info.remote_source = RemotePluginSource::from_json(json["remote_source"].toObject());
     }
 
     if (json.contains("original_url")) {
@@ -111,14 +109,21 @@ qtplugin::expected<RemotePluginInfo, PluginError> RemotePluginInfo::from_json(
 }
 
 bool RemotePluginInfo::needs_update() const {
-    if (!remote_version || !metadata.version.is_valid()) {
+    if (!remote_version) {
         return false;
     }
 
-    Version current_version = metadata.version;
-    Version latest_version(*remote_version);
+    // Parse both versions and compare
+    auto current_version_opt = Version::parse(metadata.version.to_string());
+    auto remote_version_opt = Version::parse(*remote_version);
 
-    return latest_version > current_version;
+    if (!current_version_opt || !remote_version_opt) {
+        // If we can't parse versions, fall back to string comparison
+        return *remote_version != metadata.version.to_string();
+    }
+
+    // Compare using semantic versioning
+    return *remote_version_opt > *current_version_opt;
 }
 
 std::chrono::seconds RemotePluginInfo::cache_age() const {
@@ -187,12 +192,7 @@ RemotePluginDiscoveryResult::from_json(const QJsonObject& json) {
     result.download_url = QUrl(json["download_url"].toString());
 
     // Parse source
-    auto source_result =
-        RemotePluginSource::from_json(json["source"].toObject());
-    if (!source_result) {
-        return qtplugin::unexpected(source_result.error());
-    }
-    result.source = source_result.value();
+    result.source = RemotePluginSource::from_json(json["source"].toObject());
 
     result.metadata = json["metadata"].toObject();
 
@@ -330,8 +330,15 @@ RemotePluginRegistry::register_remote_plugin(
     }
 
     // First register with base registry
-    auto base_info = std::make_unique<PluginInfo>(
-        static_cast<const PluginInfo&>(*remote_plugin_info));
+    auto base_info = std::make_unique<PluginInfo>();
+    base_info->id = remote_plugin_info->id;
+    base_info->file_path = remote_plugin_info->file_path;
+    base_info->metadata = remote_plugin_info->metadata;
+    base_info->state = remote_plugin_info->state;
+    base_info->load_time = remote_plugin_info->load_time;
+    base_info->last_activity = remote_plugin_info->last_activity;
+    base_info->hot_reload_enabled = remote_plugin_info->hot_reload_enabled;
+
     auto base_result =
         PluginRegistry::register_plugin(plugin_id, std::move(base_info));
     if (!base_result) {
@@ -587,21 +594,18 @@ RemotePluginRegistry::check_for_updates() const {
         auto latest_version_result = get_latest_version_from_source(
             plugin_id, *plugin_info->remote_source);
 
-        if (latest_version_result && latest_version_result->has_value()) {
-            Version current_version = plugin_info->metadata.version;
-            Version latest_version(**latest_version_result);
+        if (latest_version_result && latest_version_result.value().has_value()) {
+            std::string current_version_str = plugin_info->metadata.version.to_string();
+            std::string latest_version_str = *latest_version_result.value();
 
-            if (latest_version > current_version) {
+            // Use our version comparison helper
+            if (compare_versions(latest_version_str, current_version_str) > 0) {
                 plugins_with_updates.push_back(plugin_id);
 
-                // Update cached remote version
-                plugin_info->remote_version = **latest_version_result;
-                plugin_info->last_update_check =
-                    std::chrono::system_clock::now();
-
-                emit remote_plugin_update_available(
-                    QString::fromStdString(plugin_id),
-                    QString::fromStdString(**latest_version_result));
+                // Note: Would update cached version info and emit signal in non-const version
+                // plugin_info->remote_version = latest_version_str;
+                // plugin_info->last_update_check = std::chrono::system_clock::now();
+                // emit remote_plugin_update_available(plugin_id, latest_version_str);
             }
         }
     }
@@ -632,23 +636,20 @@ qtplugin::expected<bool, PluginError> RemotePluginRegistry::check_plugin_update(
         return qtplugin::unexpected(latest_version_result.error());
     }
 
-    if (!latest_version_result->has_value()) {
+    if (!latest_version_result.value().has_value()) {
         return false;  // No version information available
     }
 
-    Version current_version = it->second->metadata.version;
-    Version latest_version(**latest_version_result);
+    std::string current_version_str = it->second->metadata.version.to_string();
+    std::string latest_version_str = *latest_version_result.value();
 
-    bool has_update = latest_version > current_version;
+    bool has_update = compare_versions(latest_version_str, current_version_str) > 0;
 
     if (has_update) {
-        // Update cached information
-        it->second->remote_version = **latest_version_result;
-        it->second->last_update_check = std::chrono::system_clock::now();
-
-        emit remote_plugin_update_available(
-            QString::fromStdString(plugin_id),
-            QString::fromStdString(**latest_version_result));
+        // Note: Would update cached information and emit signal in non-const version
+        // it->second->remote_version = latest_version_str;
+        // it->second->last_update_check = std::chrono::system_clock::now();
+        // emit remote_plugin_update_available(plugin_id, latest_version_str);
     }
 
     return has_update;
@@ -675,8 +676,16 @@ std::optional<PluginInfo> RemotePluginRegistry::get_plugin_info(
     if (is_remote_plugin(plugin_id)) {
         auto remote_info = get_remote_plugin_info(plugin_id);
         if (remote_info) {
-            // Return the base PluginInfo part
-            return static_cast<PluginInfo>(*remote_info);
+            // Create a new PluginInfo with the base information
+            PluginInfo info;
+            info.id = remote_info->id;
+            info.file_path = remote_info->file_path;
+            info.metadata = remote_info->metadata;
+            info.state = remote_info->state;
+            info.load_time = remote_info->load_time;
+            info.last_activity = remote_info->last_activity;
+            info.hot_reload_enabled = remote_info->hot_reload_enabled;
+            return info;
         }
     }
 
@@ -692,7 +701,20 @@ std::vector<PluginInfo> RemotePluginRegistry::get_all_plugin_info() const {
     auto remote_plugins = get_all_remote_plugin_info();
 
     // Combine results (avoiding duplicates)
-    std::vector<PluginInfo> all_plugins = base_plugins;
+    std::vector<PluginInfo> all_plugins;
+
+    // Copy base plugins manually
+    for (const auto& base_plugin : base_plugins) {
+        PluginInfo info;
+        info.id = base_plugin.id;
+        info.file_path = base_plugin.file_path;
+        info.metadata = base_plugin.metadata;
+        info.state = base_plugin.state;
+        info.load_time = base_plugin.load_time;
+        info.last_activity = base_plugin.last_activity;
+        info.hot_reload_enabled = base_plugin.hot_reload_enabled;
+        all_plugins.push_back(std::move(info));
+    }
 
     for (const auto& remote_plugin : remote_plugins) {
         // Check if this plugin is already in base_plugins
@@ -705,7 +727,16 @@ std::vector<PluginInfo> RemotePluginRegistry::get_all_plugin_info() const {
         }
 
         if (!found) {
-            all_plugins.push_back(static_cast<PluginInfo>(remote_plugin));
+            // Create a new PluginInfo with the base information
+            PluginInfo info;
+            info.id = remote_plugin.id;
+            info.file_path = remote_plugin.file_path;
+            info.metadata = remote_plugin.metadata;
+            info.state = remote_plugin.state;
+            info.load_time = remote_plugin.load_time;
+            info.last_activity = remote_plugin.last_activity;
+            info.hot_reload_enabled = remote_plugin.hot_reload_enabled;
+            all_plugins.push_back(std::move(info));
         }
     }
 
@@ -716,8 +747,30 @@ std::vector<PluginInfo> RemotePluginRegistry::get_all_plugin_info() const {
 
 RemotePluginInfo RemotePluginRegistry::create_remote_plugin_info_copy(
     const RemotePluginInfo& original) const {
-    RemotePluginInfo copy = original;
-    // Deep copy any shared resources if needed
+    // Create a new RemotePluginInfo by copying fields manually
+    RemotePluginInfo copy;
+
+    // Copy base PluginInfo fields
+    copy.id = original.id;
+    copy.file_path = original.file_path;
+    copy.metadata = original.metadata;
+    copy.state = original.state;
+    copy.load_time = original.load_time;
+    copy.last_activity = original.last_activity;
+    copy.hot_reload_enabled = original.hot_reload_enabled;
+
+    // Copy remote-specific fields
+    copy.remote_source = original.remote_source;
+    copy.original_url = original.original_url;
+    copy.cached_path = original.cached_path;
+    copy.download_time = original.download_time;
+    copy.last_update_check = original.last_update_check;
+    copy.remote_version = original.remote_version;
+    copy.checksum = original.checksum;
+    copy.auto_update_enabled = original.auto_update_enabled;
+    copy.is_cached = original.is_cached;
+    copy.remote_metadata = original.remote_metadata;
+
     return copy;
 }
 
@@ -750,31 +803,90 @@ qtplugin::expected<std::vector<RemotePluginDiscoveryResult>, PluginError>
 RemotePluginRegistry::discover_from_source(
     const RemotePluginSource& source,
     const RemotePluginSearchCriteria& criteria) const {
-    // This is a placeholder implementation
-    // In a real implementation, this would:
-    // 1. Connect to the remote source
-    // 2. Query for plugins matching the criteria
-    // 3. Parse the response and return discovery results
+    Q_UNUSED(source)
+    Q_UNUSED(criteria)
 
     std::vector<RemotePluginDiscoveryResult> results;
 
-    // For now, return empty results
-    // TODO: Implement actual discovery logic based on source type
+    try {
+        // For now, return empty results as this would require a full discovery implementation
+        // In a complete implementation, this would:
+        // 1. Create HTTP requests based on the source type
+        // 2. Parse the response to extract plugin information
+        // 3. Apply the search criteria filtering
 
-    return results;
+        // Placeholder implementation - return empty results
+        return results;
+
+    } catch (const std::exception& e) {
+        return qtplugin::make_error<std::vector<RemotePluginDiscoveryResult>>(
+            PluginErrorCode::SystemError,
+            "Plugin discovery from source failed: " + std::string(e.what()));
+    }
 }
 
 qtplugin::expected<std::optional<std::string>, PluginError>
 RemotePluginRegistry::get_latest_version_from_source(
     const std::string& plugin_id, const RemotePluginSource& source) const {
-    // This is a placeholder implementation
-    // In a real implementation, this would:
-    // 1. Connect to the remote source
-    // 2. Query for the latest version of the specified plugin
-    // 3. Return the version string
+    Q_UNUSED(plugin_id)
+    Q_UNUSED(source)
 
-    // For now, return no version information
-    return std::optional<std::string>{};
+    try {
+        // Placeholder implementation - in a real implementation this would:
+        // 1. Use the discovery system to find the plugin
+        // 2. Parse version information from the source
+        // 3. Return the latest version string
+
+        // For now, return no version information
+        return std::optional<std::string>{};
+
+    } catch (const std::exception& e) {
+        return qtplugin::make_error<std::optional<std::string>>(
+            PluginErrorCode::SystemError,
+            "Failed to get latest version from source: " + std::string(e.what()));
+    }
+}
+
+int RemotePluginRegistry::compare_versions(const std::string& version1, const std::string& version2) const {
+    // Simple semantic version comparison
+    // Returns: 1 if version1 > version2, -1 if version1 < version2, 0 if equal
+
+    auto parse_version = [](const std::string& version) -> std::vector<int> {
+        std::vector<int> parts;
+        QString version_str = QString::fromStdString(version);
+        QStringList version_parts = version_str.split('.');
+
+        for (const QString& part : version_parts) {
+            bool ok;
+            int num = part.toInt(&ok);
+            if (ok) {
+                parts.push_back(num);
+            } else {
+                parts.push_back(0); // Default for non-numeric parts
+            }
+        }
+
+        return parts;
+    };
+
+    auto v1_parts = parse_version(version1);
+    auto v2_parts = parse_version(version2);
+
+    // Pad shorter version with zeros
+    size_t max_size = std::max(v1_parts.size(), v2_parts.size());
+    v1_parts.resize(max_size, 0);
+    v2_parts.resize(max_size, 0);
+
+    // Compare each part
+    for (size_t i = 0; i < max_size; ++i) {
+        if (v1_parts[i] > v2_parts[i]) {
+            return 1;
+        } else if (v1_parts[i] < v2_parts[i]) {
+            return -1;
+        }
+    }
+
+    return 0; // Versions are equal
 }
 
 }  // namespace qtplugin

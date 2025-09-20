@@ -494,11 +494,13 @@ std::vector<std::string> LuaPluginBridge::available_commands() const {
 }
 
 qtplugin::expected<QVariant, PluginError> LuaPluginBridge::invoke_method(
-    const QString& method_name, const QList<QVariant>& arguments) {
+    const QString& method_name, const QVariantList& parameters,
+    const QString& interface_id) {
 
 #ifndef QTFORGE_LUA_BINDINGS
     Q_UNUSED(method_name)
-    Q_UNUSED(arguments)
+    Q_UNUSED(parameters)
+    Q_UNUSED(interface_id)
     return make_error<QVariant>(PluginErrorCode::NotSupported, "Lua bindings not compiled in this build");
 #else
     QMutexLocker locker(&m_mutex);
@@ -584,10 +586,11 @@ qtplugin::expected<QVariant, PluginError> LuaPluginBridge::invoke_method(
 }
 
 qtplugin::expected<QVariant, PluginError> LuaPluginBridge::get_property(
-    const QString& property_name) {
+    const QString& property_name, const QString& interface_id) {
 
 #ifndef QTFORGE_LUA_BINDINGS
     Q_UNUSED(property_name)
+    Q_UNUSED(interface_id)
     return make_error<QVariant>(PluginErrorCode::NotSupported, "Lua bindings not compiled in this build");
 #else
     QMutexLocker locker(&m_mutex);
@@ -631,11 +634,13 @@ qtplugin::expected<QVariant, PluginError> LuaPluginBridge::get_property(
 }
 
 qtplugin::expected<void, PluginError> LuaPluginBridge::set_property(
-    const QString& property_name, const QVariant& value) {
+    const QString& property_name, const QVariant& value,
+    const QString& interface_id) {
 
 #ifndef QTFORGE_LUA_BINDINGS
     Q_UNUSED(property_name)
     Q_UNUSED(value)
+    Q_UNUSED(interface_id)
     return make_error<void>(PluginErrorCode::NotSupported, "Lua bindings not compiled in this build");
 #else
     QMutexLocker locker(&m_mutex);
@@ -728,6 +733,102 @@ void LuaPluginBridge::setup_environment() {
 
 QString LuaPluginBridge::generate_plugin_id() const {
     return QUuid::createUuid().toString(QUuid::WithoutBraces);
+}
+
+// === Missing IDynamicPlugin Interface Methods ===
+
+PluginType LuaPluginBridge::get_plugin_type() const {
+    return PluginType::Lua;
+}
+
+PluginExecutionContext LuaPluginBridge::get_execution_context() const {
+    PluginExecutionContext context;
+    context.type = PluginType::Lua;
+    context.interpreter_path = "lua";
+    context.timeout = std::chrono::seconds{30};
+    return context;
+}
+
+
+
+std::vector<InterfaceDescriptor> LuaPluginBridge::get_interface_descriptors() const {
+    // Return basic Lua plugin interface descriptor
+    std::vector<InterfaceDescriptor> descriptors;
+    InterfaceDescriptor desc;
+    desc.interface_id = "qtforge.lua.plugin";
+    desc.version = Version{1, 0, 0};
+    desc.description = "Basic Lua plugin interface";
+    descriptors.push_back(desc);
+    return descriptors;
+}
+
+bool LuaPluginBridge::supports_interface(
+    const QString& interface_id, const Version& min_version) const {
+    Q_UNUSED(min_version)
+    return interface_id == "qtforge.lua.plugin" || interface_id.isEmpty();
+}
+
+std::optional<InterfaceDescriptor> LuaPluginBridge::get_interface_descriptor(
+    const QString& interface_id) const {
+    if (interface_id == "qtforge.lua.plugin" || interface_id.isEmpty()) {
+        InterfaceDescriptor desc;
+        desc.interface_id = "qtforge.lua.plugin";
+        desc.version = Version{1, 0, 0};
+        desc.description = "Basic Lua plugin interface";
+        return desc;
+    }
+    return std::nullopt;
+}
+
+qtplugin::expected<void, PluginError> LuaPluginBridge::adapt_to_interface(
+    const QString& interface_id, const Version& target_version) {
+    Q_UNUSED(interface_id)
+    Q_UNUSED(target_version)
+    // Lua plugins are dynamically adaptable
+    return {};
+}
+
+qtplugin::expected<std::vector<InterfaceCapability>, PluginError>
+LuaPluginBridge::negotiate_capabilities(
+    const QString& other_plugin_id,
+    const std::vector<InterfaceCapability>& requested_capabilities) {
+    Q_UNUSED(other_plugin_id)
+    Q_UNUSED(requested_capabilities)
+    // Return empty capabilities for now
+    return std::vector<InterfaceCapability>{};
+}
+
+std::optional<QJsonObject> LuaPluginBridge::get_method_signature(
+    const QString& method_name, const QString& interface_id) const {
+    Q_UNUSED(method_name)
+    Q_UNUSED(interface_id)
+    // Method signatures not implemented for Lua plugins yet
+    return std::nullopt;
+}
+
+qtplugin::expected<void, PluginError> LuaPluginBridge::subscribe_to_events(
+    const QString& source_plugin_id,
+    const std::vector<QString>& event_types,
+    std::function<void(const QString&, const QJsonObject&)> callback) {
+    Q_UNUSED(source_plugin_id)
+    Q_UNUSED(event_types)
+    Q_UNUSED(callback)
+    return make_error<void>(PluginErrorCode::NotSupported, "Event system not implemented for Lua plugins yet");
+}
+
+qtplugin::expected<void, PluginError> LuaPluginBridge::unsubscribe_from_events(
+    const QString& source_plugin_id,
+    const std::vector<QString>& event_types) {
+    Q_UNUSED(source_plugin_id)
+    Q_UNUSED(event_types)
+    return make_error<void>(PluginErrorCode::NotSupported, "Event system not implemented for Lua plugins yet");
+}
+
+qtplugin::expected<void, PluginError> LuaPluginBridge::emit_event(
+    const QString& event_type, const QJsonObject& event_data) {
+    Q_UNUSED(event_type)
+    Q_UNUSED(event_data)
+    return make_error<void>(PluginErrorCode::NotSupported, "Event system not implemented for Lua plugins yet");
 }
 
 } // namespace qtplugin

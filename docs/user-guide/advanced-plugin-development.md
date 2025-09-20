@@ -113,10 +113,10 @@ private:
 Implement transaction support for atomic operations:
 
 ```cpp
-#include <qtplugin/transactions/plugin_transaction_manager.hpp>
+#include <qtplugin/workflow/transactions.hpp>
 
 class TransactionalPlugin : public IAdvancedPlugin,
-                           public qtplugin::transactions::ITransactionParticipant {
+                           public qtplugin::workflow::transactions::ITransactionParticipant {
 private:
     std::unordered_map<QString, QJsonObject> m_transaction_states;
     std::unordered_map<QString, QJsonObject> m_rollback_data;
@@ -124,8 +124,8 @@ private:
 public:
     bool supports_transactions() const override { return true; }
 
-    qtplugin::transactions::IsolationLevel supported_isolation_level() const override {
-        return qtplugin::transactions::IsolationLevel::ReadCommitted;
+    qtplugin::workflow::transactions::IsolationLevel supported_isolation_level() const override {
+        return qtplugin::workflow::transactions::IsolationLevel::ReadCommitted;
     }
 
     qtplugin::expected<void, PluginError> prepare(const QString& transaction_id) override {
@@ -398,27 +398,24 @@ private:
 };
 ```
 
-## Security Best Practices
+## SHA256 Verification Best Practices
 
-### Secure Plugin Implementation
+### Plugin Integrity Verification
 
 ```cpp
-#include <qtplugin/security/security_manager.hpp>
+#include <qtplugin/core/plugin_manager.hpp>
 
-class SecurePlugin : public IAdvancedPlugin {
-private:
-    std::shared_ptr<SecurityManager> m_security_manager;
-
+class VerifiedPlugin : public IAdvancedPlugin {
 public:
     qtplugin::expected<void, PluginError> initialize() override {
-        m_security_manager = SecurityManager::create();
+        // SHA256 verification is handled automatically by PluginManager
+        // during plugin loading when PluginLoadOptions.validate_sha256 is true
 
-        // Validate plugin integrity
-        auto validation_result = m_security_manager->validate_plugin_integrity(
-            metadata().id.toStdString());
-        if (!validation_result || !validation_result.value().is_valid) {
-            return make_error<void>(PluginErrorCode::SecurityViolation,
-                                  "Plugin integrity validation failed");
+        // Plugin can access its own verification status if needed
+        auto manager = PluginManager::instance();
+        if (manager) {
+            // Plugin is already loaded and verified at this point
+            qDebug() << "Plugin loaded with SHA256 verification";
         }
 
         return IAdvancedPlugin::initialize();

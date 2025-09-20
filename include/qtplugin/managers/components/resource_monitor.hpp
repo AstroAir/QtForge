@@ -69,14 +69,14 @@ struct ResourceAlert {
 };
 
 /**
- * @brief Interface for enhanced resource monitoring
+ * @brief Interface for enhanced component resource monitoring
  *
  * The resource monitor tracks resource usage, performance metrics,
  * and provides alerting and leak detection capabilities.
  */
-class IResourceMonitor {
+class IComponentResourceMonitor {
 public:
-    virtual ~IResourceMonitor() = default;
+    virtual ~IComponentResourceMonitor() = default;
 
     /**
      * @brief Start monitoring
@@ -182,7 +182,7 @@ public:
  * Provides comprehensive resource monitoring with usage tracking,
  * performance metrics, leak detection, and alerting capabilities.
  */
-class ResourceMonitor : public QObject, public IResourceMonitor {
+class ResourceMonitor : public QObject, public IComponentResourceMonitor {
     Q_OBJECT
 
 public:

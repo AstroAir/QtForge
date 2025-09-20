@@ -13,8 +13,9 @@ set(QTFORGE_MONITORING_COMPONENTS
     PluginMetricsCollector
 )
 
+# Security components removed - SHA256 verification preserved in PluginManager
 set(QTFORGE_SECURITY_COMPONENTS
-    # Security components removed
+    # Security components have been removed
 )
 
 set(QTFORGE_CONFIGURATION_COMPONENTS
@@ -31,7 +32,6 @@ set(QTFORGE_RESOURCE_COMPONENTS
 )
 
 set(QTFORGE_REMOTE_COMPONENTS
-    RemoteSecurityManager
     RemotePluginManager
     UnifiedPluginManager
 )
@@ -200,7 +200,7 @@ function(list_length list_var result_var)
 endfunction()
 
 # Component version information
-set(QTPLUGIN_COMPONENT_ARCHITECTURE_VERSION "3.0.0")
+set(QTPLUGIN_COMPONENT_ARCHITECTURE_VERSION "3.2.0")
 set(QTPLUGIN_COMPONENT_API_VERSION "1.0.0")
 
 # Mark as included

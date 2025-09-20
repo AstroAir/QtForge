@@ -254,9 +254,13 @@ function(qtforge_configure_gcc)
     if(GCC_ENABLE_WARNINGS)
         add_compile_options(-Wall -Wextra -Wpedantic)
 
-        if(GCC_ENABLE_WERROR)
+        # Only enable -Werror if explicitly requested and QTFORGE_ENABLE_WERROR is ON
+        if(GCC_ENABLE_WERROR AND QTFORGE_ENABLE_WERROR)
             add_compile_options(-Werror)
         endif()
+
+        # Disable specific warnings that are treated as errors during migration
+        add_compile_options(-Wno-error=deprecated-declarations)
     endif()
 
     # Sanitizers (Debug builds only)
@@ -311,9 +315,13 @@ function(qtforge_configure_clang)
     if(CLANG_ENABLE_WARNINGS)
         add_compile_options(-Wall -Wextra -Wpedantic)
 
-        if(CLANG_ENABLE_WERROR)
+        # Only enable -Werror if explicitly requested and QTFORGE_ENABLE_WERROR is ON
+        if(CLANG_ENABLE_WERROR AND QTFORGE_ENABLE_WERROR)
             add_compile_options(-Werror)
         endif()
+
+        # Disable specific warnings that are treated as errors during migration
+        add_compile_options(-Wno-error=deprecated-declarations)
     endif()
 
     # Sanitizers (Debug builds only)

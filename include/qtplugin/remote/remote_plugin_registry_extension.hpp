@@ -369,6 +369,9 @@ private:
     qtplugin::expected<std::optional<std::string>, PluginError>
     get_latest_version_from_source(const std::string& plugin_id,
                                    const RemotePluginSource& source) const;
+
+    // Version comparison helper
+    int compare_versions(const std::string& version1, const std::string& version2) const;
 };
 
 }  // namespace qtplugin

@@ -20,7 +20,7 @@ namespace qtforge_lua {
 void register_utils_bindings(sol::state& lua) {
     // Create qtforge.utils namespace
     sol::table qtforge = lua["qtforge"];
-    sol::table utils = qtforge.get_or_create<sol::table>("utils");
+    sol::table utils = qtforge["utils"].get_or_create<sol::table>();
 
     // Test function
     utils["utils_test"] = []() -> std::string {

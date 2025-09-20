@@ -54,7 +54,7 @@ struct RemotePluginLoadResult {
     std::shared_ptr<IPlugin> plugin;
     RemotePluginSource source;
     DownloadResult download_result;
-    ValidationResult validation_result;
+    RemoteValidationResult validation_result;
     std::filesystem::path cached_path;
     std::chrono::system_clock::time_point load_time;
     QJsonObject metadata;

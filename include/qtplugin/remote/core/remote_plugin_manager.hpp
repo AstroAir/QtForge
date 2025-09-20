@@ -28,7 +28,7 @@
 #include "../../utils/error_handling.hpp"
 #include "../../core/plugin_manager.hpp"
 #include "../../core/plugin_interface.hpp"
-#include "../security/remote_security_manager.hpp"
+// Remote security manager include removed
 
 namespace qtplugin::remote {
 
@@ -97,10 +97,9 @@ struct RemotePluginMetadata {
     QVersionNumber min_qtforge_version;
     QVersionNumber max_qtforge_version;
     
-    // Security info
+    // Publisher info
     QString publisher_id;
-    security::PublisherTrustLevel trust_level = security::PublisherTrustLevel::Untrusted;
-    bool requires_signature = true;
+    // Trust level and signature requirements removed - use SHA256 verification instead
     
     // Repository info
     QString repository_id;
@@ -142,7 +141,7 @@ struct RemotePluginRepository {
     bool is_enabled = true;
     bool requires_authentication = false;
     QString authentication_token;
-    security::PublisherTrustLevel default_trust_level = security::PublisherTrustLevel::Basic;
+    // Default trust level removed - use SHA256 verification instead
     
     // Repository capabilities
     bool supports_search = true;
@@ -267,8 +266,7 @@ class RemotePluginLoader : public QObject {
     Q_OBJECT
     
 public:
-    explicit RemotePluginLoader(RemotePluginCache* cache, 
-                               security::RemoteSecurityManager* security_manager,
+    explicit RemotePluginLoader(RemotePluginCache* cache,
                                QObject* parent = nullptr);
     ~RemotePluginLoader() override;
     
@@ -321,7 +319,7 @@ private slots:
     
 private:
     RemotePluginCache* m_cache;
-    security::RemoteSecurityManager* m_security_manager;
+    // Security manager removed
     std::unique_ptr<QNetworkAccessManager> m_network_manager;
     std::unique_ptr<qtplugin::PluginManager> m_local_plugin_manager;
     
@@ -367,8 +365,7 @@ public:
      * @return Success or error
      */
     expected<void, PluginError> initialize(
-        const QString& cache_directory,
-        const security::RemoteSecurityConfig& security_config = {}
+        const QString& cache_directory
     );
     
     /**
@@ -478,11 +475,7 @@ public:
      */
     RemotePluginLoader* get_loader() const { return m_loader.get(); }
     
-    /**
-     * @brief Get security manager
-     * @return Security manager instance
-     */
-    security::RemoteSecurityManager* get_security_manager() const { return m_security_manager.get(); }
+    // Security manager removed - use SHA256 verification in core PluginManager instead
     
 signals:
     void repository_added(const QString& repository_id);
@@ -502,7 +495,7 @@ private slots:
 private:
     std::unique_ptr<RemotePluginCache> m_cache;
     std::unique_ptr<RemotePluginLoader> m_loader;
-    std::unique_ptr<security::RemoteSecurityManager> m_security_manager;
+    // Security manager removed
     std::unique_ptr<QNetworkAccessManager> m_network_manager;
     std::unique_ptr<QTimer> m_cleanup_timer;
     qtplugin::PluginManager* m_fallback_manager = nullptr;

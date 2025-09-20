@@ -21,7 +21,7 @@
 #include "../../include/qtplugin/core/plugin_dependency_resolver.hpp"
 #include "../../include/qtplugin/core/plugin_loader.hpp"
 #include "../../include/qtplugin/core/plugin_registry.hpp"
-#include "../../include/qtplugin/core/service_plugin_interface.hpp"
+#include "../../include/qtplugin/interfaces/core/service_plugin_interface.hpp"
 #include "../../include/qtplugin/managers/configuration_manager_impl.hpp"
 #include "../../include/qtplugin/managers/logging_manager_impl.hpp"
 #include "../../include/qtplugin/managers/plugin_version_manager.hpp"

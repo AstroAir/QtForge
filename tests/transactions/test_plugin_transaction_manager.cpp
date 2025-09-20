@@ -10,11 +10,11 @@
 #include <memory>
 
 #include "qtplugin/core/plugin_interface.hpp"
-#include "qtplugin/transactions/plugin_transaction_manager.hpp"
+#include "qtplugin/workflow/transactions.hpp"
 #include "qtplugin/utils/error_handling.hpp"
 
 using namespace qtplugin;
-using namespace qtplugin::transactions;
+using namespace qtplugin::workflow::transactions;
 
 // Mock transaction participant for testing
 class MockTransactionParticipant : public ITransactionParticipant {

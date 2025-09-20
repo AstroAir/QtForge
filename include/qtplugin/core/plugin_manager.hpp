@@ -31,7 +31,7 @@
 #include "../utils/concepts.hpp"
 #include "../utils/error_handling.hpp"
 #include "plugin_dependency_resolver.hpp"
-#include "plugin_interface.hpp"
+#include "../interfaces/core/plugin_interface.hpp"
 #include "plugin_loader.hpp"
 // Forward-declare dependent components to reduce header coupling
 

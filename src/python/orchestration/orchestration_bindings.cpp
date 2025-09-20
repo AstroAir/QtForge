@@ -10,10 +10,10 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include <qtplugin/orchestration/plugin_orchestrator.hpp>
+#include <qtplugin/workflow/orchestration.hpp>
 
 namespace py = pybind11;
-using namespace qtplugin::orchestration;
+using namespace qtplugin::workflow::orchestration;
 
 namespace qtforge_python {
 

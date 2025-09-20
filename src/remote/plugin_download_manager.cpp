@@ -214,6 +214,9 @@ PluginDownloadManager::download_plugin(const RemotePluginSource& source,
         return qtplugin::unexpected(setup_result.error());
     }
 
+    // Record download start time
+    auto download_start_time = std::chrono::steady_clock::now();
+
     QNetworkReply* reply = m_network_manager->get(request);
 
     // Set timeout
@@ -289,8 +292,9 @@ PluginDownloadManager::download_plugin(const RemotePluginSource& source,
             result.content_type =
                 reply->header(QNetworkRequest::ContentTypeHeader).toString();
             result.download_time = std::chrono::system_clock::now();
-            result.download_duration =
-                std::chrono::milliseconds{0};  // TODO: Track actual time
+            auto download_end_time = std::chrono::steady_clock::now();
+            result.download_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+                download_end_time - download_start_time);
 
             reply->deleteLater();
             return result;

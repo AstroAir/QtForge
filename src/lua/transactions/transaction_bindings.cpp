@@ -11,7 +11,7 @@
 #include <sol/sol.hpp>
 #endif
 
-#include <qtplugin/transactions/plugin_transaction_manager.hpp>
+#include <qtplugin/workflow/transactions.hpp>
 #include "../qt_conversions.cpp"
 
 Q_LOGGING_CATEGORY(transactionBindingsLog, "qtforge.lua.transactions");
@@ -25,7 +25,7 @@ void register_transaction_bindings(sol::state& lua) {
 
     // Create qtforge.transactions namespace
     sol::table qtforge = lua["qtforge"];
-    sol::table transactions = qtforge.get_or_create<sol::table>("transactions");
+    sol::table transactions = qtforge["transactions"].get_or_create<sol::table>();
 
     // Transaction state enum
     lua.new_enum<qtplugin::TransactionState>("TransactionState", {

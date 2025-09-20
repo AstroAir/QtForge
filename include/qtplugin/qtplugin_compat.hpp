@@ -1,7 +1,7 @@
 /**
  * @file qtplugin_compat.hpp
  * @brief Backward compatibility layer for QtPlugin library
- * @version 3.0.0
+ * @version 3.2.0
  *
  * This header provides backward compatibility for applications using
  * the previous monolithic architecture. It maps the old API to the
@@ -9,6 +9,7 @@
  *
  * @deprecated This compatibility layer is provided for migration purposes.
  * New applications should use the component-based architecture directly.
+ * All features are now enabled by default in v3.2.0.
  */
 
 #pragma once
@@ -201,10 +202,10 @@ namespace v2 = compat;  ///< Alias for v2 compatibility
 /**
  * @brief Compatibility version information
  */
-#define QTPLUGIN_COMPAT_VERSION_MAJOR 2
-#define QTPLUGIN_COMPAT_VERSION_MINOR 9
-#define QTPLUGIN_COMPAT_VERSION_PATCH 99
-#define QTPLUGIN_COMPAT_VERSION "2.9.99"
+#define QTPLUGIN_COMPAT_VERSION_MAJOR 3
+#define QTPLUGIN_COMPAT_VERSION_MINOR 2
+#define QTPLUGIN_COMPAT_VERSION_PATCH 0
+#define QTPLUGIN_COMPAT_VERSION "3.2.0"
 
 namespace qtplugin::compat {
 

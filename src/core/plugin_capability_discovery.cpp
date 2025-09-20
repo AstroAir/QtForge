@@ -15,7 +15,7 @@
 #include <QMutexLocker>
 #include <algorithm>
 #include <unordered_map>
-#include "qtplugin/interfaces/data_processor_plugin_interface.hpp"
+#include "qtplugin/interfaces/data/data_processor_plugin_interface.hpp"
 #include "qtplugin/interfaces/network_plugin_interface.hpp"
 #include "qtplugin/interfaces/scripting_plugin_interface.hpp"
 #include "qtplugin/interfaces/ui_plugin_interface.hpp"

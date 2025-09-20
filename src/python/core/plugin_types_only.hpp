@@ -10,7 +10,7 @@
 #pragma once
 
 // Include the basic types we need
-#include <qtplugin/core/plugin_interface.hpp>
+#include <qtplugin/interfaces/core/plugin_interface.hpp>
 // Security manager removed
 #include <qtplugin/utils/version.hpp>
 #include <qtplugin/utils/error_handling.hpp>

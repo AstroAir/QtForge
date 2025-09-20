@@ -72,7 +72,7 @@
 #include <functional>
 #include <memory>
 
-#include "../core/dynamic_plugin_interface.hpp"
+#include "../interfaces/core/dynamic_plugin_interface.hpp"
 
 namespace qtplugin {
 

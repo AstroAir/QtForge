@@ -12,7 +12,7 @@
 #include <qtplugin/core/lua_plugin_loader.hpp>
 #include <qtplugin/utils/error_handling.hpp>
 
-#include "../test_helpers.hpp"
+#include "../utils/test_helpers.hpp"
 #include "../test_config_templates.hpp"
 
 using namespace qtplugin;

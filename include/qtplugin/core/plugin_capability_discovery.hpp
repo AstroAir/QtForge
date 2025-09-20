@@ -23,7 +23,7 @@
 #include <unordered_map>
 #include <vector>
 #include "../utils/error_handling.hpp"
-#include "plugin_interface.hpp"
+#include "../interfaces/core/plugin_interface.hpp"
 
 namespace qtplugin {
 

@@ -40,8 +40,8 @@ conditional_sources = [
   # Advanced plugin system sources (v3.1.0) - temporarily disabled due to MOC issues
   # 'communication/plugin_service_contracts.cpp',
   # 'core/advanced_plugin_interface.cpp',
-  # 'orchestration/plugin_orchestrator.cpp',
-  # 'composition/plugin_composition.cpp',
+  # 'orchestration/plugin_orchestrator.cpp', - moved to workflow module
+  # 'composition/plugin_composition.cpp', - moved to workflow module
   # 'transactions/plugin_transaction_manager.cpp',
   # Version management sources (v3.1.0) - temporarily disabled due to conflicts
   # 'managers/plugin_version_manager.cpp',
@@ -136,7 +136,7 @@ conditional_headers = [
   '../include/qtplugin/core/advanced_plugin_interface.hpp',
   '../include/qtplugin/orchestration/plugin_orchestrator.hpp',
   '../include/qtplugin/composition/plugin_composition.hpp',
-  '../include/qtplugin/transactions/plugin_transaction_manager.hpp',
+  '../include/qtplugin/workflow/transactions.hpp',
   # Dynamic plugin system headers (v3.2.0)
   '../include/qtplugin/core/dynamic_plugin_interface.hpp',
   # Multi-language plugin bridge headers (v3.2.0)

@@ -322,7 +322,7 @@ void register_communication_bindings(sol::state& lua) {
 
     // Create qtforge.communication namespace
     sol::table qtforge = lua["qtforge"];
-    sol::table comm = qtforge.get_or_create<sol::table>("communication");
+    sol::table comm = qtforge["communication"].get_or_create<sol::table>();
 
     // Register all communication types
     register_message_bus_bindings(lua);

@@ -7,9 +7,9 @@
 #include <QJsonObject>
 #include <QSignalSpy>
 #include <QtTest/QtTest>
-#include "qtplugin/orchestration/plugin_orchestrator.hpp"
+#include "qtplugin/workflow/orchestration.hpp"
 
-using namespace qtplugin::orchestration;
+using namespace qtplugin::workflow::orchestration;
 
 class TestPluginOrchestration : public QObject {
     Q_OBJECT

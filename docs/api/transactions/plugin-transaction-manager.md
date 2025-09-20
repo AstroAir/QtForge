@@ -1,9 +1,9 @@
 # PluginTransactionManager API Reference
 
 !!! info "Module Information"
-**Header**: `qtplugin/transactions/plugin_transaction_manager.hpp`  
- **Namespace**: `qtplugin::transactions`  
- **Since**: QtForge v3.0.0  
+**Header**: `qtplugin/workflow/transactions.hpp`
+ **Namespace**: `qtplugin::workflow::transactions`
+ **Since**: QtForge v3.0.0
  **Status**: Beta
 
 ## Overview
@@ -30,9 +30,9 @@ The PluginTransactionManager provides ACID transaction support for plugin operat
 ## Quick Start
 
 ```cpp
-#include <qtplugin/transactions/plugin_transaction_manager.hpp>
+#include <qtplugin/workflow/transactions.hpp>
 
-using namespace qtplugin::transactions;
+using namespace qtplugin::workflow::transactions;
 
 // Get transaction manager instance
 auto& tx_manager = PluginTransactionManager::instance();
@@ -457,7 +457,7 @@ Common error codes and their meanings:
 ### Basic Transaction Usage
 
 ```cpp
-#include <qtplugin/transactions/plugin_transaction_manager.hpp>
+#include <qtplugin/workflow/transactions.hpp>
 
 class TransactionalService {
 private:

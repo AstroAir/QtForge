@@ -17,14 +17,14 @@
 #include <filesystem>
 
 // Include comprehensive core headers
-#include <qtplugin/core/plugin_interface.hpp>
+#include <qtplugin/interfaces/core/plugin_interface.hpp>
 // Don't include the original plugin_manager.hpp to avoid conflicts
 // #include <qtplugin/core/plugin_manager.hpp>
 #include <qtplugin/core/plugin_loader.hpp>
 #include <qtplugin/core/plugin_registry.hpp>
 #include <qtplugin/core/plugin_dependency_resolver.hpp>
 #include <qtplugin/core/plugin_lifecycle_manager.hpp>
-#include <qtplugin/core/dynamic_plugin_interface.hpp>
+#include <qtplugin/interfaces/core/dynamic_plugin_interface.hpp>
 #include <qtplugin/utils/version.hpp>
 #include <qtplugin/utils/error_handling.hpp>
 

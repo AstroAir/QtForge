@@ -28,7 +28,7 @@ void register_threading_bindings(sol::state& lua) {
 
     // Create qtforge.threading namespace
     sol::table qtforge = lua["qtforge"];
-    sol::table threading = qtforge.get_or_create<sol::table>("threading");
+    sol::table threading = qtforge["threading"].get_or_create<sol::table>();
 
     // Basic threading utilities
     threading["get_thread_count"] = []() -> int {
