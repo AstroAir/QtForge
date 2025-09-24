@@ -1,0 +1,142 @@
+# QtForge Pre-commit Configuration
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+
+# Exclude build directories, third-party code, and generated files
+exclude: "^\
+  (build/.*|\
+  __pycache__/.*|\
+  site/.*|\
+  \\.git/.*|\
+  third-party/.*|\
+  external/.*|\
+  vendor/.*|\
+  \\.vscode/.*|\
+  \\.idea/.*|\
+  .*\\.autogen/.*|\
+  .*_autogen/.*|\
+  compile_commands\\.json|\
+  CMakeCache\\.txt|\
+  CMakeFiles/.*|\
+  \\.ninja_deps|\
+  \\.ninja_log|\
+  build\\.ninja|\
+  .*\\.dll\\.a|\
+  .*\\.so|\
+  .*\\.dll|\
+  .*\\.exe|\
+  .*\\.obj|\
+  .*\\.o|\
+  .*\\.pyc|\
+  .*\\.pyo|\
+  .*\\.pyd)\
+  "
+
+repos:
+  # Basic file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-added-large-files # prevents giant files from being committed
+        args: ['--maxkb=1000']
+      - id: check-case-conflict # checks for files that would conflict in case-insensitive filesystems
+      - id: check-merge-conflict # checks for files that contain merge conflict strings
+      - id: check-yaml # checks yaml files for parseable syntax
+        exclude: "^(mkdocs\\.yml|meson_options\\.txt|\\.clang-format)$"
+      - id: check-json # checks json files for parseable syntax
+        exclude: "^(tests/remote/remote_plugin_test_config\\.json)$"
+      - id: check-toml # checks toml files for parseable syntax
+      - id: check-xml # checks xml files for parseable syntax
+      - id: detect-private-key # detects the presence of private keys
+      - id: end-of-file-fixer # ensures that a file is either empty, or ends with one newline
+        exclude: "\\.(patch|diff)$"
+      - id: fix-byte-order-marker # removes utf-8 byte order marker
+      - id: mixed-line-ending # replaces or checks mixed line ending
+      - id: trailing-whitespace # trims trailing whitespace
+        exclude: "\\.(patch|diff)$"
+      - id: check-executables-have-shebangs # ensures that (non-binary) executables have a shebang
+      - id: check-shebang-scripts-are-executable # ensures that (non-binary) files with a shebang are executable
+
+  # C++ formatting with clang-format (uses existing .clang-format config)
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: v21.1.1
+    hooks:
+      - id: clang-format
+        files: \.(c|cc|cxx|cpp|h|hpp|hxx)$
+        exclude: "^(third-party/.*|external/.*|vendor/.*)$"
+
+  # C++ static analysis with clang-tidy (requires compile_commands.json)
+  - repo: https://github.com/pocc/pre-commit-hooks
+    rev: v1.3.5
+    hooks:
+      - id: clang-tidy
+        files: \.(c|cc|cxx|cpp)$
+        exclude: "^(third-party/.*|external/.*|vendor/.*|build/.*|.*_autogen/.*)$"
+        args: [-p=build, --format-style=file]
+        additional_dependencies: [clang-tidy]
+
+  # Python formatting and linting with ruff (modern replacement for black/flake8)
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.13.1
+    hooks:
+      - id: ruff # linter
+        args: [--fix, --exit-non-zero-on-fix]
+        files: \.py$
+        exclude: "^(tests/python/unit/test_core_unit\\.py)$"
+      - id: ruff-format # formatter
+        files: \.py$
+        exclude: "^(tests/python/unit/test_core_unit\\.py)$"
+
+  # Python type checking with mypy (uses existing mypy.ini)
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.14.1
+    hooks:
+      - id: mypy
+        files: \.py$
+        exclude: "^(tests/.*|examples/.*|scripts/.*)$"
+        additional_dependencies: [types-PyYAML]
+
+  # Prettier for JSON, YAML, Markdown formatting
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v4.0.0-alpha.8
+    hooks:
+      - id: prettier
+        files: \.(js|ts|jsx|tsx|css|less|html|json|markdown|md|yaml|yml)$
+        exclude: "^(package-lock\\.json|yarn\\.lock|pnpm-lock\\.yaml)$"
+
+  # CMake formatting
+  - repo: https://github.com/cheshirekow/cmake-format-precommit
+    rev: v0.6.13
+    hooks:
+      - id: cmake-format
+        files: (CMakeLists\.txt|\.cmake)$
+        exclude: "^(build/.*|third-party/.*)$"
+
+  # Shell script linting
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0.1
+    hooks:
+      - id: shellcheck
+        files: \.(sh|bash)$
+        exclude: "^(third-party/.*|build/.*)$"
+
+  # Additional security and quality checks
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        exclude: "^(tests/.*|examples/.*|\\.git/.*)$"
+
+# CI mode configuration
+ci:
+  autofix_commit_msg: |
+    [pre-commit.ci] auto fixes from pre-commit.com hooks
+
+    for more information, see https://pre-commit.ci
+  autofix_prs: true
+  autoupdate_branch: ''
+  autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
+  autoupdate_schedule: weekly
+  skip: []
+  submodules: false

@@ -1,0 +1,218 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "qtforge"
+version = "3.2.0"
+description = "Modern C++ Plugin System for Qt Applications with Modular Architecture"
+readme = "README.md"
+license = {text = "Apache-2.0"}
+authors = [
+    {name = "QtForge Team", email = "team@qtforge.org"},
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: System :: Plugins",
+]
+requires-python = ">=3.8"
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pre-commit>=4.0.0",
+    "ruff>=0.8.0",
+    "mypy>=1.14.0",
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "coverage>=7.0.0",
+]
+docs = [
+    "mkdocs>=1.5.0",
+    "mkdocs-material>=9.4.0",
+    "mkdocs-minify-plugin>=0.7.0",
+]
+test = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "coverage>=7.0.0",
+    "psutil>=5.9.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/qtforge/qtforge"
+Documentation = "https://qtforge.github.io/qtforge"
+Repository = "https://github.com/qtforge/qtforge.git"
+Issues = "https://github.com/qtforge/qtforge/issues"
+Changelog = "https://github.com/qtforge/qtforge/blob/main/CHANGELOG.md"
+
+[tool.ruff]
+# Ruff configuration for QtForge project
+target-version = "py38"
+line-length = 88
+indent-width = 4
+
+[tool.ruff.lint]
+# Enable specific rule categories
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # Pyflakes
+    "I",   # isort
+    "N",   # pep8-naming
+    "D",   # pydocstyle
+    "UP",  # pyupgrade
+    "YTT", # flake8-2020
+    "ANN", # flake8-annotations
+    "S",   # flake8-bandit
+    "BLE", # flake8-blind-except
+    "FBT", # flake8-boolean-trap
+    "B",   # flake8-bugbear
+    "A",   # flake8-builtins
+    "COM", # flake8-commas
+    "C4",  # flake8-comprehensions
+    "DTZ", # flake8-datetimez
+    "T10", # flake8-debugger
+    "EM",  # flake8-errmsg
+    "EXE", # flake8-executable
+    "FA",  # flake8-future-annotations
+    "ISC", # flake8-implicit-str-concat
+    "ICN", # flake8-import-conventions
+    "G",   # flake8-logging-format
+    "INP", # flake8-no-pep420
+    "PIE", # flake8-pie
+    "T20", # flake8-print
+    "PYI", # flake8-pyi
+    "PT",  # flake8-pytest-style
+    "Q",   # flake8-quotes
+    "RSE", # flake8-raise
+    "RET", # flake8-return
+    "SLF", # flake8-self
+    "SLOT", # flake8-slots
+    "SIM", # flake8-simplify
+    "TID", # flake8-tidy-imports
+    "TCH", # flake8-type-checking
+    "INT", # flake8-gettext
+    "ARG", # flake8-unused-arguments
+    "PTH", # flake8-use-pathlib
+    "ERA", # eradicate
+    "PD",  # pandas-vet
+    "PGH", # pygrep-hooks
+    "PL",  # Pylint
+    "TRY", # tryceratops
+    "FLY", # flynt
+    "NPY", # NumPy-specific rules
+    "PERF", # Perflint
+    "RUF", # Ruff-specific rules
+]
+
+# Disable specific rules that are too strict for this project
+ignore = [
+    "D100", # Missing docstring in public module
+    "D101", # Missing docstring in public class
+    "D102", # Missing docstring in public method
+    "D103", # Missing docstring in public function
+    "D104", # Missing docstring in public package
+    "D105", # Missing docstring in magic method
+    "D107", # Missing docstring in __init__
+
+    "S101", # Use of assert detected
+    "FBT001", # Boolean positional arg in function definition
+    "FBT002", # Boolean default value in function definition
+    "COM812", # Trailing comma missing (conflicts with formatter)
+    "ISC001", # Implicitly concatenated string literals (conflicts with formatter)
+]
+
+# Allow fix for all enabled rules (where applicable)
+fixable = ["ALL"]
+unfixable = []
+
+# Exclude specific directories and files
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+    "site",
+    "third-party",
+    "external",
+    "vendor",
+    "*_autogen",
+    "*.autogen",
+]
+
+[tool.ruff.format]
+# Use double quotes for strings
+quote-style = "double"
+
+# Use spaces for indentation
+indent-style = "space"
+
+# Respect magic trailing commas
+skip-magic-trailing-comma = false
+
+# Automatically detect line ending
+line-ending = "auto"
+
+[tool.ruff.lint.per-file-ignores]
+# Test files can use assert statements and have more relaxed rules
+"tests/**/*.py" = ["S101", "PLR2004", "ANN001", "ANN201"]
+"test_*.py" = ["S101", "PLR2004", "ANN001", "ANN201"]
+# Exclude problematic test files with syntax issues
+"tests/python/unit/test_core_unit.py" = ["ALL"]
+
+# Examples can have more relaxed rules
+"examples/**/*.py" = ["T201", "S101", "ANN001", "ANN201", "D"]
+
+# Scripts can have more relaxed rules
+"scripts/**/*.py" = ["T201", "S101", "ANN001", "ANN201", "D"]
+
+[tool.ruff.lint.pydocstyle]
+# Use Google-style docstrings
+convention = "google"
+
+[tool.ruff.lint.isort]
+# Import sorting configuration
+known-first-party = ["qtforge"]
+force-single-line = false
+force-sort-within-sections = false
+single-line-exclusions = ["typing"]
+
+[tool.ruff.lint.flake8-quotes]
+# Use double quotes
+docstring-quotes = "double"
+inline-quotes = "double"
+multiline-quotes = "double"
+
+[tool.ruff.lint.flake8-annotations]
+# Allow missing annotations in some cases
+allow-star-arg-any = true
+ignore-fully-untyped = true
