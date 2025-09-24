@@ -23,6 +23,7 @@ QtForge is a comprehensive plugin management library designed for Qt application
 ## Features
 
 ### Core System
+
 - **Modern C++ Implementation**: Built with C++20 standards and best practices
 - **Qt6 Integration**: Seamless integration with Qt6 framework and MOC system
 - **Type Safety**: Robust error handling with comprehensive validation
@@ -30,6 +31,7 @@ QtForge is a comprehensive plugin management library designed for Qt application
 - **Thread Safety**: Safe concurrent plugin operations and background tasks
 
 ### Plugin Management
+
 - **Advanced Plugin Interfaces**: Support for `IAdvancedPlugin` and `IDynamicPlugin` with dynamic capabilities
 - **Plugin Lifecycle Management**: Complete plugin state management and monitoring
 - **Version Management**: Plugin versioning with storage and compatibility tracking
@@ -37,18 +39,21 @@ QtForge is a comprehensive plugin management library designed for Qt application
 - **Plugin Types**: Support for Native, Python, JavaScript, Lua, Remote, and Composite plugins
 
 ### Multilingual Support
+
 - **Python Bindings**: Complete Python API with type stubs for IDE support
 - **Lua Plugin Bridge**: Full Lua plugin support with sol2 integration
 - **JavaScript Support**: Planned JavaScript plugin support
 - **Cross-Language Communication**: Seamless communication between different plugin types
 
 ### Security & Performance
+
 - **Enhanced Security Sandbox**: Advanced plugin sandboxing with policy validation
 - **Security Policy Engine**: Comprehensive security policy management and enforcement
 - **Resource Monitoring**: Advanced resource usage monitoring and threshold management
 - **Performance**: Efficient loading, communication, and resource management
 
 ### Developer Experience
+
 - **Service Contract System**: Complete communication system with service discovery
 - **Background Services**: Support for background task processing and services
 - **Comprehensive Testing**: Full test coverage with automated validation
@@ -220,46 +225,46 @@ public:
     std::string_view name() const noexcept override {
         return "My Example Plugin";
     }
-    
+
     std::string_view description() const noexcept override {
         return "An example plugin demonstrating the QtPlugin system";
     }
-    
+
     qtplugin::Version version() const noexcept override {
         return {1, 0, 0};
     }
-    
+
     std::string_view author() const noexcept override {
         return "Plugin Developer";
     }
-    
+
     std::string id() const noexcept override {
         return "com.example.myplugin";
     }
-    
+
     std::expected<void, qtplugin::PluginError> initialize() override {
         // Plugin initialization logic
         return {};
     }
-    
+
     void shutdown() noexcept override {
         // Plugin cleanup logic
     }
-    
+
     qtplugin::PluginState state() const noexcept override {
         return qtplugin::PluginState::Running;
     }
-    
+
     qtplugin::PluginCapabilities capabilities() const noexcept override {
         return qtplugin::PluginCapability::Service;
     }
-    
-    std::expected<nlohmann::json, qtplugin::PluginError> 
+
+    std::expected<nlohmann::json, qtplugin::PluginError>
     execute_command(std::string_view command, const nlohmann::json& params) override {
         // Handle plugin commands
         return nlohmann::json{};
     }
-    
+
     std::vector<std::string> available_commands() const override {
         return {"status", "configure"};
     }
@@ -363,6 +368,32 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Contributing
 
 Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
+
+### Development Setup
+
+For contributors, we recommend setting up pre-commit hooks to ensure code quality:
+
+```bash
+# Install pre-commit
+pip install pre-commit
+
+# Install hooks in your local repository
+pre-commit install
+
+# Run hooks manually (optional)
+pre-commit run --all-files
+```
+
+Our pre-commit hooks include:
+
+- **C++ formatting** with clang-format
+- **C++ linting** with clang-tidy
+- **Python formatting and linting** with ruff
+- **Python type checking** with mypy
+- **File validation** (YAML, JSON, etc.)
+- **Security scanning** for secrets and private keys
+
+For detailed setup instructions and troubleshooting, see [docs/contributing/pre-commit-hooks.md](docs/contributing/pre-commit-hooks.md).
 
 ## Changelog
 
