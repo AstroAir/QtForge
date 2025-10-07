@@ -17,6 +17,7 @@
 #include <QString>
 
 #include <chrono>
+#include <memory>
 #include <shared_mutex>
 #include <string>
 #include <unordered_map>
@@ -171,62 +172,41 @@ struct ServiceMethod {
 class ServiceContract {
 public:
     ServiceContract(const QString& service_name,
-                    const ServiceVersion& version = {})
-        : m_service_name(service_name), m_version(version) {}
+                    const ServiceVersion& version = {});
+
+    // Copy constructor and assignment operator
+    ServiceContract(const ServiceContract& other);
+    ServiceContract& operator=(const ServiceContract& other);
+
+    // Move constructor and assignment operator
+    ServiceContract(ServiceContract&& other) noexcept;
+    ServiceContract& operator=(ServiceContract&& other) noexcept;
+
+    // Destructor
+    ~ServiceContract();
 
     // === Contract Definition ===
 
-    ServiceContract& set_description(const QString& desc) {
-        m_description = desc;
-        return *this;
-    }
-
-    ServiceContract& set_provider(const QString& provider) {
-        m_provider = provider;
-        return *this;
-    }
-
-    ServiceContract& add_method(const ServiceMethod& method) {
-        m_methods[method.name] = method;
-        return *this;
-    }
-
-    ServiceContract& set_capabilities(ServiceCapabilities caps) {
-        m_capabilities = caps;
-        return *this;
-    }
-
+    ServiceContract& set_description(const QString& desc);
+    ServiceContract& set_provider(const QString& provider);
+    ServiceContract& add_method(const ServiceMethod& method);
+    ServiceContract& set_capabilities(ServiceCapabilities caps);
     ServiceContract& add_dependency(const QString& service_name,
-                                    const ServiceVersion& min_version = {}) {
-        m_dependencies[service_name] = min_version;
-        return *this;
-    }
+                                    const ServiceVersion& min_version = {});
 
     // === Contract Access ===
 
-    const QString& service_name() const noexcept { return m_service_name; }
-    const ServiceVersion& version() const noexcept { return m_version; }
-    const QString& description() const noexcept { return m_description; }
-    const QString& provider() const noexcept { return m_provider; }
-    ServiceCapabilities capabilities() const noexcept { return m_capabilities; }
+    const QString& service_name() const noexcept;
+    const ServiceVersion& version() const noexcept;
+    const QString& description() const noexcept;
+    const QString& provider() const noexcept;
+    ServiceCapabilities capabilities() const noexcept;
 
-    const std::unordered_map<QString, ServiceMethod>& methods() const noexcept {
-        return m_methods;
-    }
+    const std::unordered_map<QString, ServiceMethod>& methods() const noexcept;
+    const std::unordered_map<QString, ServiceVersion>& dependencies() const noexcept;
 
-    const std::unordered_map<QString, ServiceVersion>& dependencies()
-        const noexcept {
-        return m_dependencies;
-    }
-
-    bool has_method(const QString& method_name) const {
-        return m_methods.find(method_name) != m_methods.end();
-    }
-
-    const ServiceMethod* get_method(const QString& method_name) const {
-        auto it = m_methods.find(method_name);
-        return it != m_methods.end() ? &it->second : nullptr;
-    }
+    bool has_method(const QString& method_name) const;
+    const ServiceMethod* get_method(const QString& method_name) const;
 
     // === Validation ===
 
@@ -241,14 +221,8 @@ public:
         const QJsonObject& json);
 
 private:
-    QString m_service_name;
-    ServiceVersion m_version;
-    QString m_description;
-    QString m_provider;
-    ServiceCapabilities m_capabilities{
-        static_cast<uint32_t>(ServiceCapability::Synchronous)};
-    std::unordered_map<QString, ServiceMethod> m_methods;
-    std::unordered_map<QString, ServiceVersion> m_dependencies;
+    class Private;
+    std::unique_ptr<Private> d;
 };
 
 /**
@@ -256,6 +230,15 @@ private:
  */
 class ServiceContractRegistry {
 public:
+    ServiceContractRegistry();
+    ~ServiceContractRegistry();
+
+    // Non-copyable and non-movable (singleton pattern)
+    ServiceContractRegistry(const ServiceContractRegistry&) = delete;
+    ServiceContractRegistry& operator=(const ServiceContractRegistry&) = delete;
+    ServiceContractRegistry(ServiceContractRegistry&&) = delete;
+    ServiceContractRegistry& operator=(ServiceContractRegistry&&) = delete;
+
     static ServiceContractRegistry& instance();
 
     // === Contract Management ===
@@ -295,25 +278,8 @@ public:
         const ServiceVersion& min_version = {}) const;
 
 private:
-    ServiceContractRegistry() = default;
-
-    struct ContractInfo {
-        QString plugin_id;
-        ServiceContract contract;
-        std::chrono::system_clock::time_point registered_at;
-
-        ContractInfo() = default;
-        ContractInfo(const QString& id, const ServiceContract& c)
-            : plugin_id(id),
-              contract(c),
-              registered_at(std::chrono::system_clock::now()) {}
-    };
-
-    mutable std::shared_mutex m_mutex;
-    std::unordered_map<QString, std::vector<ContractInfo>>
-        m_contracts;  // service_name -> contracts
-    std::unordered_map<QString, std::vector<QString>>
-        m_plugin_services;  // plugin_id -> service_names
+    class Private;
+    std::unique_ptr<Private> d;
 };
 
 }  // namespace qtplugin::contracts

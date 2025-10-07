@@ -1,0 +1,308 @@
+name: 'Coordinated Release'
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Type of release'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+        - patch
+        - minor
+        - major
+        - prerelease
+      create_github_release:
+        description: 'Create GitHub release'
+        required: false
+        default: true
+        type: boolean
+
+# Set default permissions to read-only for security
+permissions:
+  contents: read
+
+env:
+  QT_VERSION: "6.5.3"
+  CMAKE_VERSION: "3.27.7"
+
+jobs:
+  # Trigger all platform-specific builds
+  trigger-builds:
+    name: 'Trigger Platform Builds'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
+    outputs:
+      windows-run-id: ${{ steps.trigger-windows.outputs.run-id }}
+      linux-run-id: ${{ steps.trigger-linux.outputs.run-id }}
+      macos-run-id: ${{ steps.trigger-macos.outputs.run-id }}
+      cross-platform-run-id: ${{ steps.trigger-cross.outputs.run-id }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Trigger Windows CI
+        id: trigger-windows
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const response = await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'ci-windows.yml',
+              ref: context.ref,
+              inputs: {
+                skip_tests: 'false',
+                build_type: 'release-only'
+              }
+            });
+            
+            // Get the run ID (this is a simplified approach)
+            const runs = await github.rest.actions.listWorkflowRuns({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'ci-windows.yml',
+              head_sha: context.sha
+            });
+            
+            const runId = runs.data.workflow_runs[0]?.id || 'unknown';
+            core.setOutput('run-id', runId);
+
+      - name: Trigger Linux CI
+        id: trigger-linux
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'ci-linux.yml',
+              ref: context.ref,
+              inputs: {
+                skip_tests: 'false',
+                build_type: 'release-only'
+              }
+            });
+
+      - name: Trigger macOS CI
+        id: trigger-macos
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'ci-macos.yml',
+              ref: context.ref,
+              inputs: {
+                skip_tests: 'false',
+                build_type: 'release-only'
+              }
+            });
+
+      - name: Trigger Cross-Platform CI
+        id: trigger-cross
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'ci-cross-platform.yml',
+              ref: context.ref,
+              inputs: {
+                target_platform: 'all'
+              }
+            });
+
+  # Wait for all builds to complete
+  wait-for-builds:
+    name: 'Wait for Platform Builds'
+    needs: trigger-builds
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: read
+      actions: read
+
+    steps:
+      - name: Wait for builds to complete
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const maxWaitTime = 120 * 60 * 1000; // 120 minutes in milliseconds
+            const pollInterval = 30 * 1000; // 30 seconds
+            const startTime = Date.now();
+            
+            const workflows = ['ci-windows.yml', 'ci-linux.yml', 'ci-macos.yml', 'ci-cross-platform.yml'];
+            
+            while (Date.now() - startTime < maxWaitTime) {
+              let allCompleted = true;
+              
+              for (const workflow of workflows) {
+                const runs = await github.rest.actions.listWorkflowRuns({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  workflow_id: workflow,
+                  head_sha: context.sha,
+                  per_page: 1
+                });
+                
+                if (runs.data.workflow_runs.length === 0) {
+                  console.log(`No runs found for ${workflow}`);
+                  allCompleted = false;
+                  break;
+                }
+                
+                const run = runs.data.workflow_runs[0];
+                console.log(`${workflow}: ${run.status} (${run.conclusion})`);
+                
+                if (run.status !== 'completed') {
+                  allCompleted = false;
+                  break;
+                }
+                
+                if (run.conclusion !== 'success') {
+                  core.setFailed(`Workflow ${workflow} failed with conclusion: ${run.conclusion}`);
+                  return;
+                }
+              }
+              
+              if (allCompleted) {
+                console.log('All platform builds completed successfully');
+                return;
+              }
+              
+              console.log('Waiting for builds to complete...');
+              await new Promise(resolve => setTimeout(resolve, pollInterval));
+            }
+            
+            core.setFailed('Timeout waiting for platform builds to complete');
+
+  # Collect all artifacts
+  collect-artifacts:
+    name: 'Collect Release Artifacts'
+    needs: wait-for-builds
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts/
+
+      - name: Organize artifacts
+        run: |
+          mkdir -p organized-release/
+          
+          # Create directory structure
+          mkdir -p organized-release/{windows,linux,macos,cross-platform}
+          
+          # Move artifacts to organized structure
+          find release-artifacts/ -name "*windows*" -type f -exec mv {} organized-release/windows/ \;
+          find release-artifacts/ -name "*linux*" -type f -exec mv {} organized-release/linux/ \;
+          find release-artifacts/ -name "*macos*" -type f -exec mv {} organized-release/macos/ \;
+          find release-artifacts/ -name "*android*" -o -name "*ios*" -o -name "*arm64*" -o -name "*riscv*" -type f -exec mv {} organized-release/cross-platform/ \;
+          
+          # Create release manifest
+          cat > organized-release/RELEASE_MANIFEST.md << EOF
+          # QtForge Release Artifacts
+          
+          **Release Tag**: ${{ github.ref_name }}
+          **Build Date**: $(date -u)
+          **Commit SHA**: ${{ github.sha }}
+          
+          ## Platform Artifacts
+          
+          ### Windows
+          $(ls -la organized-release/windows/ || echo "No Windows artifacts")
+          
+          ### Linux
+          $(ls -la organized-release/linux/ || echo "No Linux artifacts")
+          
+          ### macOS
+          $(ls -la organized-release/macos/ || echo "No macOS artifacts")
+          
+          ### Cross-Platform
+          $(ls -la organized-release/cross-platform/ || echo "No cross-platform artifacts")
+          EOF
+
+      - name: Upload organized artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: qtforge-release-${{ github.ref_name }}
+          path: organized-release/
+          retention-days: 90
+
+  # Create GitHub release
+  create-release:
+    name: 'Create GitHub Release'
+    needs: collect-artifacts
+    if: inputs.create_github_release != false
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: qtforge-release-${{ github.ref_name }}
+          path: release-artifacts/
+
+      - name: Generate release notes
+        id: release-notes
+        run: |
+          # Generate release notes from changelog and commits
+          RELEASE_NOTES="release-notes.md"
+          
+          echo "# QtForge ${{ github.ref_name }}" > "$RELEASE_NOTES"
+          echo "" >> "$RELEASE_NOTES"
+          echo "## What's Changed" >> "$RELEASE_NOTES"
+          echo "" >> "$RELEASE_NOTES"
+          
+          # Extract changes from CHANGELOG.md if it exists
+          if [ -f "CHANGELOG.md" ]; then
+            # Extract the latest version's changes
+            sed -n '/^## \[/,/^## \[/p' CHANGELOG.md | head -n -1 | tail -n +2 >> "$RELEASE_NOTES"
+          else
+            # Generate from recent commits
+            git log --oneline --since="1 month ago" | head -20 >> "$RELEASE_NOTES"
+          fi
+          
+          echo "" >> "$RELEASE_NOTES"
+          echo "## Platform Support" >> "$RELEASE_NOTES"
+          echo "- ✅ Windows (MSVC 2022, MinGW64)" >> "$RELEASE_NOTES"
+          echo "- ✅ Linux (GCC, Clang)" >> "$RELEASE_NOTES"
+          echo "- ✅ macOS (Intel, Apple Silicon)" >> "$RELEASE_NOTES"
+          echo "- ✅ Cross-platform (Android, iOS, ARM64)" >> "$RELEASE_NOTES"
+          
+          echo "release-notes-file=$RELEASE_NOTES" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: QtForge ${{ github.ref_name }}
+          body_path: ${{ steps.release-notes.outputs.release-notes-file }}
+          files: |
+            release-artifacts/**/*
+          draft: false
+          prerelease: ${{ contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'rc') }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true

@@ -31,6 +31,75 @@
 
 namespace qtplugin {
 
+/**
+ * @brief Private implementation for QtPluginLoader
+ */
+class QtPluginLoader::Impl {
+public:
+    struct LoadedPlugin {
+        std::string id;
+        std::filesystem::path file_path;
+        std::unique_ptr<QPluginLoader> qt_loader;
+        std::shared_ptr<IPlugin> instance;
+        std::chrono::steady_clock::time_point load_time;
+        std::atomic<int> ref_count{1};
+        size_t estimated_memory = 0;
+    };
+
+    // === Error tracking ===
+    struct ErrorEntry {
+        std::chrono::system_clock::time_point timestamp;
+        std::string function;
+        std::string message;
+        PluginErrorCode code;
+    };
+
+    // === Metadata cache ===
+    struct CacheEntry {
+        QJsonObject metadata;
+        std::filesystem::file_time_type file_time;
+        size_t file_size;
+        std::chrono::steady_clock::time_point cache_time;
+    };
+
+    std::unordered_map<std::string, std::unique_ptr<LoadedPlugin>> loaded_plugins;
+    mutable std::shared_mutex plugins_mutex;
+
+    // Enhanced features
+    mutable std::unordered_map<std::string, CacheEntry> metadata_cache;
+    mutable std::shared_mutex cache_mutex;
+    mutable std::vector<ErrorEntry> error_history;
+    mutable std::mutex error_mutex;
+    mutable std::atomic<size_t> cache_hits{0};
+    mutable std::atomic<size_t> cache_misses{0};
+    bool cache_enabled = true;
+    static constexpr size_t MAX_ERROR_HISTORY = 100;
+    static constexpr size_t MAX_CACHE_SIZE = 100;
+    static constexpr auto CACHE_EXPIRY = std::chrono::minutes(10);
+
+    // Helper methods
+    qtplugin::expected<QJsonObject, PluginError> read_metadata(
+        const std::filesystem::path& file_path) const;
+    qtplugin::expected<QJsonObject, PluginError> read_metadata_cached(
+        const std::filesystem::path& file_path) const;
+    qtplugin::expected<QJsonObject, PluginError> read_metadata_impl(
+        const std::filesystem::path& file_path) const;
+    qtplugin::expected<std::string, PluginError> extract_plugin_id(
+        const QJsonObject& metadata) const;
+    bool is_valid_plugin_file(const std::filesystem::path& file_path) const;
+    void track_error(const std::string& function, const std::string& message,
+                     PluginErrorCode code = PluginErrorCode::Unknown) const;
+    bool is_cache_valid(const std::filesystem::path& path,
+                        const CacheEntry& entry) const;
+    void evict_oldest_cache_entry() const;
+
+    // Parallel loading helpers
+    std::vector<QtPluginLoader::BatchLoadResult> batch_load_parallel(
+        const std::vector<std::filesystem::path>& paths);
+    void load_persistent_cache();
+    void save_persistent_cache() const;
+};
+
 namespace {
 // Performance optimization constants
 constexpr size_t CACHE_PREWARM_SIZE = 50;
@@ -139,15 +208,15 @@ std::unordered_map<std::string, std::function<std::unique_ptr<IPluginLoader>()>>
     PluginLoaderFactory::s_loader_factories;
 std::mutex PluginLoaderFactory::s_factory_mutex;
 
-QtPluginLoader::QtPluginLoader() {
+QtPluginLoader::QtPluginLoader() : d(std::make_unique<Impl>()) {
     // Load persistent cache on startup
-    load_persistent_cache();
+    d->load_persistent_cache();
 
     // Setup cache persistence timer
     if (QCoreApplication::instance()) {
         auto* timer = new QTimer(nullptr);
         QObject::connect(timer, &QTimer::timeout, [this]() {
-            save_persistent_cache();
+            d->save_persistent_cache();
         });
         timer->start(std::chrono::duration_cast<std::chrono::milliseconds>(
             CACHE_PERSISTENCE_INTERVAL).count());
@@ -156,21 +225,21 @@ QtPluginLoader::QtPluginLoader() {
 
 QtPluginLoader::~QtPluginLoader() {
     // Save persistent cache before destruction
-    save_persistent_cache();
+    d->save_persistent_cache();
 
     // Log final statistics if cache was used
-    if (m_cache_enabled && (m_cache_hits > 0 || m_cache_misses > 0)) {
+    if (d->cache_enabled && (d->cache_hits > 0 || d->cache_misses > 0)) {
         qDebug() << "QtPluginLoader cache statistics:"
-                 << "hits=" << m_cache_hits.load()
-                 << "misses=" << m_cache_misses.load()
+                 << "hits=" << d->cache_hits.load()
+                 << "misses=" << d->cache_misses.load()
                  << "hit_rate=" << get_cache_statistics().hit_rate;
     }
 
     // Unload all plugins gracefully with parallel unloading for better performance
-    std::unique_lock lock(m_plugins_mutex);
+    std::unique_lock lock(d->plugins_mutex);
     std::vector<std::future<void>> unload_futures;
 
-    for (auto& [id, plugin] : m_loaded_plugins) {
+    for (auto& [id, plugin] : d->loaded_plugins) {
         if (plugin->qt_loader && plugin->qt_loader->isLoaded()) {
             // Capture qt_loader as shared_ptr to ensure it survives async operation
             auto loader = std::move(plugin->qt_loader);
@@ -185,14 +254,51 @@ QtPluginLoader::~QtPluginLoader() {
         future.wait();
     }
 
-    m_loaded_plugins.clear();
+    d->loaded_plugins.clear();
+}
+
+// Copy constructor
+QtPluginLoader::QtPluginLoader(const QtPluginLoader& other) : d(std::make_unique<Impl>()) {
+    d->loaded_plugins = other.d->loaded_plugins;
+    d->metadata_cache = other.d->metadata_cache;
+    d->error_history = other.d->error_history;
+    d->cache_hits = other.d->cache_hits.load();
+    d->cache_misses = other.d->cache_misses.load();
+    d->cache_enabled = other.d->cache_enabled;
+}
+
+// Copy assignment operator
+QtPluginLoader& QtPluginLoader::operator=(const QtPluginLoader& other) {
+    if (this != &other) {
+        d->loaded_plugins = other.d->loaded_plugins;
+        d->metadata_cache = other.d->metadata_cache;
+        d->error_history = other.d->error_history;
+        d->cache_hits = other.d->cache_hits.load();
+        d->cache_misses = other.d->cache_misses.load();
+        d->cache_enabled = other.d->cache_enabled;
+    }
+    return *this;
+}
+
+// Move constructor
+QtPluginLoader::QtPluginLoader(QtPluginLoader&& other) noexcept : d(std::move(other.d)) {
+    other.d = std::make_unique<Impl>();
+}
+
+// Move assignment operator
+QtPluginLoader& QtPluginLoader::operator=(QtPluginLoader&& other) noexcept {
+    if (this != &other) {
+        d = std::move(other.d);
+        other.d = std::make_unique<Impl>();
+    }
+    return *this;
 }
 
 bool QtPluginLoader::can_load(const std::filesystem::path& file_path) const {
     qDebug() << "QtPluginLoader::can_load() called with path:"
              << QString::fromStdString(file_path.string());
 
-    if (!is_valid_plugin_file(file_path)) {
+    if (!d->is_valid_plugin_file(file_path)) {
         qDebug() << "is_valid_plugin_file() returned false";
         return false;
     }
@@ -200,7 +306,7 @@ bool QtPluginLoader::can_load(const std::filesystem::path& file_path) const {
     qDebug() << "is_valid_plugin_file() returned true, checking metadata...";
 
     // Try to read metadata to verify it's a valid plugin
-    auto metadata_result = read_metadata(file_path);
+    auto metadata_result = d->read_metadata(file_path);
     bool has_metadata = metadata_result.has_value();
     qDebug() << "read_metadata() result:"
              << (has_metadata ? "success" : "failed");
@@ -216,7 +322,7 @@ qtplugin::expected<std::shared_ptr<IPlugin>, PluginError> QtPluginLoader::load(
     auto start_time = std::chrono::steady_clock::now();
 
     if (!std::filesystem::exists(file_path)) {
-        track_error(__FUNCTION__, "Plugin file not found: " + file_path.string(),
+        d->track_error(__FUNCTION__, "Plugin file not found: " + file_path.string(),
                    PluginErrorCode::FileNotFound);
         return make_error<std::shared_ptr<IPlugin>>(
             PluginErrorCode::FileNotFound,
@@ -230,7 +336,7 @@ qtplugin::expected<std::shared_ptr<IPlugin>, PluginError> QtPluginLoader::load(
     }
 
     // Read metadata to get plugin ID
-    auto metadata_result = read_metadata(file_path);
+    auto metadata_result = d->read_metadata(file_path);
     if (!metadata_result) {
         return qtplugin::unexpected<PluginError>{metadata_result.error()};
     }

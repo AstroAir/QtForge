@@ -1,0 +1,244 @@
+name: 'Cross-Platform CI'
+
+on:
+  push:
+    branches: [main, develop]
+    tags: ["v*"]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    # Run weekly for cross-compilation targets
+    - cron: '0 6 * * 0'
+  workflow_dispatch:
+    inputs:
+      target_platform:
+        description: 'Target platform to build'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+        - all
+        - android
+        - ios
+        - linux-arm64
+        - embedded
+
+# Set default permissions to read-only for security
+permissions:
+  contents: read
+
+env:
+  QT_VERSION: "6.5.3"
+  CMAKE_VERSION: "3.27.7"
+
+jobs:
+  # Check what files changed to determine which jobs to run
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      core: ${{ steps.detect.outputs.core }}
+      cmake: ${{ steps.detect.outputs.cmake }}
+      ci: ${{ steps.detect.outputs.ci }}
+      workflows: ${{ steps.detect.outputs.workflows }}
+    steps:
+      - name: Detect changes
+        id: detect
+        uses: ./.github/workflows/shared/detect-changes
+
+  # Cross-compilation builds
+  cross-compile:
+    name: 'Cross-compile (${{ matrix.target }})'
+    needs: changes
+    if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.cmake == 'true' || needs.changes.outputs.ci == 'true' || needs.changes.outputs.workflows == 'true' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Linux ARM64 cross-compilation
+          - target: linux-arm64
+            os: ubuntu-latest
+            toolchain: cmake/toolchains/linux-arm64.cmake
+            packages: "gcc-aarch64-linux-gnu g++-aarch64-linux-gnu"
+            cmake_preset: cross-linux-arm64
+            qt_arch: gcc_64
+          # Android ARM64
+          - target: android-arm64
+            os: ubuntu-latest
+            toolchain: cmake/toolchains/android.cmake
+            packages: ""
+            cmake_preset: android-arm64
+            qt_arch: android_arm64_v8a
+          # Embedded RISC-V
+          - target: embedded-riscv
+            os: ubuntu-latest
+            toolchain: cmake/toolchains/embedded/riscv.cmake
+            packages: ""
+            cmake_preset: embedded-riscv
+            qt_arch: gcc_64
+
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Qt
+        if: matrix.target != 'embedded-riscv'
+        uses: ./.github/workflows/shared/setup-qt
+        with:
+          qt-version: ${{ env.QT_VERSION }}
+          qt-arch: ${{ matrix.qt_arch }}
+          cache-key-suffix: ${{ matrix.target }}
+
+      - name: Setup Build Environment
+        uses: ./.github/workflows/shared/setup-build-env
+        with:
+          cmake-version: ${{ env.CMAKE_VERSION }}
+          enable-ccache: 'true'
+          ccache-key-suffix: ${{ matrix.target }}
+          build-type: 'Release'
+          compiler: 'cross'
+
+      - name: Install cross-compilation tools
+        if: matrix.packages != ''
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ${{ matrix.packages }}
+
+      - name: Setup Android NDK
+        if: matrix.target == 'android-arm64'
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r25c
+
+      - name: Setup RISC-V toolchain
+        if: matrix.target == 'embedded-riscv'
+        run: |
+          # Install RISC-V GNU toolchain
+          sudo apt-get update
+          sudo apt-get install -y gcc-riscv64-linux-gnu g++-riscv64-linux-gnu
+
+      - name: Configure cross-compilation
+        run: |
+          # Create build directory
+          mkdir -p build-cross
+          
+          # Configure with toolchain
+          if [ -f "${{ matrix.toolchain }}" ]; then
+            cmake -S . -B build-cross \
+              -DCMAKE_TOOLCHAIN_FILE=${{ matrix.toolchain }} \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DQTFORGE_BUILD_TESTS=OFF \
+              -DQTFORGE_BUILD_EXAMPLES=OFF \
+              -DQTFORGE_BUILD_SHARED=OFF \
+              -DQTFORGE_BUILD_STATIC=ON \
+              -G Ninja
+          else
+            echo "Toolchain file not found: ${{ matrix.toolchain }}"
+            exit 1
+          fi
+
+      - name: Build cross-compilation target
+        run: |
+          cmake --build build-cross --config Release --parallel
+
+      - name: Package cross-compilation artifacts
+        run: |
+          # Create artifacts directory
+          mkdir -p artifacts/${{ matrix.target }}
+          
+          # Copy built libraries and headers
+          if [ -d "build-cross/lib" ]; then
+            cp -r build-cross/lib artifacts/${{ matrix.target }}/
+          fi
+          if [ -d "build-cross/bin" ]; then
+            cp -r build-cross/bin artifacts/${{ matrix.target }}/
+          fi
+          if [ -d "include" ]; then
+            cp -r include artifacts/${{ matrix.target }}/
+          fi
+          
+          # Create build info
+          cat > artifacts/${{ matrix.target }}/build-info.txt << EOF
+          Target: ${{ matrix.target }}
+          Toolchain: ${{ matrix.toolchain }}
+          Build Date: $(date -u)
+          Commit: ${{ github.sha }}
+          EOF
+
+      - name: Upload cross-compilation artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: qtforge-${{ matrix.target }}-${{ github.run_number }}
+          path: artifacts/${{ matrix.target }}/
+          retention-days: 30
+
+  # iOS builds (macOS only)
+  ios-build:
+    name: 'iOS Build (${{ matrix.sdk }})'
+    needs: changes
+    if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.cmake == 'true' || needs.changes.outputs.ci == 'true' || needs.changes.outputs.workflows == 'true' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - sdk: iphoneos
+            arch: arm64
+            os: macos-latest
+          - sdk: iphonesimulator
+            arch: x86_64
+            os: macos-latest
+
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Build Environment
+        uses: ./.github/workflows/shared/setup-build-env
+        with:
+          cmake-version: ${{ env.CMAKE_VERSION }}
+          enable-ccache: 'false'
+          build-type: 'Release'
+          compiler: 'clang'
+
+      - name: Setup Xcode
+        run: |
+          sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+          xcodebuild -version
+          xcodebuild -showsdks
+
+      - name: Configure iOS build
+        run: |
+          cmake -S . -B build-ios \
+            -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/ios.cmake \
+            -DCMAKE_SYSTEM_NAME=iOS \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0 \
+            -DCMAKE_OSX_SYSROOT=${{ matrix.sdk }} \
+            -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch }} \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DQTFORGE_BUILD_TESTS=OFF \
+            -DQTFORGE_BUILD_EXAMPLES=OFF \
+            -DQTFORGE_BUILD_SHARED=OFF \
+            -DQTFORGE_BUILD_STATIC=ON \
+            -G Xcode
+
+      - name: Build iOS target
+        run: |
+          cmake --build build-ios --config Release --parallel
+
+      - name: Upload iOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: qtforge-ios-${{ matrix.sdk }}-${{ github.run_number }}
+          path: |
+            build-ios/Release-${{ matrix.sdk }}/
+            build-ios/*.xcodeproj/
+          retention-days: 30

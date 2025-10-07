@@ -112,6 +112,15 @@ Start your QtForge journey with these foundational examples.
 - ✅ Default and custom configurations
 - ✅ Configuration persistence
 
+
+#### [composition-basics/](01-fundamentals/composition-basics/)
+
+**Composition data model** - Understand how to define compositions
+
+- ✅ Define PluginComposition and bindings
+- ✅ Validate composition config
+- ✅ Serialize to/from JSON
+
 ### 🔄 02-communication/ - Inter-Plugin Communication
 
 Master the art of plugin communication and coordination.
@@ -208,6 +217,23 @@ Advanced features for specialized use cases.
 - ✅ REST API implementation
 - ✅ SSL/TLS security
 - ✅ Network diagnostics and monitoring
+
+
+#### [threading/](04-specialized/threading/)
+
+**Thread pool and async tasks** - Concurrency utilities
+
+- ✅ Configure PluginThreadPool
+- ✅ Submit tasks and await completion
+- ✅ Gather statistics and monitoring
+
+#### [transactions/](04-specialized/transactions/)
+
+**Transactional operations** - Two-phase commit patterns
+
+- ✅ Begin/prepare/commit transactions
+- ✅ Add custom operations with rollback
+- ✅ Handle timeouts and failure paths
 
 #### [ui-integration/](04-specialized/ui-integration/)
 

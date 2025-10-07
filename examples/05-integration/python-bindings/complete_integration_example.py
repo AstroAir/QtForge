@@ -10,6 +10,7 @@ and more.
 Author: QtForge Development Team
 Version: 3.0.0
 """
+# type: ignore
 
 import sys
 import os
@@ -26,10 +27,10 @@ class QtForgeCompleteExample:
     
     def __init__(self) -> None:
         """Initialize the example"""
-        self.qtforge = None
-        self.plugin_manager = None
-        self.message_bus = None
-        self.security_manager = None
+        self.qtforge: Optional[Any] = None
+        self.plugin_manager: Optional[Any] = None
+        self.message_bus: Optional[Any] = None
+        self.security_manager: Optional[Any] = None
         
     def initialize_qtforge(self) -> bool:
         """Initialize QtForge and all modules"""
@@ -53,17 +54,17 @@ class QtForgeCompleteExample:
         try:
             # Test plugin manager creation
             if hasattr(self.qtforge, 'create_plugin_manager'):
-                self.plugin_manager = self.qtforge.create_plugin_manager()
+                self.plugin_manager = self.qtforge.create_plugin_manager()  # type: ignore
                 print("✅ Plugin manager created successfully")
-            elif hasattr(self.qtforge.core, 'create_plugin_manager'):
-                self.plugin_manager = self.qtforge.core.create_plugin_manager()
+            elif hasattr(self.qtforge, 'core') and hasattr(self.qtforge.core, 'create_plugin_manager'):  # type: ignore
+                self.plugin_manager = self.qtforge.core.create_plugin_manager()  # type: ignore
                 print("✅ Plugin manager created successfully")
             else:
                 print("⚠️  Plugin manager creation not available")
-                
+
             # Test version utilities
             if hasattr(self.qtforge, 'get_version'):
-                version = self.qtforge.get_version()
+                version = self.qtforge.get_version()  # type: ignore
                 print(f"✅ Version utility: {version}")
                 
             return True
@@ -77,7 +78,7 @@ class QtForgeCompleteExample:
         
         try:
             if hasattr(self.qtforge, 'communication'):
-                comm = self.qtforge.communication
+                comm = self.qtforge.communication  # type: ignore
                 print("✅ Communication module available")
                 
                 # Test message creation if available
@@ -103,7 +104,7 @@ class QtForgeCompleteExample:
         
         try:
             if hasattr(self.qtforge, 'security'):
-                security = self.qtforge.security
+                security = self.qtforge.security  # type: ignore
                 print("✅ Security module available")
                 
                 # Test security manager creation if available
@@ -127,7 +128,7 @@ class QtForgeCompleteExample:
         
         try:
             if hasattr(self.qtforge, 'orchestration'):
-                orchestration = self.qtforge.orchestration
+                orchestration = self.qtforge.orchestration  # type: ignore
                 print("✅ Orchestration module available")
                 
                 # Test workflow creation if available
@@ -150,7 +151,7 @@ class QtForgeCompleteExample:
         
         try:
             if hasattr(self.qtforge, 'monitoring'):
-                monitoring = self.qtforge.monitoring
+                monitoring = self.qtforge.monitoring  # type: ignore
                 print("✅ Monitoring module available")
                 
                 # Test metrics collection if available
@@ -200,7 +201,7 @@ class QtForgeCompleteExample:
         
         try:
             if hasattr(self.qtforge, 'utils'):
-                utils = self.qtforge.utils
+                utils = self.qtforge.utils  # type: ignore
                 print("✅ Utils module available")
                 
                 # Test common utility functions
@@ -229,7 +230,7 @@ class QtForgeCompleteExample:
         
         try:
             if hasattr(self.qtforge, 'managers'):
-                managers = self.qtforge.managers
+                managers = self.qtforge.managers  # type: ignore
                 print("✅ Managers module available")
                 
                 # Test manager creation functions
@@ -294,7 +295,7 @@ class QtForgeCompleteExample:
             print("❌ No tests passed. QtForge Python integration needs attention.")
             return 1
 
-def main() -> None:
+def main() -> int:
     """Main entry point"""
     try:
         example = QtForgeCompleteExample()

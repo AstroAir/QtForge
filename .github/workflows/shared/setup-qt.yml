@@ -1,0 +1,66 @@
+name: 'Setup Qt Environment'
+description: 'Reusable action for Qt installation and caching across platforms'
+
+inputs:
+  qt-version:
+    description: 'Qt version to install'
+    required: false
+    default: '6.5.3'
+  qt-arch:
+    description: 'Qt architecture'
+    required: true
+  cache-key-suffix:
+    description: 'Additional suffix for cache key'
+    required: false
+    default: ''
+  setup-python:
+    description: 'Whether to setup Python'
+    required: false
+    default: 'false'
+  qt-modules:
+    description: 'Additional Qt modules to install'
+    required: false
+    default: 'qtnetworkauth qtwebsockets'
+
+outputs:
+  qt-dir:
+    description: 'Qt installation directory'
+    value: ${{ steps.install-qt.outputs.qt-dir }}
+  cache-hit:
+    description: 'Whether Qt cache was hit'
+    value: ${{ steps.cache-qt.outputs.cache-hit }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Cache Qt
+      id: cache-qt
+      uses: actions/cache@v4
+      with:
+        path: ../Qt
+        key: ${{ runner.os }}-QtCache-${{ inputs.qt-version }}-${{ inputs.qt-arch }}-${{ inputs.cache-key-suffix }}-v3
+        restore-keys: |
+          ${{ runner.os }}-QtCache-${{ inputs.qt-version }}-${{ inputs.qt-arch }}-
+          ${{ runner.os }}-QtCache-${{ inputs.qt-version }}-
+
+    - name: Install Qt
+      id: install-qt
+      uses: jurplel/install-qt-action@v4
+      with:
+        version: ${{ inputs.qt-version }}
+        arch: ${{ inputs.qt-arch }}
+        cache: ${{ steps.cache-qt.outputs.cache-hit }}
+        setup-python: ${{ inputs.setup-python }}
+        modules: ${{ inputs.qt-modules }}
+
+    - name: Qt Installation Summary
+      shell: bash
+      run: |
+        echo "## Qt Installation Summary" >> $GITHUB_STEP_SUMMARY
+        echo "- **Version**: ${{ inputs.qt-version }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Architecture**: ${{ inputs.qt-arch }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Cache Hit**: ${{ steps.cache-qt.outputs.cache-hit }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Installation Directory**: ${{ steps.install-qt.outputs.qt-dir }}" >> $GITHUB_STEP_SUMMARY
+        if [ "${{ inputs.qt-modules }}" != "" ]; then
+          echo "- **Additional Modules**: ${{ inputs.qt-modules }}" >> $GITHUB_STEP_SUMMARY
+        fi

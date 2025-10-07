@@ -11,9 +11,7 @@
 #include <optional>
 #include <qtplugin/interfaces/core/plugin_interface.hpp>
 #include <qtplugin/utils/error_handling.hpp>
-#include <shared_mutex>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 namespace qtplugin {
@@ -111,6 +109,7 @@ public:
  *
  * Provides thread-safe storage and access to plugin information.
  * Uses shared_mutex for efficient concurrent read access.
+ * Implements the Pimpl idiom for reduced compilation dependencies.
  */
 class PluginRegistry : public QObject, public IPluginRegistry {
     Q_OBJECT
@@ -118,6 +117,15 @@ class PluginRegistry : public QObject, public IPluginRegistry {
 public:
     explicit PluginRegistry(QObject* parent = nullptr);
     ~PluginRegistry() override;
+
+    // Copy constructor
+    PluginRegistry(const PluginRegistry& other);
+    // Copy assignment operator
+    PluginRegistry& operator=(const PluginRegistry& other);
+    // Move constructor
+    PluginRegistry(PluginRegistry&& other) noexcept;
+    // Move assignment operator
+    PluginRegistry& operator=(PluginRegistry&& other) noexcept;
 
     // IPluginRegistry interface
     qtplugin::expected<void, PluginError> register_plugin(
@@ -160,11 +168,10 @@ signals:
     void plugin_info_updated(const QString& plugin_id);
 
 private:
-    mutable std::shared_mutex m_plugins_mutex;
-    std::unordered_map<std::string, std::unique_ptr<PluginInfo>> m_plugins;
-
-    // Helper methods
-    PluginInfo create_plugin_info_copy(const PluginInfo& original) const;
+    // Forward declaration of implementation class
+    class Impl;
+    // Pimpl pointer using Qt naming convention
+    std::unique_ptr<Impl> d;
 };
 
 }  // namespace qtplugin

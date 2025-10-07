@@ -16,11 +16,113 @@ Q_LOGGING_CATEGORY(contractsLog, "qtplugin.contracts")
 
 namespace qtplugin::contracts {
 
+// === ServiceContract Private Implementation ===
+
+class ServiceContract::Private {
+public:
+    QString service_name;
+    ServiceVersion version;
+    QString description;
+    QString provider;
+    ServiceCapabilities capabilities{
+        static_cast<uint32_t>(ServiceCapability::Synchronous)};
+    std::unordered_map<QString, ServiceMethod> methods;
+    std::unordered_map<QString, ServiceVersion> dependencies;
+
+    Private(const QString& name, const ServiceVersion& ver)
+        : service_name(name), version(ver) {}
+
+    Private(const Private& other) = default;
+    Private& operator=(const Private& other) = default;
+    Private(Private&& other) = default;
+    Private& operator=(Private&& other) = default;
+};
+
 // === ServiceContract Implementation ===
+
+ServiceContract::ServiceContract(const QString& service_name, const ServiceVersion& version)
+    : d(std::make_unique<Private>(service_name, version)) {}
+
+ServiceContract::ServiceContract(const ServiceContract& other)
+    : d(std::make_unique<Private>(*other.d)) {}
+
+ServiceContract& ServiceContract::operator=(const ServiceContract& other) {
+    if (this != &other) {
+        *d = *other.d;
+    }
+    return *this;
+}
+
+ServiceContract::ServiceContract(ServiceContract&& other) noexcept = default;
+ServiceContract& ServiceContract::operator=(ServiceContract&& other) noexcept = default;
+ServiceContract::~ServiceContract() = default;
+
+ServiceContract& ServiceContract::set_description(const QString& desc) {
+    d->description = desc;
+    return *this;
+}
+
+ServiceContract& ServiceContract::set_provider(const QString& provider) {
+    d->provider = provider;
+    return *this;
+}
+
+ServiceContract& ServiceContract::add_method(const ServiceMethod& method) {
+    d->methods[method.name] = method;
+    return *this;
+}
+
+ServiceContract& ServiceContract::set_capabilities(ServiceCapabilities caps) {
+    d->capabilities = caps;
+    return *this;
+}
+
+ServiceContract& ServiceContract::add_dependency(const QString& service_name,
+                                                  const ServiceVersion& min_version) {
+    d->dependencies[service_name] = min_version;
+    return *this;
+}
+
+const QString& ServiceContract::service_name() const noexcept {
+    return d->service_name;
+}
+
+const ServiceVersion& ServiceContract::version() const noexcept {
+    return d->version;
+}
+
+const QString& ServiceContract::description() const noexcept {
+    return d->description;
+}
+
+const QString& ServiceContract::provider() const noexcept {
+    return d->provider;
+}
+
+ServiceCapabilities ServiceContract::capabilities() const noexcept {
+    return d->capabilities;
+}
+
+const std::unordered_map<QString, ServiceMethod>& ServiceContract::methods() const noexcept {
+    return d->methods;
+}
+
+const std::unordered_map<QString, ServiceVersion>& ServiceContract::dependencies() const noexcept {
+    return d->dependencies;
+}
+
+bool ServiceContract::has_method(const QString& method_name) const {
+    return d->methods.find(method_name) != d->methods.end();
+}
+
+const ServiceMethod* ServiceContract::get_method(const QString& method_name) const {
+    auto it = d->methods.find(method_name);
+    return it != d->methods.end() ? &it->second : nullptr;
+}
 
 qtplugin::expected<void, PluginError> ServiceContract::validate() const {
     // Validate service name
-    if (m_service_name.isEmpty()) {
+    if (d->service_name.isEmpty()) {
         return make_error<void>(PluginErrorCode::InvalidConfiguration,
                                 "Service name cannot be empty");
     }
@@ -28,20 +130,20 @@ qtplugin::expected<void, PluginError> ServiceContract::validate() const {
     // Validate service name format (should be like com.example.service)
     QRegularExpression name_pattern(
         R"(^[a-zA-Z][a-zA-Z0-9]*(\.[a-zA-Z][a-zA-Z0-9]*)*$)");
-    if (!name_pattern.match(m_service_name).hasMatch()) {
+    if (!name_pattern.match(d->service_name).hasMatch()) {
         return make_error<void>(
             PluginErrorCode::InvalidConfiguration,
-            "Invalid service name format: " + m_service_name.toStdString());
+            "Invalid service name format: " + d->service_name.toStdString());
     }
 
     // Validate methods
-    if (m_methods.empty()) {
+    if (d->methods.empty()) {
         return make_error<void>(
             PluginErrorCode::InvalidConfiguration,
             "Service contract must have at least one method");
     }
 
-    for (const auto& [method_name, method] : m_methods) {
+    for (const auto& [method_name, method] : d->methods) {
         if (method_name.isEmpty()) {
             return make_error<void>(PluginErrorCode::InvalidConfiguration,
                                     "Method name cannot be empty");
@@ -64,8 +166,8 @@ qtplugin::expected<void, PluginError> ServiceContract::validate() const {
 qtplugin::expected<void, PluginError> ServiceContract::validate_method_call(
     const QString& method_name, const QJsonObject& parameters) const {
     // Check if method exists
-    auto method_it = m_methods.find(method_name);
-    if (method_it == m_methods.end()) {
+    auto method_it = d->methods.find(method_name);
+    if (method_it == d->methods.end()) {
         return make_error<void>(
             PluginErrorCode::CommandNotFound,
             "Method not found: " + method_name.toStdString());
@@ -131,17 +233,17 @@ qtplugin::expected<void, PluginError> ServiceContract::validate_method_call(
 
 QJsonObject ServiceContract::to_json() const {
     QJsonObject json;
-    json["service_name"] = m_service_name;
-    json["version"] = QJsonObject{{"major", static_cast<int>(m_version.major)},
-                                  {"minor", static_cast<int>(m_version.minor)},
-                                  {"patch", static_cast<int>(m_version.patch)}};
-    json["description"] = m_description;
-    json["provider"] = m_provider;
-    json["capabilities"] = static_cast<int>(m_capabilities);
+    json["service_name"] = d->service_name;
+    json["version"] = QJsonObject{{"major", static_cast<int>(d->version.major)},
+                                  {"minor", static_cast<int>(d->version.minor)},
+                                  {"patch", static_cast<int>(d->version.patch)}};
+    json["description"] = d->description;
+    json["provider"] = d->provider;
+    json["capabilities"] = static_cast<int>(d->capabilities);
 
     // Serialize methods
     QJsonObject methods_json;
-    for (const auto& [name, method] : m_methods) {
+    for (const auto& [name, method] : d->methods) {
         QJsonObject method_json;
         method_json["name"] = method.name;
         method_json["description"] = method.description;
@@ -176,7 +278,7 @@ QJsonObject ServiceContract::to_json() const {
 
     // Serialize dependencies
     QJsonObject deps_json;
-    for (const auto& [service_name, version] : m_dependencies) {
+    for (const auto& [service_name, version] : d->dependencies) {
         deps_json[service_name] =
             QJsonObject{{"major", static_cast<int>(version.major)},
                         {"minor", static_cast<int>(version.minor)},
@@ -292,7 +394,35 @@ qtplugin::expected<ServiceContract, PluginError> ServiceContract::from_json(
     return contract;
 }
 
+// === ServiceContractRegistry Private Implementation ===
+
+class ServiceContractRegistry::Private {
+public:
+    struct ContractInfo {
+        QString plugin_id;
+        ServiceContract contract;
+        std::chrono::system_clock::time_point registered_at;
+
+        ContractInfo() = default;
+        ContractInfo(const QString& id, const ServiceContract& c)
+            : plugin_id(id),
+              contract(c),
+              registered_at(std::chrono::system_clock::now()) {}
+    };
+
+    mutable std::shared_mutex mutex;
+    std::unordered_map<QString, std::vector<ContractInfo>>
+        contracts;  // service_name -> contracts
+    std::unordered_map<QString, std::vector<QString>>
+        plugin_services;  // plugin_id -> service_names
+};
+
 // === ServiceContractRegistry Implementation ===
+
+ServiceContractRegistry::ServiceContractRegistry()
+    : d(std::make_unique<Private>()) {}
+
+ServiceContractRegistry::~ServiceContractRegistry() = default;
 
 ServiceContractRegistry& ServiceContractRegistry::instance() {
     static ServiceContractRegistry registry;
@@ -308,12 +438,12 @@ ServiceContractRegistry::register_contract(const QString& plugin_id,
         return validation_result;
     }
 
-    std::unique_lock lock(m_mutex);
+    std::unique_lock lock(d->mutex);
 
     const QString& service_name = contract.service_name();
 
     // Check for existing contract with same version
-    auto& contracts = m_contracts[service_name];
+    auto& contracts = d->contracts[service_name];
     for (const auto& info : contracts) {
         if (info.contract.version().major == contract.version().major &&
             info.contract.version().minor == contract.version().minor &&
@@ -325,10 +455,10 @@ ServiceContractRegistry::register_contract(const QString& plugin_id,
     }
 
     // Add the contract
-    ContractInfo info(plugin_id, contract);
+    Private::ContractInfo info(plugin_id, contract);
 
     contracts.push_back(info);
-    m_plugin_services[plugin_id].push_back(service_name);
+    d->plugin_services[plugin_id].push_back(service_name);
 
     qCDebug(contractsLog) << "Registered service contract:" << service_name
                           << "version"
@@ -342,10 +472,10 @@ ServiceContractRegistry::register_contract(const QString& plugin_id,
 qtplugin::expected<void, PluginError>
 ServiceContractRegistry::unregister_contract(const QString& plugin_id,
                                              const QString& service_name) {
-    std::unique_lock lock(m_mutex);
+    std::unique_lock lock(d->mutex);
 
-    auto contracts_it = m_contracts.find(service_name);
-    if (contracts_it == m_contracts.end()) {
+    auto contracts_it = d->contracts.find(service_name);
+    if (contracts_it == d->contracts.end()) {
         return make_error<void>(
             PluginErrorCode::PluginNotFound,
             "Service not found: " + service_name.toStdString());
@@ -353,7 +483,7 @@ ServiceContractRegistry::unregister_contract(const QString& plugin_id,
 
     auto& contracts = contracts_it->second;
     auto contract_it = std::find_if(contracts.begin(), contracts.end(),
-                                    [&plugin_id](const ContractInfo& info) {
+                                    [&plugin_id](const Private::ContractInfo& info) {
                                         return info.plugin_id == plugin_id;
                                     });
 
@@ -366,20 +496,20 @@ ServiceContractRegistry::unregister_contract(const QString& plugin_id,
     contracts.erase(contract_it);
 
     // Remove from plugin services
-    auto plugin_it = m_plugin_services.find(plugin_id);
-    if (plugin_it != m_plugin_services.end()) {
+    auto plugin_it = d->plugin_services.find(plugin_id);
+    if (plugin_it != d->plugin_services.end()) {
         auto& services = plugin_it->second;
         services.erase(
             std::remove(services.begin(), services.end(), service_name),
             services.end());
         if (services.empty()) {
-            m_plugin_services.erase(plugin_it);
+            d->plugin_services.erase(plugin_it);
         }
     }
 
     // Remove service entry if no contracts left
     if (contracts.empty()) {
-        m_contracts.erase(contracts_it);
+        d->contracts.erase(contracts_it);
     }
 
     qCDebug(contractsLog) << "Unregistered service contract:" << service_name
@@ -391,10 +521,10 @@ ServiceContractRegistry::unregister_contract(const QString& plugin_id,
 qtplugin::expected<ServiceContract, PluginError>
 ServiceContractRegistry::get_contract(const QString& service_name,
                                       const ServiceVersion& min_version) const {
-    std::shared_lock lock(m_mutex);
+    std::shared_lock lock(d->mutex);
 
-    auto contracts_it = m_contracts.find(service_name);
-    if (contracts_it == m_contracts.end()) {
+    auto contracts_it = d->contracts.find(service_name);
+    if (contracts_it == d->contracts.end()) {
         return make_error<ServiceContract>(
             PluginErrorCode::PluginNotFound,
             "Service not found: " + service_name.toStdString());
@@ -403,7 +533,7 @@ ServiceContractRegistry::get_contract(const QString& service_name,
     const auto& contracts = contracts_it->second;
 
     // Find the best matching version
-    const ContractInfo* best_match = nullptr;
+    const Private::ContractInfo* best_match = nullptr;
     for (const auto& info : contracts) {
         if (info.contract.version().is_compatible_with(min_version)) {
             if (!best_match || info.contract.version().minor >
@@ -426,12 +556,12 @@ ServiceContractRegistry::get_contract(const QString& service_name,
 std::vector<ServiceContract>
 ServiceContractRegistry::find_contracts_by_capability(
     ServiceCapability capability) const {
-    std::shared_lock lock(m_mutex);
+    std::shared_lock lock(d->mutex);
     std::vector<ServiceContract> result;
 
     uint32_t capability_flag = static_cast<uint32_t>(capability);
 
-    for (const auto& [service_name, contracts] : m_contracts) {
+    for (const auto& [service_name, contracts] : d->contracts) {
         for (const auto& info : contracts) {
             if (info.contract.capabilities() & capability_flag) {
                 result.push_back(info.contract);
@@ -443,11 +573,11 @@ ServiceContractRegistry::find_contracts_by_capability(
 }
 
 std::vector<QString> ServiceContractRegistry::list_services() const {
-    std::shared_lock lock(m_mutex);
+    std::shared_lock lock(d->mutex);
     std::vector<QString> services;
-    services.reserve(m_contracts.size());
+    services.reserve(d->contracts.size());
 
-    for (const auto& [service_name, _] : m_contracts) {
+    for (const auto& [service_name, _] : d->contracts) {
         services.push_back(service_name);
     }
 
@@ -455,10 +585,10 @@ std::vector<QString> ServiceContractRegistry::list_services() const {
 }
 
 std::vector<QString> ServiceContractRegistry::list_providers() const {
-    std::shared_lock lock(m_mutex);
+    std::shared_lock lock(d->mutex);
     std::vector<QString> providers;
 
-    for (const auto& [plugin_id, _] : m_plugin_services) {
+    for (const auto& [plugin_id, _] : d->plugin_services) {
         providers.push_back(plugin_id);
     }
 
@@ -468,7 +598,7 @@ std::vector<QString> ServiceContractRegistry::list_providers() const {
 qtplugin::expected<void, PluginError>
 ServiceContractRegistry::validate_dependencies(
     const ServiceContract& contract) const {
-    std::shared_lock lock(m_mutex);
+    std::shared_lock lock(d->mutex);
 
     for (const auto& [dep_service, min_version] : contract.dependencies()) {
         auto dep_result = get_contract(dep_service, min_version);
@@ -496,14 +626,14 @@ ServiceContractRegistry::validate_compatibility(
 std::vector<ServiceContract>
 ServiceContractRegistry::discover_services_for_plugin(
     const QString& plugin_id) const {
-    std::shared_lock lock(m_mutex);
+    std::shared_lock lock(d->mutex);
     std::vector<ServiceContract> result;
 
-    auto plugin_it = m_plugin_services.find(plugin_id);
-    if (plugin_it != m_plugin_services.end()) {
+    auto plugin_it = d->plugin_services.find(plugin_id);
+    if (plugin_it != d->plugin_services.end()) {
         for (const QString& service_name : plugin_it->second) {
-            auto contracts_it = m_contracts.find(service_name);
-            if (contracts_it != m_contracts.end()) {
+            auto contracts_it = d->contracts.find(service_name);
+            if (contracts_it != d->contracts.end()) {
                 for (const auto& info : contracts_it->second) {
                     if (info.plugin_id == plugin_id) {
                         result.push_back(info.contract);
@@ -523,9 +653,9 @@ qtplugin::expected<QString, PluginError> ServiceContractRegistry::find_provider(
         return qtplugin::unexpected<PluginError>(contract_result.error());
     }
 
-    std::shared_lock lock(m_mutex);
-    auto contracts_it = m_contracts.find(service_name);
-    if (contracts_it != m_contracts.end()) {
+    std::shared_lock lock(d->mutex);
+    auto contracts_it = d->contracts.find(service_name);
+    if (contracts_it != d->contracts.end()) {
         for (const auto& info : contracts_it->second) {
             if (info.contract.version().is_compatible_with(min_version)) {
                 return info.plugin_id;

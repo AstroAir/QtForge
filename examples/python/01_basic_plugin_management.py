@@ -13,6 +13,7 @@ using the QtForge Python bindings, including:
 import sys
 import os
 from pathlib import Path
+from typing import Any
 
 # Add the build directory to Python path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "build"))
@@ -30,7 +31,7 @@ except ImportError as e:
     sys.exit(1)
 
 
-def demonstrate_plugin_manager_creation() -> None:
+def demonstrate_plugin_manager_creation() -> Any:
     """Demonstrate creating and configuring a plugin manager."""
     print("\n" + "="*50)
     print("🔧 Creating Plugin Manager")
@@ -99,7 +100,7 @@ def demonstrate_plugin_loading(manager) -> None:
             print(f"❌ Failed to load plugin: {e}")
 
 
-def demonstrate_plugin_enumeration(manager) -> None:
+def demonstrate_plugin_enumeration(manager) -> Any:
     """Demonstrate enumerating loaded plugins."""
     print("\n" + "="*50)
     print("📋 Plugin Enumeration")
@@ -129,7 +130,7 @@ def demonstrate_plugin_enumeration(manager) -> None:
         return []
 
 
-def demonstrate_plugin_registry() -> None:
+def demonstrate_plugin_registry() -> Any:
     """Demonstrate plugin registry operations."""
     print("\n" + "="*50)
     print("📚 Plugin Registry Operations")
@@ -167,7 +168,7 @@ def demonstrate_plugin_registry() -> None:
         return None
 
 
-def demonstrate_plugin_lifecycle() -> None:
+def demonstrate_plugin_lifecycle() -> Any:
     """Demonstrate plugin lifecycle management."""
     print("\n" + "="*50)
     print("🔄 Plugin Lifecycle Management")
@@ -214,7 +215,7 @@ def demonstrate_plugin_lifecycle() -> None:
         return None
 
 
-def demonstrate_plugin_dependencies() -> None:
+def demonstrate_plugin_dependencies() -> Any:
     """Demonstrate plugin dependency resolution."""
     print("\n" + "="*50)
     print("🔗 Plugin Dependency Resolution")
@@ -228,8 +229,12 @@ def demonstrate_plugin_dependencies() -> None:
         # Demonstrate dependency resolution with empty list
         print("\n🔍 Resolving dependencies for empty plugin list...")
         try:
-            resolved = resolver.resolve_dependencies([])
-            print(f"✅ Resolved dependencies: {len(resolved)} plugins")
+            resolve_func = getattr(resolver, 'resolve_dependencies', None)
+            if resolve_func:
+                resolved = resolve_func([])
+                print(f"✅ Resolved dependencies: {len(resolved)} plugins")
+            else:
+                print("⚠️  resolve_dependencies method not available")
         except Exception as e:
             print(f"❌ Dependency resolution failed: {e}")
         
@@ -249,8 +254,12 @@ def demonstrate_plugin_dependencies() -> None:
                 
                 # Attempt dependency resolution
                 try:
-                    resolved = resolver.resolve_dependencies([metadata1, metadata2])
-                    print(f"✅ Resolved {len(resolved)} plugins with dependencies")
+                    resolve_func = getattr(resolver, 'resolve_dependencies', None)
+                    if resolve_func:
+                        resolved = resolve_func([metadata1, metadata2])
+                        print(f"✅ Resolved {len(resolved)} plugins with dependencies")
+                    else:
+                        print("⚠️  resolve_dependencies method not available")
                 except Exception as e:
                     print(f"⚠️  Dependency resolution with metadata failed: {e}")
                     
@@ -336,10 +345,10 @@ def demonstrate_error_handling() -> None:
             print(f"✅ Correctly caught exception for empty path: {type(e).__name__}: {e}")
         
         try:
-            result = manager.load_plugin(None)  # None path
-            print(f"⚠️  Unexpected success with None path: {result}")
+            result = manager.load_plugin("")  # Empty path instead of None
+            print(f"⚠️  Unexpected success with empty path: {result}")
         except Exception as e:
-            print(f"✅ Correctly caught exception for None path: {type(e).__name__}: {e}")
+            print(f"✅ Correctly caught exception for empty path: {type(e).__name__}: {e}")
             
     except Exception as e:
         print(f"❌ Failed to create manager for error testing: {e}")

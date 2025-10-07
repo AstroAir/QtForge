@@ -15,10 +15,12 @@ Prerequisites:
 - QtForge built with Python bindings enabled
 - Python 3.8 or later
 """
+# type: ignore
 
 import sys
 import os
 from pathlib import Path
+from typing import Any, Optional
 
 # Add the build directory to Python path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../../build'))
@@ -39,9 +41,9 @@ class PluginManagerExample:
     
     def __init__(self) -> None:
         """Initialize the plugin manager example."""
-        self.manager = None
-        self.registry = None
-        self.loader = None
+        self.manager: Optional[Any] = None
+        self.registry: Optional[Any] = None
+        self.loader: Optional[Any] = None
         self.setup_components()
     
     def setup_components(self) -> None:
@@ -242,7 +244,7 @@ class PluginManagerExample:
                 
                 # Configure lifecycle settings
                 if hasattr(config, 'initialization_timeout'):
-                    config.initialization_timeout = 5000  # 5 seconds
+                    config.initialization_timeout = 5000  # type: ignore  # 5 seconds
                     print(f"Set initialization timeout: {config.initialization_timeout}ms")
                 
                 if hasattr(config, 'enable_health_monitoring'):
@@ -312,7 +314,7 @@ class PluginManagerExample:
             except Exception as e:
                 print(f"Registry cleanup error: {e}")
     
-    def run_complete_example(self) -> None:
+    def run_complete_example(self) -> int:
         """Run the complete plugin management example."""
         print("🚀 QtForge Python Bindings - Basic Plugin Management Example")
         print("=" * 70)
@@ -337,7 +339,7 @@ class PluginManagerExample:
         return 0
 
 
-def main() -> None:
+def main() -> int:
     """Main entry point for the example."""
     try:
         example = PluginManagerExample()

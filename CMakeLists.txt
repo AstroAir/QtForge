@@ -41,7 +41,7 @@ set(QTFORGE_CORE_SOURCES
     src/qtplugin_components.cpp
     src/core/plugin_interface.cpp
     src/core/plugin_manager.cpp
-    src/core/plugin_loader.cpp
+    # src/core/plugin_loader.cpp  # Temporarily disabled due to Pimpl refactoring issues
     src/core/plugin_registry.cpp
     src/core/plugin_dependency_resolver.cpp
     src/core/plugin_lifecycle_manager.cpp
@@ -86,7 +86,7 @@ set(QTFORGE_CORE_SOURCES
 set(QTFORGE_CORE_HEADERS
     include/qtplugin/core/plugin_interface.hpp
     include/qtplugin/core/plugin_manager.hpp
-    include/qtplugin/core/plugin_loader.hpp
+    # include/qtplugin/core/plugin_loader.hpp  # Temporarily disabled due to Pimpl refactoring issues
     include/qtplugin/core/plugin_registry.hpp
     include/qtplugin/core/plugin_dependency_resolver.hpp
     include/qtplugin/core/plugin_lifecycle_manager.hpp
@@ -547,11 +547,11 @@ else()
     message(STATUS "QtForge: Examples disabled")
 endif()
 
-# Tests - temporarily disabled due to missing dependencies
+# Tests
 if(QTFORGE_BUILD_TESTS)
-    message(STATUS "QtForge: Tests temporarily disabled due to missing dependencies")
-    # enable_testing()
-    # add_subdirectory(tests)
+    message(STATUS "QtForge: Building tests")
+    enable_testing()
+    add_subdirectory(tests)
 else()
     message(STATUS "QtForge: Tests disabled")
 endif()

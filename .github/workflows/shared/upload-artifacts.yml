@@ -1,0 +1,79 @@
+name: 'Upload Artifacts'
+description: 'Reusable action for uploading build artifacts and test results'
+
+inputs:
+  artifact-name-prefix:
+    description: 'Prefix for artifact names'
+    required: false
+    default: 'qtforge'
+  build-artifacts:
+    description: 'Whether to upload build artifacts'
+    required: false
+    default: 'true'
+  test-results:
+    description: 'Whether to upload test results'
+    required: false
+    default: 'true'
+  retention-days-build:
+    description: 'Retention days for build artifacts'
+    required: false
+    default: '3'
+  retention-days-test:
+    description: 'Retention days for test results'
+    required: false
+    default: '14'
+  compression-level:
+    description: 'Compression level for artifacts'
+    required: false
+    default: '6'
+
+outputs:
+  build-artifact-name:
+    description: 'Name of uploaded build artifact'
+    value: ${{ steps.upload-build.outputs.artifact-name }}
+  test-artifact-name:
+    description: 'Name of uploaded test artifact'
+    value: ${{ steps.upload-test.outputs.artifact-name }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Upload build artifacts
+      id: upload-build
+      if: inputs.build-artifacts == 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.artifact-name-prefix }}-${{ runner.os }}-${{ github.run_number }}-build
+        path: |
+          install/
+          build/compile_commands.json
+        retention-days: ${{ inputs.retention-days-build }}
+        compression-level: ${{ inputs.compression-level }}
+        if-no-files-found: warn
+
+    - name: Upload test results
+      id: upload-test
+      if: inputs.test-results == 'true' && always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.artifact-name-prefix }}-${{ runner.os }}-${{ github.run_number }}-test-results
+        path: |
+          build/Testing/
+          build/test-results.xml
+        retention-days: ${{ inputs.retention-days-test }}
+        compression-level: 9
+        if-no-files-found: ignore
+
+    - name: Artifact Summary
+      shell: bash
+      run: |
+        echo "## Artifact Summary" >> $GITHUB_STEP_SUMMARY
+        if [ "${{ inputs.build-artifacts }}" = "true" ]; then
+          echo "- **Build Artifacts**: ${{ inputs.artifact-name-prefix }}-${{ runner.os }}-${{ github.run_number }}-build" >> $GITHUB_STEP_SUMMARY
+          echo "  - Retention: ${{ inputs.retention-days-build }} days" >> $GITHUB_STEP_SUMMARY
+        fi
+        if [ "${{ inputs.test-results }}" = "true" ]; then
+          echo "- **Test Results**: ${{ inputs.artifact-name-prefix }}-${{ runner.os }}-${{ github.run_number }}-test-results" >> $GITHUB_STEP_SUMMARY
+          echo "  - Retention: ${{ inputs.retention-days-test }} days" >> $GITHUB_STEP_SUMMARY
+        fi
+        echo "- **Compression Level**: ${{ inputs.compression-level }}" >> $GITHUB_STEP_SUMMARY

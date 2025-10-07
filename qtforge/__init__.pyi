@@ -9,41 +9,13 @@ from typing import Any, Tuple, Optional, Union, List, Dict, Callable
 from typing_extensions import Self
 from datetime import datetime
 import json
+from pathlib import Path
 
 # Module-level attributes
 __version__: str
 __version_major__: int
 __version_minor__: int
 __version_patch__: int
-
-# Core classes
-class PluginManager:
-    """Plugin manager for loading and managing plugins."""
-    def __init__(self) -> None: ...
-    def plugin_count(self) -> int: ...
-
-class Version:
-    """Version class for handling semantic versioning."""
-    def __init__(self, *args: Union[int, str]) -> None: ...  # Supports both (major, minor, patch) and (version_string)
-    def __str__(self) -> str: ...
-    def __lt__(self, other: Version) -> bool: ...
-    def __le__(self, other: Version) -> bool: ...
-    def __gt__(self, other: Version) -> bool: ...
-    def __ge__(self, other: Version) -> bool: ...
-    def __eq__(self, other: object) -> bool: ...
-    def __ne__(self, other: object) -> bool: ...
-
-class PluginMetadata:
-    """Plugin metadata class."""
-    def __init__(self) -> None: ...
-    name: str
-    version: Union[str, Version]
-    description: str
-    author: str
-
-class PluginError(Exception):
-    """Plugin error exception."""
-    def __init__(self, code: int, message: str) -> None: ...
 
 class PluginErrorCode:
     """Plugin error codes."""
@@ -53,11 +25,11 @@ class PluginErrorCode:
     InvalidArgument: int
 
 # Module-level functions
-def version() -> str:
+def get_version() -> str:
     """Get QtForge version string."""
     ...
 
-def version_info() -> Tuple[int, int, int]:
+def get_version_info() -> Tuple[int, int, int]:
     """Get QtForge version as tuple (major, minor, patch)."""
     ...
 
@@ -65,49 +37,53 @@ def test_function() -> str:
     """Test function for verifying bindings work."""
     ...
 
-def get_version() -> str:
-    """Get version string (alias for version())."""
+def get_build_info() -> Dict[str, Any]:
+    """Get comprehensive build and system information."""
     ...
 
-def create_plugin_manager() -> PluginManager:
-    """Create a new PluginManager instance."""
+def list_available_modules() -> List[str]:
+    """List all available QtForge modules."""
     ...
 
-def load_plugin_demo(plugin_path: str) -> str:
-    """Demo function for plugin loading."""
+def test_connection() -> str:
+    """Test function to verify bindings work."""
     ...
 
-def utils_test() -> str:
-    """Test function for utils module."""
+def get_system_info() -> Dict[str, Any]:
+    """Get comprehensive system information."""
     ...
 
-def create_version(major: int, minor: int, patch: int) -> str:
-    """Create a version string from major, minor, patch numbers."""
+def create_metadata(name: str, description: str) -> Any:
+    """Create basic plugin metadata."""
     ...
 
-def parse_version(version_string: str) -> str:
-    """Parse a version string and return formatted result."""
+def get_help() -> str:
+    """Get help information about QtForge Python bindings."""
     ...
 
-def create_error(code: int, message: str) -> str:
-    """Create an error message with code and description."""
-    ...
+# Re-export core classes for convenience
+from .core import (
+    PluginManager,
+    IPlugin,
+    PluginMetadata,
+    PluginInfo,
+    PluginLoadOptions,
+    Version,
+    PluginState,
+    PluginCapability,
+    PluginPriority,
+    PluginLifecycleEvent,
+)
 
-# Submodules
-class CoreModule:
-    """Core module containing plugin system functions."""
-    def test_function(self) -> str: ...
-    def get_version(self) -> str: ...
-    def create_plugin_manager(self) -> PluginManager: ...
-    def load_plugin_demo(self, plugin_path: str) -> str: ...
-
-class UtilsModule:
-    """Utils module containing utility functions."""
-    def utils_test(self) -> str: ...
-    def create_version(self, major: int, minor: int, patch: int) -> str: ...
-    def parse_version(self, version_string: str) -> str: ...
-    def create_error(self, code: int, message: str) -> str: ...
-    def register_qt_conversions(self) -> None: ...
+# Re-export utility functions
+from .utils import (
+    utils_test,
+    test_utils,
+    create_version as utils_create_version,
+    parse_version,
+    create_error,
+    register_qt_conversions,
+)
 
 class MessageBus:
     """Message bus for inter-plugin communication."""
@@ -422,14 +398,15 @@ def create_thread_pool(max_threads: int = 4) -> Any: ...
 def create_thread_pool_manager() -> Any: ...
 
 # Module definitions
-core: CoreModule
-utils: UtilsModule
-communication: CommunicationModule
-security: SecurityModule
-managers: ManagersModule
-orchestration: Any
-monitoring: Any
-transactions: Any
-composition: Any
-marketplace: Any
-threading: Any
+from . import core
+from . import utils
+
+# Conditionally available modules (may not be present depending on build configuration)
+communication: Optional[Any]
+security: Optional[Any]
+managers: Optional[Any]
+orchestration: Optional[Any]
+monitoring: Optional[Any]
+threading: Optional[Any]
+transactions: Optional[Any]
+composition: Optional[Any]

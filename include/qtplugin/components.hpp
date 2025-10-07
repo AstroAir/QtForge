@@ -73,9 +73,9 @@
 
 // Interface components
 #include "interfaces/data/data_processor_plugin_interface.hpp"
-#include "interfaces/network_plugin_interface.hpp"
-#include "interfaces/ui_plugin_interface.hpp"
-// #include "interfaces/scripting_plugin_interface.hpp" // Temporarily disabled - requires Qt6Qml
+#include "interfaces/network/network_plugin_interface.hpp"
+#include "interfaces/ui/ui_plugin_interface.hpp"
+// #include "interfaces/scripting/scripting_plugin_interface.hpp" // Temporarily disabled - requires Qt6Qml
 #include "interfaces/interface_validator.hpp"
 
 // Manager components

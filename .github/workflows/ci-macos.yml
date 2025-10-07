@@ -1,0 +1,231 @@
+name: 'macOS CI'
+
+on:
+  push:
+    branches: [main, develop, project-organization]
+    tags: ["v*"]
+  pull_request:
+    branches: [main, develop, project-organization]
+  schedule:
+    # Run nightly builds to catch dependency issues
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+    inputs:
+      skip_tests:
+        description: 'Skip running tests'
+        required: false
+        default: false
+        type: boolean
+      build_type:
+        description: 'Build type to run'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+        - all
+        - release-only
+        - debug-only
+
+# Set default permissions to read-only for security
+permissions:
+  contents: read
+
+env:
+  QT_VERSION: "6.5.3"
+  CMAKE_VERSION: "3.27.7"
+  # Build performance optimizations
+  CCACHE_COMPRESS: "1"
+  CCACHE_COMPRESSLEVEL: "6"
+  CCACHE_MAXSIZE: "2G"
+
+jobs:
+  # Check what files changed to determine which jobs to run
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      core: ${{ steps.detect.outputs.core }}
+      cmake: ${{ steps.detect.outputs.cmake }}
+      scripts: ${{ steps.detect.outputs.scripts }}
+      ci: ${{ steps.detect.outputs.ci }}
+      workflows: ${{ steps.detect.outputs.workflows }}
+      dependencies: ${{ steps.detect.outputs.dependencies }}
+    steps:
+      - name: Detect changes
+        id: detect
+        uses: ./.github/workflows/shared/detect-changes
+
+  # macOS Build and Test
+  build-and-test:
+    name: 'macOS Build & Test (${{ matrix.arch }}-${{ matrix.build_type }})'
+    needs: changes
+    if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.cmake == 'true' || needs.changes.outputs.scripts == 'true' || needs.changes.outputs.ci == 'true' || needs.changes.outputs.workflows == 'true' || needs.changes.outputs.dependencies == 'true' }}
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        include:
+          # Intel builds
+          - os: macos-13
+            arch: x86_64
+            qt_arch: clang_64
+            cmake_preset: macos
+            build_type: Release
+            parallel_jobs: 4
+            enable_lto: true
+          - os: macos-13
+            arch: x86_64
+            qt_arch: clang_64
+            cmake_preset: macos
+            build_type: Debug
+            parallel_jobs: 2
+            enable_lto: false
+          # Apple Silicon builds
+          - os: macos-latest
+            arch: arm64
+            qt_arch: clang_64
+            cmake_preset: macos
+            build_type: Release
+            parallel_jobs: 4
+            enable_lto: true
+          - os: macos-latest
+            arch: arm64
+            qt_arch: clang_64
+            cmake_preset: macos
+            build_type: Debug
+            parallel_jobs: 2
+            enable_lto: false
+
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 50
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Qt
+        uses: ./.github/workflows/shared/setup-qt
+        with:
+          qt-version: ${{ env.QT_VERSION }}
+          qt-arch: ${{ matrix.qt_arch }}
+          cache-key-suffix: ${{ matrix.arch }}
+
+      - name: Setup Build Environment
+        uses: ./.github/workflows/shared/setup-build-env
+        with:
+          cmake-version: ${{ env.CMAKE_VERSION }}
+          enable-ccache: 'true'
+          ccache-key-suffix: ${{ matrix.arch }}
+          build-type: ${{ matrix.build_type }}
+          compiler: 'clang'
+
+      - name: Cache Dependencies
+        uses: ./.github/workflows/shared/cache-dependencies
+        with:
+          cache-key-suffix: ${{ matrix.arch }}
+          build-type: ${{ matrix.build_type }}
+          compiler: 'clang'
+
+      - name: Install Platform Dependencies
+        uses: ./.github/workflows/shared/install-platform-deps
+        with:
+          install-dev-tools: 'true'
+          install-analysis-tools: 'true'
+
+      - name: Setup Xcode
+        run: |
+          # Ensure we're using the latest Xcode
+          sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+          xcodebuild -version
+
+      - name: Build and Test
+        uses: ./.github/workflows/shared/build-and-test
+        with:
+          build-type: ${{ matrix.build_type }}
+          cmake-preset: ${{ matrix.cmake_preset }}
+          parallel-jobs: ${{ matrix.parallel_jobs }}
+          skip-tests: ${{ github.event.inputs.skip_tests }}
+          enable-lto: ${{ matrix.enable_lto }}
+          additional-cmake-args: '-G Ninja -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache'
+
+      - name: Performance Monitor
+        uses: ./.github/workflows/shared/performance-monitor
+        with:
+          build-time: ${{ env.BUILD_TIME }}
+          test-time: ${{ env.TEST_TIME }}
+          platform: 'macOS'
+          build-type: ${{ matrix.build_type }}
+          compiler: 'clang'
+
+      - name: Upload Artifacts
+        uses: ./.github/workflows/shared/upload-artifacts
+        with:
+          artifact-name-prefix: 'qtforge-macos-${{ matrix.arch }}'
+
+  # macOS Packaging (only on tags or main branch)
+  package:
+    name: 'macOS Packaging (${{ matrix.package_type }})'
+    if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main')
+    needs: build-and-test
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - package_type: DragNDrop
+            os: macos-latest
+          - package_type: TGZ
+            os: macos-latest
+
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Qt
+        uses: ./.github/workflows/shared/setup-qt
+        with:
+          qt-version: ${{ env.QT_VERSION }}
+          qt-arch: clang_64
+
+      - name: Setup Build Environment
+        uses: ./.github/workflows/shared/setup-build-env
+        with:
+          cmake-version: ${{ env.CMAKE_VERSION }}
+
+      - name: Setup Xcode
+        run: |
+          sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+          xcodebuild -version
+
+      - name: Configure for packaging
+        run: |
+          cmake -S . -B build-pkg \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DQTFORGE_BUILD_EXAMPLES=ON \
+            -DQTFORGE_BUILD_TESTS=OFF \
+            -DQTFORGE_BUILD_NETWORK=ON \
+            -DQTFORGE_BUILD_UI=ON \
+            -DQTFORGE_CREATE_PACKAGES=ON \
+            -DCPACK_GENERATOR="${{ matrix.package_type }}" \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 \
+            -G Ninja
+
+      - name: Build for packaging
+        run: cmake --build build-pkg --config Release --parallel
+
+      - name: Create packages
+        run: |
+          cd build-pkg
+          cpack --config CPackConfig.cmake --verbose
+
+      - name: Upload packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: qtforge-macos-${{ matrix.package_type }}-${{ github.run_number }}
+          path: build-pkg/packages/
+          retention-days: 90

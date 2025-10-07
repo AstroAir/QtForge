@@ -92,7 +92,12 @@ public:
 template <typename Derived>
 class Message : public IMessage {
 public:
-    Message(std::string_view sender,
+    /**
+     * @brief Constructs a typed message with sender and optional priority
+     * @param sender Identifier of the message sender
+     * @param priority Priority level of the message (default: Normal)
+     */
+    explicit Message(std::string_view sender,
             MessagePriority priority = MessagePriority::Normal)
         : m_sender(sender),
           m_timestamp(std::chrono::system_clock::now()),
@@ -116,6 +121,10 @@ private:
     MessagePriority m_priority;
     std::string m_id;
 
+    /**
+     * @brief Generates a unique identifier for the message
+     * @return A unique string ID
+     */
     static std::string generate_id() {
         static std::atomic<uint64_t> counter{0};
         return std::to_string(counter.fetch_add(1));
@@ -163,6 +172,12 @@ struct Subscription {
     uint64_t message_count = 0;
     uint64_t messages_received = 0;
 
+    /**
+     * @brief Constructs a new subscription entry
+     * @param id Identifier of the subscriber
+     * @param type Type index of the message
+     * @param h Handler any for the subscription
+     */
     Subscription(std::string_view id, std::type_index type, std::any h)
         : subscriber_id(id),
           message_type(type),
@@ -252,13 +267,12 @@ public:
     /**
      * @brief Unsubscribe from messages
      * @param subscriber_id Subscriber identifier
-     * @param message_type Message type to unsubscribe from (optional, all types
-     * if empty)
+     * @param message_type Message type to unsubscribe from (optional, all types if empty)
      * @return Success or error information
      */
     virtual qtplugin::expected<void, PluginError> unsubscribe(
         std::string_view subscriber_id,
-        std::optional<std::type_index> message_type = std::nullopt) = 0;
+        std::optional<std::type_index> message_type) = 0;
 
     /**
      * @brief Get list of subscribers for a message type
@@ -311,7 +325,7 @@ public:
      * @param limit Maximum number of messages to return (0 for all)
      * @return Vector of logged messages
      */
-    virtual std::vector<QJsonObject> message_log(size_t limit = 100) const = 0;
+    virtual std::vector<QJsonObject> message_log(size_t limit) const = 0;
 
 protected:
     virtual qtplugin::expected<void, PluginError> publish_impl(
@@ -334,7 +348,15 @@ class MessageBus : public QObject, public IMessageBus {
     Q_OBJECT
 
 public:
+    /**
+     * @brief Constructs a new message bus instance
+     * @param parent Optional parent QObject for Qt ownership
+     */
     explicit MessageBus(QObject* parent = nullptr);
+    
+    /**
+     * @brief Destroys the message bus and cleans up resources
+     */
     ~MessageBus() override;
 
     // IMessageBus implementation
@@ -351,7 +373,7 @@ public:
     void clear() override;
     void set_logging_enabled(bool enabled) override;
     bool is_logging_enabled() const override;
-    std::vector<QJsonObject> message_log(size_t limit = 100) const override;
+    std::vector<QJsonObject> message_log(size_t limit) const override;
 
 signals:
     /**
@@ -393,46 +415,85 @@ protected:
         std::any handler, std::function<bool(const IMessage&)> filter) override;
 
 private:
-    mutable std::shared_mutex m_subscriptions_mutex;
-    std::unordered_map<std::type_index,
-                       std::vector<std::shared_ptr<Subscription>>>
-        m_subscriptions;
-    std::unordered_map<std::string, std::unordered_set<std::type_index>>
-        m_subscriber_types;
-
-    mutable std::shared_mutex m_log_mutex;
-    std::atomic<bool> m_logging_enabled{false};
-    std::vector<QJsonObject> m_message_log;
+    class Impl;
+    std::unique_ptr<Impl> m_impl;
     static constexpr size_t MAX_LOG_SIZE = 10000;
 
-    // Statistics
-    std::atomic<uint64_t> m_messages_published{0};
-    std::atomic<uint64_t> m_messages_delivered{0};
-    std::atomic<uint64_t> m_delivery_failures{0};
-
-    // Delivery infrastructure
-    QTimer* m_cleanup_timer = nullptr;
-    QThreadPool m_delivery_thread_pool;
-
+    /**
+     * @brief Logs the message details if logging is enabled
+     * @param message The message being published
+     * @param recipients List of recipient IDs
+     */
     void log_message(const IMessage& message,
                      const std::vector<std::string>& recipients);
+    
+    /**
+     * @brief Delivers the message to the specified recipients
+     * @param message Shared pointer to the message
+     * @param recipients List of target recipient IDs
+     * @return Success result or PluginError
+     */
     qtplugin::expected<void, PluginError> deliver_message(
         const IMessage& message, const std::vector<std::string>& recipients);
+    
+    /**
+     * @brief Finds appropriate recipients for the message
+     * @param message_type Type index of the message
+     * @param specific_recipients Optional specific recipients to filter
+     * @return Vector of matching subscriber IDs
+     */
     std::vector<std::string> find_recipients(
         std::type_index message_type,
         const std::vector<std::string>& specific_recipients) const;
 
-    // Additional private methods
+    /**
+     * @brief Delivers message synchronously to recipients
+     * @param message Shared pointer to the message
+     * @param recipients List of recipient IDs
+     * @return Success result or PluginError
+     */
     qtplugin::expected<void, PluginError> deliver_sync(
         std::shared_ptr<IMessage> message,
         const std::vector<std::string>& recipients);
+    
+    /**
+     * @brief Delivers message asynchronously using thread pool
+     * @param message Shared pointer to the message
+     * @param recipients List of recipient IDs
+     * @return Success result or PluginError
+     */
     qtplugin::expected<void, PluginError> deliver_async(
         std::shared_ptr<IMessage> message,
         const std::vector<std::string>& recipients);
+    
+    /**
+     * @brief Retrieves all subscribers for a given message type
+     * @param message_type Type index of the message
+     * @return Vector of all subscriber IDs
+     */
     std::vector<std::string> get_all_subscribers(std::type_index message_type) const;
+    
+    /**
+     * @brief Cleans up expired messages and inactive subscriptions periodically
+     */
     void cleanup_expired_messages();
+    
+    /**
+     * @brief Generates detailed statistics about the message bus
+     * @return JSON object containing statistics
+     */
     QJsonObject get_detailed_statistics() const;
+    
+    /**
+     * @brief Calculates the total number of subscriptions
+     * @return Total subscription count
+     */
     size_t get_total_subscription_count() const;
+    
+    /**
+     * @brief Calculates the number of active subscriptions
+     * @return Active subscription count
+     */
     size_t get_active_subscription_count() const;
 };
 

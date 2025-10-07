@@ -235,7 +235,7 @@ void TestMessageBus::testMessageBusInitialization() {
     QVERIFY(m_message_bus->is_logging_enabled());
 
     // Test that message log is initially empty
-    auto log = m_message_bus->message_log();
+    auto log = m_message_bus->message_log(0); // 0 means get all messages
     QVERIFY(log.empty());
 }
 

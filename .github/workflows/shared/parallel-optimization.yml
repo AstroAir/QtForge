@@ -1,0 +1,314 @@
+name: 'Parallel Build Optimization'
+description: 'Optimize parallel build execution based on system resources and build complexity'
+
+inputs:
+  build-complexity:
+    description: 'Build complexity level (simple/moderate/complex)'
+    required: false
+    default: 'moderate'
+  memory-limit-gb:
+    description: 'Memory limit in GB for parallel builds'
+    required: false
+    default: '0'
+  enable-adaptive-parallelism:
+    description: 'Enable adaptive parallelism based on system load'
+    required: false
+    default: 'true'
+  force-parallel-jobs:
+    description: 'Force specific number of parallel jobs (0 = auto)'
+    required: false
+    default: '0'
+
+outputs:
+  optimal-jobs:
+    description: 'Optimal number of parallel jobs calculated'
+    value: ${{ steps.calculate.outputs.jobs }}
+  memory-per-job:
+    description: 'Estimated memory per job in MB'
+    value: ${{ steps.calculate.outputs.memory-per-job }}
+  build-strategy:
+    description: 'Build strategy applied'
+    value: ${{ steps.strategy.outputs.strategy }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Detect system resources
+      id: resources
+      shell: bash
+      run: |
+        echo "::group::System Resource Detection"
+        
+        # Detect CPU cores
+        if [ "${{ runner.os }}" = "macOS" ]; then
+          CPU_CORES=$(sysctl -n hw.ncpu)
+          LOGICAL_CORES=$(sysctl -n hw.logicalcpu)
+        elif [ "${{ runner.os }}" = "Linux" ]; then
+          CPU_CORES=$(nproc --all)
+          LOGICAL_CORES=$(nproc)
+        elif [ "${{ runner.os }}" = "Windows" ]; then
+          CPU_CORES=${NUMBER_OF_PROCESSORS:-4}
+          LOGICAL_CORES=${NUMBER_OF_PROCESSORS:-4}
+        else
+          CPU_CORES=4
+          LOGICAL_CORES=4
+        fi
+        
+        # Detect available memory
+        if [ "${{ runner.os }}" = "Linux" ]; then
+          TOTAL_MEMORY_KB=$(grep MemTotal /proc/meminfo | awk '{print $2}')
+          AVAILABLE_MEMORY_KB=$(grep MemAvailable /proc/meminfo | awk '{print $2}')
+          TOTAL_MEMORY_GB=$((TOTAL_MEMORY_KB / 1024 / 1024))
+          AVAILABLE_MEMORY_GB=$((AVAILABLE_MEMORY_KB / 1024 / 1024))
+        elif [ "${{ runner.os }}" = "macOS" ]; then
+          TOTAL_MEMORY_BYTES=$(sysctl -n hw.memsize)
+          TOTAL_MEMORY_GB=$((TOTAL_MEMORY_BYTES / 1024 / 1024 / 1024))
+          # Estimate 80% available
+          AVAILABLE_MEMORY_GB=$((TOTAL_MEMORY_GB * 80 / 100))
+        elif [ "${{ runner.os }}" = "Windows" ]; then
+          # GitHub Windows runners typically have 7GB
+          TOTAL_MEMORY_GB=7
+          AVAILABLE_MEMORY_GB=5
+        else
+          TOTAL_MEMORY_GB=4
+          AVAILABLE_MEMORY_GB=3
+        fi
+        
+        # Detect disk space
+        if [ "${{ runner.os }}" = "Windows" ]; then
+          DISK_SPACE_GB=$(powershell -Command "(Get-WmiObject -Class Win32_LogicalDisk -Filter \"DeviceID='C:'\").Size / 1GB" 2>/dev/null || echo "50")
+        else
+          DISK_SPACE_GB=$(df -BG . | tail -1 | awk '{print $4}' | sed 's/G//' || echo "50")
+        fi
+        
+        echo "CPU Cores: $CPU_CORES"
+        echo "Logical Cores: $LOGICAL_CORES"
+        echo "Total Memory: ${TOTAL_MEMORY_GB}GB"
+        echo "Available Memory: ${AVAILABLE_MEMORY_GB}GB"
+        echo "Available Disk: ${DISK_SPACE_GB}GB"
+        
+        # Output for next steps
+        echo "cpu-cores=${CPU_CORES}" >> $GITHUB_OUTPUT
+        echo "logical-cores=${LOGICAL_CORES}" >> $GITHUB_OUTPUT
+        echo "total-memory=${TOTAL_MEMORY_GB}" >> $GITHUB_OUTPUT
+        echo "available-memory=${AVAILABLE_MEMORY_GB}" >> $GITHUB_OUTPUT
+        echo "disk-space=${DISK_SPACE_GB}" >> $GITHUB_OUTPUT
+        
+        # Set environment variables
+        echo "CPU_CORES=${CPU_CORES}" >> $GITHUB_ENV
+        echo "LOGICAL_CORES=${LOGICAL_CORES}" >> $GITHUB_ENV
+        echo "AVAILABLE_MEMORY_GB=${AVAILABLE_MEMORY_GB}" >> $GITHUB_ENV
+        
+        echo "::endgroup::"
+
+    - name: Calculate optimal parallelism
+      id: calculate
+      shell: bash
+      run: |
+        echo "::group::Parallel Job Calculation"
+        
+        # Start with logical cores
+        OPTIMAL_JOBS=${LOGICAL_CORES}
+        
+        # Apply memory constraints
+        MEMORY_LIMIT=${{ inputs.memory-limit-gb }}
+        if [ "$MEMORY_LIMIT" = "0" ]; then
+          MEMORY_LIMIT=${AVAILABLE_MEMORY_GB}
+        fi
+        
+        # Estimate memory per job based on build complexity
+        case "${{ inputs.build-complexity }}" in
+          "simple")
+            MEMORY_PER_JOB_GB=1
+            ;;
+          "moderate")
+            MEMORY_PER_JOB_GB=2
+            ;;
+          "complex")
+            MEMORY_PER_JOB_GB=3
+            ;;
+          *)
+            MEMORY_PER_JOB_GB=2
+            ;;
+        esac
+        
+        # Calculate memory-constrained jobs
+        MEMORY_CONSTRAINED_JOBS=$((MEMORY_LIMIT / MEMORY_PER_JOB_GB))
+        
+        # Use the minimum of CPU and memory constraints
+        if [ $MEMORY_CONSTRAINED_JOBS -lt $OPTIMAL_JOBS ]; then
+          OPTIMAL_JOBS=$MEMORY_CONSTRAINED_JOBS
+          echo "Memory constraint applied: ${MEMORY_CONSTRAINED_JOBS} jobs"
+        fi
+        
+        # Platform-specific adjustments
+        case "${{ runner.os }}" in
+          "Windows")
+            # Windows builds are typically slower, reduce parallelism
+            OPTIMAL_JOBS=$((OPTIMAL_JOBS * 75 / 100))
+            ;;
+          "macOS")
+            # macOS handles parallelism well, but be conservative
+            OPTIMAL_JOBS=$((OPTIMAL_JOBS * 90 / 100))
+            ;;
+          "Linux")
+            # Linux handles parallelism best
+            # No adjustment needed
+            ;;
+        esac
+        
+        # Apply forced parallel jobs if specified
+        if [ "${{ inputs.force-parallel-jobs }}" != "0" ]; then
+          OPTIMAL_JOBS=${{ inputs.force-parallel-jobs }}
+          echo "Forced parallel jobs: ${OPTIMAL_JOBS}"
+        fi
+        
+        # Ensure minimum of 1 job
+        if [ $OPTIMAL_JOBS -lt 1 ]; then
+          OPTIMAL_JOBS=1
+        fi
+        
+        # Ensure maximum reasonable limit
+        if [ $OPTIMAL_JOBS -gt 16 ]; then
+          OPTIMAL_JOBS=16
+        fi
+        
+        MEMORY_PER_JOB_MB=$((MEMORY_PER_JOB_GB * 1024))
+        
+        echo "Optimal parallel jobs: ${OPTIMAL_JOBS}"
+        echo "Memory per job: ${MEMORY_PER_JOB_MB}MB"
+        
+        echo "jobs=${OPTIMAL_JOBS}" >> $GITHUB_OUTPUT
+        echo "memory-per-job=${MEMORY_PER_JOB_MB}" >> $GITHUB_OUTPUT
+        
+        # Set environment variables
+        echo "OPTIMAL_JOBS=${OPTIMAL_JOBS}" >> $GITHUB_ENV
+        echo "MEMORY_PER_JOB_MB=${MEMORY_PER_JOB_MB}" >> $GITHUB_ENV
+        
+        echo "::endgroup::"
+
+    - name: Determine build strategy
+      id: strategy
+      shell: bash
+      run: |
+        echo "::group::Build Strategy Selection"
+        
+        # Determine build strategy based on resources and complexity
+        if [ $OPTIMAL_JOBS -ge 8 ] && [ $AVAILABLE_MEMORY_GB -ge 8 ]; then
+          STRATEGY="aggressive"
+        elif [ $OPTIMAL_JOBS -ge 4 ] && [ $AVAILABLE_MEMORY_GB -ge 4 ]; then
+          STRATEGY="balanced"
+        else
+          STRATEGY="conservative"
+        fi
+        
+        # Adjust strategy based on build complexity
+        if [ "${{ inputs.build-complexity }}" = "complex" ] && [ "$STRATEGY" = "aggressive" ]; then
+          STRATEGY="balanced"
+          echo "Reduced strategy due to complex build"
+        fi
+        
+        echo "Build strategy: ${STRATEGY}"
+        echo "strategy=${STRATEGY}" >> $GITHUB_OUTPUT
+        echo "BUILD_STRATEGY=${STRATEGY}" >> $GITHUB_ENV
+        
+        echo "::endgroup::"
+
+    - name: Configure adaptive parallelism
+      if: inputs.enable-adaptive-parallelism == 'true'
+      shell: bash
+      run: |
+        echo "::group::Adaptive Parallelism Configuration"
+        
+        # Create adaptive parallelism script
+        cat > adaptive-parallelism.sh << 'EOF'
+        #!/bin/bash
+        
+        # Function to adjust parallelism based on system load
+        adjust_parallelism() {
+          local current_jobs=$1
+          local max_jobs=$2
+          
+          # Check system load (Linux/macOS only)
+          if command -v uptime >/dev/null 2>&1; then
+            LOAD=$(uptime | awk -F'load average:' '{print $2}' | awk '{print $1}' | sed 's/,//')
+            LOAD_INT=$(echo "$LOAD" | cut -d. -f1)
+            
+            if [ "$LOAD_INT" -gt $((CPU_CORES * 2)) ]; then
+              # High load, reduce parallelism
+              NEW_JOBS=$((current_jobs * 75 / 100))
+              echo "High system load detected, reducing jobs to $NEW_JOBS"
+            elif [ "$LOAD_INT" -lt $CPU_CORES ]; then
+              # Low load, can increase parallelism
+              NEW_JOBS=$((current_jobs * 110 / 100))
+              if [ $NEW_JOBS -gt $max_jobs ]; then
+                NEW_JOBS=$max_jobs
+              fi
+              echo "Low system load detected, increasing jobs to $NEW_JOBS"
+            else
+              NEW_JOBS=$current_jobs
+            fi
+          else
+            NEW_JOBS=$current_jobs
+          fi
+          
+          echo $NEW_JOBS
+        }
+        EOF
+        
+        chmod +x adaptive-parallelism.sh
+        
+        # Set up adaptive parallelism monitoring
+        echo "ADAPTIVE_PARALLELISM_ENABLED=true" >> $GITHUB_ENV
+        
+        echo "::endgroup::"
+
+    - name: Set build environment variables
+      shell: bash
+      run: |
+        # Set CMake and build tool environment variables
+        echo "CMAKE_BUILD_PARALLEL_LEVEL=${OPTIMAL_JOBS}" >> $GITHUB_ENV
+        echo "CTEST_PARALLEL_LEVEL=${OPTIMAL_JOBS}" >> $GITHUB_ENV
+        echo "MAKEFLAGS=-j${OPTIMAL_JOBS}" >> $GITHUB_ENV
+        
+        # Set memory-related environment variables
+        echo "CTEST_RESOURCE_SPEC_FILE=.github/ctest-resources.json" >> $GITHUB_ENV
+        
+        # Create CTest resource specification
+        mkdir -p .github
+        cat > .github/ctest-resources.json << EOF
+        {
+          "version": {
+            "major": 1,
+            "minor": 0
+          },
+          "local": [
+            {
+              "memory": [
+                {
+                  "id": "0",
+                  "slots": ${OPTIMAL_JOBS}
+                }
+              ]
+            }
+          ]
+        }
+        EOF
+
+    - name: Parallel Optimization Summary
+      shell: bash
+      run: |
+        echo "## Parallel Build Optimization" >> $GITHUB_STEP_SUMMARY
+        echo "- **Platform**: ${{ runner.os }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **CPU Cores**: ${CPU_CORES}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Logical Cores**: ${LOGICAL_CORES}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Available Memory**: ${AVAILABLE_MEMORY_GB}GB" >> $GITHUB_STEP_SUMMARY
+        echo "- **Build Complexity**: ${{ inputs.build-complexity }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Optimal Jobs**: ${OPTIMAL_JOBS}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Memory per Job**: ${MEMORY_PER_JOB_MB}MB" >> $GITHUB_STEP_SUMMARY
+        echo "- **Build Strategy**: ${BUILD_STRATEGY}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Adaptive Parallelism**: ${{ inputs.enable-adaptive-parallelism }}" >> $GITHUB_STEP_SUMMARY
+        
+        if [ "${{ inputs.force-parallel-jobs }}" != "0" ]; then
+          echo "- **Forced Jobs**: ⚠️ ${{ inputs.force-parallel-jobs }}" >> $GITHUB_STEP_SUMMARY
+        fi

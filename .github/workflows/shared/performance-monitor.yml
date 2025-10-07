@@ -1,0 +1,181 @@
+name: 'Performance Monitor'
+description: 'Monitor build performance and detect regressions'
+
+inputs:
+  build-time:
+    description: 'Build time in seconds'
+    required: true
+  test-time:
+    description: 'Test time in seconds'
+    required: false
+    default: '0'
+  platform:
+    description: 'Platform name'
+    required: true
+  build-type:
+    description: 'Build type'
+    required: true
+  compiler:
+    description: 'Compiler used'
+    required: true
+  cache-hit-rate:
+    description: 'Cache hit rate percentage'
+    required: false
+    default: '0'
+
+outputs:
+  performance-status:
+    description: 'Performance status (good/warning/critical)'
+    value: ${{ steps.analyze.outputs.status }}
+  regression-detected:
+    description: 'Whether performance regression was detected'
+    value: ${{ steps.analyze.outputs.regression }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Store performance data
+      shell: bash
+      run: |
+        # Create performance data directory
+        mkdir -p .github/performance-data
+        
+        # Create performance record
+        TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+        PERFORMANCE_FILE=".github/performance-data/build-${TIMESTAMP}.json"
+        
+        cat > "$PERFORMANCE_FILE" << EOF
+        {
+          "timestamp": "$TIMESTAMP",
+          "platform": "${{ inputs.platform }}",
+          "build_type": "${{ inputs.build-type }}",
+          "compiler": "${{ inputs.compiler }}",
+          "build_time": ${{ inputs.build-time }},
+          "test_time": ${{ inputs.test-time }},
+          "cache_hit_rate": ${{ inputs.cache-hit-rate }},
+          "commit_sha": "${{ github.sha }}",
+          "run_id": "${{ github.run_id }}"
+        }
+        EOF
+        
+        echo "Performance data stored in $PERFORMANCE_FILE"
+
+    - name: Analyze performance
+      id: analyze
+      shell: bash
+      run: |
+        BUILD_TIME=${{ inputs.build-time }}
+        TEST_TIME=${{ inputs.test-time }}
+        PLATFORM="${{ inputs.platform }}"
+        BUILD_TYPE="${{ inputs.build-type }}"
+        
+        # Define performance thresholds (in seconds)
+        case "$PLATFORM" in
+          "Linux")
+            if [ "$BUILD_TYPE" = "Release" ]; then
+              BUILD_THRESHOLD=600  # 10 minutes
+              BUILD_WARNING=300    # 5 minutes
+            else
+              BUILD_THRESHOLD=900  # 15 minutes
+              BUILD_WARNING=450    # 7.5 minutes
+            fi
+            ;;
+          "Windows")
+            if [ "$BUILD_TYPE" = "Release" ]; then
+              BUILD_THRESHOLD=900  # 15 minutes
+              BUILD_WARNING=450    # 7.5 minutes
+            else
+              BUILD_THRESHOLD=1200 # 20 minutes
+              BUILD_WARNING=600    # 10 minutes
+            fi
+            ;;
+          "macOS")
+            if [ "$BUILD_TYPE" = "Release" ]; then
+              BUILD_THRESHOLD=720  # 12 minutes
+              BUILD_WARNING=360    # 6 minutes
+            else
+              BUILD_THRESHOLD=1080 # 18 minutes
+              BUILD_WARNING=540    # 9 minutes
+            fi
+            ;;
+          *)
+            BUILD_THRESHOLD=900
+            BUILD_WARNING=450
+            ;;
+        esac
+        
+        # Analyze build performance
+        STATUS="good"
+        REGRESSION="false"
+        
+        if [ "$BUILD_TIME" -gt "$BUILD_THRESHOLD" ]; then
+          STATUS="critical"
+          REGRESSION="true"
+        elif [ "$BUILD_TIME" -gt "$BUILD_WARNING" ]; then
+          STATUS="warning"
+        fi
+        
+        # Check test performance (if tests were run)
+        if [ "$TEST_TIME" -gt 0 ]; then
+          TEST_THRESHOLD=300  # 5 minutes
+          TEST_WARNING=180    # 3 minutes
+          
+          if [ "$TEST_TIME" -gt "$TEST_THRESHOLD" ]; then
+            if [ "$STATUS" = "good" ]; then
+              STATUS="warning"
+            fi
+          fi
+        fi
+        
+        echo "status=$STATUS" >> $GITHUB_OUTPUT
+        echo "regression=$REGRESSION" >> $GITHUB_OUTPUT
+        
+        # Set environment variables for summary
+        echo "PERF_STATUS=$STATUS" >> $GITHUB_ENV
+        echo "PERF_REGRESSION=$REGRESSION" >> $GITHUB_ENV
+        echo "BUILD_THRESHOLD=$BUILD_THRESHOLD" >> $GITHUB_ENV
+        echo "BUILD_WARNING=$BUILD_WARNING" >> $GITHUB_ENV
+
+    - name: Performance Summary
+      shell: bash
+      run: |
+        echo "## Performance Analysis" >> $GITHUB_STEP_SUMMARY
+        echo "- **Platform**: ${{ inputs.platform }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Build Type**: ${{ inputs.build-type }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Compiler**: ${{ inputs.compiler }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Build Time**: ${{ inputs.build-time }}s" >> $GITHUB_STEP_SUMMARY
+        
+        if [ "${{ inputs.test-time }}" != "0" ]; then
+          echo "- **Test Time**: ${{ inputs.test-time }}s" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [ "${{ inputs.cache-hit-rate }}" != "0" ]; then
+          echo "- **Cache Hit Rate**: ${{ inputs.cache-hit-rate }}%" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        # Performance status with emoji
+        case "$PERF_STATUS" in
+          "good")
+            echo "- **Performance Status**: ✅ Good" >> $GITHUB_STEP_SUMMARY
+            ;;
+          "warning")
+            echo "- **Performance Status**: ⚠️ Warning" >> $GITHUB_STEP_SUMMARY
+            echo "- **Warning Threshold**: ${BUILD_WARNING}s" >> $GITHUB_STEP_SUMMARY
+            ;;
+          "critical")
+            echo "- **Performance Status**: ❌ Critical" >> $GITHUB_STEP_SUMMARY
+            echo "- **Critical Threshold**: ${BUILD_THRESHOLD}s" >> $GITHUB_STEP_SUMMARY
+            ;;
+        esac
+        
+        if [ "$PERF_REGRESSION" = "true" ]; then
+          echo "- **Regression Detected**: ⚠️ Yes" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "- **Regression Detected**: ✅ No" >> $GITHUB_STEP_SUMMARY
+        fi
+
+    - name: Create performance issue
+      if: steps.analyze.outputs.regression == 'true'
+      shell: bash
+      run: |
+        echo "::warning title=Performance Regression::Build time (${{ inputs.build-time }}s) exceeded threshold for ${{ inputs.platform }} ${{ inputs.build-type }} build"

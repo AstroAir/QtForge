@@ -20,7 +20,9 @@ namespace qtplugin::messages {
 // Helper functions for reducing code duplication
 namespace detail {
 /**
- * @brief Convert timestamp to JSON string format
+ * @brief Converts a timestamp to JSON-compatible string format (milliseconds since epoch)
+ * @param tp The system clock time point to convert
+ * @return QString representation of the timestamp
  */
 inline QString timestamp_to_json_string(
     const std::chrono::system_clock::time_point& tp) {
@@ -31,14 +33,20 @@ inline QString timestamp_to_json_string(
 }
 
 /**
- * @brief Convert string_view to QString efficiently
+ * @brief Converts a string_view to QString efficiently using UTF-8 encoding
+ * @param sv The string_view to convert
+ * @return QString equivalent
  */
 inline QString to_qstring(std::string_view sv) {
     return QString::fromUtf8(sv.data(), static_cast<int>(sv.size()));
 }
 
 /**
- * @brief Create base JSON object with common fields
+ * @brief Creates a base JSON object with common message fields
+ * @param type The message type string
+ * @param sender The sender identifier
+ * @param timestamp The message timestamp
+ * @return QJsonObject with type, sender, and timestamp fields
  */
 inline QJsonObject create_base_json(
     const char* type, std::string_view sender,
@@ -49,7 +57,10 @@ inline QJsonObject create_base_json(
 }
 
 /**
- * @brief Add optional string field to JSON if value is not empty
+ * @brief Adds an optional string field to a JSON object if the value is not empty
+ * @param json The JSON object to modify
+ * @param key The field key
+ * @param value The string value to add if non-empty
  */
 inline void add_optional_field(QJsonObject& json, const char* key,
                                std::string_view value) {
@@ -59,7 +70,12 @@ inline void add_optional_field(QJsonObject& json, const char* key,
 }
 
 /**
- * @brief Template for enum-to-string conversion using lookup arrays
+ * @brief Template function for converting an enum value to its string representation using a lookup array
+ * @tparam EnumType The enum type
+ * @tparam N The size of the string array
+ * @param value The enum value to convert
+ * @param strings The array of string literals for enum values
+ * @return Const char* string for the enum value, or "unknown" if out of bounds
  */
 template <typename EnumType, size_t N>
 constexpr const char* enum_to_string(
@@ -81,31 +97,53 @@ constexpr std::array log_level_strings = {"debug", "info", "warning", "error",
 }  // namespace detail
 
 /**
- * @brief Plugin lifecycle event message
+ * @brief Plugin lifecycle event message for notifying about plugin state changes
  */
 class PluginLifecycleMessage : public Message<PluginLifecycleMessage> {
 public:
+    /**
+     * @brief Enum representing different plugin lifecycle events
+     */
     enum class Event {
-        Loading,
-        Loaded,
-        Initializing,
-        Initialized,
-        Starting,
-        Started,
-        Stopping,
-        Stopped,
-        Unloading,
-        Unloaded,
-        Error
+        Loading,      ///< Plugin is being loaded
+        Loaded,       ///< Plugin has been loaded successfully
+        Initializing, ///< Plugin is initializing
+        Initialized,  ///< Plugin has been initialized
+        Starting,     ///< Plugin is starting
+        Started,      ///< Plugin has started successfully
+        Stopping,     ///< Plugin is stopping
+        Stopped,      ///< Plugin has stopped
+        Unloading,    ///< Plugin is being unloaded
+        Unloaded,     ///< Plugin has been unloaded
+        Error         ///< An error occurred during lifecycle
     };
 
+    /**
+     * @brief Constructs a plugin lifecycle message
+     * @param sender The sender identifier
+     * @param plugin_id The ID of the affected plugin
+     * @param event The lifecycle event type
+     */
     PluginLifecycleMessage(std::string_view sender, std::string_view plugin_id,
                            Event event)
         : Message(sender), m_plugin_id(plugin_id), m_event(event) {}
 
+    /**
+     * @brief Gets the plugin ID
+     * @return The plugin identifier
+     */
     std::string_view plugin_id() const noexcept { return m_plugin_id; }
+    
+    /**
+     * @brief Gets the lifecycle event
+     * @return The event type
+     */
     Event event() const noexcept { return m_event; }
 
+    /**
+     * @brief Serializes the message to JSON format
+     * @return QJsonObject representation of the message
+     */
     QJsonObject to_json() const override {
         auto json =
             detail::create_base_json("plugin_lifecycle", sender(), timestamp());
@@ -121,11 +159,18 @@ private:
 };
 
 /**
- * @brief Plugin configuration change message
+ * @brief Message indicating a change in plugin configuration
  */
 class ConfigurationChangedMessage
     : public Message<ConfigurationChangedMessage> {
 public:
+    /**
+     * @brief Constructs a configuration change message
+     * @param sender The sender identifier
+     * @param plugin_id The ID of the plugin whose config changed
+     * @param old_config The previous configuration
+     * @param new_config The updated configuration
+     */
     ConfigurationChangedMessage(std::string_view sender,
                                 std::string_view plugin_id,
                                 const QJsonObject& old_config,
@@ -135,14 +180,32 @@ public:
           m_old_config(old_config),
           m_new_config(new_config) {}
 
+    /**
+     * @brief Gets the plugin ID
+     * @return The plugin identifier
+     */
     std::string_view plugin_id() const noexcept { return m_plugin_id; }
+    
+    /**
+     * @brief Gets the old configuration
+     * @return The previous QJsonObject config
+     */
     const QJsonObject& old_configuration() const noexcept {
         return m_old_config;
     }
+    
+    /**
+     * @brief Gets the new configuration
+     * @return The updated QJsonObject config
+     */
     const QJsonObject& new_configuration() const noexcept {
         return m_new_config;
     }
 
+    /**
+     * @brief Serializes the message to JSON format
+     * @return QJsonObject representation of the message
+     */
     QJsonObject to_json() const override {
         auto json = detail::create_base_json("configuration_changed", sender(),
                                              timestamp());
@@ -159,10 +222,18 @@ private:
 };
 
 /**
- * @brief Plugin command message
+ * @brief Message for sending commands to plugins
  */
 class PluginCommandMessage : public Message<PluginCommandMessage> {
 public:
+    /**
+     * @brief Constructs a plugin command message
+     * @param sender The sender identifier
+     * @param target_plugin The ID of the target plugin
+     * @param command The command string
+     * @param parameters Optional JSON parameters for the command
+     * @param priority Message priority (default: Normal)
+     */
     PluginCommandMessage(std::string_view sender,
                          std::string_view target_plugin,
                          std::string_view command,
@@ -173,10 +244,28 @@ public:
           m_command(command),
           m_parameters(parameters) {}
 
+    /**
+     * @brief Gets the target plugin ID
+     * @return The target plugin identifier
+     */
     std::string_view target_plugin() const noexcept { return m_target_plugin; }
+    
+    /**
+     * @brief Gets the command string
+     * @return The command name
+     */
     std::string_view command() const noexcept { return m_command; }
+    
+    /**
+     * @brief Gets the command parameters
+     * @return The QJsonObject parameters
+     */
     const QJsonObject& parameters() const noexcept { return m_parameters; }
 
+    /**
+     * @brief Serializes the message to JSON format
+     * @return QJsonObject representation of the message
+     */
     QJsonObject to_json() const override {
         auto json =
             detail::create_base_json("plugin_command", sender(), timestamp());
@@ -194,11 +283,19 @@ private:
 };
 
 /**
- * @brief Plugin command response message
+ * @brief Response message for plugin commands
  */
 class PluginCommandResponseMessage
     : public Message<PluginCommandResponseMessage> {
 public:
+    /**
+     * @brief Constructs a plugin command response message
+     * @param sender The sender identifier
+     * @param request_id The ID of the original request
+     * @param success Whether the command succeeded
+     * @param result Optional result data
+     * @param error_message Optional error description
+     */
     PluginCommandResponseMessage(std::string_view sender,
                                  std::string_view request_id, bool success,
                                  const QJsonObject& result = {},
@@ -209,11 +306,34 @@ public:
           m_result(result),
           m_error_message(error_message) {}
 
+    /**
+     * @brief Gets the request ID
+     * @return The original request identifier
+     */
     std::string_view request_id() const noexcept { return m_request_id; }
+    
+    /**
+     * @brief Checks if the command was successful
+     * @return True if successful
+     */
     bool success() const noexcept { return m_success; }
+    
+    /**
+     * @brief Gets the result data
+     * @return The QJsonObject result
+     */
     const QJsonObject& result() const noexcept { return m_result; }
+    
+    /**
+     * @brief Gets the error message if any
+     * @return The error description string
+     */
     std::string_view error_message() const noexcept { return m_error_message; }
 
+    /**
+     * @brief Serializes the message to JSON format
+     * @return QJsonObject representation of the message
+     */
     QJsonObject to_json() const override {
         auto json = detail::create_base_json("plugin_command_response",
                                              sender(), timestamp());
@@ -232,28 +352,50 @@ private:
 };
 
 /**
- * @brief System status message
+ * @brief Message reporting system status updates
  */
 class SystemStatusMessage : public Message<SystemStatusMessage> {
 public:
+    /**
+     * @brief Enum representing system status levels
+     */
     enum class Status {
-        Starting,
-        Running,
-        Stopping,
-        Stopped,
-        Error,
-        Maintenance
+        Starting,     ///< System is starting up
+        Running,      ///< System is running normally
+        Stopping,     ///< System is shutting down
+        Stopped,      ///< System has stopped
+        Error,        ///< System encountered an error
+        Maintenance   ///< System is in maintenance mode
     };
 
+    /**
+     * @brief Constructs a system status message
+     * @param sender The sender identifier
+     * @param status The current system status
+     * @param details Optional additional details
+     */
     SystemStatusMessage(std::string_view sender, Status status,
                         std::string_view details = "")
         : Message(sender, MessagePriority::High),
           m_status(status),
           m_details(details) {}
 
+    /**
+     * @brief Gets the system status
+     * @return The status enum value
+     */
     Status status() const noexcept { return m_status; }
+    
+    /**
+     * @brief Gets the status details
+     * @return The details string
+     */
     std::string_view details() const noexcept { return m_details; }
 
+    /**
+     * @brief Serializes the message to JSON format
+     * @return QJsonObject representation of the message
+     */
     QJsonObject to_json() const override {
         auto json =
             detail::create_base_json("system_status", sender(), timestamp());
@@ -269,27 +411,49 @@ private:
 };
 
 /**
- * @brief Resource usage message
+ * @brief Message reporting resource usage statistics
  */
 class ResourceUsageMessage : public Message<ResourceUsageMessage> {
 public:
+    /**
+     * @brief Structure holding resource usage information
+     */
     struct ResourceInfo {
-        double cpu_usage = 0.0;     ///< CPU usage percentage
+        double cpu_usage = 0.0;     ///< CPU usage percentage (0.0 to 100.0)
         uint64_t memory_usage = 0;  ///< Memory usage in bytes
         uint64_t disk_usage = 0;    ///< Disk usage in bytes
-        uint32_t thread_count = 0;  ///< Number of threads
-        uint32_t handle_count = 0;  ///< Number of handles/file descriptors
+        uint32_t thread_count = 0;  ///< Number of active threads
+        uint32_t handle_count = 0;  ///< Number of open handles/file descriptors
     };
 
+    /**
+     * @brief Constructs a resource usage message
+     * @param sender The sender identifier
+     * @param plugin_id The ID of the plugin reporting usage
+     * @param info The resource usage information
+     */
     ResourceUsageMessage(std::string_view sender, std::string_view plugin_id,
                          const ResourceInfo& info)
         : Message(sender), m_plugin_id(plugin_id), m_resource_info(info) {}
 
+    /**
+     * @brief Gets the plugin ID
+     * @return The plugin identifier
+     */
     std::string_view plugin_id() const noexcept { return m_plugin_id; }
+    
+    /**
+     * @brief Gets the resource information
+     * @return Const reference to ResourceInfo
+     */
     const ResourceInfo& resource_info() const noexcept {
         return m_resource_info;
     }
 
+    /**
+     * @brief Serializes the message to JSON format
+     * @return QJsonObject representation of the message
+     */
     QJsonObject to_json() const override {
         auto json =
             detail::create_base_json("resource_usage", sender(), timestamp());
@@ -309,18 +473,38 @@ private:
 };
 
 /**
- * @brief Custom data message for plugin-specific communication
+ * @brief Generic message for custom plugin-specific data exchange
  */
 class CustomDataMessage : public Message<CustomDataMessage> {
 public:
+    /**
+     * @brief Constructs a custom data message
+     * @param sender The sender identifier
+     * @param data_type The type identifier for the custom data
+     * @param data The JSON data payload
+     * @param priority Message priority (default: Normal)
+     */
     CustomDataMessage(std::string_view sender, std::string_view data_type,
                       const QJsonObject& data,
                       MessagePriority priority = MessagePriority::Normal)
         : Message(sender, priority), m_data_type(data_type), m_data(data) {}
 
+    /**
+     * @brief Gets the data type
+     * @return The custom data type string
+     */
     std::string_view data_type() const noexcept { return m_data_type; }
+    
+    /**
+     * @brief Gets the data payload
+     * @return The QJsonObject data
+     */
     const QJsonObject& data() const noexcept { return m_data; }
 
+    /**
+     * @brief Serializes the message to JSON format
+     * @return QJsonObject representation of the message
+     */
     QJsonObject to_json() const override {
         auto json =
             detail::create_base_json("custom_data", sender(), timestamp());
@@ -336,19 +520,38 @@ private:
 };
 
 /**
- * @brief Error message for reporting plugin errors
+ * @brief Message for reporting errors from plugins
  */
 class ErrorMessage : public Message<ErrorMessage> {
 public:
+    /**
+     * @brief Constructs an error message
+     * @param sender The sender identifier
+     * @param plugin_id The ID of the plugin reporting the error
+     * @param error The PluginError details
+     */
     ErrorMessage(std::string_view sender, std::string_view plugin_id,
                  const PluginError& error)
         : Message(sender, MessagePriority::High),
           m_plugin_id(plugin_id),
           m_error(error) {}
 
+    /**
+     * @brief Gets the plugin ID
+     * @return The plugin identifier
+     */
     std::string_view plugin_id() const noexcept { return m_plugin_id; }
+    
+    /**
+     * @brief Gets the error details
+     * @return Const reference to PluginError
+     */
     const PluginError& error() const noexcept { return m_error; }
 
+    /**
+     * @brief Serializes the message to JSON format
+     * @return QJsonObject representation of the message
+     */
     QJsonObject to_json() const override {
         auto json = detail::create_base_json("error", sender(), timestamp());
         json["plugin_id"] = detail::to_qstring(m_plugin_id);
@@ -364,12 +567,28 @@ private:
 };
 
 /**
- * @brief Log message for centralized logging
+ * @brief Message for logging events across the system
  */
 class LogMessage : public Message<LogMessage> {
 public:
-    enum class Level { Debug, Info, Warning, Error, Critical };
+    /**
+     * @brief Enum representing log levels
+     */
+    enum class Level {
+        Debug,     ///< Debug level logging
+        Info,      ///< Informational logging
+        Warning,   ///< Warning level logging
+        Error,     ///< Error level logging
+        Critical   ///< Critical error logging
+    };
 
+    /**
+     * @brief Constructs a log message
+     * @param sender The sender identifier
+     * @param level The log level
+     * @param message The log message content
+     * @param category Optional log category
+     */
     LogMessage(std::string_view sender, Level level, std::string_view message,
                std::string_view category = "")
         : Message(sender),
@@ -377,10 +596,28 @@ public:
           m_message(message),
           m_category(category) {}
 
+    /**
+     * @brief Gets the log level
+     * @return The Level enum value
+     */
     Level level() const noexcept { return m_level; }
+    
+    /**
+     * @brief Gets the log message
+     * @return The message string
+     */
     std::string_view message() const noexcept { return m_message; }
+    
+    /**
+     * @brief Gets the log category
+     * @return The category string
+     */
     std::string_view category() const noexcept { return m_category; }
 
+    /**
+     * @brief Serializes the message to JSON format
+     * @return QJsonObject representation of the message
+     */
     QJsonObject to_json() const override {
         auto json = detail::create_base_json("log", sender(), timestamp());
         json["level"] =

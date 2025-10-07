@@ -1,0 +1,102 @@
+name: 'Cache Dependencies'
+description: 'Reusable action for caching platform-specific dependencies and build artifacts'
+
+inputs:
+  cache-key-suffix:
+    description: 'Additional suffix for cache keys'
+    required: false
+    default: ''
+  build-type:
+    description: 'Build type for cache key'
+    required: false
+    default: 'Release'
+  compiler:
+    description: 'Compiler for cache key'
+    required: false
+    default: 'default'
+
+outputs:
+  cmake-cache-hit:
+    description: 'Whether CMake cache was hit'
+    value: ${{ steps.cache-cmake.outputs.cache-hit }}
+  deps-cache-hit:
+    description: 'Whether dependencies cache was hit'
+    value: ${{ steps.cache-deps.outputs.cache-hit }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Cache CMake build
+      id: cache-cmake
+      uses: actions/cache@v4
+      with:
+        path: |
+          build
+          ~/.cache/cmake
+          ~/AppData/Local/cmake
+          ~/.cache/ccache
+          ~/AppData/Local/ccache
+        key: ${{ runner.os }}-cmake-${{ inputs.build-type }}-${{ inputs.compiler }}-${{ inputs.cache-key-suffix }}-${{ hashFiles('**/CMakeLists.txt', 'cmake/**/*.cmake', 'src/**/*.cpp', 'src/**/*.hpp', 'include/**/*.hpp') }}-v3
+        restore-keys: |
+          ${{ runner.os }}-cmake-${{ inputs.build-type }}-${{ inputs.compiler }}-${{ inputs.cache-key-suffix }}-
+          ${{ runner.os }}-cmake-${{ inputs.build-type }}-${{ inputs.compiler }}-
+          ${{ runner.os }}-cmake-${{ inputs.build-type }}-
+          ${{ runner.os }}-cmake-
+
+    - name: Cache vcpkg dependencies (Windows)
+      id: cache-vcpkg
+      if: runner.os == 'Windows'
+      uses: actions/cache@v4
+      with:
+        path: |
+          C:\vcpkg\installed
+          C:\vcpkg\buildtrees
+        key: ${{ runner.os }}-vcpkg-${{ hashFiles('**/vcpkg.json', '**/CMakeLists.txt') }}-v2
+        restore-keys: |
+          ${{ runner.os }}-vcpkg-
+
+    - name: Cache system packages (Linux)
+      id: cache-apt
+      if: runner.os == 'Linux'
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/apt
+          /var/cache/apt
+        key: ${{ runner.os }}-apt-${{ hashFiles('.github/workflows/**/*.yml') }}-v2
+        restore-keys: |
+          ${{ runner.os }}-apt-
+
+    - name: Cache Homebrew (macOS)
+      id: cache-homebrew
+      if: runner.os == 'macOS'
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/Library/Caches/Homebrew
+          /usr/local/Homebrew
+        key: ${{ runner.os }}-homebrew-${{ hashFiles('.github/workflows/**/*.yml') }}-v2
+        restore-keys: |
+          ${{ runner.os }}-homebrew-
+
+    - name: Set dependencies cache output
+      id: cache-deps
+      shell: bash
+      run: |
+        if [ "${{ runner.os }}" = "Windows" ]; then
+          echo "cache-hit=${{ steps.cache-vcpkg.outputs.cache-hit }}" >> $GITHUB_OUTPUT
+        elif [ "${{ runner.os }}" = "Linux" ]; then
+          echo "cache-hit=${{ steps.cache-apt.outputs.cache-hit }}" >> $GITHUB_OUTPUT
+        elif [ "${{ runner.os }}" = "macOS" ]; then
+          echo "cache-hit=${{ steps.cache-homebrew.outputs.cache-hit }}" >> $GITHUB_OUTPUT
+        else
+          echo "cache-hit=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Cache Summary
+      shell: bash
+      run: |
+        echo "## Cache Summary" >> $GITHUB_STEP_SUMMARY
+        echo "- **CMake Cache Hit**: ${{ steps.cache-cmake.outputs.cache-hit }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Dependencies Cache Hit**: ${{ steps.cache-deps.outputs.cache-hit }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Platform**: ${{ runner.os }}" >> $GITHUB_STEP_SUMMARY

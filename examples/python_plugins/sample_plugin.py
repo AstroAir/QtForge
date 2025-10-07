@@ -4,6 +4,8 @@ Sample Python Plugin for QtForge
 Demonstrates basic plugin functionality with the Python bridge.
 """
 
+from typing import Any, Dict, List, Optional, Union
+
 class SamplePlugin:
     """A sample plugin demonstrating QtForge Python plugin capabilities"""
 
@@ -16,24 +18,24 @@ class SamplePlugin:
 
         # Plugin state
         self.initialized = False
-        self.data = {}
+        self.data: Dict[str, Any] = {}
         self.counter = 0
-        self.event_handlers = {}
-        self.subscribed_events = []
+        self.event_handlers: Dict[str, Any] = {}
+        self.subscribed_events: List[str] = []
 
-    def initialize(self) -> None:
+    def initialize(self) -> Dict[str, Any]:
         """Initialize the plugin"""
         self.initialized = True
         self.data = {"startup_time": "2024-01-01T00:00:00Z"}
         return {"success": True, "message": "Plugin initialized successfully"}
 
-    def shutdown(self) -> None:
+    def shutdown(self) -> Dict[str, Any]:
         """Shutdown the plugin"""
         self.initialized = False
         self.data.clear()
         return {"success": True, "message": "Plugin shutdown successfully"}
 
-    def get_info(self) -> None:
+    def get_info(self) -> Dict[str, Any]:
         """Get plugin information"""
         return {
             "name": self.name,
@@ -44,7 +46,7 @@ class SamplePlugin:
             "initialized": self.initialized
         }
 
-    def process_data(self, input_data) -> None:
+    def process_data(self, input_data: Any) -> Dict[str, Any]:
         """Process some data"""
         self.counter += 1
         result = {
@@ -55,27 +57,27 @@ class SamplePlugin:
         }
         return result
 
-    def get_counter(self) -> None:
+    def get_counter(self) -> int:
         """Get the current counter value"""
         return self.counter
 
-    def set_counter(self, value) -> None:
+    def set_counter(self, value: Any) -> Dict[str, Any]:
         """Set the counter value"""
         self.counter = int(value)
         return {"success": True, "new_value": self.counter}
 
-    def add_data(self, key, value) -> None:
+    def add_data(self, key: str, value: Any) -> Dict[str, Any]:
         """Add data to the plugin's data store"""
         self.data[key] = value
         return {"success": True, "key": key, "value": value}
 
-    def get_data(self, key=None) -> None:
+    def get_data(self, key: Optional[str] = None) -> Any:
         """Get data from the plugin's data store"""
         if key is None:
             return self.data
         return self.data.get(key)
 
-    def list_methods(self) -> None:
+    def list_methods(self) -> List[str]:
         """List available methods"""
         methods = []
         for attr_name in dir(self):
@@ -83,7 +85,7 @@ class SamplePlugin:
                 methods.append(attr_name)
         return methods
 
-    def list_properties(self) -> None:
+    def list_properties(self) -> List[Dict[str, str]]:
         """List available properties"""
         properties = []
         for attr_name in dir(self):
@@ -95,21 +97,21 @@ class SamplePlugin:
                 })
         return properties
 
-    def subscribe_events(self, event_names) -> None:
+    def subscribe_events(self, event_names: List[str]) -> Dict[str, Any]:
         """Subscribe to events (called by bridge)"""
         for event_name in event_names:
             if event_name not in self.subscribed_events:
                 self.subscribed_events.append(event_name)
         return {"success": True, "subscribed_events": self.subscribed_events}
 
-    def unsubscribe_events(self, event_names) -> None:
+    def unsubscribe_events(self, event_names: List[str]) -> Dict[str, Any]:
         """Unsubscribe from events (called by bridge)"""
         for event_name in event_names:
             if event_name in self.subscribed_events:
                 self.subscribed_events.remove(event_name)
         return {"success": True, "subscribed_events": self.subscribed_events}
 
-    def emit_event(self, event_name, event_data) -> None:
+    def emit_event(self, event_name: str, event_data: Any) -> Dict[str, Any]:
         """Handle event emission (called by bridge)"""
         result = {"event_received": True, "event_name": event_name, "event_data": event_data}
 
@@ -123,7 +125,7 @@ class SamplePlugin:
 
         return result
 
-    def handle_event(self, event_name, event_data) -> None:
+    def handle_event(self, event_name: str, event_data: Any) -> Dict[str, Any]:
         """Generic event handler"""
         self.data[f"last_event_{event_name}"] = {
             "data": event_data,
@@ -131,7 +133,7 @@ class SamplePlugin:
         }
         return {"handled": True, "event_name": event_name}
 
-    def on_test_event(self, event_data) -> None:
+    def on_test_event(self, event_data: Any) -> Dict[str, Any]:
         """Specific handler for 'test_event'"""
         self.counter += 1
         return {
@@ -140,7 +142,7 @@ class SamplePlugin:
             "received_data": event_data
         }
 
-    def trigger_custom_event(self, event_name="custom_event", data=None) -> None:
+    def trigger_custom_event(self, event_name: str = "custom_event", data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Trigger a custom event (for testing)"""
         if data is None:
             data = {"triggered_by": "plugin", "counter": self.counter}
@@ -155,7 +157,7 @@ class SamplePlugin:
         }
 
 # Factory function for creating plugin instances
-def create_plugin() -> None:
+def create_plugin() -> SamplePlugin:
     """Create and return a plugin instance"""
     return SamplePlugin()
 

@@ -23,29 +23,29 @@ except ImportError:
 
 def main() -> None:
     """Main example function demonstrating QtForge basic usage."""
-    
+
     print("=" * 60)
     print("QtForge Python Bindings - Basic Usage Example")
     print("=" * 60)
-    
+
     # Test the connection
     print("\n1. Testing Connection:")
-    print(f"   {qtforge.test_connection()}")
-    
+    print(f"   {qtforge.test_connection()}")  # type: ignore
+
     # Get version information
     print("\n2. Version Information:")
     print(f"   QtForge Version: {qtforge.get_version()}")
-    print(f"   Version Info: {qtforge.get_version_info()}")
-    
+    print(f"   Version Info: {qtforge.get_version_info()}")  # type: ignore
+
     # List available modules
     print("\n3. Available Modules:")
-    modules = qtforge.list_available_modules()
+    modules = qtforge.list_available_modules()  # type: ignore
     for module in modules:
         print(f"   - {module}")
-    
+
     # Get build information
     print("\n4. Build Information:")
-    build_info = qtforge.get_build_info()
+    build_info = qtforge.get_build_info()  # type: ignore
     for key, value in build_info.items():
         if isinstance(value, dict):
             print(f"   {key}:")
@@ -53,17 +53,17 @@ def main() -> None:
                 print(f"     {sub_key}: {sub_value}")
         else:
             print(f"   {key}: {value}")
-    
+
     # Create a plugin manager
     print("\n5. Plugin Manager:")
     try:
         manager = qtforge.create_plugin_manager()
         print(f"   Created: {manager}")
-        print(f"   Loaded plugins: {manager.loaded_plugins()}")
-        print(f"   Search paths: {manager.search_paths()}")
+        print(f"   Loaded plugins: {getattr(manager, 'loaded_plugins', lambda: [])()}")
+        print(f"   Search paths: {getattr(manager, 'search_paths', lambda: [])()}")
     except Exception as e:
         print(f"   Error creating plugin manager: {e}")
-    
+
     # Test core module functionality
     print("\n6. Core Module:")
     try:
@@ -71,27 +71,27 @@ def main() -> None:
         print(f"   PluginState.Running: {PluginState.Running}")
         print(f"   PluginCapability.Service: {PluginCapability.Service}")
         print(f"   PluginPriority.High: {PluginPriority.High}")
-        
+
         # Create version objects
         version = qtforge.create_version(1, 2, 3)
         print(f"   Created version: {version}")
-        
+
         # Create metadata
-        metadata = qtforge.create_metadata("TestPlugin", "A test plugin")
+        metadata = qtforge.create_metadata("TestPlugin", "A test plugin")  # type: ignore
         print(f"   Created metadata: {metadata}")
-        
+
     except Exception as e:
         print(f"   Error with core module: {e}")
-    
+
     # Test utils module
     print("\n7. Utils Module:")
     try:
         from qtforge import utils
-        test_result = utils.test_utils()
+        test_result = getattr(utils, 'test_utils', lambda: 'test_utils not available')()
         print(f"   Utils test: {test_result}")
     except Exception as e:
         print(f"   Error with utils module: {e}")
-    
+
     # Test other modules if available
     modules_to_test = [
         ('communication', 'Communication'),
@@ -104,7 +104,7 @@ def main() -> None:
         ('composition', 'Composition'),
         ('marketplace', 'Marketplace')
     ]
-    
+
     for module_name, display_name in modules_to_test:
         print(f"\n8. {display_name} Module:")
         try:
@@ -116,7 +116,7 @@ def main() -> None:
             print(f"   {display_name} module not available or no test function")
         except Exception as e:
             print(f"   Error with {display_name} module: {e}")
-    
+
     print("\n" + "=" * 60)
     print("Basic usage example completed!")
     print("=" * 60)

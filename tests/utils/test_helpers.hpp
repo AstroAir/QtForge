@@ -16,7 +16,7 @@
 #include <functional>
 
 #include <qtplugin/interfaces/core/plugin_interface.hpp>
-#include <qtplugin/managers/plugin_manager.hpp>
+#include <qtplugin/core/plugin_manager.hpp>
 #include <qtplugin/utils/error_handling.hpp>
 
 namespace QtForgeTest {

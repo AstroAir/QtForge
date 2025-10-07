@@ -176,6 +176,14 @@ public:
     explicit PluginDependencyResolver(QObject* parent = nullptr);
     ~PluginDependencyResolver() override;
 
+    // Copy constructor and assignment operator
+    PluginDependencyResolver(const PluginDependencyResolver& other);
+    PluginDependencyResolver& operator=(const PluginDependencyResolver& other);
+
+    // Move constructor and assignment operator
+    PluginDependencyResolver(PluginDependencyResolver&& other) noexcept;
+    PluginDependencyResolver& operator=(PluginDependencyResolver&& other) noexcept;
+
     // IPluginDependencyResolver interface
     qtplugin::expected<void, PluginError> update_dependency_graph(
         IPluginRegistry* plugin_registry) override;
@@ -218,29 +226,8 @@ signals:
     void circular_dependency_detected(const QStringList& plugin_ids);
 
 private:
-    std::unordered_map<std::string, DependencyNode> m_dependency_graph;
-    mutable std::vector<CircularDependency> m_circular_dependencies;
-    mutable bool m_circular_deps_cached = false;
-
-    // Helper methods
-    std::vector<std::string> topological_sort() const;
-    int calculate_dependency_level(
-        const std::string& plugin_id,
-        const std::vector<std::string>& dependencies) const;
-    void detect_circular_dependencies();
-    bool has_circular_dependency(
-        const std::string& plugin_id, std::unordered_set<std::string>& visited,
-        std::unordered_set<std::string>& recursion_stack) const;
-    
-    // Enhanced helper methods (v3.2.0)
-    void find_all_cycles() const;
-    bool find_cycle_from_node(const std::string& node,
-                             std::unordered_set<std::string>& visited,
-                             std::unordered_set<std::string>& rec_stack,
-                             std::vector<std::string>& path) const;
-    std::string find_weakest_link(const std::vector<std::string>& cycle) const;
-    void remove_dependency(const std::string& from, const std::string& to);
-    bool is_strongly_connected(const std::string& from, const std::string& to) const;
+    class Impl;
+    std::unique_ptr<Impl> d;
 };
 
 }  // namespace qtplugin

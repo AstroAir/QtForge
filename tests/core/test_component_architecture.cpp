@@ -243,7 +243,7 @@ void TestComponentArchitecture::testPluginDependencyResolverComponent() {
 
 void TestComponentArchitecture::testSecurityValidatorComponent() {
     // Test SecurityValidator component
-    auto validator = std::make_unique<SecurityValidator>();
+    auto validator = std::make_unique<qtplugin::security::components::SecurityValidator>();
     QVERIFY(validator != nullptr);
 
     // Create a test file
@@ -372,7 +372,6 @@ void TestComponentArchitecture::testComponentInteraction() {
     plugin_info->load_time = std::chrono::system_clock::now();
     plugin_info->last_activity = std::chrono::system_clock::now();
     plugin_info->instance = nullptr;  // No actual plugin instance
-    plugin_info->loader = nullptr;    // No loader
     plugin_info->hot_reload_enabled = false;
 
     // Initialize metadata to avoid uninitialized memory

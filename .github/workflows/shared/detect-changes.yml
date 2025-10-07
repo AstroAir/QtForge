@@ -1,0 +1,106 @@
+name: 'Detect Changes'
+description: 'Detect what parts of the codebase have changed to optimize CI execution'
+
+outputs:
+  core:
+    description: 'Core source code changed'
+    value: ${{ steps.changes.outputs.core }}
+  cmake:
+    description: 'CMake configuration changed'
+    value: ${{ steps.changes.outputs.cmake }}
+  scripts:
+    description: 'Build scripts changed'
+    value: ${{ steps.changes.outputs.scripts }}
+  docs:
+    description: 'Documentation changed'
+    value: ${{ steps.changes.outputs.docs }}
+  examples:
+    description: 'Examples changed'
+    value: ${{ steps.changes.outputs.examples }}
+  packaging:
+    description: 'Packaging configuration changed'
+    value: ${{ steps.changes.outputs.packaging }}
+  ci:
+    description: 'CI configuration changed'
+    value: ${{ steps.changes.outputs.ci }}
+  workflows:
+    description: 'GitHub workflows changed'
+    value: ${{ steps.changes.outputs.workflows }}
+  dependencies:
+    description: 'Dependencies changed'
+    value: ${{ steps.changes.outputs.dependencies }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Check for changes
+      uses: dorny/paths-filter@v3
+      id: changes
+      with:
+        filters: |
+          core:
+            - 'src/**'
+            - 'include/**'
+            - 'CMakeLists.txt'
+            - 'cmake/modules/**'
+          cmake:
+            - 'cmake/**'
+            - 'CMakeLists.txt'
+            - 'CMakePresets.json'
+            - 'cmake/toolchains/**'
+          scripts:
+            - 'scripts/**'
+            - 'build.sh'
+            - 'build.bat'
+            - 'build.py'
+          docs:
+            - 'docs/**'
+            - '*.md'
+            - 'mkdocs.yml'
+            - 'Doxyfile'
+          examples:
+            - 'examples/**'
+          packaging:
+            - 'packaging/**'
+            - 'cmake/modules/QtForgePackaging.cmake'
+          ci:
+            - '.github/workflows/**'
+          workflows:
+            - '.github/workflows/shared/**'
+            - '.github/workflows/ci-*.yml'
+          dependencies:
+            - 'vcpkg.json'
+            - 'conanfile.txt'
+            - 'requirements.txt'
+            - 'cmake/modules/QtForgeDependencies.cmake'
+
+    - name: Changes Summary
+      shell: bash
+      run: |
+        echo "## Change Detection Summary" >> $GITHUB_STEP_SUMMARY
+        echo "- **Core Code**: ${{ steps.changes.outputs.core }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **CMake Config**: ${{ steps.changes.outputs.cmake }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Build Scripts**: ${{ steps.changes.outputs.scripts }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Documentation**: ${{ steps.changes.outputs.docs }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Examples**: ${{ steps.changes.outputs.examples }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Packaging**: ${{ steps.changes.outputs.packaging }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **CI Config**: ${{ steps.changes.outputs.ci }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Workflows**: ${{ steps.changes.outputs.workflows }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Dependencies**: ${{ steps.changes.outputs.dependencies }}" >> $GITHUB_STEP_SUMMARY
+        
+        # Determine if build is needed
+        if [ "${{ steps.changes.outputs.core }}" = "true" ] || \
+           [ "${{ steps.changes.outputs.cmake }}" = "true" ] || \
+           [ "${{ steps.changes.outputs.scripts }}" = "true" ] || \
+           [ "${{ steps.changes.outputs.ci }}" = "true" ] || \
+           [ "${{ steps.changes.outputs.workflows }}" = "true" ] || \
+           [ "${{ steps.changes.outputs.dependencies }}" = "true" ]; then
+          echo "- **Build Required**: ✅ Yes" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "- **Build Required**: ❌ No" >> $GITHUB_STEP_SUMMARY
+        fi

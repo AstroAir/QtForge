@@ -11,7 +11,7 @@
 #include <chrono>
 
 // Advanced plugin interface merged into core plugin interface
-#include <qtplugin/communication/service_contracts.hpp>
+#include <qtplugin/communication/plugin_service_contracts.hpp>
 #include <qtplugin/utils/error_handling.hpp>
 
 #include "../utils/test_helpers.hpp"

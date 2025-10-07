@@ -17,9 +17,45 @@ from typing import List, Dict, Any
 try:
     import qtforge
     from qtforge.core import (
-        PluginManager, PluginState, PluginCapability, PluginPriority,
-        PluginLoadOptions, PluginInfo, PluginMetadata, Version
+        PluginManager, PluginState, PluginCapability, PluginPriority
     )
+    # Try to import optional classes that might not exist
+    try:
+        from qtforge.core import PluginLoadOptions, PluginInfo, PluginMetadata, Version  # type: ignore
+    except ImportError:
+        # Create dummy classes for missing types
+        class PluginLoadOptions:  # type: ignore
+            def __init__(self) -> None:
+                self.validate_signature = False
+                self.check_dependencies = False
+                self.initialize_immediately = False
+                self.enable_hot_reload = False
+
+        class PluginInfo:  # type: ignore
+            pass
+
+        class PluginMetadata:  # type: ignore
+            def __init__(self) -> None:
+                self.name = ""
+                self.version = None
+                self.description = ""
+                self.author = ""
+                self.license = ""
+                self.dependencies: List[str] = []
+                self.tags: List[str] = []
+
+        class Version:  # type: ignore
+            def __init__(self, major: int, minor: int, patch: int) -> None:
+                self.major = major
+                self.minor = minor
+                self.patch = patch
+
+            def __str__(self) -> str:
+                return f"{self.major}.{self.minor}.{self.patch}"
+
+            def __lt__(self, other: 'Version') -> bool:
+                return (self.major, self.minor, self.patch) < (other.major, other.minor, other.patch)
+
 except ImportError:
     # Try to find the bindings in the build directory
     build_dir = Path(__file__).parent.parent / "build" / "src" / "python"
@@ -27,42 +63,98 @@ except ImportError:
         sys.path.insert(0, str(build_dir))
     import qtforge
     from qtforge.core import (
-        PluginManager, PluginState, PluginCapability, PluginPriority,
-        PluginLoadOptions, PluginInfo, PluginMetadata, Version
+        PluginManager, PluginState, PluginCapability, PluginPriority
     )
+    # Try to import optional classes that might not exist
+    try:
+        from qtforge.core import PluginLoadOptions, PluginInfo, PluginMetadata, Version  # type: ignore
+    except ImportError:
+        # Create dummy classes for missing types
+        class PluginLoadOptions:  # type: ignore
+            def __init__(self) -> None:
+                self.validate_signature = False
+                self.check_dependencies = False
+                self.initialize_immediately = False
+                self.enable_hot_reload = False
 
-def demonstrate_plugin_manager() -> None:
+        class PluginInfo:  # type: ignore
+            pass
+
+        class PluginMetadata:  # type: ignore
+            def __init__(self) -> None:
+                self.name = ""
+                self.version = None
+                self.description = ""
+                self.author = ""
+                self.license = ""
+                self.dependencies: List[str] = []
+                self.tags: List[str] = []
+
+        class Version:  # type: ignore
+            def __init__(self, major: int, minor: int, patch: int) -> None:
+                self.major = major
+                self.minor = minor
+                self.patch = patch
+
+            def __str__(self) -> str:
+                return f"{self.major}.{self.minor}.{self.patch}"
+
+            def __lt__(self, other: 'Version') -> bool:
+                return (self.major, self.minor, self.patch) < (other.major, other.minor, other.patch)
+
+def demonstrate_plugin_manager() -> Any:
     """Demonstrate basic plugin manager functionality."""
     print("\n" + "=" * 50)
     print("Plugin Manager Demonstration")
     print("=" * 50)
-    
+
     # Create a plugin manager
     manager = PluginManager()
     print(f"Created plugin manager: {manager}")
-    
+
     # Get initial state
-    print(f"Initially loaded plugins: {manager.loaded_plugins()}")
-    print(f"Search paths: {manager.search_paths()}")
-    
+    try:
+        loaded_plugins: Any = getattr(manager, 'loaded_plugins', lambda: [])()
+        print(f"Initially loaded plugins: {loaded_plugins}")
+    except Exception as e:
+        print(f"Could not get loaded plugins: {e}")
+
+    try:
+        search_paths: Any = getattr(manager, 'search_paths', lambda: [])()
+        print(f"Search paths: {search_paths}")
+    except Exception as e:
+        print(f"Could not get search paths: {e}")
+
     # Add some search paths (these might not exist, but that's okay for demo)
     demo_paths = ["./plugins", "../plugins", "/usr/local/lib/qtforge/plugins"]
     for path in demo_paths:
         try:
-            manager.add_search_path(path)
-            print(f"Added search path: {path}")
+            add_search_path = getattr(manager, 'add_search_path', None)
+            if add_search_path:
+                add_search_path(path)
+                print(f"Added search path: {path}")
+            else:
+                print(f"add_search_path method not available")
         except Exception as e:
             print(f"Could not add search path {path}: {e}")
-    
-    print(f"Updated search paths: {manager.search_paths()}")
-    
+
+    try:
+        search_paths = getattr(manager, 'search_paths', lambda: [])()
+        print(f"Updated search paths: {search_paths}")
+    except Exception as e:
+        print(f"Could not get updated search paths: {e}")
+
     # Try to discover plugins
     try:
-        discovered = manager.discover_plugins(".", recursive=True)
-        print(f"Discovered plugins: {discovered}")
+        discover_plugins = getattr(manager, 'discover_plugins', None)
+        if discover_plugins:
+            discovered = discover_plugins(".", recursive=True)
+            print(f"Discovered plugins: {discovered}")
+        else:
+            print("discover_plugins method not available")
     except Exception as e:
         print(f"Plugin discovery failed: {e}")
-    
+
     return manager
 
 def demonstrate_plugin_metadata() -> None:
@@ -70,15 +162,15 @@ def demonstrate_plugin_metadata() -> None:
     print("\n" + "=" * 50)
     print("Plugin Metadata Demonstration")
     print("=" * 50)
-    
+
     # Create version objects
     version1 = Version(1, 0, 0)
     version2 = Version(2, 1, 3)
-    
+
     print(f"Version 1: {version1}")
     print(f"Version 2: {version2}")
     print(f"Version comparison: {version1} < {version2} = {version1 < version2}")
-    
+
     # Create plugin metadata
     metadata = PluginMetadata()
     metadata.name = "ExamplePlugin"
@@ -88,7 +180,7 @@ def demonstrate_plugin_metadata() -> None:
     metadata.license = "MIT"
     metadata.dependencies = ["CorePlugin", "UtilsPlugin"]
     metadata.tags = ["example", "demo", "test"]
-    
+
     print(f"Created metadata: {metadata}")
     print(f"Plugin name: {metadata.name}")
     print(f"Plugin version: {metadata.version}")
@@ -100,29 +192,24 @@ def demonstrate_plugin_capabilities() -> None:
     print("\n" + "=" * 50)
     print("Plugin Capabilities Demonstration")
     print("=" * 50)
-    
+
     # Show all available capabilities
-    capabilities = [
-        PluginCapability.UI,
-        PluginCapability.Service,
-        PluginCapability.Network,
-        PluginCapability.DataProcessing,
-        PluginCapability.Scripting,
-        PluginCapability.FileSystem,
-        PluginCapability.Database,
-        PluginCapability.AsyncInit,
-        PluginCapability.HotReload,
-        PluginCapability.Configuration,
-        PluginCapability.Logging,
-        PluginCapability.Security,
-        PluginCapability.Threading,
-        PluginCapability.Monitoring
+    capability_names = [
+        'UI', 'Service', 'Network', 'DataProcessing', 'Scripting',
+        'FileSystem', 'Database', 'AsyncInit', 'HotReload', 'Configuration',
+        'Logging', 'Security', 'Threading', 'Monitoring'
     ]
-    
+
+    capabilities = []
+    for name in capability_names:
+        cap = getattr(PluginCapability, name, None)
+        if cap is not None:
+            capabilities.append(cap)
+
     print("Available plugin capabilities:")
     for cap in capabilities:
         print(f"  - {cap}")
-    
+
     # Show all available priorities
     priorities = [
         PluginPriority.Lowest,
@@ -131,25 +218,23 @@ def demonstrate_plugin_capabilities() -> None:
         PluginPriority.High,
         PluginPriority.Highest
     ]
-    
+
     print("\nAvailable plugin priorities:")
     for priority in priorities:
         print(f"  - {priority}")
-    
+
     # Show all available states
-    states = [
-        PluginState.Unloaded,
-        PluginState.Loading,
-        PluginState.Loaded,
-        PluginState.Initializing,
-        PluginState.Running,
-        PluginState.Paused,
-        PluginState.Stopping,
-        PluginState.Stopped,
-        PluginState.Error,
-        PluginState.Reloading
+    state_names = [
+        'Unloaded', 'Loading', 'Loaded', 'Initializing', 'Running',
+        'Paused', 'Stopping', 'Stopped', 'Error', 'Reloading'
     ]
-    
+
+    states = []
+    for name in state_names:
+        state = getattr(PluginState, name, None)
+        if state is not None:
+            states.append(state)
+
     print("\nAvailable plugin states:")
     for state in states:
         print(f"  - {state}")
@@ -159,17 +244,17 @@ def demonstrate_plugin_load_options() -> None:
     print("\n" + "=" * 50)
     print("Plugin Load Options Demonstration")
     print("=" * 50)
-    
+
     # Create load options
     options = PluginLoadOptions()
     print(f"Default load options: {options}")
-    
+
     # Configure options
     options.validate_signature = True
     options.check_dependencies = True
     options.initialize_immediately = False
     options.enable_hot_reload = True
-    
+
     print("Configured load options:")
     print(f"  Validate signature: {options.validate_signature}")
     print(f"  Check dependencies: {options.check_dependencies}")
@@ -181,19 +266,19 @@ def demonstrate_system_information() -> None:
     print("\n" + "=" * 50)
     print("System Information Demonstration")
     print("=" * 50)
-    
+
     # Get system status
     try:
-        status = qtforge.get_system_status()
+        status = qtforge.get_system_status()  # type: ignore
         print("System status:")
         for key, value in status.items():
             print(f"  {key}: {value}")
     except Exception as e:
         print(f"Could not get system status: {e}")
-    
+
     # Get system info
     try:
-        info = qtforge.get_system_info()
+        info = qtforge.get_system_info()  # type: ignore
         print("\nSystem info:")
         for key, value in info.items():
             if isinstance(value, dict):
@@ -208,22 +293,22 @@ def demonstrate_system_information() -> None:
 def main() -> None:
     """Main function demonstrating plugin management."""
     print("QtForge Python Bindings - Plugin Management Example")
-    
+
     try:
         # Test basic connection
-        print(f"Connection test: {qtforge.test_connection()}")
-        
+        print(f"Connection test: {qtforge.test_connection()}")  # type: ignore
+
         # Demonstrate various aspects
         manager = demonstrate_plugin_manager()
         demonstrate_plugin_metadata()
         demonstrate_plugin_capabilities()
         demonstrate_plugin_load_options()
         demonstrate_system_information()
-        
+
         print("\n" + "=" * 50)
         print("Plugin management example completed successfully!")
         print("=" * 50)
-        
+
     except Exception as e:
         print(f"Error during demonstration: {e}")
         import traceback

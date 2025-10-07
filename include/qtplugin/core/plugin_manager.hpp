@@ -6,25 +6,13 @@
 
 #pragma once
 
-#include <QJsonDocument>
-#include <QJsonObject>
 #include <QObject>
-#include <QPluginLoader>
 #include <QString>
-#include <QTimer>
-#include <atomic>
-#include <chrono>
 #include <filesystem>
-#include <functional>
-#include <future>
 #include <memory>
-#include <mutex>
 #include <optional>
-#include <shared_mutex>
 #include <string>
 #include <string_view>
-#include <unordered_map>
-#include <unordered_set>
 #include <vector>
 #include "../managers/plugin_version_manager.hpp"
 
@@ -95,7 +83,6 @@ struct PluginInfo {
     std::chrono::system_clock::time_point load_time;
     std::chrono::system_clock::time_point last_activity;
     std::shared_ptr<IPlugin> instance;
-    std::unique_ptr<QPluginLoader> loader;
     QJsonObject configuration;
     std::vector<std::string> error_log;
     QJsonObject metrics;
@@ -157,7 +144,13 @@ public:
     /**
      * @brief Destructor
      */
-    ~PluginManager();  // Removed override since not inheriting from QObject
+    ~PluginManager();
+
+    // Rule of Five for Pimpl idiom
+    PluginManager(const PluginManager& other);
+    PluginManager& operator=(const PluginManager& other);
+    PluginManager(PluginManager&& other) noexcept;
+    PluginManager& operator=(PluginManager&& other) noexcept;
 
     // === Plugin Loading ===
 
@@ -622,7 +615,7 @@ public:
      * @brief Get message bus
      * @return Reference to the message bus
      */
-    IMessageBus& message_bus() const { return *m_message_bus; }
+    IMessageBus& message_bus() const;
 
     // === Monitoring and Metrics ===
 
@@ -655,7 +648,7 @@ public:
      * @brief Check if monitoring is active
      * @return true if monitoring is running
      */
-    bool is_monitoring_active() const noexcept { return m_monitoring_active; }
+    bool is_monitoring_active() const noexcept;
 
     // === Version Management ===
 
@@ -746,93 +739,9 @@ private slots:
     void on_monitoring_timer();
 
 private:
-    // Components
-    std::unique_ptr<IPluginLoader> m_loader;
-    std::unique_ptr<IMessageBus> m_message_bus;
-
-    std::unique_ptr<IConfigurationManager> m_configuration_manager;
-    std::unique_ptr<ILoggingManager> m_logging_manager;
-    std::unique_ptr<IResourceManager> m_resource_manager;
-    std::unique_ptr<IResourceLifecycleManager> m_resource_lifecycle_manager;
-    std::unique_ptr<IResourceMonitor, detail::IResourceMonitorDeleter>
-        m_resource_monitor;
-    std::unique_ptr<IPluginRegistry, detail::IPluginRegistryDeleter>
-        m_plugin_registry;
-    std::unique_ptr<IPluginDependencyResolver> m_dependency_resolver;
-    std::unique_ptr<IPluginHotReloadManager,
-                    detail::IPluginHotReloadManagerDeleter>
-        m_hot_reload_manager;
-    std::unique_ptr<IPluginMetricsCollector,
-                    detail::IPluginMetricsCollectorDeleter>
-        m_metrics_collector;
-    std::unique_ptr<IPluginVersionManager> m_version_manager;
-
-    // === Enhanced Features (v3.2.0) ===
-
-    // Lifecycle hooks
-    struct HookEntry {
-        std::string id;
-        PluginHook hook;
-    };
-    std::vector<HookEntry> m_pre_load_hooks;
-    std::vector<HookEntry> m_post_load_hooks;
-    std::vector<HookEntry> m_pre_unload_hooks;
-    mutable std::shared_mutex m_hooks_mutex;
-
-    // Health monitoring
-    std::unordered_map<std::string, HealthStatus> m_health_status;
-    std::unique_ptr<QTimer> m_health_timer;
-    bool m_auto_restart_unhealthy = false;
-    mutable std::shared_mutex m_health_mutex;
-
-    // Transaction support
-    std::vector<std::unique_ptr<PluginTransaction>> m_active_transactions;
-    mutable std::mutex m_transaction_mutex;
-
-    // Plugin storage (now handled by PluginRegistry and
-    // PluginDependencyResolver)
-    // TODO: Remove after refactoring is complete
-    mutable std::shared_mutex m_plugins_mutex;
-    std::unordered_map<std::string, std::unique_ptr<PluginInfo>> m_plugins;
-    std::unordered_map<std::string, DependencyNode> m_dependency_graph;
-
-    // Search paths
-    mutable std::shared_mutex m_search_paths_mutex;
-    std::unordered_set<std::filesystem::path> m_search_paths;
-
-    // Hot reloading (now handled by PluginHotReloadManager)
-    // TODO: Remove after refactoring is complete
-    // std::unique_ptr<QFileSystemWatcher> m_file_watcher;
-    // std::unordered_map<std::string, std::filesystem::path> m_watched_files;
-
-    // Monitoring (now handled by PluginMetricsCollector)
-    // TODO: Remove after refactoring is complete
-    std::atomic<bool> m_monitoring_active{false};
-    std::unique_ptr<QTimer> m_monitoring_timer;
-
-
-
-    // Helper methods
-    qtplugin::expected<void, PluginError> validate_plugin_file(
-        const std::filesystem::path& file_path) const;
-    qtplugin::expected<void, PluginError> check_plugin_dependencies(
-        const PluginInfo& info) const;
-    void update_dependency_graph();
-    std::vector<std::string> topological_sort() const;
-    void cleanup_plugin(const std::string& plugin_id);
-    void update_plugin_metrics(const std::string& plugin_id);
-
-    // Dependency graph helpers
-    int calculate_dependency_level(
-        const std::string& plugin_id,
-        const std::vector<std::string>& dependencies) const;
-    void detect_circular_dependencies() const;
-    bool has_circular_dependency(
-        const std::string& plugin_id, std::unordered_set<std::string>& visited,
-        std::unordered_set<std::string>& recursion_stack) const;
-
-    // Utility helpers
-    std::string plugin_state_to_string(PluginState state) const;
+    // Pimpl idiom
+    class Impl;
+    std::unique_ptr<Impl> d;
 };
 
 }  // namespace qtplugin

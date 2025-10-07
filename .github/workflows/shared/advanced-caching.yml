@@ -1,0 +1,251 @@
+name: 'Advanced Caching Strategy'
+description: 'Implement intelligent caching with cache warming and optimization'
+
+inputs:
+  cache-strategy:
+    description: 'Caching strategy (aggressive/conservative/minimal)'
+    required: false
+    default: 'conservative'
+  enable-cache-warming:
+    description: 'Enable cache warming for dependencies'
+    required: false
+    default: 'true'
+  cache-compression:
+    description: 'Enable cache compression'
+    required: false
+    default: 'true'
+  max-cache-size:
+    description: 'Maximum cache size'
+    required: false
+    default: '5G'
+
+outputs:
+  cache-strategy-used:
+    description: 'Cache strategy that was applied'
+    value: ${{ steps.strategy.outputs.strategy }}
+  total-cache-size:
+    description: 'Total cache size used'
+    value: ${{ steps.summary.outputs.total-size }}
+  cache-hit-rate:
+    description: 'Overall cache hit rate percentage'
+    value: ${{ steps.summary.outputs.hit-rate }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Determine cache strategy
+      id: strategy
+      shell: bash
+      run: |
+        STRATEGY="${{ inputs.cache-strategy }}"
+        
+        # Auto-adjust strategy based on available resources
+        if [ "${{ runner.os }}" = "Windows" ]; then
+          # Windows runners have more limited disk space
+          if [ "$STRATEGY" = "aggressive" ]; then
+            STRATEGY="conservative"
+            echo "Adjusted strategy to conservative for Windows"
+          fi
+        fi
+        
+        echo "strategy=$STRATEGY" >> $GITHUB_OUTPUT
+        echo "CACHE_STRATEGY=$STRATEGY" >> $GITHUB_ENV
+
+    - name: Setup cache directories
+      shell: bash
+      run: |
+        # Create cache directories
+        mkdir -p ~/.cache/qtforge
+        mkdir -p ~/.cache/cmake-build
+        mkdir -p ~/.cache/dependencies
+        
+        # Set cache environment variables
+        echo "QTFORGE_CACHE_DIR=$HOME/.cache/qtforge" >> $GITHUB_ENV
+        echo "CMAKE_CACHE_DIR=$HOME/.cache/cmake-build" >> $GITHUB_ENV
+        echo "DEPS_CACHE_DIR=$HOME/.cache/dependencies" >> $GITHUB_ENV
+
+    - name: Cache Qt installation (Enhanced)
+      id: cache-qt-enhanced
+      uses: actions/cache@v4
+      with:
+        path: |
+          ../Qt
+          ~/.cache/qtforge/qt-${{ env.QT_VERSION }}
+        key: ${{ runner.os }}-qt-enhanced-${{ env.QT_VERSION }}-${{ hashFiles('.github/workflows/**/*.yml') }}-v4
+        restore-keys: |
+          ${{ runner.os }}-qt-enhanced-${{ env.QT_VERSION }}-
+          ${{ runner.os }}-qt-enhanced-
+
+    - name: Cache CMake modules and presets
+      id: cache-cmake-modules
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/cmake-build
+          cmake/modules
+          CMakePresets.json
+        key: ${{ runner.os }}-cmake-modules-${{ hashFiles('cmake/**/*.cmake', 'CMakePresets.json') }}-v2
+        restore-keys: |
+          ${{ runner.os }}-cmake-modules-
+
+    - name: Cache compiler toolchains
+      id: cache-toolchains
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/toolchains
+          cmake/toolchains
+        key: ${{ runner.os }}-toolchains-${{ hashFiles('cmake/toolchains/**/*.cmake') }}-v2
+        restore-keys: |
+          ${{ runner.os }}-toolchains-
+
+    - name: Cache build dependencies (Platform-specific)
+      id: cache-build-deps
+      uses: actions/cache@v4
+      with:
+        path: |
+          ${{ runner.os == 'Windows' && 'C:\vcpkg\installed' || '' }}
+          ${{ runner.os == 'Windows' && 'C:\vcpkg\buildtrees' || '' }}
+          ${{ runner.os == 'Linux' && '~/.cache/apt' || '' }}
+          ${{ runner.os == 'Linux' && '/var/cache/apt' || '' }}
+          ${{ runner.os == 'macOS' && '~/Library/Caches/Homebrew' || '' }}
+          ${{ runner.os == 'macOS' && '/usr/local/Homebrew' || '' }}
+        key: ${{ runner.os }}-build-deps-${{ env.CACHE_STRATEGY }}-${{ hashFiles('**/vcpkg.json', '**/requirements.txt', '.github/workflows/**/*.yml') }}-v3
+        restore-keys: |
+          ${{ runner.os }}-build-deps-${{ env.CACHE_STRATEGY }}-
+          ${{ runner.os }}-build-deps-
+
+    - name: Cache compiler cache (ccache/sccache)
+      id: cache-compiler-cache
+      if: runner.os != 'Windows'
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/ccache
+          ~/.ccache
+        key: ${{ runner.os }}-ccache-${{ env.CACHE_STRATEGY }}-${{ hashFiles('src/**/*.cpp', 'src/**/*.hpp', 'include/**/*.hpp') }}-v3
+        restore-keys: |
+          ${{ runner.os }}-ccache-${{ env.CACHE_STRATEGY }}-
+          ${{ runner.os }}-ccache-
+
+    - name: Cache Python dependencies
+      id: cache-python
+      if: inputs.cache-strategy != 'minimal'
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/pip
+          ~/.local/lib/python*/site-packages
+        key: ${{ runner.os }}-python-${{ hashFiles('**/requirements.txt', '**/pyproject.toml') }}-v2
+        restore-keys: |
+          ${{ runner.os }}-python-
+
+    - name: Warm up caches
+      if: inputs.enable-cache-warming == 'true'
+      shell: bash
+      run: |
+        echo "::group::Cache Warming"
+        
+        # Pre-populate ccache if empty
+        if [ "${{ runner.os }}" != "Windows" ] && [ "${{ steps.cache-compiler-cache.outputs.cache-hit }}" != "true" ]; then
+          echo "Warming up ccache..."
+          ccache -M ${{ inputs.max-cache-size }}
+          ccache -z  # Zero statistics
+        fi
+        
+        # Pre-fetch common dependencies
+        if [ "${{ steps.cache-build-deps.outputs.cache-hit }}" != "true" ]; then
+          echo "Pre-fetching build dependencies..."
+          case "${{ runner.os }}" in
+            "Linux")
+              sudo apt-get update -qq
+              ;;
+            "macOS")
+              brew update --quiet || true
+              ;;
+            "Windows")
+              # Update vcpkg if available
+              if [ -d "C:/vcpkg" ]; then
+                cd C:/vcpkg && git pull --quiet || true
+              fi
+              ;;
+          esac
+        fi
+        
+        echo "::endgroup::"
+
+    - name: Configure cache compression
+      if: inputs.cache-compression == 'true'
+      shell: bash
+      run: |
+        # Configure ccache compression
+        if [ "${{ runner.os }}" != "Windows" ]; then
+          ccache --set-config=compression=true
+          ccache --set-config=compression_level=6
+        fi
+        
+        # Set environment variables for cache compression
+        echo "CCACHE_COMPRESS=1" >> $GITHUB_ENV
+        echo "CCACHE_COMPRESSLEVEL=6" >> $GITHUB_ENV
+
+    - name: Cache statistics and summary
+      id: summary
+      shell: bash
+      run: |
+        echo "::group::Cache Statistics"
+        
+        # Calculate cache hit rates
+        QT_HIT=${{ steps.cache-qt-enhanced.outputs.cache-hit == 'true' && '1' || '0' }}
+        CMAKE_HIT=${{ steps.cache-cmake-modules.outputs.cache-hit == 'true' && '1' || '0' }}
+        TOOLCHAIN_HIT=${{ steps.cache-toolchains.outputs.cache-hit == 'true' && '1' || '0' }}
+        DEPS_HIT=${{ steps.cache-build-deps.outputs.cache-hit == 'true' && '1' || '0' }}
+        CCACHE_HIT=${{ steps.cache-compiler-cache.outputs.cache-hit == 'true' && '1' || '0' }}
+        
+        TOTAL_CACHES=4
+        if [ "${{ runner.os }}" != "Windows" ]; then
+          TOTAL_CACHES=5
+        fi
+        
+        HITS=$((QT_HIT + CMAKE_HIT + TOOLCHAIN_HIT + DEPS_HIT + CCACHE_HIT))
+        HIT_RATE=$((HITS * 100 / TOTAL_CACHES))
+        
+        echo "Cache hit rate: ${HIT_RATE}%"
+        echo "hit-rate=${HIT_RATE}" >> $GITHUB_OUTPUT
+        
+        # Estimate total cache size
+        TOTAL_SIZE="Unknown"
+        if command -v du >/dev/null 2>&1; then
+          if [ -d "$HOME/.cache" ]; then
+            SIZE_KB=$(du -sk "$HOME/.cache" 2>/dev/null | cut -f1 || echo "0")
+            TOTAL_SIZE="${SIZE_KB}KB"
+          fi
+        fi
+        
+        echo "total-size=${TOTAL_SIZE}" >> $GITHUB_OUTPUT
+        
+        # ccache statistics
+        if [ "${{ runner.os }}" != "Windows" ] && command -v ccache >/dev/null 2>&1; then
+          echo "ccache statistics:"
+          ccache -s
+        fi
+        
+        echo "::endgroup::"
+
+    - name: Cache Summary Report
+      shell: bash
+      run: |
+        echo "## Advanced Caching Summary" >> $GITHUB_STEP_SUMMARY
+        echo "- **Strategy**: ${{ steps.strategy.outputs.strategy }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Cache Hit Rate**: ${{ steps.summary.outputs.hit-rate }}%" >> $GITHUB_STEP_SUMMARY
+        echo "- **Total Cache Size**: ${{ steps.summary.outputs.total-size }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Compression**: ${{ inputs.cache-compression }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Cache Warming**: ${{ inputs.enable-cache-warming }}" >> $GITHUB_STEP_SUMMARY
+        
+        echo "### Cache Status" >> $GITHUB_STEP_SUMMARY
+        echo "- **Qt Cache**: ${{ steps.cache-qt-enhanced.outputs.cache-hit == 'true' && '✅ Hit' || '❌ Miss' }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **CMake Modules**: ${{ steps.cache-cmake-modules.outputs.cache-hit == 'true' && '✅ Hit' || '❌ Miss' }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Toolchains**: ${{ steps.cache-toolchains.outputs.cache-hit == 'true' && '✅ Hit' || '❌ Miss' }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Build Dependencies**: ${{ steps.cache-build-deps.outputs.cache-hit == 'true' && '✅ Hit' || '❌ Miss' }}" >> $GITHUB_STEP_SUMMARY
+        if [ "${{ runner.os }}" != "Windows" ]; then
+          echo "- **Compiler Cache**: ${{ steps.cache-compiler-cache.outputs.cache-hit == 'true' && '✅ Hit' || '❌ Miss' }}" >> $GITHUB_STEP_SUMMARY
+        fi

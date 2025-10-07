@@ -15,6 +15,7 @@ import sys
 import time
 import threading
 from pathlib import Path
+from typing import Any
 
 # Add the build directory to Python path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "build"))
@@ -29,7 +30,7 @@ except ImportError as e:
     sys.exit(1)
 
 
-def demonstrate_message_bus_creation() -> None:
+def demonstrate_message_bus_creation() -> Any:
     """Demonstrate creating and configuring a message bus."""
     print("\n" + "="*50)
     print("📡 Creating Message Bus")
@@ -101,9 +102,13 @@ def demonstrate_basic_messaging(bus) -> None:
             
             for i, msg_data in enumerate(messages, 1):
                 try:
-                    message = comm.BasicMessage(topic, msg_data)
-                    bus.publish(message)
-                    print(f"  ✅ Published message {i}: {msg_data}")
+                    message = comm.BasicMessage(topic, str(msg_data))
+                    publish_func = getattr(bus, 'publish', None)
+                    if publish_func:
+                        publish_func(message)
+                        print(f"  ✅ Published message {i}: {msg_data}")
+                    else:
+                        print(f"  ⚠️  Publish method not available for message {i}")
                     time.sleep(0.1)  # Small delay for processing
                 except Exception as e:
                     print(f"  ❌ Failed to publish message {i}: {e}")
@@ -125,7 +130,7 @@ def demonstrate_basic_messaging(bus) -> None:
         print(f"❌ Basic messaging demonstration failed: {e}")
 
 
-def demonstrate_message_properties() -> None:
+def demonstrate_message_properties() -> Any:
     """Demonstrate message properties and metadata."""
     print("\n" + "="*50)
     print("🏷️  Message Properties and Metadata")
@@ -140,7 +145,7 @@ def demonstrate_message_properties() -> None:
         topic = "example.properties"
         data = {"user": "alice", "action": "login", "timestamp": time.time()}
         
-        message = comm.BasicMessage(topic, data)
+        message = comm.BasicMessage(topic, str(data))
         print("✅ Created message with basic properties")
         
         # Test property access
@@ -163,8 +168,20 @@ def demonstrate_message_properties() -> None:
             
             for key, value in metadata_items:
                 try:
-                    message.set_metadata(key, value)
-                    print(f"  ✅ Set {key}: {value}")
+                    set_metadata_func = getattr(message, 'set_metadata', None)
+                    if set_metadata_func:
+                        # Try different call signatures
+                        try:
+                            set_metadata_func({key: value})  # Dict format
+                        except:
+                            try:
+                                set_metadata_func(key, value)  # Key-value format
+                            except:
+                                print(f"  ⚠️  Could not set metadata {key}: incompatible signature")
+                                continue
+                        print(f"  ✅ Set {key}: {value}")
+                    else:
+                        print(f"  ⚠️  set_metadata method not available")
                 except Exception as e:
                     print(f"  ❌ Failed to set {key}: {e}")
         
@@ -456,8 +473,12 @@ def demonstrate_async_communication() -> None:
             topic = f"async.test.{i}"
             try:
                 message = comm.BasicMessage(topic, f"Message for thread {i}")
-                bus.publish(message)
-                print(f"📤 Published to {topic}")
+                publish_func = getattr(bus, 'publish', None)
+                if publish_func:
+                    publish_func(message)
+                    print(f"📤 Published to {topic}")
+                else:
+                    print(f"⚠️  Publish method not available for {topic}")
             except Exception as e:
                 print(f"❌ Failed to publish to {topic}: {e}")
     

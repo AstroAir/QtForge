@@ -7,16 +7,11 @@
 #pragma once
 
 #include <QJsonObject>
-#include <QPluginLoader>
 #include <filesystem>
 #include <functional>
 #include <memory>
-#include <mutex>
-#include <shared_mutex>
 #include <string>
 #include <string_view>
-#include <unordered_map>
-#include <unordered_set>
 #include <vector>
 #include "../utils/concepts.hpp"
 #include "../utils/error_handling.hpp"
@@ -80,6 +75,14 @@ class QtPluginLoader : public IPluginLoader {
 public:
     QtPluginLoader();
     ~QtPluginLoader() override;
+
+    // Copy constructor and assignment operator
+    QtPluginLoader(const QtPluginLoader& other);
+    QtPluginLoader& operator=(const QtPluginLoader& other);
+
+    // Move constructor and assignment operator
+    QtPluginLoader(QtPluginLoader&& other) noexcept;
+    QtPluginLoader& operator=(QtPluginLoader&& other) noexcept;
 
     // IPluginLoader implementation
     bool can_load(const std::filesystem::path& file_path) const override;
@@ -215,69 +218,8 @@ public:
     void set_max_loading_threads(size_t count);
 
 private:
-    struct LoadedPlugin {
-        std::string id;
-        std::filesystem::path file_path;
-        std::unique_ptr<QPluginLoader> qt_loader;
-        std::shared_ptr<IPlugin> instance;
-        std::chrono::steady_clock::time_point load_time;
-        std::atomic<int> ref_count{1};
-        size_t estimated_memory = 0;
-    };
-
-    // === Error tracking ===
-    struct ErrorEntry {
-        std::chrono::system_clock::time_point timestamp;
-        std::string function;
-        std::string message;
-        PluginErrorCode code;
-    };
-    
-    // === Metadata cache ===
-    struct CacheEntry {
-        QJsonObject metadata;
-        std::filesystem::file_time_type file_time;
-        size_t file_size;
-        std::chrono::steady_clock::time_point cache_time;
-    };
-
-    std::unordered_map<std::string, std::unique_ptr<LoadedPlugin>>
-        m_loaded_plugins;
-    mutable std::shared_mutex m_plugins_mutex;
-    
-    // Enhanced features
-    mutable std::unordered_map<std::string, CacheEntry> m_metadata_cache;
-    mutable std::shared_mutex m_cache_mutex;
-    mutable std::vector<ErrorEntry> m_error_history;
-    mutable std::mutex m_error_mutex;
-    mutable std::atomic<size_t> m_cache_hits{0};
-    mutable std::atomic<size_t> m_cache_misses{0};
-    bool m_cache_enabled = true;
-    static constexpr size_t MAX_ERROR_HISTORY = 100;
-    static constexpr size_t MAX_CACHE_SIZE = 100;
-    static constexpr auto CACHE_EXPIRY = std::chrono::minutes(10);
-
-    // Helper methods
-    qtplugin::expected<QJsonObject, PluginError> read_metadata(
-        const std::filesystem::path& file_path) const;
-    qtplugin::expected<QJsonObject, PluginError> read_metadata_cached(
-        const std::filesystem::path& file_path) const;
-    qtplugin::expected<QJsonObject, PluginError> read_metadata_impl(
-        const std::filesystem::path& file_path) const;
-    qtplugin::expected<std::string, PluginError> extract_plugin_id(
-        const QJsonObject& metadata) const;
-    bool is_valid_plugin_file(const std::filesystem::path& file_path) const;
-    void track_error(const std::string& function, const std::string& message,
-                     PluginErrorCode code = PluginErrorCode::Unknown) const;
-    bool is_cache_valid(const std::filesystem::path& path, 
-                        const CacheEntry& entry) const;
-    void evict_oldest_cache_entry() const;
-    
-    // Parallel loading helpers
-    std::vector<BatchLoadResult> batch_load_parallel(
-        const std::vector<std::filesystem::path>& paths);
-    void load_persistent_cache();
-    void save_persistent_cache() const;
+    class Impl;
+    std::unique_ptr<Impl> d;
 };
 
 /**

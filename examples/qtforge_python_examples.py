@@ -9,6 +9,7 @@ official QtForge Python bindings with practical examples.
 import sys
 import time
 from pathlib import Path
+from typing import Optional, Any
 
 # Add the build/python directory to the path for QtForge bindings
 build_path = Path(__file__).parent.parent / "build" / "python"
@@ -38,7 +39,7 @@ except ImportError as e:
     QTFORGE_AVAILABLE = False
 
     # Create dummy classes for when QtForge is not available
-    class IPlugin:
+    class DummyIPlugin:
         def __init__(self):
             pass
 
@@ -89,20 +90,21 @@ except ImportError as e:
         def test_connection():
             return "QtForge not available"
 
-    qtforge = DummyQtForge()
+    qtforge = DummyQtForge()  # type: ignore
+    IPlugin = DummyIPlugin  # type: ignore
 
 
 # Example 1: Basic Plugin Implementation using QtForge
-class DatabasePlugin(IPlugin):
+class DatabasePlugin(IPlugin):  # type: ignore
     """Example database plugin with full lifecycle."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
-        self.connection = None
+        self.connection: Optional[str] = None
         self.connected = False
-        self._plugin_id = "database_plugin"
-        self._name = "Database Plugin"
-        self._version = "1.0.0"
+        self._plugin_id: str = "database_plugin"
+        self._name: str = "Database Plugin"
+        self._version: str = "1.0.0"
 
     def get_plugin_id(self) -> str:
         """Get the plugin ID."""
@@ -166,16 +168,16 @@ class DatabasePlugin(IPlugin):
         return result
 
 
-class WebServerPlugin(IPlugin):
+class WebServerPlugin(IPlugin):  # type: ignore
     """Example web server plugin."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.server_running = False
         self.port = 8080
-        self._plugin_id = "webserver_plugin"
-        self._name = "Web Server Plugin"
-        self._version = "1.0.0"
+        self._plugin_id: str = "webserver_plugin"
+        self._name: str = "Web Server Plugin"
+        self._version: str = "1.0.0"
 
     def get_plugin_id(self) -> str:
         return self._plugin_id
@@ -295,21 +297,21 @@ def example_2_qtforge_system_info():
 
     try:
         # Get version information
-        version = qtforge.get_version()
-        version_info = qtforge.get_version_info()
+        version = qtforge.get_version()  # type: ignore
+        version_info = qtforge.get_version_info()  # type: ignore
         print(f"📦 QtForge Version: {version}")
         print(f"📦 Version Info: {version_info}")
 
         # Get build information
-        build_info = qtforge.get_build_info()
+        build_info = qtforge.get_build_info()  # type: ignore
         print(f"🔧 Build Info: {build_info}")
 
         # List available modules
-        modules = qtforge.list_available_modules()
+        modules = qtforge.list_available_modules()  # type: ignore
         print(f"📚 Available Modules: {modules}")
 
         # Test connection
-        test_result = qtforge.test_connection()
+        test_result = qtforge.test_connection()  # type: ignore
         print(f"🔗 Connection Test: {test_result}")
 
     except Exception as e:

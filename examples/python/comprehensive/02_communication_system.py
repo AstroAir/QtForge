@@ -24,6 +24,7 @@ import json
 import time
 import threading
 from pathlib import Path
+from typing import Any, Optional, List, Dict
 
 # Add the build directory to Python path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../../build'))
@@ -43,8 +44,8 @@ class CommunicationExample:
     
     def __init__(self) -> None:
         """Initialize the communication example."""
-        self.message_bus = None
-        self.messages_received = []
+        self.message_bus: Optional[Any] = None
+        self.messages_received: List[Any] = []
         self.setup_components()
     
     def setup_components(self) -> None:
@@ -66,7 +67,7 @@ class CommunicationExample:
             print(f"❌ Failed to setup communication components: {e}")
             raise
     
-    def demonstrate_message_creation(self) -> None:
+    def demonstrate_message_creation(self) -> List[Any]:
         """Demonstrate message creation and manipulation."""
         print("\n📨 Demonstrating message creation...")
         
@@ -263,7 +264,7 @@ class CommunicationExample:
                     print(f"Service name: {contract.service_name}")
                 
                 if hasattr(contract, 'version'):
-                    contract.version = "1.0.0"
+                    contract.version = "1.0.0"  # type: ignore
                     print(f"Service version: {contract.version}")
                 
                 if hasattr(contract, 'description'):
@@ -275,7 +276,7 @@ class CommunicationExample:
         
         elif hasattr(comm, 'create_service_contract'):
             try:
-                contract = comm.create_service_contract()
+                contract = comm.create_service_contract()  # type: ignore
                 print("✅ ServiceContract created via factory")
                 
             except Exception as e:
@@ -339,7 +340,7 @@ class CommunicationExample:
                         )
                         
                         if hasattr(self.message_bus, 'publish'):
-                            result = self.message_bus.publish(message)
+                            result = self.message_bus.publish(message)  # type: ignore
                             results.append(f"Thread {thread_id}, Message {i}: {result}")
                     
                     time.sleep(0.01)  # Small delay
@@ -398,7 +399,7 @@ class CommunicationExample:
         
         print("✅ Communication cleanup completed")
     
-    def run_complete_example(self) -> None:
+    def run_complete_example(self) -> int:
         """Run the complete communication example."""
         print("🚀 QtForge Python Bindings - Communication System Example")
         print("=" * 70)
@@ -429,7 +430,7 @@ class CommunicationExample:
         return 0
 
 
-def main() -> None:
+def main() -> int:
     """Main entry point for the example."""
     try:
         example = CommunicationExample()

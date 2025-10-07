@@ -18,6 +18,20 @@ if has_config("examples") and has_package("qt6widgets") then
 else
     print("UI Plugin example skipped (Qt6Widgets not available)")
 end
+-- New specialized examples
+if os.isdir("04-specialized/threading") then
+    includes("04-specialized/threading")
+end
+if os.isdir("04-specialized/transactions") then
+    includes("04-specialized/transactions")
+end
+if os.isdir("01-fundamentals/composition-basics") then
+    includes("01-fundamentals/composition-basics")
+end
+if os.isdir("04-specialized/security") then
+    includes("04-specialized/security")
+end
+
 
 -- Additional examples based on available directories
 local example_dirs = {

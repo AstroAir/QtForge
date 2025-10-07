@@ -19,6 +19,20 @@ if(QTFORGE_BUILD_UI)
 else()
     message(STATUS "UI Plugin example skipped (QTFORGE_BUILD_UI=OFF)")
 endif()
+# Threading and Transactions Examples
+add_subdirectory(04-specialized/threading)
+add_subdirectory(04-specialized/transactions)
+
+# Composition Basics Example
+add_subdirectory(01-fundamentals/composition-basics)
+
+# Security Example (stubbed)
+if(QTFORGE_BUILD_SECURITY)
+    add_subdirectory(04-specialized/security)
+else()
+    message(STATUS "Security example skipped (QTFORGE_BUILD_SECURITY=OFF)")
+endif()
+
 
 # Communication Examples (advanced MessageBus patterns) - temporarily disabled due to interface issues
 # add_subdirectory(02-communication/event-driven)
@@ -104,7 +118,7 @@ message(STATUS "✅ UI Plugin - Qt Widgets integration and themes")
 message(STATUS "✅ Communication Examples - Advanced MessageBus patterns")
 message(STATUS "📋 Python Integration - Python bindings and scripting (planned)")
 message(STATUS "📋 Version Management - Plugin versioning and compatibility (planned)")
-message(STATUS "✅ Security Plugin - Validation, permissions, and audit")
+message(STATUS "✅ Security Example - Validator and basic checks (stub)")
 message(STATUS "✅ Monitoring Plugin - Hot reload and metrics collection")
 message(STATUS "✅ Network Plugin - REST API and WebSocket integration")
 message(STATUS "📋 Database Plugin - Database integration patterns (planned)")

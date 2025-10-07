@@ -11,6 +11,10 @@ def utils_test() -> str:
     """Test function for verifying utils module works."""
     ...
 
+def test_utils() -> str:
+    """Test function for utils module (alias)."""
+    ...
+
 def create_version(major: int, minor: int, patch: int) -> str:
     """Create a version string from major, minor, patch numbers.
     

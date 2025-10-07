@@ -66,12 +66,12 @@
 // Enhanced plugin interfaces
 #include "interfaces/data/data_processor_plugin_interface.hpp"
 #ifdef QTFORGE_HAS_NETWORK
-#include "interfaces/network_plugin_interface.hpp"
+#include "interfaces/network/network_plugin_interface.hpp"
 #endif
 #ifdef QTFORGE_HAS_WIDGETS
-#include "interfaces/ui_plugin_interface.hpp"
+#include "interfaces/ui/ui_plugin_interface.hpp"
 #endif
-// #include "interfaces/scripting_plugin_interface.hpp" // Temporarily disabled - requires Qt6Qml
+// #include "interfaces/scripting/scripting_plugin_interface.hpp" // Temporarily disabled - requires Qt6Qml
 
 // Platform-specific components
 #include "platform/platform_plugin_loader.hpp"

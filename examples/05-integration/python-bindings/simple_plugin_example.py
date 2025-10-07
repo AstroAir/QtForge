@@ -13,6 +13,8 @@ Version: 3.0.0
 import sys
 import os
 import json
+import time
+from typing import Dict, Any, Optional
 from typing import Dict, Any, Optional
 
 # Add the build directory to Python path
@@ -29,7 +31,7 @@ class SimpleQtForgePlugin:
         self.version = "1.0.0"
         self.description = "A demonstration Python plugin for QtForge"
         self.state = "initialized"
-        self.data_store = {}
+        self.data_store: Dict[str, Any] = {}
         
     def get_info(self) -> Dict[str, Any]:
         """Get plugin information"""
@@ -188,8 +190,8 @@ class QtForgePluginExample:
     
     def __init__(self) -> None:
         """Initialize the example"""
-        self.qtforge = None
-        self.plugin = None
+        self.qtforge: Optional[Any] = None
+        self.plugin: Optional[SimpleQtForgePlugin] = None
         
     def initialize_qtforge(self) -> bool:
         """Initialize QtForge"""
@@ -261,10 +263,10 @@ class QtForgePluginExample:
             
             # Test if we can create QtForge components
             if hasattr(self.qtforge, 'create_plugin_manager'):
-                manager = self.qtforge.create_plugin_manager()
+                manager = self.qtforge.create_plugin_manager()  # type: ignore
                 print("✅ Plugin manager created")
-            elif hasattr(self.qtforge.core, 'create_plugin_manager'):
-                manager = self.qtforge.core.create_plugin_manager()
+            elif hasattr(self.qtforge, 'core') and hasattr(self.qtforge.core, 'create_plugin_manager'):  # type: ignore
+                manager = self.qtforge.core.create_plugin_manager()  # type: ignore
                 print("✅ Plugin manager created via core module")
             else:
                 print("⚠️  Plugin manager creation not available")
@@ -317,7 +319,7 @@ class QtForgePluginExample:
         
         return 0
 
-def main() -> None:
+def main() -> int:
     """Main entry point"""
     import time
     

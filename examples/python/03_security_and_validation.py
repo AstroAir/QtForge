@@ -16,13 +16,14 @@ import os
 import tempfile
 import hashlib
 from pathlib import Path
+from typing import Any
 
 # Add the build directory to Python path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "build"))
 
 try:
     import qtforge
-    import qtforge.security as security
+    import qtforge.security as security  # type: ignore
     print("✅ QtForge Security bindings loaded successfully")
 except ImportError as e:
     print(f"❌ Failed to import QtForge Security: {e}")
@@ -30,7 +31,7 @@ except ImportError as e:
     sys.exit(1)
 
 
-def demonstrate_security_manager() -> None:
+def demonstrate_security_manager() -> Any:  # type: ignore
     """Demonstrate security manager creation and basic operations."""
     print("\n" + "="*50)
     print("🔒 Security Manager Operations")
@@ -107,7 +108,7 @@ def demonstrate_security_manager() -> None:
         return None
 
 
-def demonstrate_security_validator() -> None:
+def demonstrate_security_validator() -> Any:  # type: ignore
     """Demonstrate security validator operations."""
     print("\n" + "="*50)
     print("🔍 Security Validator Operations")
@@ -165,7 +166,7 @@ def demonstrate_security_validator() -> None:
         return None
 
 
-def demonstrate_signature_verifier() -> None:
+def demonstrate_signature_verifier() -> Any:  # type: ignore
     """Demonstrate signature verification operations."""
     print("\n" + "="*50)
     print("✍️  Signature Verification Operations")
@@ -226,7 +227,7 @@ def demonstrate_signature_verifier() -> None:
         return None
 
 
-def demonstrate_permission_manager() -> None:
+def demonstrate_permission_manager() -> Any:  # type: ignore
     """Demonstrate permission management operations."""
     print("\n" + "="*50)
     print("🔐 Permission Management Operations")
@@ -304,7 +305,7 @@ def demonstrate_permission_manager() -> None:
         return None
 
 
-def demonstrate_security_policy_engine() -> None:
+def demonstrate_security_policy_engine() -> Any:  # type: ignore
     """Demonstrate security policy engine operations."""
     print("\n" + "="*50)
     print("📋 Security Policy Engine Operations")
@@ -419,7 +420,7 @@ def demonstrate_security_enums() -> None:
                 print(f"  • {level}: {value}")
 
 
-def demonstrate_security_context() -> None:
+def demonstrate_security_context() -> Any:  # type: ignore
     """Demonstrate security context operations."""
     print("\n" + "="*50)
     print("🏷️  Security Context Operations")
@@ -506,7 +507,7 @@ def demonstrate_error_handling() -> None:
             ]
             
             for test_name, test_func in permission_error_tests:
-                if test_func:
+                if test_func is not None:
                     try:
                         result = test_func()
                         print(f"  ⚠️  {test_name}: Unexpected success ({result})")

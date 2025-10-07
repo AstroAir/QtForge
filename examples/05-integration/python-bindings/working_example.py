@@ -9,7 +9,7 @@ Due to compilation issues with advanced modules, this shows the minimal working 
 import sys
 import os
 
-def test_qtforge_integration() -> None:
+def test_qtforge_integration() -> bool:
     """Test QtForge Python integration"""
     
     print("🔧 QtForge Python Integration Test")

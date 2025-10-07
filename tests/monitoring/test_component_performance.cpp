@@ -43,7 +43,10 @@
 #include "qtplugin/managers/resource_monitor_impl.hpp"
 #include "qtplugin/monitoring/plugin_hot_reload_manager.hpp"
 #include "qtplugin/monitoring/plugin_metrics_collector.hpp"
-// Security components removed
+#include "qtplugin/security/components/security_validator.hpp"
+#include "qtplugin/security/components/signature_verifier.hpp"
+#include "qtplugin/security/components/permission_manager.hpp"
+#include "qtplugin/security/components/security_policy_engine.hpp"
 // #include "qtplugin/managers/components/resource_monitor.hpp"  // Conflicts
 // with resource_monitor_impl.hpp
 
@@ -138,8 +141,8 @@ void ComponentPerformanceTests::testComponentInstantiationPerformance() {
             auto resolver = std::make_unique<PluginDependencyResolver>();
 
             // Test security components
-            auto validator = std::make_unique<SecurityValidator>();
-            auto verifier = std::make_unique<SignatureVerifier>();
+            auto validator = std::make_unique<qtplugin::security::components::SecurityValidator>();
+            auto verifier = std::make_unique<qtplugin::security::components::SignatureVerifier>();
 
             // Test configuration components
             auto storage = std::make_unique<ConfigurationStorage>();
@@ -235,10 +238,10 @@ void ComponentPerformanceTests::testComponentMemoryFootprint() {
     auto resolver = std::make_unique<PluginDependencyResolver>();
     auto hot_reload = std::make_unique<PluginHotReloadManager>();
     auto metrics = std::make_unique<PluginMetricsCollector>();
-    auto validator = std::make_unique<SecurityValidator>();
-    auto verifier = std::make_unique<SignatureVerifier>();
-    auto permission_mgr = std::make_unique<PermissionManager>();
-    auto policy_engine = std::make_unique<SecurityPolicyEngine>();
+    auto validator = std::make_unique<qtplugin::security::components::SecurityValidator>();
+    auto verifier = std::make_unique<qtplugin::security::components::SignatureVerifier>();
+    auto permission_mgr = std::make_unique<qtplugin::security::components::PermissionManager>();
+    auto policy_engine = std::make_unique<qtplugin::security::components::SecurityPolicyEngine>();
     auto storage = std::make_unique<ConfigurationStorage>();
     auto config_validator = std::make_unique<ConfigurationValidator>();
     auto merger = std::make_unique<ConfigurationMerger>();
@@ -446,7 +449,7 @@ void ComponentPerformanceTests::testDependencyResolverPerformance() {
 }
 
 void ComponentPerformanceTests::testSecurityValidatorPerformance() {
-    auto validator = std::make_unique<SecurityValidator>();
+    auto validator = std::make_unique<qtplugin::security::components::SecurityValidator>();
 
     measureExecutionTime(
         "Security Validator Performance", [&validator, this]() {
@@ -511,7 +514,7 @@ void ComponentPerformanceTests::testMemoryUsageComparison() {
         size_t initial = getCurrentMemoryUsage();
         auto registry = std::make_unique<PluginRegistry>();
         auto allocator = std::make_unique<ResourceAllocator>();
-        auto validator = std::make_unique<SecurityValidator>();
+        auto validator = std::make_unique<qtplugin::security::components::SecurityValidator>();
         size_t final = getCurrentMemoryUsage();
         component_memory = static_cast<qint64>(final) - static_cast<qint64>(initial);
         Q_UNUSED(registry);

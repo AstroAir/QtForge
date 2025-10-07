@@ -1,0 +1,334 @@
+name: 'Enhanced Error Handling'
+description: 'Implement retry mechanisms and detailed error reporting'
+
+inputs:
+  max-retries:
+    description: 'Maximum number of retries for flaky operations'
+    required: false
+    default: '3'
+  retry-delay:
+    description: 'Delay between retries in seconds'
+    required: false
+    default: '30'
+  enable-detailed-logging:
+    description: 'Enable detailed error logging'
+    required: false
+    default: 'true'
+  collect-diagnostics:
+    description: 'Collect system diagnostics on failure'
+    required: false
+    default: 'true'
+
+outputs:
+  retry-count:
+    description: 'Number of retries performed'
+    value: ${{ steps.retry-tracker.outputs.count }}
+  final-status:
+    description: 'Final operation status'
+    value: ${{ steps.final-status.outputs.status }}
+  error-summary:
+    description: 'Summary of errors encountered'
+    value: ${{ steps.error-summary.outputs.summary }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Initialize error handling
+      shell: bash
+      run: |
+        # Create error tracking directory
+        mkdir -p .github/error-logs
+        
+        # Initialize retry counter
+        echo "0" > .github/error-logs/retry-count.txt
+        
+        # Set error handling environment
+        echo "ERROR_LOG_DIR=.github/error-logs" >> $GITHUB_ENV
+        echo "MAX_RETRIES=${{ inputs.max-retries }}" >> $GITHUB_ENV
+        echo "RETRY_DELAY=${{ inputs.retry-delay }}" >> $GITHUB_ENV
+
+    - name: Setup error logging
+      if: inputs.enable-detailed-logging == 'true'
+      shell: bash
+      run: |
+        # Configure detailed logging
+        if [ "${{ runner.os }}" != "Windows" ]; then
+          # Enable bash error tracing
+          set -x
+          exec 2> >(tee -a "${ERROR_LOG_DIR}/error.log")
+        fi
+        
+        # Create log files
+        touch "${ERROR_LOG_DIR}/build.log"
+        touch "${ERROR_LOG_DIR}/test.log"
+        touch "${ERROR_LOG_DIR}/system.log"
+        
+        echo "Error logging initialized at $(date)" >> "${ERROR_LOG_DIR}/error.log"
+
+    - name: System diagnostics collection
+      if: inputs.collect-diagnostics == 'true'
+      shell: bash
+      run: |
+        echo "::group::System Diagnostics"
+        
+        DIAG_FILE="${ERROR_LOG_DIR}/system-diagnostics.txt"
+        
+        echo "=== System Information ===" > "$DIAG_FILE"
+        echo "Date: $(date)" >> "$DIAG_FILE"
+        echo "Runner OS: ${{ runner.os }}" >> "$DIAG_FILE"
+        echo "Runner Architecture: ${{ runner.arch }}" >> "$DIAG_FILE"
+        echo "GitHub Workspace: ${{ github.workspace }}" >> "$DIAG_FILE"
+        echo "GitHub Event: ${{ github.event_name }}" >> "$DIAG_FILE"
+        echo "" >> "$DIAG_FILE"
+        
+        echo "=== Environment Variables ===" >> "$DIAG_FILE"
+        env | grep -E "(QT_|CMAKE_|QTFORGE_|GITHUB_)" | sort >> "$DIAG_FILE"
+        echo "" >> "$DIAG_FILE"
+        
+        echo "=== System Resources ===" >> "$DIAG_FILE"
+        if [ "${{ runner.os }}" = "Linux" ] || [ "${{ runner.os }}" = "macOS" ]; then
+          echo "Memory:" >> "$DIAG_FILE"
+          free -h >> "$DIAG_FILE" 2>/dev/null || vm_stat >> "$DIAG_FILE" 2>/dev/null
+          echo "" >> "$DIAG_FILE"
+          
+          echo "Disk Space:" >> "$DIAG_FILE"
+          df -h >> "$DIAG_FILE" 2>/dev/null
+          echo "" >> "$DIAG_FILE"
+          
+          echo "CPU Info:" >> "$DIAG_FILE"
+          nproc >> "$DIAG_FILE" 2>/dev/null || sysctl -n hw.ncpu >> "$DIAG_FILE" 2>/dev/null
+        elif [ "${{ runner.os }}" = "Windows" ]; then
+          echo "System Info:" >> "$DIAG_FILE"
+          systeminfo | head -20 >> "$DIAG_FILE" 2>/dev/null || echo "systeminfo not available" >> "$DIAG_FILE"
+        fi
+        
+        echo "::endgroup::"
+
+    - name: Retry mechanism wrapper
+      id: retry-wrapper
+      shell: bash
+      run: |
+        # This step sets up the retry mechanism for subsequent operations
+        echo "Retry mechanism initialized"
+        echo "Maximum retries: ${{ inputs.max-retries }}"
+        echo "Retry delay: ${{ inputs.retry-delay }} seconds"
+        
+        # Create retry function
+        cat > "${ERROR_LOG_DIR}/retry-function.sh" << 'EOF'
+        #!/bin/bash
+        retry_operation() {
+          local max_attempts=$1
+          local delay=$2
+          local command="${@:3}"
+          local attempt=1
+          
+          while [ $attempt -le $max_attempts ]; do
+            echo "Attempt $attempt of $max_attempts: $command"
+            
+            if eval "$command"; then
+              echo "Operation succeeded on attempt $attempt"
+              echo $((attempt - 1)) > .github/error-logs/retry-count.txt
+              return 0
+            else
+              local exit_code=$?
+              echo "Operation failed on attempt $attempt (exit code: $exit_code)"
+              
+              if [ $attempt -lt $max_attempts ]; then
+                echo "Waiting $delay seconds before retry..."
+                sleep $delay
+              fi
+              
+              attempt=$((attempt + 1))
+            fi
+          done
+          
+          echo "Operation failed after $max_attempts attempts"
+          echo $max_attempts > .github/error-logs/retry-count.txt
+          return 1
+        }
+        EOF
+        
+        chmod +x "${ERROR_LOG_DIR}/retry-function.sh"
+
+    - name: Error pattern detection
+      shell: bash
+      run: |
+        # Create error pattern detection script
+        cat > "${ERROR_LOG_DIR}/detect-errors.sh" << 'EOF'
+        #!/bin/bash
+        detect_error_patterns() {
+          local log_file=$1
+          local patterns_file="${ERROR_LOG_DIR}/error-patterns.txt"
+          
+          # Common error patterns
+          cat > "$patterns_file" << 'PATTERNS'
+        error:|ERROR:|Error:|fatal:|FATAL:|Fatal:
+        failed:|FAILED:|Failed:|failure:|FAILURE:|Failure:
+        exception:|Exception:|EXCEPTION:
+        segmentation fault|segfault|SIGSEGV
+        out of memory|OOM|memory allocation failed
+        permission denied|access denied
+        no such file|file not found|cannot find
+        connection refused|connection timeout
+        cmake.*error|make.*error|ninja.*error
+        qt.*error|moc.*error|qmake.*error
+        PATTERNS
+          
+          if [ -f "$log_file" ]; then
+            echo "=== Error Pattern Analysis ===" >> "${ERROR_LOG_DIR}/error-analysis.txt"
+            echo "Log file: $log_file" >> "${ERROR_LOG_DIR}/error-analysis.txt"
+            echo "Timestamp: $(date)" >> "${ERROR_LOG_DIR}/error-analysis.txt"
+            echo "" >> "${ERROR_LOG_DIR}/error-analysis.txt"
+            
+            while IFS= read -r pattern; do
+              if grep -i "$pattern" "$log_file" >/dev/null 2>&1; then
+                echo "Found pattern: $pattern" >> "${ERROR_LOG_DIR}/error-analysis.txt"
+                grep -i -n "$pattern" "$log_file" | head -5 >> "${ERROR_LOG_DIR}/error-analysis.txt"
+                echo "" >> "${ERROR_LOG_DIR}/error-analysis.txt"
+              fi
+            done < "$patterns_file"
+          fi
+        }
+        EOF
+        
+        chmod +x "${ERROR_LOG_DIR}/detect-errors.sh"
+
+    - name: Failure recovery suggestions
+      shell: bash
+      run: |
+        # Create failure recovery suggestions
+        cat > "${ERROR_LOG_DIR}/recovery-suggestions.sh" << 'EOF'
+        #!/bin/bash
+        generate_recovery_suggestions() {
+          local error_type=$1
+          local suggestions_file="${ERROR_LOG_DIR}/recovery-suggestions.txt"
+          
+          echo "=== Recovery Suggestions ===" > "$suggestions_file"
+          echo "Error Type: $error_type" >> "$suggestions_file"
+          echo "Generated: $(date)" >> "$suggestions_file"
+          echo "" >> "$suggestions_file"
+          
+          case "$error_type" in
+            "build_failure")
+              cat >> "$suggestions_file" << 'SUGGESTIONS'
+        Build Failure Recovery:
+        1. Check if all dependencies are properly installed
+        2. Verify CMake configuration and presets
+        3. Clear build cache and try again
+        4. Check for disk space issues
+        5. Verify compiler toolchain installation
+        6. Review build logs for specific error messages
+        SUGGESTIONS
+              ;;
+            "test_failure")
+              cat >> "$suggestions_file" << 'SUGGESTIONS'
+        Test Failure Recovery:
+        1. Run tests individually to isolate failures
+        2. Check for race conditions in parallel tests
+        3. Verify test environment setup
+        4. Check for resource constraints (memory, disk)
+        5. Review test logs for assertion failures
+        6. Consider platform-specific test issues
+        SUGGESTIONS
+              ;;
+            "dependency_failure")
+              cat >> "$suggestions_file" << 'SUGGESTIONS'
+        Dependency Failure Recovery:
+        1. Update package manager repositories
+        2. Check network connectivity
+        3. Verify package availability for platform
+        4. Clear package manager cache
+        5. Try alternative package sources
+        6. Check for version compatibility issues
+        SUGGESTIONS
+              ;;
+            *)
+              cat >> "$suggestions_file" << 'SUGGESTIONS'
+        General Recovery:
+        1. Check system resources (memory, disk space)
+        2. Review error logs for specific issues
+        3. Verify environment configuration
+        4. Try running with verbose logging
+        5. Check for platform-specific issues
+        6. Consider retrying the operation
+        SUGGESTIONS
+              ;;
+          esac
+        }
+        EOF
+        
+        chmod +x "${ERROR_LOG_DIR}/recovery-suggestions.sh"
+
+    - name: Track retry count
+      id: retry-tracker
+      shell: bash
+      run: |
+        if [ -f "${ERROR_LOG_DIR}/retry-count.txt" ]; then
+          RETRY_COUNT=$(cat "${ERROR_LOG_DIR}/retry-count.txt")
+        else
+          RETRY_COUNT=0
+        fi
+        
+        echo "count=${RETRY_COUNT}" >> $GITHUB_OUTPUT
+        echo "RETRY_COUNT=${RETRY_COUNT}" >> $GITHUB_ENV
+
+    - name: Final status determination
+      id: final-status
+      shell: bash
+      run: |
+        # Determine final status based on retry count and other factors
+        if [ "${RETRY_COUNT:-0}" -eq 0 ]; then
+          STATUS="success"
+        elif [ "${RETRY_COUNT:-0}" -lt "${{ inputs.max-retries }}" ]; then
+          STATUS="success_with_retries"
+        else
+          STATUS="failure_after_retries"
+        fi
+        
+        echo "status=${STATUS}" >> $GITHUB_OUTPUT
+        echo "FINAL_STATUS=${STATUS}" >> $GITHUB_ENV
+
+    - name: Generate error summary
+      id: error-summary
+      shell: bash
+      run: |
+        SUMMARY_FILE="${ERROR_LOG_DIR}/error-summary.txt"
+        
+        echo "=== Error Handling Summary ===" > "$SUMMARY_FILE"
+        echo "Final Status: ${FINAL_STATUS}" >> "$SUMMARY_FILE"
+        echo "Retry Count: ${RETRY_COUNT}" >> "$SUMMARY_FILE"
+        echo "Max Retries: ${{ inputs.max-retries }}" >> "$SUMMARY_FILE"
+        echo "Detailed Logging: ${{ inputs.enable-detailed-logging }}" >> "$SUMMARY_FILE"
+        echo "Diagnostics Collection: ${{ inputs.collect-diagnostics }}" >> "$SUMMARY_FILE"
+        echo "" >> "$SUMMARY_FILE"
+        
+        # Include error analysis if available
+        if [ -f "${ERROR_LOG_DIR}/error-analysis.txt" ]; then
+          echo "=== Error Analysis ===" >> "$SUMMARY_FILE"
+          cat "${ERROR_LOG_DIR}/error-analysis.txt" >> "$SUMMARY_FILE"
+          echo "" >> "$SUMMARY_FILE"
+        fi
+        
+        # Include recovery suggestions if available
+        if [ -f "${ERROR_LOG_DIR}/recovery-suggestions.txt" ]; then
+          cat "${ERROR_LOG_DIR}/recovery-suggestions.txt" >> "$SUMMARY_FILE"
+        fi
+        
+        # Output summary for GitHub
+        SUMMARY_CONTENT=$(cat "$SUMMARY_FILE" | head -20)
+        echo "summary=${SUMMARY_CONTENT}" >> $GITHUB_OUTPUT
+
+    - name: Error Handling Summary Report
+      shell: bash
+      run: |
+        echo "## Error Handling Summary" >> $GITHUB_STEP_SUMMARY
+        echo "- **Final Status**: ${FINAL_STATUS}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Retry Count**: ${RETRY_COUNT}/${{ inputs.max-retries }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Detailed Logging**: ${{ inputs.enable-detailed-logging }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Diagnostics Collection**: ${{ inputs.collect-diagnostics }}" >> $GITHUB_STEP_SUMMARY
+        
+        if [ "${RETRY_COUNT:-0}" -gt 0 ]; then
+          echo "- **Retries Performed**: ⚠️ ${RETRY_COUNT}" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "- **Retries Performed**: ✅ None needed" >> $GITHUB_STEP_SUMMARY
+        fi
