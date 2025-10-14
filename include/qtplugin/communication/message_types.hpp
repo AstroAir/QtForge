@@ -20,7 +20,8 @@ namespace qtplugin::messages {
 // Helper functions for reducing code duplication
 namespace detail {
 /**
- * @brief Converts a timestamp to JSON-compatible string format (milliseconds since epoch)
+ * @brief Converts a timestamp to JSON-compatible string format (milliseconds
+ * since epoch)
  * @param tp The system clock time point to convert
  * @return QString representation of the timestamp
  */
@@ -57,7 +58,8 @@ inline QJsonObject create_base_json(
 }
 
 /**
- * @brief Adds an optional string field to a JSON object if the value is not empty
+ * @brief Adds an optional string field to a JSON object if the value is not
+ * empty
  * @param json The JSON object to modify
  * @param key The field key
  * @param value The string value to add if non-empty
@@ -70,7 +72,8 @@ inline void add_optional_field(QJsonObject& json, const char* key,
 }
 
 /**
- * @brief Template function for converting an enum value to its string representation using a lookup array
+ * @brief Template function for converting an enum value to its string
+ * representation using a lookup array
  * @tparam EnumType The enum type
  * @tparam N The size of the string array
  * @param value The enum value to convert
@@ -97,7 +100,8 @@ constexpr std::array log_level_strings = {"debug", "info", "warning", "error",
 }  // namespace detail
 
 /**
- * @brief Plugin lifecycle event message for notifying about plugin state changes
+ * @brief Plugin lifecycle event message for notifying about plugin state
+ * changes
  */
 class PluginLifecycleMessage : public Message<PluginLifecycleMessage> {
 public:
@@ -105,17 +109,17 @@ public:
      * @brief Enum representing different plugin lifecycle events
      */
     enum class Event {
-        Loading,      ///< Plugin is being loaded
-        Loaded,       ///< Plugin has been loaded successfully
-        Initializing, ///< Plugin is initializing
-        Initialized,  ///< Plugin has been initialized
-        Starting,     ///< Plugin is starting
-        Started,      ///< Plugin has started successfully
-        Stopping,     ///< Plugin is stopping
-        Stopped,      ///< Plugin has stopped
-        Unloading,    ///< Plugin is being unloaded
-        Unloaded,     ///< Plugin has been unloaded
-        Error         ///< An error occurred during lifecycle
+        Loading,       ///< Plugin is being loaded
+        Loaded,        ///< Plugin has been loaded successfully
+        Initializing,  ///< Plugin is initializing
+        Initialized,   ///< Plugin has been initialized
+        Starting,      ///< Plugin is starting
+        Started,       ///< Plugin has started successfully
+        Stopping,      ///< Plugin is stopping
+        Stopped,       ///< Plugin has stopped
+        Unloading,     ///< Plugin is being unloaded
+        Unloaded,      ///< Plugin has been unloaded
+        Error          ///< An error occurred during lifecycle
     };
 
     /**
@@ -133,7 +137,7 @@ public:
      * @return The plugin identifier
      */
     std::string_view plugin_id() const noexcept { return m_plugin_id; }
-    
+
     /**
      * @brief Gets the lifecycle event
      * @return The event type
@@ -185,7 +189,7 @@ public:
      * @return The plugin identifier
      */
     std::string_view plugin_id() const noexcept { return m_plugin_id; }
-    
+
     /**
      * @brief Gets the old configuration
      * @return The previous QJsonObject config
@@ -193,7 +197,7 @@ public:
     const QJsonObject& old_configuration() const noexcept {
         return m_old_config;
     }
-    
+
     /**
      * @brief Gets the new configuration
      * @return The updated QJsonObject config
@@ -249,13 +253,13 @@ public:
      * @return The target plugin identifier
      */
     std::string_view target_plugin() const noexcept { return m_target_plugin; }
-    
+
     /**
      * @brief Gets the command string
      * @return The command name
      */
     std::string_view command() const noexcept { return m_command; }
-    
+
     /**
      * @brief Gets the command parameters
      * @return The QJsonObject parameters
@@ -311,19 +315,19 @@ public:
      * @return The original request identifier
      */
     std::string_view request_id() const noexcept { return m_request_id; }
-    
+
     /**
      * @brief Checks if the command was successful
      * @return True if successful
      */
     bool success() const noexcept { return m_success; }
-    
+
     /**
      * @brief Gets the result data
      * @return The QJsonObject result
      */
     const QJsonObject& result() const noexcept { return m_result; }
-    
+
     /**
      * @brief Gets the error message if any
      * @return The error description string
@@ -360,12 +364,12 @@ public:
      * @brief Enum representing system status levels
      */
     enum class Status {
-        Starting,     ///< System is starting up
-        Running,      ///< System is running normally
-        Stopping,     ///< System is shutting down
-        Stopped,      ///< System has stopped
-        Error,        ///< System encountered an error
-        Maintenance   ///< System is in maintenance mode
+        Starting,    ///< System is starting up
+        Running,     ///< System is running normally
+        Stopping,    ///< System is shutting down
+        Stopped,     ///< System has stopped
+        Error,       ///< System encountered an error
+        Maintenance  ///< System is in maintenance mode
     };
 
     /**
@@ -385,7 +389,7 @@ public:
      * @return The status enum value
      */
     Status status() const noexcept { return m_status; }
-    
+
     /**
      * @brief Gets the status details
      * @return The details string
@@ -441,7 +445,7 @@ public:
      * @return The plugin identifier
      */
     std::string_view plugin_id() const noexcept { return m_plugin_id; }
-    
+
     /**
      * @brief Gets the resource information
      * @return Const reference to ResourceInfo
@@ -494,7 +498,7 @@ public:
      * @return The custom data type string
      */
     std::string_view data_type() const noexcept { return m_data_type; }
-    
+
     /**
      * @brief Gets the data payload
      * @return The QJsonObject data
@@ -541,7 +545,7 @@ public:
      * @return The plugin identifier
      */
     std::string_view plugin_id() const noexcept { return m_plugin_id; }
-    
+
     /**
      * @brief Gets the error details
      * @return Const reference to PluginError
@@ -575,11 +579,11 @@ public:
      * @brief Enum representing log levels
      */
     enum class Level {
-        Debug,     ///< Debug level logging
-        Info,      ///< Informational logging
-        Warning,   ///< Warning level logging
-        Error,     ///< Error level logging
-        Critical   ///< Critical error logging
+        Debug,    ///< Debug level logging
+        Info,     ///< Informational logging
+        Warning,  ///< Warning level logging
+        Error,    ///< Error level logging
+        Critical  ///< Critical error logging
     };
 
     /**
@@ -601,13 +605,13 @@ public:
      * @return The Level enum value
      */
     Level level() const noexcept { return m_level; }
-    
+
     /**
      * @brief Gets the log message
      * @return The message string
      */
     std::string_view message() const noexcept { return m_message; }
-    
+
     /**
      * @brief Gets the log category
      * @return The category string

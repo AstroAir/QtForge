@@ -267,8 +267,8 @@ if has_config("tests") then
             add_packages("qt6test")
         end
 
-        -- Add dependencies
-        add_deps("QtForgeCore", "QtForgeSecurity")
+        -- Add dependencies (QtForgeSecurity removed - security is now part of QtForgeCore)
+        add_deps("QtForgeCore")
 
         -- Set as test target
         set_default(false)

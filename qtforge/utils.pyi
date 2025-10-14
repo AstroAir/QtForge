@@ -17,12 +17,12 @@ def test_utils() -> str:
 
 def create_version(major: int, minor: int, patch: int) -> str:
     """Create a version string from major, minor, patch numbers.
-    
+
     Args:
         major: Major version number
-        minor: Minor version number  
+        minor: Minor version number
         patch: Patch version number
-        
+
     Returns:
         Formatted version string (e.g., "1.2.3")
     """
@@ -30,10 +30,10 @@ def create_version(major: int, minor: int, patch: int) -> str:
 
 def parse_version(version_string: str) -> str:
     """Parse a version string and return formatted result.
-    
+
     Args:
         version_string: Version string to parse (e.g., "1.2.3-beta")
-        
+
     Returns:
         Parsed and formatted version string
     """
@@ -41,11 +41,11 @@ def parse_version(version_string: str) -> str:
 
 def create_error(code: int, message: str) -> str:
     """Create an error message with code and description.
-    
+
     Args:
         code: Error code number
         message: Error message description
-        
+
     Returns:
         Formatted error string
     """
@@ -53,7 +53,7 @@ def create_error(code: int, message: str) -> str:
 
 def register_qt_conversions() -> None:
     """Register Qt type conversions with pybind11.
-    
+
     This function sets up type conversions between Qt types and Python types
     for use in the Python bindings.
     """

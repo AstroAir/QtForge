@@ -6,27 +6,14 @@
 #include <QRegularExpression>
 #include <QUuid>
 #include <algorithm>
+#include <qtplugin/communication/message_bus.hpp>
 #include <qtplugin/remote/remote_plugin_manager_extension.hpp>
 
 namespace qtplugin {
 
 // === RemotePluginLoadOptions Implementation ===
-
-qtplugin::RemotePluginLoadOptions RemotePluginLoadOptions::to_remote_options()
-    const {
-    qtplugin::RemotePluginLoadOptions remote_opts;
-    remote_opts.download_options.timeout = download_timeout;
-    remote_opts.download_options.use_cache = cache_remote_plugin;
-    remote_opts.download_options.verify_checksum = validate_signature;
-    remote_opts.security_level = remote_security_level;
-    remote_opts.validate_source = validate_remote_source;
-    remote_opts.validate_plugin = validate_signature;
-    remote_opts.cache_plugin = cache_remote_plugin;
-    remote_opts.auto_update = auto_update_remote;
-    remote_opts.validation_timeout =
-        std::chrono::duration_cast<std::chrono::seconds>(timeout);
-    return remote_opts;
-}
+// Note: to_remote_options() method removed as RemotePluginLoadOptions is
+// already the remote options type
 
 // === RemotePluginManagerExtension Implementation ===
 
@@ -75,8 +62,7 @@ RemotePluginManagerExtension::load_remote_plugin(
 
     // Use HTTP loader for HTTP/HTTPS sources
     if (HttpPluginLoader::is_http_url(source.url())) {
-        auto remote_options = options.to_remote_options();
-        auto result = m_http_loader->load_remote(source, remote_options);
+        auto result = m_http_loader->load_remote(source, options);
 
         if (!result) {
             return qtplugin::unexpected(result.error());
@@ -84,8 +70,8 @@ RemotePluginManagerExtension::load_remote_plugin(
 
         // Load the downloaded plugin using the base manager
         auto base_options = convert_to_base_options(options);
-        auto load_result =
-            m_plugin_manager->load_plugin(result->cached_path, base_options);
+        auto load_result = m_plugin_manager->load_plugin(
+            result.value().cached_path, base_options);
 
         if (load_result) {
             // Track the remote source for this plugin
@@ -97,8 +83,7 @@ RemotePluginManagerExtension::load_remote_plugin(
     }
 
     return qtplugin::make_error<std::string>(
-        PluginErrorCode::UnsupportedFormat,
-        "Unsupported remote plugin source type");
+        PluginErrorCode::NotSupported, "Unsupported remote plugin source type");
 }
 
 QString RemotePluginManagerExtension::load_remote_plugin_async(
@@ -131,8 +116,6 @@ QString RemotePluginManagerExtension::load_remote_plugin_async(
 
     // Use HTTP loader for HTTP/HTTPS sources
     if (HttpPluginLoader::is_http_url(source.url())) {
-        auto remote_options = options.to_remote_options();
-
         // Create completion wrapper that loads the plugin using base manager
         auto wrapped_completion =
             [this, options, operation_id, source, completion_callback](
@@ -150,7 +133,7 @@ QString RemotePluginManagerExtension::load_remote_plugin_async(
                 // Load the downloaded plugin using the base manager
                 auto base_options = convert_to_base_options(options);
                 auto load_result = m_plugin_manager->load_plugin(
-                    result->cached_path, base_options);
+                    result.value().cached_path, base_options);
 
                 if (load_result) {
                     // Track the remote source for this plugin
@@ -166,7 +149,7 @@ QString RemotePluginManagerExtension::load_remote_plugin_async(
             };
 
         QString remote_operation_id = m_http_loader->load_remote_async(
-            source, remote_options, progress_callback, wrapped_completion);
+            source, options, progress_callback, wrapped_completion);
 
         if (!remote_operation_id.isEmpty()) {
             track_async_operation(operation_id,
@@ -176,7 +159,7 @@ QString RemotePluginManagerExtension::load_remote_plugin_async(
     }
 
     if (completion_callback) {
-        PluginError error{PluginErrorCode::UnsupportedFormat,
+        PluginError error{PluginErrorCode::NotSupported,
                           "Unsupported remote plugin source type"};
         completion_callback(qtplugin::unexpected(error));
     }
@@ -380,8 +363,7 @@ RemotePluginManagerExtension::load_from_cached_file(
 void RemotePluginManagerExtension::initialize_remote_components() {
     // Create default remote configuration if not provided
     if (!m_remote_configuration) {
-        m_remote_configuration = std::make_shared<RemotePluginConfiguration>(
-            RemotePluginConfiguration::create_default());
+        m_remote_configuration = RemotePluginConfiguration::create_default();
     }
 
     // Create download manager
@@ -425,14 +407,10 @@ void RemotePluginManagerExtension::untrack_async_operation(
 
 PluginLoadOptions RemotePluginManagerExtension::convert_to_base_options(
     const RemotePluginLoadOptions& remote_options) const {
-    // Since RemotePluginLoadOptions inherits from PluginLoadOptions, we can use
-    // the base part
     PluginLoadOptions base_options;
 
     // Set default values for base options
-    base_options.validate_signature =
-        remote_options.validate_plugin;  // Map remote plugin validation to
-                                         // signature validation
+    base_options.validate_sha256 = remote_options.validate_plugin;
     base_options.check_dependencies =
         true;  // Default to true for remote plugins
     base_options.initialize_immediately = true;  // Default to true
@@ -444,22 +422,6 @@ PluginLoadOptions RemotePluginManagerExtension::convert_to_base_options(
     base_options.configuration =
         QJsonObject();  // Empty configuration by default
 
-    // Convert remote security level to base security level
-    switch (remote_options.security_level) {
-        case RemoteSecurityLevel::Minimal:
-            base_options.security_level = SecurityLevel::None;
-            break;
-        case RemoteSecurityLevel::Standard:
-            base_options.security_level = SecurityLevel::Standard;
-            break;
-        case RemoteSecurityLevel::High:
-            base_options.security_level = SecurityLevel::Strict;
-            break;
-        case RemoteSecurityLevel::Paranoid:
-            base_options.security_level = SecurityLevel::Maximum;
-            break;
-    }
-
     return base_options;
 }
 
@@ -469,32 +431,14 @@ RemotePluginLoadOptions RemotePluginManagerExtension::convert_from_base_options(
 
     // Map base options to remote options
     remote_options.validate_source = true;  // Always validate remote sources
-    remote_options.validate_plugin = base_options.validate_signature;
+    remote_options.validate_plugin = base_options.validate_sha256;
     remote_options.cache_plugin = true;  // Default to caching remote plugins
     remote_options.auto_update = false;  // Default to no auto-update
     remote_options.validation_timeout =
         std::chrono::duration_cast<std::chrono::seconds>(base_options.timeout);
 
-    // Convert base security level to remote security level
-    switch (base_options.security_level) {
-        case SecurityLevel::None:
-            remote_options.security_level = RemoteSecurityLevel::Minimal;
-            break;
-        case SecurityLevel::Basic:
-        case SecurityLevel::Permissive:
-            remote_options.security_level = RemoteSecurityLevel::Standard;
-            break;
-        case SecurityLevel::Standard:
-        case SecurityLevel::Moderate:
-            remote_options.security_level = RemoteSecurityLevel::Standard;
-            break;
-        case SecurityLevel::Strict:
-            remote_options.security_level = RemoteSecurityLevel::High;
-            break;
-        case SecurityLevel::Maximum:
-            remote_options.security_level = RemoteSecurityLevel::Paranoid;
-            break;
-    }
+    // Use standard security level for remote plugins
+    remote_options.security_level = RemoteSecurityLevel::Standard;
 
     return remote_options;
 }
@@ -536,8 +480,7 @@ RemotePluginManagerFactory::create_enterprise() {
     auto base_manager = std::make_shared<PluginManager>();
 
     // Create enterprise remote configuration
-    auto remote_config = std::make_shared<RemotePluginConfiguration>(
-        RemotePluginConfiguration::create_enterprise());
+    auto remote_config = RemotePluginConfiguration::create_enterprise();
 
     // Create extension
     auto extension =
@@ -564,7 +507,7 @@ qtplugin::expected<std::string, PluginError> load_plugin_from_path_or_url(
     if (is_plugin_url(path_or_url)) {
         // This is a URL - we need remote plugin support
         return qtplugin::make_error<std::string>(
-            PluginErrorCode::UnsupportedFormat,
+            PluginErrorCode::NotSupported,
             "Remote plugin URLs require RemotePluginManagerExtension");
     } else {
         // This is a local file path

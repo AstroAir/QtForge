@@ -1,6 +1,7 @@
 /**
  * @file composition.cpp
- * @brief Implementation of plugin composition functionality for unified workflow module
+ * @brief Implementation of plugin composition functionality for unified
+ * workflow module
  * @version 3.1.0
  */
 
@@ -9,10 +10,14 @@
 #include <QJsonDocument>
 #include <QLoggingCategory>
 #include <algorithm>
-#include <future>
+#include <exception>
+#include <memory>
+#include <set>
 #include "qtplugin/core/plugin_manager.hpp"
 
-Q_LOGGING_CATEGORY(workflowCompositionLog, "qtplugin.workflow.composition")
+namespace {
+Q_LOGGING_CATEGORY(workflow_composition_log, "qtplugin.workflow.composition")
+}  // namespace
 
 namespace qtplugin::workflow::composition {
 
@@ -41,13 +46,13 @@ qtplugin::expected<void, PluginError> PluginComposition::validate() const {
 
     // Validate bindings
     for (const auto& binding : m_bindings) {
-        if (m_plugins.find(binding.source_plugin_id) == m_plugins.end()) {
+        if (!m_plugins.contains(binding.source_plugin_id)) {
             return make_error<void>(PluginErrorCode::DependencyMissing,
                                     "Binding source plugin not found: " +
                                         binding.source_plugin_id.toStdString());
         }
 
-        if (m_plugins.find(binding.target_plugin_id) == m_plugins.end()) {
+        if (!m_plugins.contains(binding.target_plugin_id)) {
             return make_error<void>(PluginErrorCode::DependencyMissing,
                                     "Binding target plugin not found: " +
                                         binding.target_plugin_id.toStdString());
@@ -98,8 +103,8 @@ qtplugin::expected<PluginComposition, PluginError> PluginComposition::from_json(
             PluginErrorCode::InvalidConfiguration, "Missing composition ID");
     }
 
-    QString id = json["id"].toString();
-    QString name = json.value("name").toString(id);
+    const QString id = json["id"].toString();
+    const QString name = json.value("name").toString(id);
 
     PluginComposition composition(id, name);
     composition.set_description(json.value("description").toString());
@@ -107,7 +112,8 @@ qtplugin::expected<PluginComposition, PluginError> PluginComposition::from_json(
         static_cast<CompositionStrategy>(json.value("strategy").toInt()));
     composition.set_configuration(json.value("configuration").toObject());
 
-    QString primary_plugin_id = json.value("primary_plugin_id").toString();
+    const QString primary_plugin_id =
+        json.value("primary_plugin_id").toString();
     if (!primary_plugin_id.isEmpty()) {
         composition.set_primary_plugin(primary_plugin_id);
     }
@@ -117,14 +123,14 @@ qtplugin::expected<PluginComposition, PluginError> PluginComposition::from_json(
         QJsonObject plugins_json = json["plugins"].toObject();
         for (auto it = plugins_json.begin(); it != plugins_json.end(); ++it) {
             const QString& plugin_id = it.key();
-            PluginRole role = static_cast<PluginRole>(it.value().toInt());
+            const PluginRole role = static_cast<PluginRole>(it.value().toInt());
             composition.add_plugin(plugin_id, role);
         }
     }
 
     // Parse bindings
     if (json.contains("bindings") && json["bindings"].isArray()) {
-        QJsonArray bindings_json = json["bindings"].toArray();
+        const QJsonArray bindings_json = json["bindings"].toArray();
         for (const auto& binding_value : bindings_json) {
             QJsonObject binding_json = binding_value.toObject();
 
@@ -158,13 +164,14 @@ qtplugin::expected<PluginComposition, PluginError> PluginComposition::from_json(
 
 CompositePlugin::CompositePlugin(const PluginComposition& composition,
                                  QObject* parent)
-    : QObject(parent), m_composition(composition) {
+    : QObject(parent),
+      m_composition(composition),
+      m_configuration(composition.configuration()) {
     m_id = composition.id().toStdString();
     m_name = composition.name().toStdString();
     m_description = composition.description().toStdString();
-    m_configuration = composition.configuration();
 
-    qCDebug(workflowCompositionLog)
+    qCDebug(workflow_composition_log)
         << "Created composite plugin:" << QString::fromStdString(m_id);
 }
 
@@ -193,7 +200,7 @@ qtplugin::expected<void, PluginError> CompositePlugin::initialize() {
     for (auto& [plugin_id, plugin] : m_component_plugins) {
         auto init_result = plugin->initialize();
         if (!init_result) {
-            qCWarning(workflowCompositionLog)
+            qCWarning(workflow_composition_log)
                 << "Failed to initialize component plugin:" << plugin_id;
             m_state = PluginState::Error;
             return init_result;
@@ -215,7 +222,7 @@ qtplugin::expected<void, PluginError> CompositePlugin::initialize() {
 
     m_state = PluginState::Running;
 
-    qCDebug(workflowCompositionLog)
+    qCDebug(workflow_composition_log)
         << "Composite plugin initialized:" << QString::fromStdString(m_id);
 
     return make_success();
@@ -232,15 +239,17 @@ void CompositePlugin::shutdown() noexcept {
         // Shutdown component plugins in reverse insertion order
         std::vector<QString> keys;
         keys.reserve(m_component_plugins.size());
-        for (const auto& kv : m_component_plugins)
+        for (const auto& kv : m_component_plugins) {
             keys.push_back(kv.first);
+        }
         for (auto it = keys.rbegin(); it != keys.rend(); ++it) {
             try {
                 auto found = m_component_plugins.find(*it);
-                if (found != m_component_plugins.end() && found->second)
+                if (found != m_component_plugins.end() && found->second) {
                     found->second->shutdown();
+                }
             } catch (const std::exception& e) {
-                qCWarning(workflowCompositionLog)
+                qCWarning(workflow_composition_log)
                     << "Exception during component plugin shutdown:"
                     << e.what();
             }
@@ -251,14 +260,14 @@ void CompositePlugin::shutdown() noexcept {
 
         m_state = PluginState::Unloaded;
 
-        qCDebug(workflowCompositionLog)
+        qCDebug(workflow_composition_log)
             << "Composite plugin shutdown:" << QString::fromStdString(m_id);
     } catch (const std::exception& e) {
-        qCWarning(workflowCompositionLog)
+        qCWarning(workflow_composition_log)
             << "Exception during composite plugin shutdown:" << e.what();
         m_state = PluginState::Error;
     } catch (...) {
-        qCWarning(workflowCompositionLog)
+        qCWarning(workflow_composition_log)
             << "Unknown exception during composite plugin shutdown";
         m_state = PluginState::Error;
     }
@@ -274,7 +283,7 @@ qtplugin::expected<void, PluginError> CompositePlugin::configure(
             auto plugin_config = config[plugin_id].toObject();
             auto config_result = plugin->configure(plugin_config);
             if (!config_result) {
-                qCWarning(workflowCompositionLog)
+                qCWarning(workflow_composition_log)
                     << "Failed to configure component plugin:" << plugin_id;
                 return config_result;
             }
@@ -282,6 +291,10 @@ qtplugin::expected<void, PluginError> CompositePlugin::configure(
     }
 
     return make_success();
+}
+
+QJsonObject CompositePlugin::get_configuration() const {
+    return m_configuration;
 }
 
 PluginMetadata CompositePlugin::metadata() const {
@@ -292,21 +305,8 @@ PluginMetadata CompositePlugin::metadata() const {
     meta.author = m_author;
     meta.capabilities = m_capabilities;
 
-    // Add component plugin information as custom data
-    QJsonObject custom_data;
-    custom_data["strategy"] = static_cast<int>(m_composition.strategy());
-
-    QJsonArray components;
-    for (const auto& [plugin_id, plugin] : m_component_plugins) {
-        QJsonObject component_info;
-        component_info["id"] = plugin_id;
-        component_info["name"] =
-            QString::fromStdString(std::string(plugin->name()));
-        component_info["state"] = static_cast<int>(plugin->state());
-        components.append(component_info);
-    }
-    custom_data["components"] = components;
-    meta.custom_data = custom_data;
+    // Note: PluginMetadata doesn't have a custom_data field
+    // Component information can be retrieved via get_component_plugins() method
 
     return meta;
 }
@@ -332,14 +332,16 @@ qtplugin::expected<QJsonObject, PluginError> CompositePlugin::execute_command(
 }
 
 std::vector<std::string> CompositePlugin::available_commands() const {
-    std::set<std::string> all_commands;
+    const std::set<std::string> all_commands = [this]() {
+        std::set<std::string> commands;
+        for (const auto& [plugin_id, plugin] : m_component_plugins) {
+            auto plugin_commands = plugin->available_commands();
+            commands.insert(plugin_commands.begin(), plugin_commands.end());
+        }
+        return commands;
+    }();
 
-    for (const auto& [plugin_id, plugin] : m_component_plugins) {
-        auto commands = plugin->available_commands();
-        all_commands.insert(commands.begin(), commands.end());
-    }
-
-    return std::vector<std::string>(all_commands.begin(), all_commands.end());
+    return {all_commands.begin(), all_commands.end()};
 }
 
 qtplugin::expected<void, PluginError>
@@ -362,8 +364,9 @@ CompositePlugin::load_component_plugins() {
 
         m_component_plugins[plugin_id] = plugin;
 
-        qCDebug(workflowCompositionLog) << "Loaded component plugin:" << plugin_id
-                                << "role:" << static_cast<int>(role);
+        qCDebug(workflow_composition_log)
+            << "Loaded component plugin:" << plugin_id
+            << "role:" << static_cast<int>(role);
     }
 
     return make_success();
@@ -373,13 +376,13 @@ qtplugin::expected<void, PluginError> CompositePlugin::setup_bindings() {
     m_active_bindings = m_composition.bindings();
 
     // Sort bindings by priority
-    std::sort(m_active_bindings.begin(), m_active_bindings.end(),
-              [](const CompositionBinding& a, const CompositionBinding& b) {
-                  return a.priority > b.priority;
-              });
+    std::ranges::sort(m_active_bindings, [](const CompositionBinding& a,
+                                            const CompositionBinding& b) {
+        return a.priority > b.priority;
+    });
 
-    qCDebug(workflowCompositionLog) << "Setup" << m_active_bindings.size()
-                            << "bindings for composite plugin";
+    qCDebug(workflow_composition_log) << "Setup" << m_active_bindings.size()
+                                      << "bindings for composite plugin";
 
     return make_success();
 }
@@ -394,7 +397,7 @@ CompositePlugin::execute_aggregation_command(std::string_view command,
     // Execute command on all component plugins
     for (const auto& [plugin_id, plugin] : m_component_plugins) {
         auto commands = plugin->available_commands();
-        if (std::find(commands.begin(), commands.end(), std::string(command)) !=
+        if (std::ranges::find(commands, std::string(command)) !=
             commands.end()) {
             auto result = plugin->execute_command(command, params);
             if (result) {
@@ -402,7 +405,7 @@ CompositePlugin::execute_aggregation_command(std::string_view command,
                 any_success = true;
             } else {
                 last_error = QString::fromStdString(result.error().message);
-                qCWarning(workflowCompositionLog)
+                qCWarning(workflow_composition_log)
                     << "Component plugin" << plugin_id
                     << "failed to execute command:"
                     << QString::fromStdString(std::string(command));
@@ -450,7 +453,7 @@ CompositePlugin::execute_pipeline_command(std::string_view command,
         auto plugin = plugin_it->second;
         auto commands = plugin->available_commands();
 
-        if (std::find(commands.begin(), commands.end(), std::string(command)) !=
+        if (std::ranges::find(commands, std::string(command)) !=
             commands.end()) {
             auto result = plugin->execute_command(command, current_data);
             if (result) {
@@ -474,8 +477,8 @@ CompositePlugin::execute_facade_command(std::string_view command,
         // Find first plugin that supports the command
         for (const auto& [plugin_id, plugin] : m_component_plugins) {
             auto commands = plugin->available_commands();
-            if (std::find(commands.begin(), commands.end(),
-                          std::string(command)) != commands.end()) {
+            if (std::ranges::find(commands, std::string(command)) !=
+                commands.end()) {
                 target_plugin = plugin;
                 break;
             }
@@ -500,6 +503,8 @@ std::shared_ptr<IPlugin> CompositePlugin::find_primary_plugin() const {
     return it != m_component_plugins.end() ? it->second : nullptr;
 }
 
+#if 0   // These methods are not declared in the header - commenting out to fix
+        // build
 std::vector<contracts::ServiceContract> CompositePlugin::get_service_contracts()
     const {
     std::vector<contracts::ServiceContract> all_contracts;
@@ -582,6 +587,7 @@ CompositePlugin::handle_service_call(const QString& service_name,
         PluginErrorCode::NotImplemented,
         "CompositePlugin::handle_service_call not implemented");
 }
+#endif  // End of commented out methods
 
 qtplugin::expected<void, PluginError> CompositePlugin::handle_event(
     const QString& event_type, const QJsonObject& event_data) {
@@ -609,7 +615,7 @@ CompositionManager& CompositionManager::instance() {
 
 qtplugin::expected<void, PluginError> CompositionManager::register_composition(
     const PluginComposition& composition) {
-    std::unique_lock lock(m_compositions_mutex);
+    const std::unique_lock lock(m_compositions_mutex);
 
     auto validation_result = composition.validate();
     if (!validation_result) {
@@ -618,26 +624,27 @@ qtplugin::expected<void, PluginError> CompositionManager::register_composition(
 
     m_compositions[composition.id()] = composition;
 
-    qCDebug(workflowCompositionLog)
+    qCDebug(workflow_composition_log)
         << "Registered composition:" << composition.id();
 
     emit composition_registered(composition.id());
     return {};
 }
 
-qtplugin::expected<void, PluginError> CompositionManager::unregister_composition(
-    const QString& composition_id) {
-    std::unique_lock lock(m_compositions_mutex);
+qtplugin::expected<void, PluginError>
+CompositionManager::unregister_composition(const QString& composition_id) {
+    const std::unique_lock lock(m_compositions_mutex);
 
     auto it = m_compositions.find(composition_id);
     if (it == m_compositions.end()) {
-        return make_error<void>(PluginErrorCode::NotFound,
-                                "Composition not found: " + composition_id.toStdString());
+        return make_error<void>(
+            PluginErrorCode::NotFound,
+            "Composition not found: " + composition_id.toStdString());
     }
 
     // Remove associated composite plugin if it exists
     {
-        std::unique_lock plugin_lock(m_composite_plugins_mutex);
+        const std::unique_lock plugin_lock(m_composite_plugins_mutex);
         auto plugin_it = m_composite_plugins.find(composition_id);
         if (plugin_it != m_composite_plugins.end()) {
             plugin_it->second->shutdown();
@@ -648,28 +655,29 @@ qtplugin::expected<void, PluginError> CompositionManager::unregister_composition
 
     m_compositions.erase(it);
 
-    qCDebug(workflowCompositionLog)
+    qCDebug(workflow_composition_log)
         << "Unregistered composition:" << composition_id;
 
     emit composition_unregistered(composition_id);
     return {};
 }
 
-qtplugin::expected<PluginComposition, PluginError> CompositionManager::get_composition(
-    const QString& composition_id) const {
-    std::shared_lock lock(m_compositions_mutex);
+qtplugin::expected<PluginComposition, PluginError>
+CompositionManager::get_composition(const QString& composition_id) const {
+    const std::shared_lock lock(m_compositions_mutex);
 
     auto it = m_compositions.find(composition_id);
     if (it == m_compositions.end()) {
-        return make_error<PluginComposition>(PluginErrorCode::NotFound,
-                                             "Composition not found: " + composition_id.toStdString());
+        return make_error<PluginComposition>(
+            PluginErrorCode::NotFound,
+            "Composition not found: " + composition_id.toStdString());
     }
 
     return it->second;
 }
 
 std::vector<QString> CompositionManager::list_compositions() const {
-    std::shared_lock lock(m_compositions_mutex);
+    const std::shared_lock lock(m_compositions_mutex);
 
     std::vector<QString> result;
     result.reserve(m_compositions.size());
@@ -686,10 +694,11 @@ CompositionManager::create_composite_plugin(const QString& composition_id) {
     // Get the composition
     auto composition_result = get_composition(composition_id);
     if (!composition_result) {
-        return make_error<std::shared_ptr<CompositePlugin>>(composition_result.error());
+        return make_error<std::shared_ptr<CompositePlugin>>(
+            composition_result.error());
     }
 
-    std::unique_lock lock(m_composite_plugins_mutex);
+    const std::unique_lock lock(m_composite_plugins_mutex);
 
     // Check if composite plugin already exists
     auto existing_it = m_composite_plugins.find(composition_id);
@@ -698,37 +707,40 @@ CompositionManager::create_composite_plugin(const QString& composition_id) {
     }
 
     // Create new composite plugin
-    auto composite_plugin = std::make_shared<CompositePlugin>(composition_result.value());
+    auto composite_plugin =
+        std::make_shared<CompositePlugin>(composition_result.value());
 
     // Initialize the composite plugin
     auto init_result = composite_plugin->initialize();
     if (!init_result) {
-        return make_error<std::shared_ptr<CompositePlugin>>(init_result.error());
+        return make_error<std::shared_ptr<CompositePlugin>>(
+            init_result.error());
     }
 
     m_composite_plugins[composition_id] = composite_plugin;
 
-    qCDebug(workflowCompositionLog)
+    qCDebug(workflow_composition_log)
         << "Created composite plugin:" << composition_id;
 
     emit composite_plugin_created(composition_id);
     return composite_plugin;
 }
 
-qtplugin::expected<void, PluginError> CompositionManager::destroy_composite_plugin(
-    const QString& composition_id) {
-    std::unique_lock lock(m_composite_plugins_mutex);
+qtplugin::expected<void, PluginError>
+CompositionManager::destroy_composite_plugin(const QString& composition_id) {
+    const std::unique_lock lock(m_composite_plugins_mutex);
 
     auto it = m_composite_plugins.find(composition_id);
     if (it == m_composite_plugins.end()) {
-        return make_error<void>(PluginErrorCode::NotFound,
-                                "Composite plugin not found: " + composition_id.toStdString());
+        return make_error<void>(
+            PluginErrorCode::NotFound,
+            "Composite plugin not found: " + composition_id.toStdString());
     }
 
     it->second->shutdown();
     m_composite_plugins.erase(it);
 
-    qCDebug(workflowCompositionLog)
+    qCDebug(workflow_composition_log)
         << "Destroyed composite plugin:" << composition_id;
 
     emit composite_plugin_destroyed(composition_id);
@@ -736,7 +748,7 @@ qtplugin::expected<void, PluginError> CompositionManager::destroy_composite_plug
 }
 
 std::vector<QString> CompositionManager::list_composite_plugins() const {
-    std::shared_lock lock(m_composite_plugins_mutex);
+    const std::shared_lock lock(m_composite_plugins_mutex);
 
     std::vector<QString> result;
     result.reserve(m_composite_plugins.size());
@@ -750,7 +762,7 @@ std::vector<QString> CompositionManager::list_composite_plugins() const {
 
 std::shared_ptr<CompositePlugin> CompositionManager::get_composite_plugin(
     const QString& composition_id) const {
-    std::shared_lock lock(m_composite_plugins_mutex);
+    const std::shared_lock lock(m_composite_plugins_mutex);
 
     auto it = m_composite_plugins.find(composition_id);
     return it != m_composite_plugins.end() ? it->second : nullptr;

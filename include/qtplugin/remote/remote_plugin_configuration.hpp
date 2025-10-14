@@ -200,23 +200,17 @@ public:
     explicit RemotePluginConfiguration(const QJsonObject& json);
 
     /**
-     * @brief Copy constructor
-     * @param other Object to copy from
-     */
-    RemotePluginConfiguration(const RemotePluginConfiguration& other);
-
-    /**
-     * @brief Assignment operator
-     * @param other Object to assign from
-     * @return Reference to this object
-     */
-    RemotePluginConfiguration& operator=(
-        const RemotePluginConfiguration& other);
-
-    /**
      * @brief Destructor
      */
     ~RemotePluginConfiguration();
+
+    // Delete copy and move operations (contains non-copyable
+    // RemoteSourceManager)
+    RemotePluginConfiguration(const RemotePluginConfiguration&) = delete;
+    RemotePluginConfiguration& operator=(const RemotePluginConfiguration&) =
+        delete;
+    RemotePluginConfiguration(RemotePluginConfiguration&&) = delete;
+    RemotePluginConfiguration& operator=(RemotePluginConfiguration&&) = delete;
 
     // === General Settings ===
 
@@ -381,14 +375,16 @@ public:
      * @param json JSON object to parse
      * @return RemotePluginConfiguration instance
      */
-    static RemotePluginConfiguration from_json(const QJsonObject& json);
+    static std::shared_ptr<RemotePluginConfiguration> from_json(
+        const QJsonObject& json);
 
     /**
      * @brief Load configuration from file
      * @param file_path Configuration file path
      * @return Configuration or error
      */
-    static qtplugin::expected<RemotePluginConfiguration, PluginError>
+    static qtplugin::expected<std::shared_ptr<RemotePluginConfiguration>,
+                              PluginError>
     load_from_file(const std::filesystem::path& file_path);
 
     /**
@@ -405,25 +401,25 @@ public:
      * @brief Create default configuration
      * @return Default configuration
      */
-    static RemotePluginConfiguration create_default();
+    static std::shared_ptr<RemotePluginConfiguration> create_default();
 
     /**
      * @brief Create secure configuration (high security)
      * @return Secure configuration
      */
-    static RemotePluginConfiguration create_secure();
+    static std::shared_ptr<RemotePluginConfiguration> create_secure();
 
     /**
      * @brief Create permissive configuration (low security)
      * @return Permissive configuration
      */
-    static RemotePluginConfiguration create_permissive();
+    static std::shared_ptr<RemotePluginConfiguration> create_permissive();
 
     /**
      * @brief Create enterprise configuration
      * @return Enterprise configuration
      */
-    static RemotePluginConfiguration create_enterprise();
+    static std::shared_ptr<RemotePluginConfiguration> create_enterprise();
 
 private:
     // General settings
@@ -459,7 +455,7 @@ public:
      * @brief Get current configuration
      * @return Current configuration
      */
-    const RemotePluginConfiguration& configuration() const {
+    std::shared_ptr<const RemotePluginConfiguration> configuration() const {
         return m_configuration;
     }
 
@@ -467,7 +463,7 @@ public:
      * @brief Set configuration
      * @param config New configuration
      */
-    void set_configuration(const RemotePluginConfiguration& config);
+    void set_configuration(std::shared_ptr<RemotePluginConfiguration> config);
 
     /**
      * @brief Load configuration from default location
@@ -490,7 +486,8 @@ public:
 private:
     RemotePluginConfigurationManager() =
         default;  ///< Private constructor for singleton
-    RemotePluginConfiguration m_configuration;  ///< Current configuration
+    std::shared_ptr<RemotePluginConfiguration>
+        m_configuration;  ///< Current configuration
 };
 
 }  // namespace qtplugin

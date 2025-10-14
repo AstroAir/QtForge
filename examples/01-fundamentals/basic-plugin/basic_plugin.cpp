@@ -17,10 +17,10 @@ BasicPlugin::BasicPlugin(QObject* parent)
             &BasicPlugin::on_timer_timeout);
 
     // Set default configuration
-    auto default_config = default_configuration();
-    if (default_config.has_value()) {
-        m_configuration = default_config.value();
-    }
+    m_configuration["timer_interval"] = 5000;
+    m_configuration["timer_enabled"] = true;
+    m_configuration["logging_enabled"] = true;
+    m_configuration["custom_message"] = "Hello from BasicPlugin!";
 }
 
 BasicPlugin::~BasicPlugin() {
@@ -31,22 +31,30 @@ BasicPlugin::~BasicPlugin() {
 
 // === IPlugin Interface Implementation ===
 
-std::string_view BasicPlugin::name() const noexcept { return "BasicPlugin"; }
-
-std::string_view BasicPlugin::description() const noexcept {
-    return "Basic plugin demonstrating core IPlugin interface";
+qtplugin::PluginMetadata BasicPlugin::metadata() const {
+    qtplugin::PluginMetadata meta;
+    meta.name = "BasicPlugin";
+    meta.description = "Basic plugin demonstrating core IPlugin interface";
+    meta.version = qtplugin::Version{2, 0, 0};
+    meta.author = "QtForge Team";
+    meta.category = "Example";
+    meta.license = "MIT";
+    meta.homepage = "https://github.com/qtforge/examples";
+    return meta;
 }
 
-qtplugin::Version BasicPlugin::version() const noexcept {
-    return qtplugin::Version{2, 0, 0};
+qtplugin::PluginState BasicPlugin::state() const noexcept {
+    return m_state.load();
 }
 
-std::string_view BasicPlugin::author() const noexcept { return "QtForge Team"; }
+uint32_t BasicPlugin::capabilities() const noexcept { return 0; }
 
-std::string BasicPlugin::id() const noexcept { return "qtplugin.BasicPlugin"; }
+qtplugin::PluginPriority BasicPlugin::priority() const noexcept {
+    return qtplugin::PluginPriority::Normal;
+}
 
-qtplugin::PluginCapabilities BasicPlugin::capabilities() const noexcept {
-    return qtplugin::PluginCapabilities{};
+bool BasicPlugin::is_initialized() const noexcept {
+    return m_state == qtplugin::PluginState::Loaded;
 }
 
 qtplugin::expected<void, qtplugin::PluginError> BasicPlugin::initialize() {
@@ -153,36 +161,7 @@ std::vector<std::string> BasicPlugin::available_commands() const {
     return {"status", "echo", "config", "timer"};
 }
 
-qtplugin::PluginMetadata BasicPlugin::metadata() const {
-    qtplugin::PluginMetadata meta;
-    meta.name = "BasicPlugin";
-    meta.description = "Basic plugin demonstrating core IPlugin interface";
-    meta.version = qtplugin::Version{2, 0, 0};
-    meta.author = "QtForge Examples";
-    meta.category = "Example";
-    meta.license = "MIT";
-    meta.homepage = "https://github.com/qtforge/examples";
-    return meta;
-}
-
-qtplugin::PluginState BasicPlugin::state() const noexcept {
-    return m_state.load();
-}
-
-bool BasicPlugin::is_initialized() const noexcept {
-    return m_state == qtplugin::PluginState::Loaded;
-}
-
-std::optional<QJsonObject> BasicPlugin::default_configuration() const {
-    QJsonObject config;
-    config["timer_interval"] = 5000;
-    config["timer_enabled"] = true;
-    config["logging_enabled"] = true;
-    config["custom_message"] = "Hello from BasicPlugin!";
-    return std::make_optional(config);
-}
-
-QJsonObject BasicPlugin::current_configuration() const {
+QJsonObject BasicPlugin::get_configuration() const {
     QMutexLocker locker(&m_config_mutex);
     return m_configuration;
 }
@@ -252,11 +231,7 @@ QJsonObject BasicPlugin::execute_config_command(const QJsonObject& params) {
 
         if (action == "get") {
             QJsonObject result;
-            result["configuration"] = current_configuration();
-            auto default_config = default_configuration();
-            if (default_config.has_value()) {
-                result["default_configuration"] = default_config.value();
-            }
+            result["configuration"] = get_configuration();
             return result;
         } else if (action == "set" && params.contains("config")) {
             QJsonObject new_config = params.value("config").toObject();
@@ -273,7 +248,7 @@ QJsonObject BasicPlugin::execute_config_command(const QJsonObject& params) {
 
     // Default: return current configuration
     QJsonObject result;
-    result["configuration"] = current_configuration();
+    result["configuration"] = get_configuration();
     return result;
 }
 

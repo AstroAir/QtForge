@@ -18,9 +18,9 @@
 
 namespace qtplugin {
 
-// === ValidationResult Implementation ===
+// === RemoteValidationResult Implementation ===
 
-QJsonObject ValidationResult::to_json() const {
+QJsonObject RemoteValidationResult::to_json() const {
     QJsonObject json;
     json["level"] = static_cast<int>(level);
     json["message"] = QString::fromStdString(message);
@@ -34,8 +34,9 @@ QJsonObject ValidationResult::to_json() const {
     return json;
 }
 
-ValidationResult ValidationResult::from_json(const QJsonObject& json) {
-    ValidationResult result;
+RemoteValidationResult RemoteValidationResult::from_json(
+    const QJsonObject& json) {
+    RemoteValidationResult result;
     result.level = static_cast<ValidationLevel>(json["level"].toInt());
     result.message = json["message"].toString().toStdString();
     result.details = json["details"].toString().toStdString();
@@ -139,7 +140,7 @@ RemotePluginValidator::~RemotePluginValidator() {
     save_reputation_cache();
 }
 
-qtplugin::expected<ValidationResult, PluginError>
+qtplugin::expected<RemoteValidationResult, PluginError>
 RemotePluginValidator::validate_source(const RemotePluginSource& source) {
     QString cache_key = generate_cache_key(source);
 
@@ -156,7 +157,7 @@ RemotePluginValidator::validate_source(const RemotePluginSource& source) {
     // Validate source configuration
     auto source_validation = source.validate();
     if (!source_validation) {
-        ValidationResult result = create_validation_result(
+        RemoteValidationResult result = create_validation_result(
             ValidationLevel::Failed, "Source configuration validation failed",
             source_validation.error().message);
 
@@ -168,7 +169,7 @@ RemotePluginValidator::validate_source(const RemotePluginSource& source) {
     // Check if domain is blocked
     QString domain = source.url().host();
     if (is_domain_blocked(domain)) {
-        ValidationResult result = create_validation_result(
+        RemoteValidationResult result = create_validation_result(
             ValidationLevel::Blocked, "Domain is blocked",
             "Domain " + domain.toStdString() +
                 " is in the blocked domains list");
@@ -190,16 +191,16 @@ RemotePluginValidator::validate_source(const RemotePluginSource& source) {
         return qtplugin::unexpected(url_validation.error());
     }
 
-    if (url_validation->is_failed()) {
-        cache_validation_result(cache_key, *url_validation);
+    if (url_validation.value().is_failed()) {
+        cache_validation_result(cache_key, url_validation.value());
         m_validations_failed++;
-        return *url_validation;
+        return url_validation.value();
     }
 
     // Check source reputation
     SourceReputation reputation = get_source_reputation(source);
     if (!reputation.is_acceptable()) {
-        ValidationResult result = create_validation_result(
+        RemoteValidationResult result = create_validation_result(
             ValidationLevel::Warning, "Source has low reputation",
             "Source reputation level: " + std::to_string(reputation.level));
 
@@ -209,7 +210,7 @@ RemotePluginValidator::validate_source(const RemotePluginSource& source) {
     }
 
     // All validations passed
-    ValidationResult result = create_validation_result(
+    RemoteValidationResult result = create_validation_result(
         ValidationLevel::Passed, "Source validation passed",
         "All security checks passed");
 
@@ -218,7 +219,7 @@ RemotePluginValidator::validate_source(const RemotePluginSource& source) {
     return result;
 }
 
-qtplugin::expected<ValidationResult, PluginError>
+qtplugin::expected<RemoteValidationResult, PluginError>
 RemotePluginValidator::validate_url(const QUrl& url,
                                     RemoteSecurityLevel security_level) {
     QString cache_key = generate_cache_key(url);
@@ -237,9 +238,9 @@ RemotePluginValidator::validate_url(const QUrl& url,
         return qtplugin::unexpected(scheme_validation.error());
     }
 
-    if (scheme_validation->is_failed()) {
-        cache_validation_result(cache_key, *scheme_validation);
-        return *scheme_validation;
+    if (scheme_validation.value().is_failed()) {
+        cache_validation_result(cache_key, scheme_validation.value());
+        return scheme_validation.value();
     }
 
     // Validate URL security based on security level
@@ -248,8 +249,8 @@ RemotePluginValidator::validate_url(const QUrl& url,
         return qtplugin::unexpected(security_validation.error());
     }
 
-    cache_validation_result(cache_key, *security_validation);
-    return *security_validation;
+    cache_validation_result(cache_key, security_validation.value());
+    return security_validation.value();
 }
 
 bool RemotePluginValidator::is_domain_trusted(const QString& domain) const {
@@ -275,7 +276,7 @@ CertificateValidation RemotePluginValidator::validate_certificate(
     // Check if certificate is valid
     validation.is_valid = !certificate.isNull();
     if (!validation.is_valid) {
-        validation.errors.append("Certificate is null or invalid");
+        validation.errors.push_back("Certificate is null or invalid");
         return validation;
     }
 
@@ -283,7 +284,7 @@ CertificateValidation RemotePluginValidator::validate_certificate(
     QDateTime now = QDateTime::currentDateTime();
     validation.is_expired = certificate.expiryDate() < now;
     if (validation.is_expired) {
-        validation.errors.append("Certificate has expired");
+        validation.errors.push_back("Certificate has expired");
     }
 
     // Extract certificate information
@@ -305,14 +306,14 @@ CertificateValidation RemotePluginValidator::validate_certificate(
         QString subject_cn =
             certificate.subjectInfo(QSslCertificate::CommonName).join(", ");
         if (!subject_cn.contains(hostname, Qt::CaseInsensitive)) {
-            validation.errors.append("Certificate hostname does not match");
+            validation.errors.push_back("Certificate hostname does not match");
         }
     }
 
     // Determine if certificate is trusted
     validation.is_trusted = !validation.is_expired &&
                             !validation.is_self_signed &&
-                            validation.errors.isEmpty();
+                            validation.errors.empty();
 
     return validation;
 }
@@ -322,7 +323,7 @@ CertificateValidation RemotePluginValidator::validate_certificate_chain(
     CertificateValidation validation;
 
     if (certificates.empty()) {
-        validation.errors.append("Certificate chain is empty");
+        validation.errors.push_back("Certificate chain is empty");
         return validation;
     }
 
@@ -354,8 +355,8 @@ bool RemotePluginValidator::is_validation_cached(
     return m_validation_cache.find(cache_key) != m_validation_cache.end();
 }
 
-std::optional<ValidationResult> RemotePluginValidator::get_cached_validation(
-    const QString& cache_key) const {
+std::optional<RemoteValidationResult>
+RemotePluginValidator::get_cached_validation(const QString& cache_key) const {
     std::lock_guard<std::mutex> lock(m_validation_cache_mutex);
 
     auto it = m_validation_cache.find(cache_key);
@@ -375,15 +376,15 @@ std::optional<ValidationResult> RemotePluginValidator::get_cached_validation(
 }
 
 void RemotePluginValidator::cache_validation_result(
-    const QString& cache_key, const ValidationResult& result) {
+    const QString& cache_key, const RemoteValidationResult& result) {
     std::lock_guard<std::mutex> lock(m_validation_cache_mutex);
     m_validation_cache[cache_key] = result;
 }
 
-ValidationResult RemotePluginValidator::create_validation_result(
+RemoteValidationResult RemotePluginValidator::create_validation_result(
     ValidationLevel level, const std::string& message,
     const std::string& details) const {
-    ValidationResult result;
+    RemoteValidationResult result;
     result.level = level;
     result.message = message;
     result.details = details;
@@ -391,7 +392,7 @@ ValidationResult RemotePluginValidator::create_validation_result(
     return result;
 }
 
-qtplugin::expected<ValidationResult, PluginError>
+qtplugin::expected<RemoteValidationResult, PluginError>
 RemotePluginValidator::validate_url_scheme(const QUrl& url) const {
     QString scheme = url.scheme().toLower();
 
@@ -402,20 +403,20 @@ RemotePluginValidator::validate_url_scheme(const QUrl& url) const {
         supported_schemes.end();
 
     if (!is_supported) {
-        ValidationResult result = create_validation_result(
+        RemoteValidationResult result = create_validation_result(
             ValidationLevel::Failed, "Unsupported URL scheme",
             "Scheme '" + scheme.toStdString() + "' is not supported");
         return result;
     }
 
-    ValidationResult result = create_validation_result(
+    RemoteValidationResult result = create_validation_result(
         ValidationLevel::Passed, "URL scheme validation passed",
         "Scheme '" + scheme.toStdString() + "' is supported");
 
     return result;
 }
 
-qtplugin::expected<ValidationResult, PluginError>
+qtplugin::expected<RemoteValidationResult, PluginError>
 RemotePluginValidator::validate_url_security(const QUrl& url,
                                              RemoteSecurityLevel level) const {
     QString scheme = url.scheme().toLower();
@@ -424,19 +425,19 @@ RemotePluginValidator::validate_url_security(const QUrl& url,
     if (level >= RemoteSecurityLevel::Standard && scheme != "https") {
         if (m_configuration &&
             m_configuration->security_policy().require_https) {
-            ValidationResult result = create_validation_result(
+            RemoteValidationResult result = create_validation_result(
                 ValidationLevel::Failed, "HTTPS required",
                 "Security policy requires HTTPS for remote plugin sources");
             return result;
         } else {
-            ValidationResult result = create_validation_result(
+            RemoteValidationResult result = create_validation_result(
                 ValidationLevel::Warning, "Non-HTTPS connection",
                 "Using non-secure connection for plugin download");
             return result;
         }
     }
 
-    ValidationResult result = create_validation_result(
+    RemoteValidationResult result = create_validation_result(
         ValidationLevel::Passed, "URL security validation passed",
         "URL meets security requirements");
 
@@ -612,6 +613,39 @@ std::filesystem::path RemotePluginValidator::get_reputation_cache_path() const {
         QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
     return std::filesystem::path(cache_dir.toStdString()) / "qtforge" /
            "remote_plugin_reputation.json";
+}
+
+SourceReputation RemotePluginValidator::get_source_reputation(
+    const RemotePluginSource& source) {
+    // TODO: Implement actual reputation checking
+    // For now, return a default acceptable reputation
+    (void)source;  // Suppress unused parameter warning
+    SourceReputation reputation;
+    reputation.level = SourceReputation::Medium;
+    reputation.download_count = 0;
+    reputation.success_rate = 100;
+    reputation.last_verified = std::chrono::system_clock::now();
+    return reputation;
+}
+
+qtplugin::expected<RemoteValidationResult, PluginError>
+RemotePluginValidator::validate_plugin_file(
+    const std::filesystem::path& file_path, const RemotePluginSource& source,
+    const QString& expected_checksum) {
+    // TODO: Implement actual file validation
+    // For now, return a basic validation result
+    (void)file_path;  // Suppress unused parameter warning
+    (void)source;
+    (void)expected_checksum;
+
+    RemoteValidationResult result;
+    result.level = ValidationLevel::Passed;
+    result.message = "Plugin file validation not yet implemented";
+    result.details = "Stub implementation - always passes";
+    result.timestamp = std::chrono::system_clock::now();
+    result.metadata = QJsonObject();
+
+    return result;
 }
 
 }  // namespace qtplugin

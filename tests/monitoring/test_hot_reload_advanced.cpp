@@ -4,30 +4,29 @@
  * @version 3.2.0
  */
 
-#include <QtTest/QtTest>
 #include <QCoreApplication>
-#include <QTemporaryDir>
-#include <QTemporaryFile>
+#include <QElapsedTimer>
 #include <QFileSystemWatcher>
 #include <QSignalSpy>
-#include <QTimer>
+#include <QTemporaryDir>
+#include <QTemporaryFile>
 #include <QThread>
-#include <QElapsedTimer>
+#include <QTimer>
+#include <QtTest/QtTest>
 
-#include <qtplugin/monitoring/plugin_hot_reload_manager.hpp>
 #include <qtplugin/core/plugin_manager.hpp>
-#include <qtplugin/core/plugin_interface.hpp>
+#include <qtplugin/interfaces/core/plugin_interface.hpp>
+#include <qtplugin/monitoring/plugin_hot_reload_manager.hpp>
 
-#include <memory>
+#include <atomic>
+#include <chrono>
 #include <filesystem>
 #include <fstream>
-#include <chrono>
-#include <atomic>
+#include <memory>
 
 using namespace qtplugin;
 
-class HotReloadComprehensiveTest : public QObject
-{
+class HotReloadComprehensiveTest : public QObject {
     Q_OBJECT
 
 private slots:
@@ -76,13 +75,15 @@ private:
     std::unique_ptr<PluginHotReloadManager> m_hot_reload_manager;
     std::unique_ptr<PluginManager> m_plugin_manager;
 
-    QString createTestPlugin(const QString& plugin_name, const QString& content = QString());
-    void modifyTestPlugin(const QString& plugin_path, const QString& new_content);
-    bool waitForSignal(QObject* sender, const char* signal, int timeout_ms = 5000);
+    QString createTestPlugin(const QString& plugin_name,
+                             const QString& content = QString());
+    void modifyTestPlugin(const QString& plugin_path,
+                          const QString& new_content);
+    bool waitForSignal(QObject* sender, const char* signal,
+                       int timeout_ms = 5000);
 };
 
-void HotReloadComprehensiveTest::initTestCase()
-{
+void HotReloadComprehensiveTest::initTestCase() {
     qDebug() << "Starting comprehensive hot reload tests";
 
     // Create temporary directory for test files
@@ -92,27 +93,23 @@ void HotReloadComprehensiveTest::initTestCase()
     qDebug() << "Test directory:" << m_temp_dir->path();
 }
 
-void HotReloadComprehensiveTest::cleanupTestCase()
-{
+void HotReloadComprehensiveTest::cleanupTestCase() {
     qDebug() << "Comprehensive hot reload tests completed";
 }
 
-void HotReloadComprehensiveTest::init()
-{
+void HotReloadComprehensiveTest::init() {
     // Create fresh instances for each test
     m_hot_reload_manager = std::make_unique<PluginHotReloadManager>();
     m_plugin_manager = std::make_unique<PluginManager>();
 }
 
-void HotReloadComprehensiveTest::cleanup()
-{
+void HotReloadComprehensiveTest::cleanup() {
     // Clean up after each test
     m_hot_reload_manager.reset();
     m_plugin_manager.reset();
 }
 
-void HotReloadComprehensiveTest::testHotReloadManagerCreation()
-{
+void HotReloadComprehensiveTest::testHotReloadManagerCreation() {
     // Test basic creation and initialization
     QVERIFY(m_hot_reload_manager != nullptr);
 
@@ -121,8 +118,7 @@ void HotReloadComprehensiveTest::testHotReloadManagerCreation()
     QCOMPARE(m_hot_reload_manager->get_watched_plugin_count(), 0);
 }
 
-void HotReloadComprehensiveTest::testEnableHotReload()
-{
+void HotReloadComprehensiveTest::testEnableHotReload() {
     // Create a test plugin file
     QString plugin_path = createTestPlugin("test_plugin");
     QVERIFY(!plugin_path.isEmpty());
@@ -139,14 +135,14 @@ void HotReloadComprehensiveTest::testEnableHotReload()
     QCOMPARE(m_hot_reload_manager->get_watched_plugin_count(), 1);
 }
 
-void HotReloadComprehensiveTest::testDisableHotReload()
-{
+void HotReloadComprehensiveTest::testDisableHotReload() {
     // First enable hot reload
     QString plugin_path = createTestPlugin("test_plugin");
     std::string plugin_id = "test_plugin";
     std::filesystem::path fs_path(plugin_path.toStdString());
 
-    auto enable_result = m_hot_reload_manager->enable_hot_reload(plugin_id, fs_path);
+    auto enable_result =
+        m_hot_reload_manager->enable_hot_reload(plugin_id, fs_path);
     QVERIFY(enable_result.has_value());
     QCOMPARE(m_hot_reload_manager->get_watched_plugin_count(), 1);
 
@@ -156,10 +152,10 @@ void HotReloadComprehensiveTest::testDisableHotReload()
     QCOMPARE(m_hot_reload_manager->get_watched_plugin_count(), 0);
 }
 
-void HotReloadComprehensiveTest::testFileChangeDetection()
-{
+void HotReloadComprehensiveTest::testFileChangeDetection() {
     // Create test plugin and enable hot reload
-    QString plugin_path = createTestPlugin("test_plugin", "// Original content");
+    QString plugin_path =
+        createTestPlugin("test_plugin", "// Original content");
     std::string plugin_id = "test_plugin";
     std::filesystem::path fs_path(plugin_path.toStdString());
 
@@ -167,7 +163,8 @@ void HotReloadComprehensiveTest::testFileChangeDetection()
     QVERIFY(result.has_value());
 
     // Set up signal spy to detect file changes
-    QSignalSpy spy(m_hot_reload_manager.get(), &PluginHotReloadManager::plugin_file_changed);
+    QSignalSpy spy(m_hot_reload_manager.get(),
+                   &PluginHotReloadManager::plugin_file_changed);
 
     // Modify the file
     modifyTestPlugin(plugin_path, "// Modified content");
@@ -181,8 +178,7 @@ void HotReloadComprehensiveTest::testFileChangeDetection()
     QCOMPARE(arguments.at(0).toString(), QString::fromStdString(plugin_id));
 }
 
-void HotReloadComprehensiveTest::testPluginReloadCallback()
-{
+void HotReloadComprehensiveTest::testPluginReloadCallback() {
     // Create test plugin
     QString plugin_path = createTestPlugin("test_plugin");
     std::string plugin_id = "test_plugin";
@@ -216,20 +212,21 @@ void HotReloadComprehensiveTest::testPluginReloadCallback()
     QCOMPARE(callback_plugin_id, plugin_id);
 }
 
-void HotReloadComprehensiveTest::testHotReloadPerformance()
-{
+void HotReloadComprehensiveTest::testHotReloadPerformance() {
     // Create multiple test plugins
     const int plugin_count = 10;
     std::vector<QString> plugin_paths;
 
     for (int i = 0; i < plugin_count; ++i) {
-        QString plugin_path = createTestPlugin(QString("test_plugin_%1").arg(i));
+        QString plugin_path =
+            createTestPlugin(QString("test_plugin_%1").arg(i));
         plugin_paths.push_back(plugin_path);
 
         std::string plugin_id = QString("test_plugin_%1").arg(i).toStdString();
         std::filesystem::path fs_path(plugin_path.toStdString());
 
-        auto result = m_hot_reload_manager->enable_hot_reload(plugin_id, fs_path);
+        auto result =
+            m_hot_reload_manager->enable_hot_reload(plugin_id, fs_path);
         QVERIFY(result.has_value());
     }
 
@@ -243,7 +240,8 @@ void HotReloadComprehensiveTest::testHotReloadPerformance()
     }
 
     // Wait for all changes to be detected
-    QSignalSpy spy(m_hot_reload_manager.get(), &PluginHotReloadManager::plugin_file_changed);
+    QSignalSpy spy(m_hot_reload_manager.get(),
+                   &PluginHotReloadManager::plugin_file_changed);
     while (spy.count() < plugin_count && timer.elapsed() < 10000) {
         QCoreApplication::processEvents();
         QThread::msleep(10);
@@ -252,33 +250,36 @@ void HotReloadComprehensiveTest::testHotReloadPerformance()
     qint64 elapsed = timer.elapsed();
 
     // Performance expectations
-    QVERIFY(elapsed < 5000); // Should complete within 5 seconds
+    QVERIFY(elapsed < 5000);  // Should complete within 5 seconds
     QCOMPARE(spy.count(), plugin_count);
 
-    qDebug() << "Hot reload performance:" << elapsed << "ms for" << plugin_count << "plugins";
+    qDebug() << "Hot reload performance:" << elapsed << "ms for" << plugin_count
+             << "plugins";
     qDebug() << "Average per plugin:" << (elapsed / plugin_count) << "ms";
 }
 
-void HotReloadComprehensiveTest::testErrorHandlingAndRecovery()
-{
+void HotReloadComprehensiveTest::testErrorHandlingAndRecovery() {
     // Test invalid plugin ID
-    auto result1 = m_hot_reload_manager->enable_hot_reload("", std::filesystem::path("dummy"));
+    auto result1 = m_hot_reload_manager->enable_hot_reload(
+        "", std::filesystem::path("dummy"));
     QVERIFY(!result1.has_value());
     QCOMPARE(result1.error().code, PluginErrorCode::InvalidParameters);
 
     // Test non-existent file
-    auto result2 = m_hot_reload_manager->enable_hot_reload("test", std::filesystem::path("/non/existent/file"));
+    auto result2 = m_hot_reload_manager->enable_hot_reload(
+        "test", std::filesystem::path("/non/existent/file"));
     QVERIFY(!result2.has_value());
     QCOMPARE(result2.error().code, PluginErrorCode::FileNotFound);
 
     // Test disabling non-existent plugin
-    auto result3 = m_hot_reload_manager->disable_hot_reload("non_existent_plugin");
+    auto result3 =
+        m_hot_reload_manager->disable_hot_reload("non_existent_plugin");
     QVERIFY(!result3.has_value());
     QCOMPARE(result3.error().code, PluginErrorCode::PluginNotFound);
 }
 
-QString HotReloadComprehensiveTest::createTestPlugin(const QString& plugin_name, const QString& content)
-{
+QString HotReloadComprehensiveTest::createTestPlugin(const QString& plugin_name,
+                                                     const QString& content) {
     QString plugin_path = m_temp_dir->path() + "/" + plugin_name + ".cpp";
     QFile plugin_file(plugin_path);
 
@@ -289,7 +290,7 @@ QString HotReloadComprehensiveTest::createTestPlugin(const QString& plugin_name,
     QTextStream stream(&plugin_file);
     if (content.isEmpty()) {
         stream << "// Test plugin: " << plugin_name << "\n";
-        stream << "#include <qtplugin/core/plugin_interface.hpp>\n";
+        stream << "#include <qtplugin/interfaces/core/plugin_interface.hpp>\n";
         stream << "class " << plugin_name << " : public qtplugin::IPlugin {\n";
         stream << "    // Plugin implementation\n";
         stream << "};\n";
@@ -301,8 +302,8 @@ QString HotReloadComprehensiveTest::createTestPlugin(const QString& plugin_name,
     return plugin_path;
 }
 
-void HotReloadComprehensiveTest::modifyTestPlugin(const QString& plugin_path, const QString& new_content)
-{
+void HotReloadComprehensiveTest::modifyTestPlugin(const QString& plugin_path,
+                                                  const QString& new_content) {
     QFile plugin_file(plugin_path);
     if (plugin_file.open(QIODevice::WriteOnly | QIODevice::Text)) {
         QTextStream stream(&plugin_file);
@@ -315,8 +316,9 @@ void HotReloadComprehensiveTest::modifyTestPlugin(const QString& plugin_path, co
     }
 }
 
-bool HotReloadComprehensiveTest::waitForSignal(QObject* sender, const char* signal, int timeout_ms)
-{
+bool HotReloadComprehensiveTest::waitForSignal(QObject* sender,
+                                               const char* signal,
+                                               int timeout_ms) {
     QSignalSpy spy(sender, signal);
     return spy.wait(timeout_ms);
 }

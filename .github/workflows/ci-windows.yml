@@ -1,4 +1,4 @@
-name: 'Windows CI'
+name: "Windows CI"
 
 on:
   push:
@@ -8,23 +8,23 @@ on:
     branches: [main, develop, project-organization]
   schedule:
     # Run nightly builds to catch dependency issues
-    - cron: '0 3 * * *'
+    - cron: "0 3 * * *"
   workflow_dispatch:
     inputs:
       skip_tests:
-        description: 'Skip running tests'
+        description: "Skip running tests"
         required: false
         default: false
         type: boolean
       build_type:
-        description: 'Build type to run'
+        description: "Build type to run"
         required: false
-        default: 'all'
+        default: "all"
         type: choice
         options:
-        - all
-        - release-only
-        - debug-only
+          - all
+          - release-only
+          - debug-only
 
 # Set default permissions to read-only for security
 permissions:
@@ -61,7 +61,7 @@ jobs:
 
   # Windows Build and Test
   build-and-test:
-    name: 'Windows Build & Test (${{ matrix.compiler }}-${{ matrix.build_type }})'
+    name: "Windows Build & Test (${{ matrix.compiler }}-${{ matrix.build_type }})"
     needs: changes
     if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.cmake == 'true' || needs.changes.outputs.scripts == 'true' || needs.changes.outputs.ci == 'true' || needs.changes.outputs.workflows == 'true' || needs.changes.outputs.dependencies == 'true' }}
     strategy:
@@ -120,7 +120,7 @@ jobs:
         uses: ./.github/workflows/shared/setup-build-env
         with:
           cmake-version: ${{ env.CMAKE_VERSION }}
-          enable-ccache: 'true'
+          enable-ccache: "true"
           ccache-key-suffix: ${{ matrix.compiler }}
           build-type: ${{ matrix.build_type }}
           compiler: ${{ matrix.compiler }}
@@ -136,7 +136,7 @@ jobs:
         uses: ./.github/workflows/shared/install-platform-deps
         with:
           install-dev-tools: ${{ matrix.compiler == 'mingw64' && 'true' || 'false' }}
-          install-packaging-tools: 'true'
+          install-packaging-tools: "true"
 
       - name: Setup MinGW64 (if needed)
         if: matrix.compiler == 'mingw64'
@@ -145,11 +145,11 @@ jobs:
           # Install MSYS2 and MinGW64 toolchain
           choco install msys2 -y
           $env:PATH = "C:\tools\msys64\mingw64\bin;C:\tools\msys64\usr\bin;" + $env:PATH
-          
+
           # Update MSYS2 and install MinGW64 toolchain
           C:\tools\msys64\usr\bin\bash.exe -lc "pacman -Syu --noconfirm"
           C:\tools\msys64\usr\bin\bash.exe -lc "pacman -S --noconfirm mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake mingw-w64-x86_64-ninja"
-          
+
           # Add to PATH for subsequent steps
           echo "C:\tools\msys64\mingw64\bin" >> $env:GITHUB_PATH
           echo "C:\tools\msys64\usr\bin" >> $env:GITHUB_PATH
@@ -162,25 +162,25 @@ jobs:
           parallel-jobs: ${{ matrix.parallel_jobs }}
           skip-tests: ${{ github.event.inputs.skip_tests }}
           enable-lto: ${{ matrix.enable_lto }}
-          additional-cmake-args: ${{ matrix.compiler == 'msvc' && '-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL' || '' }}
+          additional-cmake-args: ${{ matrix.compiler == 'msvc' && '-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL' || '' }} # pragma: allowlist secret
 
       - name: Performance Monitor
         uses: ./.github/workflows/shared/performance-monitor
         with:
           build-time: ${{ env.BUILD_TIME }}
           test-time: ${{ env.TEST_TIME }}
-          platform: 'Windows'
+          platform: "Windows"
           build-type: ${{ matrix.build_type }}
           compiler: ${{ matrix.compiler }}
 
       - name: Upload Artifacts
         uses: ./.github/workflows/shared/upload-artifacts
         with:
-          artifact-name-prefix: 'qtforge-windows-${{ matrix.compiler }}'
+          artifact-name-prefix: "qtforge-windows-${{ matrix.compiler }}"
 
   # Windows Packaging (only on tags or main branch)
   package:
-    name: 'Windows Packaging (${{ matrix.package_type }})'
+    name: "Windows Packaging (${{ matrix.package_type }})"
     if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main')
     needs: build-and-test
     strategy:
@@ -217,7 +217,7 @@ jobs:
       - name: Install Platform Dependencies
         uses: ./.github/workflows/shared/install-platform-deps
         with:
-          install-packaging-tools: 'true'
+          install-packaging-tools: "true"
 
       - name: Configure for packaging
         shell: pwsh

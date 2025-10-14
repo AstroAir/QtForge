@@ -83,16 +83,9 @@ void test_plugin_commands(BasicPlugin& plugin) {
 void test_plugin_configuration(BasicPlugin& plugin) {
     qDebug() << "\n=== Testing Plugin Configuration ===";
 
-    // Test default configuration
-    auto default_config = plugin.default_configuration();
-    qDebug() << "Default configuration:";
-    if (default_config.has_value()) {
-        qDebug() << QJsonDocument(default_config.value())
-                        .toJson(QJsonDocument::Compact);
-    }
-
-    // Test current configuration
-    auto current_config = plugin.current_configuration();
+    // Test current configuration (get_configuration replaces both
+    // default_configuration and current_configuration)
+    auto current_config = plugin.get_configuration();
     qDebug() << "Current configuration:";
     qDebug() << QJsonDocument(current_config).toJson(QJsonDocument::Compact);
 
@@ -105,7 +98,7 @@ void test_plugin_configuration(BasicPlugin& plugin) {
     if (config_result) {
         qDebug() << "✅ Configuration updated successfully";
 
-        auto updated_config = plugin.current_configuration();
+        auto updated_config = plugin.get_configuration();
         qDebug() << "Updated configuration:";
         qDebug()
             << QJsonDocument(updated_config).toJson(QJsonDocument::Compact);

@@ -5,29 +5,29 @@
  */
 
 #include <QCoreApplication>
+#include <QCryptographicHash>
+#include <QDataStream>
+#include <QDateTime>
 #include <QDir>
 #include <QFileInfo>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QLibrary>
 #include <QPluginLoader>
-#include <QCryptographicHash>
-#include <QDateTime>
-#include <mutex>
-#include <qtplugin/core/plugin_loader.hpp>
-#include <shared_mutex>
-#include <unordered_map>
-#include <sstream>
-#include <iomanip>
 #include <QStandardPaths>
-#include <QDataStream>
-#include <QTimer>
 #include <QThreadPool>
+#include <QTimer>
 #include <QtConcurrent>
 #include <algorithm>
 #include <future>
+#include <iomanip>
+#include <mutex>
+#include <qtplugin/core/plugin_loader.hpp>
 #include <queue>
+#include <shared_mutex>
+#include <sstream>
 #include <thread>
+#include <unordered_map>
 
 namespace qtplugin {
 
@@ -36,6 +36,8 @@ namespace qtplugin {
  */
 class QtPluginLoader::Impl {
 public:
+    explicit Impl(QtPluginLoader* parent) : parent(parent) {}
+
     struct LoadedPlugin {
         std::string id;
         std::filesystem::path file_path;
@@ -62,7 +64,9 @@ public:
         std::chrono::steady_clock::time_point cache_time;
     };
 
-    std::unordered_map<std::string, std::unique_ptr<LoadedPlugin>> loaded_plugins;
+    QtPluginLoader* parent;
+    std::unordered_map<std::string, std::unique_ptr<LoadedPlugin>>
+        loaded_plugins;
     mutable std::shared_mutex plugins_mutex;
 
     // Enhanced features
@@ -110,7 +114,8 @@ constexpr auto LOAD_TIMEOUT = std::chrono::seconds(30);
 
 // Cache persistence helper
 QString get_cache_persistence_path() {
-    auto cache_dir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
+    auto cache_dir =
+        QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
     return QDir(cache_dir).filePath("qtplugin_metadata_cache.dat");
 }
 
@@ -201,25 +206,25 @@ private:
     std::atomic<bool> m_stop{false};
     size_t m_max_threads;
 };
-} // namespace
+}  // namespace
 
 // Static members for PluginLoaderFactory
 std::unordered_map<std::string, std::function<std::unique_ptr<IPluginLoader>()>>
     PluginLoaderFactory::s_loader_factories;
 std::mutex PluginLoaderFactory::s_factory_mutex;
 
-QtPluginLoader::QtPluginLoader() : d(std::make_unique<Impl>()) {
+QtPluginLoader::QtPluginLoader() : d(std::make_unique<Impl>(this)) {
     // Load persistent cache on startup
     d->load_persistent_cache();
 
     // Setup cache persistence timer
     if (QCoreApplication::instance()) {
         auto* timer = new QTimer(nullptr);
-        QObject::connect(timer, &QTimer::timeout, [this]() {
-            d->save_persistent_cache();
-        });
+        QObject::connect(timer, &QTimer::timeout,
+                         [this]() { d->save_persistent_cache(); });
         timer->start(std::chrono::duration_cast<std::chrono::milliseconds>(
-            CACHE_PERSISTENCE_INTERVAL).count());
+                         CACHE_PERSISTENCE_INTERVAL)
+                         .count());
     }
 }
 
@@ -235,17 +240,19 @@ QtPluginLoader::~QtPluginLoader() {
                  << "hit_rate=" << get_cache_statistics().hit_rate;
     }
 
-    // Unload all plugins gracefully with parallel unloading for better performance
+    // Unload all plugins gracefully with parallel unloading for better
+    // performance
     std::unique_lock lock(d->plugins_mutex);
     std::vector<std::future<void>> unload_futures;
 
     for (auto& [id, plugin] : d->loaded_plugins) {
         if (plugin->qt_loader && plugin->qt_loader->isLoaded()) {
-            // Capture qt_loader as shared_ptr to ensure it survives async operation
+            // Capture qt_loader as shared_ptr to ensure it survives async
+            // operation
             auto loader = std::move(plugin->qt_loader);
-            unload_futures.push_back(std::async(std::launch::async, [loader = std::move(loader)]() {
-                loader->unload();
-            }));
+            unload_futures.push_back(std::async(
+                std::launch::async,
+                [loader = std::move(loader)]() { loader->unload(); }));
         }
     }
 
@@ -257,39 +264,21 @@ QtPluginLoader::~QtPluginLoader() {
     d->loaded_plugins.clear();
 }
 
-// Copy constructor
-QtPluginLoader::QtPluginLoader(const QtPluginLoader& other) : d(std::make_unique<Impl>()) {
-    d->loaded_plugins = other.d->loaded_plugins;
-    d->metadata_cache = other.d->metadata_cache;
-    d->error_history = other.d->error_history;
-    d->cache_hits = other.d->cache_hits.load();
-    d->cache_misses = other.d->cache_misses.load();
-    d->cache_enabled = other.d->cache_enabled;
-}
-
-// Copy assignment operator
-QtPluginLoader& QtPluginLoader::operator=(const QtPluginLoader& other) {
-    if (this != &other) {
-        d->loaded_plugins = other.d->loaded_plugins;
-        d->metadata_cache = other.d->metadata_cache;
-        d->error_history = other.d->error_history;
-        d->cache_hits = other.d->cache_hits.load();
-        d->cache_misses = other.d->cache_misses.load();
-        d->cache_enabled = other.d->cache_enabled;
-    }
-    return *this;
-}
+// Copy constructor and assignment operator are deleted in the header
 
 // Move constructor
-QtPluginLoader::QtPluginLoader(QtPluginLoader&& other) noexcept : d(std::move(other.d)) {
-    other.d = std::make_unique<Impl>();
+QtPluginLoader::QtPluginLoader(QtPluginLoader&& other) noexcept
+    : d(std::move(other.d)) {
+    d->parent = this;
+    other.d = std::make_unique<Impl>(&other);
 }
 
 // Move assignment operator
 QtPluginLoader& QtPluginLoader::operator=(QtPluginLoader&& other) noexcept {
     if (this != &other) {
         d = std::move(other.d);
-        other.d = std::make_unique<Impl>();
+        d->parent = this;
+        other.d = std::make_unique<Impl>(&other);
     }
     return *this;
 }
@@ -322,8 +311,9 @@ qtplugin::expected<std::shared_ptr<IPlugin>, PluginError> QtPluginLoader::load(
     auto start_time = std::chrono::steady_clock::now();
 
     if (!std::filesystem::exists(file_path)) {
-        d->track_error(__FUNCTION__, "Plugin file not found: " + file_path.string(),
-                   PluginErrorCode::FileNotFound);
+        d->track_error(__FUNCTION__,
+                       "Plugin file not found: " + file_path.string(),
+                       PluginErrorCode::FileNotFound);
         return make_error<std::shared_ptr<IPlugin>>(
             PluginErrorCode::FileNotFound,
             "Plugin file not found: " + file_path.string());
@@ -341,7 +331,7 @@ qtplugin::expected<std::shared_ptr<IPlugin>, PluginError> QtPluginLoader::load(
         return qtplugin::unexpected<PluginError>{metadata_result.error()};
     }
 
-    auto plugin_id_result = extract_plugin_id(metadata_result.value());
+    auto plugin_id_result = d->extract_plugin_id(metadata_result.value());
     if (!plugin_id_result) {
         return qtplugin::unexpected<PluginError>{plugin_id_result.error()};
     }
@@ -350,8 +340,8 @@ qtplugin::expected<std::shared_ptr<IPlugin>, PluginError> QtPluginLoader::load(
 
     // Check if already loaded
     {
-        std::shared_lock lock(m_plugins_mutex);
-        if (m_loaded_plugins.find(plugin_id) != m_loaded_plugins.end()) {
+        std::shared_lock lock(d->plugins_mutex);
+        if (d->loaded_plugins.find(plugin_id) != d->loaded_plugins.end()) {
             return make_error<std::shared_ptr<IPlugin>>(
                 PluginErrorCode::LoadFailed,
                 "Plugin already loaded: " + plugin_id);
@@ -386,7 +376,7 @@ qtplugin::expected<std::shared_ptr<IPlugin>, PluginError> QtPluginLoader::load(
     });
 
     // Create loaded plugin info with enhanced tracking
-    auto loaded_plugin = std::make_unique<LoadedPlugin>();
+    auto loaded_plugin = std::make_unique<Impl::LoadedPlugin>();
     loaded_plugin->id = plugin_id;
     loaded_plugin->file_path = file_path;
     loaded_plugin->qt_loader = std::move(qt_loader);
@@ -402,8 +392,8 @@ qtplugin::expected<std::shared_ptr<IPlugin>, PluginError> QtPluginLoader::load(
 
     // Store the loaded plugin
     {
-        std::unique_lock lock(m_plugins_mutex);
-        m_loaded_plugins[plugin_id] = std::move(loaded_plugin);
+        std::unique_lock lock(d->plugins_mutex);
+        d->loaded_plugins[plugin_id] = std::move(loaded_plugin);
     }
 
     return plugin_ptr;
@@ -411,10 +401,10 @@ qtplugin::expected<std::shared_ptr<IPlugin>, PluginError> QtPluginLoader::load(
 
 qtplugin::expected<void, PluginError> QtPluginLoader::unload(
     std::string_view plugin_id) {
-    std::unique_lock lock(m_plugins_mutex);
+    std::unique_lock lock(d->plugins_mutex);
 
-    auto it = m_loaded_plugins.find(std::string(plugin_id));
-    if (it == m_loaded_plugins.end()) {
+    auto it = d->loaded_plugins.find(std::string(plugin_id));
+    if (it == d->loaded_plugins.end()) {
         return make_error<void>(PluginErrorCode::LoadFailed,
                                 "Plugin not found: " + std::string(plugin_id));
     }
@@ -432,7 +422,7 @@ qtplugin::expected<void, PluginError> QtPluginLoader::unload(
     }
 
     // Remove from loaded plugins
-    m_loaded_plugins.erase(it);
+    d->loaded_plugins.erase(it);
 
     return make_success();
 }
@@ -448,16 +438,16 @@ std::string_view QtPluginLoader::name() const noexcept {
 bool QtPluginLoader::supports_hot_reload() const noexcept { return true; }
 
 size_t QtPluginLoader::loaded_plugin_count() const {
-    std::shared_lock lock(m_plugins_mutex);
-    return m_loaded_plugins.size();
+    std::shared_lock lock(d->plugins_mutex);
+    return d->loaded_plugins.size();
 }
 
 std::vector<std::string> QtPluginLoader::loaded_plugins() const {
-    std::shared_lock lock(m_plugins_mutex);
+    std::shared_lock lock(d->plugins_mutex);
     std::vector<std::string> plugin_ids;
-    plugin_ids.reserve(m_loaded_plugins.size());
+    plugin_ids.reserve(d->loaded_plugins.size());
 
-    for (const auto& [id, plugin] : m_loaded_plugins) {
+    for (const auto& [id, plugin] : d->loaded_plugins) {
         plugin_ids.push_back(id);
     }
 
@@ -465,41 +455,43 @@ std::vector<std::string> QtPluginLoader::loaded_plugins() const {
 }
 
 bool QtPluginLoader::is_loaded(std::string_view plugin_id) const {
-    std::shared_lock lock(m_plugins_mutex);
-    return m_loaded_plugins.find(std::string(plugin_id)) !=
-           m_loaded_plugins.end();
+    std::shared_lock lock(d->plugins_mutex);
+    return d->loaded_plugins.find(std::string(plugin_id)) !=
+           d->loaded_plugins.end();
 }
 
-qtplugin::expected<QJsonObject, PluginError> QtPluginLoader::read_metadata(
+qtplugin::expected<QJsonObject, PluginError>
+QtPluginLoader::Impl::read_metadata(
     const std::filesystem::path& file_path) const {
     // Use cached version if caching is enabled
-    if (m_cache_enabled) {
+    if (cache_enabled) {
         return read_metadata_cached(file_path);
     }
     return read_metadata_impl(file_path);
 }
 
-qtplugin::expected<QJsonObject, PluginError> QtPluginLoader::read_metadata_cached(
+qtplugin::expected<QJsonObject, PluginError>
+QtPluginLoader::Impl::read_metadata_cached(
     const std::filesystem::path& file_path) const {
     // Check cache first
     {
-        std::shared_lock lock(m_cache_mutex);
-        auto it = m_metadata_cache.find(file_path.string());
-        if (it != m_metadata_cache.end()) {
+        std::shared_lock lock(cache_mutex);
+        auto it = metadata_cache.find(file_path.string());
+        if (it != metadata_cache.end()) {
             if (is_cache_valid(file_path, it->second)) {
-                ++m_cache_hits;
+                ++cache_hits;
                 return it->second.metadata;
             }
         }
     }
 
-    ++m_cache_misses;
+    ++cache_misses;
 
     // Read metadata from file
     auto result = read_metadata_impl(file_path);
     if (result) {
         // Cache the result
-        std::unique_lock lock(m_cache_mutex);
+        std::unique_lock lock(cache_mutex);
 
         CacheEntry entry;
         entry.metadata = result.value();
@@ -509,13 +501,14 @@ qtplugin::expected<QJsonObject, PluginError> QtPluginLoader::read_metadata_cache
             entry.file_time = std::filesystem::last_write_time(file_path);
             entry.file_size = std::filesystem::file_size(file_path);
         } catch (const std::filesystem::filesystem_error& e) {
-            track_error(__FUNCTION__, "Failed to get file info: " + std::string(e.what()));
+            track_error(__FUNCTION__,
+                        "Failed to get file info: " + std::string(e.what()));
         }
 
-        m_metadata_cache[file_path.string()] = std::move(entry);
+        metadata_cache[file_path.string()] = std::move(entry);
 
         // Evict old entries if cache is too large
-        if (m_metadata_cache.size() > MAX_CACHE_SIZE) {
+        if (metadata_cache.size() > MAX_CACHE_SIZE) {
             evict_oldest_cache_entry();
         }
     }
@@ -524,7 +517,8 @@ qtplugin::expected<QJsonObject, PluginError> QtPluginLoader::read_metadata_cache
 }
 
 // Internal implementation without caching
-qtplugin::expected<QJsonObject, PluginError> QtPluginLoader::read_metadata_impl(
+qtplugin::expected<QJsonObject, PluginError>
+QtPluginLoader::Impl::read_metadata_impl(
     const std::filesystem::path& file_path) const {
     QString qt_path = QString::fromStdString(file_path.string());
     qDebug() << "read_metadata_impl() called with path:" << qt_path;
@@ -558,8 +552,8 @@ qtplugin::expected<QJsonObject, PluginError> QtPluginLoader::read_metadata_impl(
     return metadata;
 }
 
-qtplugin::expected<std::string, PluginError> QtPluginLoader::extract_plugin_id(
-    const QJsonObject& metadata) const {
+qtplugin::expected<std::string, PluginError>
+QtPluginLoader::Impl::extract_plugin_id(const QJsonObject& metadata) const {
     // Try to get plugin ID from metadata
     if (metadata.contains("MetaData")) {
         QJsonObject meta_data = metadata["MetaData"].toObject();
@@ -580,7 +574,7 @@ qtplugin::expected<std::string, PluginError> QtPluginLoader::extract_plugin_id(
                                    "No plugin ID found in metadata");
 }
 
-bool QtPluginLoader::is_valid_plugin_file(
+bool QtPluginLoader::Impl::is_valid_plugin_file(
     const std::filesystem::path& file_path) const {
     QFileInfo file_info(QString::fromStdString(file_path.string()));
 
@@ -590,7 +584,8 @@ bool QtPluginLoader::is_valid_plugin_file(
 
     // Check file extension
     QString suffix = file_info.suffix().toLower();
-    auto extensions = supported_extensions();
+    static const std::vector<std::string> extensions = {".dll", ".so", ".dylib",
+                                                        ".qtplugin"};
 
     for (const auto& ext : extensions) {
         QString ext_without_dot =
@@ -645,7 +640,7 @@ std::vector<std::string> PluginLoaderFactory::available_loaders() {
 // === Enhanced functionality implementation (v3.2.0) ===
 
 void QtPluginLoader::set_cache_enabled(bool enabled) {
-    m_cache_enabled = enabled;
+    d->cache_enabled = enabled;
     if (!enabled) {
         clear_cache();
     }
@@ -653,40 +648,41 @@ void QtPluginLoader::set_cache_enabled(bool enabled) {
 
 QtPluginLoader::CacheStatistics QtPluginLoader::get_cache_statistics() const {
     CacheStatistics stats;
-    stats.hits = m_cache_hits.load();
-    stats.misses = m_cache_misses.load();
+    stats.hits = d->cache_hits.load();
+    stats.misses = d->cache_misses.load();
 
     size_t total = stats.hits + stats.misses;
     stats.hit_rate = total > 0 ? static_cast<double>(stats.hits) / total : 0.0;
 
     {
-        std::shared_lock lock(m_cache_mutex);
-        stats.cache_size = m_metadata_cache.size();
+        std::shared_lock lock(d->cache_mutex);
+        stats.cache_size = d->metadata_cache.size();
     }
 
     return stats;
 }
 
 void QtPluginLoader::clear_cache() {
-    std::unique_lock lock(m_cache_mutex);
-    m_metadata_cache.clear();
-    m_cache_hits = 0;
-    m_cache_misses = 0;
+    std::unique_lock lock(d->cache_mutex);
+    d->metadata_cache.clear();
+    d->cache_hits = 0;
+    d->cache_misses = 0;
 }
 
 std::string QtPluginLoader::get_error_report() const {
-    std::lock_guard<std::mutex> lock(m_error_mutex);
+    std::lock_guard<std::mutex> lock(d->error_mutex);
 
     std::stringstream ss;
     ss << "=== QtPluginLoader Error Report ===\n";
-    ss << "Total errors: " << m_error_history.size() << "\n\n";
+    ss << "Total errors: " << d->error_history.size() << "\n\n";
 
-    for (size_t i = 0; i < m_error_history.size(); ++i) {
-        const auto& error = m_error_history[i];
+    for (size_t i = 0; i < d->error_history.size(); ++i) {
+        const auto& error = d->error_history[i];
         auto time_t = std::chrono::system_clock::to_time_t(error.timestamp);
 
         ss << "[" << i << "] "
-           << std::put_time(std::localtime(&time_t), "%Y-%m-%d %H:%M:%S") << "\n";
+           << std::put_time(std::localtime(&time_t), "%Y-%m-%d %H:%M:%S")
+           << "\n";
         ss << "  Function: " << error.function << "\n";
         ss << "  Message: " << error.message << "\n";
         ss << "  Code: " << static_cast<int>(error.code) << "\n\n";
@@ -696,19 +692,18 @@ std::string QtPluginLoader::get_error_report() const {
 }
 
 void QtPluginLoader::clear_error_history() {
-    std::lock_guard<std::mutex> lock(m_error_mutex);
-    m_error_history.clear();
+    std::lock_guard<std::mutex> lock(d->error_mutex);
+    d->error_history.clear();
 }
 
 QtPluginLoader::ResourceUsage QtPluginLoader::get_resource_usage(
     std::string_view plugin_id) const {
-
     ResourceUsage usage;
 
-    std::shared_lock lock(m_plugins_mutex);
-    auto it = m_loaded_plugins.find(std::string(plugin_id));
+    std::shared_lock lock(d->plugins_mutex);
+    auto it = d->loaded_plugins.find(std::string(plugin_id));
 
-    if (it != m_loaded_plugins.end()) {
+    if (it != d->loaded_plugins.end()) {
         const auto& plugin = it->second;
 
         // Calculate approximate memory usage
@@ -716,7 +711,8 @@ QtPluginLoader::ResourceUsage QtPluginLoader::get_resource_usage(
         if (usage.memory_bytes == 0) {
             // Estimate based on file size if not set
             try {
-                usage.memory_bytes = std::filesystem::file_size(plugin->file_path);
+                usage.memory_bytes =
+                    std::filesystem::file_size(plugin->file_path);
             } catch (...) {
                 usage.memory_bytes = 0;
             }
@@ -726,7 +722,8 @@ QtPluginLoader::ResourceUsage QtPluginLoader::get_resource_usage(
 
         auto now = std::chrono::steady_clock::now();
         auto duration = now - plugin->load_time;
-        usage.load_time = std::chrono::duration_cast<std::chrono::milliseconds>(duration);
+        usage.load_time =
+            std::chrono::duration_cast<std::chrono::milliseconds>(duration);
 
         usage.last_access = std::chrono::system_clock::now();
     }
@@ -734,10 +731,10 @@ QtPluginLoader::ResourceUsage QtPluginLoader::get_resource_usage(
     return usage;
 }
 
-void QtPluginLoader::track_error(const std::string& function,
-                                 const std::string& message,
-                                 PluginErrorCode code) const {
-    std::lock_guard<std::mutex> lock(m_error_mutex);
+void QtPluginLoader::Impl::track_error(const std::string& function,
+                                       const std::string& message,
+                                       PluginErrorCode code) const {
+    std::lock_guard<std::mutex> lock(error_mutex);
 
     ErrorEntry entry;
     entry.timestamp = std::chrono::system_clock::now();
@@ -745,16 +742,16 @@ void QtPluginLoader::track_error(const std::string& function,
     entry.message = message;
     entry.code = code;
 
-    m_error_history.push_back(std::move(entry));
+    error_history.push_back(std::move(entry));
 
     // Keep only last MAX_ERROR_HISTORY entries
-    if (m_error_history.size() > MAX_ERROR_HISTORY) {
-        m_error_history.erase(m_error_history.begin());
+    if (error_history.size() > MAX_ERROR_HISTORY) {
+        error_history.erase(error_history.begin());
     }
 }
 
-bool QtPluginLoader::is_cache_valid(const std::filesystem::path& path,
-                                    const CacheEntry& entry) const {
+bool QtPluginLoader::Impl::is_cache_valid(const std::filesystem::path& path,
+                                          const CacheEntry& entry) const {
     try {
         // Check if file has been modified
         auto current_time = std::filesystem::last_write_time(path);
@@ -770,7 +767,7 @@ bool QtPluginLoader::is_cache_valid(const std::filesystem::path& path,
 
         // Check cache age
         auto age = std::chrono::steady_clock::now() - entry.cache_time;
-        if (age > CACHE_EXPIRY) {
+        if (age > Impl::CACHE_EXPIRY) {
             return false;
         }
 
@@ -780,26 +777,26 @@ bool QtPluginLoader::is_cache_valid(const std::filesystem::path& path,
     }
 }
 
-void QtPluginLoader::evict_oldest_cache_entry() const {
-    if (m_metadata_cache.empty()) {
+void QtPluginLoader::Impl::evict_oldest_cache_entry() const {
+    if (metadata_cache.empty()) {
         return;
     }
 
-    auto oldest = m_metadata_cache.begin();
+    auto oldest = metadata_cache.begin();
     auto oldest_time = oldest->second.cache_time;
 
-    for (auto it = m_metadata_cache.begin(); it != m_metadata_cache.end(); ++it) {
+    for (auto it = metadata_cache.begin(); it != metadata_cache.end(); ++it) {
         if (it->second.cache_time < oldest_time) {
             oldest = it;
             oldest_time = it->second.cache_time;
         }
     }
 
-    m_metadata_cache.erase(oldest);
+    metadata_cache.erase(oldest);
 }
 
 // Load persistent cache from disk for faster startup
-void QtPluginLoader::load_persistent_cache() {
+void QtPluginLoader::Impl::load_persistent_cache() {
     auto cache_path = get_cache_persistence_path();
     QFile cache_file(cache_path);
 
@@ -815,7 +812,7 @@ void QtPluginLoader::load_persistent_cache() {
         return;  // Incompatible cache version
     }
 
-    std::unique_lock lock(m_cache_mutex);
+    std::unique_lock lock(cache_mutex);
 
     quint32 entry_count;
     stream >> entry_count;
@@ -837,16 +834,17 @@ void QtPluginLoader::load_persistent_cache() {
                 entry.cache_time = std::chrono::steady_clock::now();
 
                 // Note: file_time will be updated on first validation
-                m_metadata_cache[key.toStdString()] = std::move(entry);
+                metadata_cache[key.toStdString()] = std::move(entry);
             }
         }
     }
 
-    qDebug() << "Loaded" << m_metadata_cache.size() << "entries from persistent cache";
+    qDebug() << "Loaded" << metadata_cache.size()
+             << "entries from persistent cache";
 }
 
 // Save cache to disk for persistence across sessions
-void QtPluginLoader::save_persistent_cache() const {
+void QtPluginLoader::Impl::save_persistent_cache() const {
     auto cache_path = get_cache_persistence_path();
 
     // Ensure cache directory exists
@@ -864,16 +862,16 @@ void QtPluginLoader::save_persistent_cache() const {
     QDataStream stream(&cache_file);
     stream << quint32(1);  // Cache version
 
-    std::shared_lock lock(m_cache_mutex);
+    std::shared_lock lock(cache_mutex);
 
     // Save limited number of most recent entries
-    quint32 entry_count = std::min(static_cast<size_t>(m_metadata_cache.size()),
+    quint32 entry_count = std::min(static_cast<size_t>(metadata_cache.size()),
                                    CACHE_PREWARM_SIZE);
     stream << entry_count;
 
     // Sort entries by cache time to save most recent ones
     std::vector<std::pair<std::string, const CacheEntry*>> sorted_entries;
-    for (const auto& [key, entry] : m_metadata_cache) {
+    for (const auto& [key, entry] : metadata_cache) {
         sorted_entries.push_back({key, &entry});
     }
 
@@ -911,7 +909,6 @@ struct BatchLoadResult {
 // Batch load multiple plugins efficiently
 std::vector<QtPluginLoader::BatchLoadResult> QtPluginLoader::batch_load(
     const std::vector<std::filesystem::path>& paths) {
-
     std::vector<QtPluginLoader::BatchLoadResult> results;
     results.reserve(paths.size());
 
@@ -922,24 +919,23 @@ std::vector<QtPluginLoader::BatchLoadResult> QtPluginLoader::batch_load(
             auto result = load(path);
             auto end = std::chrono::steady_clock::now();
 
-            results.push_back({
-                path,
-                result,
-                std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
-            });
+            results.push_back(
+                {path, result,
+                 std::chrono::duration_cast<std::chrono::milliseconds>(end -
+                                                                       start)});
         }
     } else {
         // Parallel loading for large batches
-        results = batch_load_parallel(paths);
+        results = d->batch_load_parallel(paths);
     }
 
     return results;
 }
 
 // Parallel batch loading implementation
-std::vector<QtPluginLoader::BatchLoadResult> QtPluginLoader::batch_load_parallel(
+std::vector<QtPluginLoader::BatchLoadResult>
+QtPluginLoader::Impl::batch_load_parallel(
     const std::vector<std::filesystem::path>& paths) {
-
     auto& thread_pool = PluginLoadThreadPool::instance();
     std::vector<std::future<QtPluginLoader::BatchLoadResult>> futures;
     futures.reserve(paths.size());
@@ -948,14 +944,13 @@ std::vector<QtPluginLoader::BatchLoadResult> QtPluginLoader::batch_load_parallel
     for (const auto& path : paths) {
         futures.push_back(thread_pool.submit([this, path]() {
             auto start = std::chrono::steady_clock::now();
-            auto result = load(path);
+            auto result = parent->load(path);
             auto end = std::chrono::steady_clock::now();
 
             return BatchLoadResult{
-                path,
-                result,
-                std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
-            };
+                path, result,
+                std::chrono::duration_cast<std::chrono::milliseconds>(end -
+                                                                      start)};
         }));
     }
 
@@ -968,13 +963,11 @@ std::vector<QtPluginLoader::BatchLoadResult> QtPluginLoader::batch_load_parallel
             results.push_back(future.get());
         } else {
             // Timeout occurred
-            results.push_back({
-                std::filesystem::path(),
-                qtplugin::make_error<std::shared_ptr<IPlugin>>(
-                    PluginErrorCode::Timeout,
-                    "Plugin load timed out"),
-                std::chrono::milliseconds(0)
-            });
+            results.push_back(
+                {std::filesystem::path(),
+                 qtplugin::make_error<std::shared_ptr<IPlugin>>(
+                     PluginErrorCode::Timeout, "Plugin load timed out"),
+                 std::chrono::milliseconds(0)});
         }
     }
 
@@ -984,7 +977,6 @@ std::vector<QtPluginLoader::BatchLoadResult> QtPluginLoader::batch_load_parallel
 // Batch unload multiple plugins
 std::vector<qtplugin::expected<void, PluginError>> QtPluginLoader::batch_unload(
     const std::vector<std::string>& plugin_ids) {
-
     std::vector<qtplugin::expected<void, PluginError>> results;
     results.reserve(plugin_ids.size());
 
@@ -999,9 +991,8 @@ std::vector<qtplugin::expected<void, PluginError>> QtPluginLoader::batch_unload(
         std::vector<std::future<qtplugin::expected<void, PluginError>>> futures;
 
         for (const auto& id : plugin_ids) {
-            futures.push_back(thread_pool.submit([this, id]() {
-                return unload(id);
-            }));
+            futures.push_back(
+                thread_pool.submit([this, id]() { return unload(id); }));
         }
 
         // Collect results
@@ -1017,24 +1008,23 @@ std::vector<qtplugin::expected<void, PluginError>> QtPluginLoader::batch_unload(
 std::vector<qtplugin::expected<QJsonObject, PluginError>>
 QtPluginLoader::batch_read_metadata(
     const std::vector<std::filesystem::path>& paths) {
-
     std::vector<qtplugin::expected<QJsonObject, PluginError>> results;
     results.reserve(paths.size());
 
     if (paths.size() < MIN_PARALLEL_LOAD_THRESHOLD) {
         // Sequential for small batches
         for (const auto& path : paths) {
-            results.push_back(read_metadata(path));
+            results.push_back(d->read_metadata(path));
         }
     } else {
         // Parallel for large batches
         auto& thread_pool = PluginLoadThreadPool::instance();
-        std::vector<std::future<qtplugin::expected<QJsonObject, PluginError>>> futures;
+        std::vector<std::future<qtplugin::expected<QJsonObject, PluginError>>>
+            futures;
 
         for (const auto& path : paths) {
-            futures.push_back(thread_pool.submit([this, path]() {
-                return read_metadata(path);
-            }));
+            futures.push_back(thread_pool.submit(
+                [this, path]() { return d->read_metadata(path); }));
         }
 
         // Collect results

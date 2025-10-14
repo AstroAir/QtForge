@@ -1,11 +1,13 @@
 /**
  * @file ui_plugin_interface.hpp
- * @brief Unified UI plugin interface combining comprehensive features with modern C++ patterns
+ * @brief Unified UI plugin interface combining comprehensive features with
+ * modern C++ patterns
  * @version 3.1.0
  *
- * This interface consolidates the best features from both the comprehensive enterprise-focused
- * UI interface and the streamlined developer-friendly interface, providing a complete solution
- * for C++ widget-based user interface components with modern accessibility and state management.
+ * This interface consolidates the best features from both the comprehensive
+ * enterprise-focused UI interface and the streamlined developer-friendly
+ * interface, providing a complete solution for C++ widget-based user interface
+ * components with modern accessibility and state management.
  */
 
 #pragma once
@@ -37,12 +39,12 @@
 #include <QtGui/QAction>
 #include <QtGui/QIcon>
 #include <QtGui/QKeySequence>
-#include <QtWidgets/QWidget>
 #include <QtWidgets/QDialog>
 #include <QtWidgets/QDockWidget>
 #include <QtWidgets/QMenu>
-#include <QtWidgets/QToolBar>
 #include <QtWidgets/QSizePolicy>
+#include <QtWidgets/QToolBar>
+#include <QtWidgets/QWidget>
 
 namespace qtplugin {
 
@@ -172,7 +174,8 @@ struct UIActionInfo {
 };
 
 /**
- * @brief UI widget information (enhanced with accessibility and state management)
+ * @brief UI widget information (enhanced with accessibility and state
+ * management)
  */
 struct UIWidgetInfo {
     QString id;                            ///< Widget identifier
@@ -188,11 +191,11 @@ struct UIWidgetInfo {
     bool resizable = true;                 ///< Whether widget is resizable
     bool closable = true;                  ///< Whether widget is closable
     bool floatable = true;                 ///< Whether widget can float
-    bool accessible = true;                ///< Whether widget supports accessibility
+    bool accessible = true;  ///< Whether widget supports accessibility
     Qt::DockWidgetAreas allowed_areas =
-        Qt::AllDockWidgetAreas;     ///< Allowed dock areas
-    QJsonObject custom_properties;  ///< Custom widget properties
-    QJsonObject accessibility_info; ///< Accessibility information
+        Qt::AllDockWidgetAreas;      ///< Allowed dock areas
+    QJsonObject custom_properties;   ///< Custom widget properties
+    QJsonObject accessibility_info;  ///< Accessibility information
 
     /**
      * @brief Convert to JSON object
@@ -235,22 +238,25 @@ struct UIWidgetInfo {
         info.title = json["title"].toString();
         info.description = json["description"].toString();
         info.type = static_cast<UIComponentType>(json["type"].toInt());
-        info.integration_point = static_cast<UIIntegrationPoint>(json["integration_point"].toInt());
-        info.integration_mode = static_cast<UIIntegrationMode>(json["integration_mode"].toInt());
+        info.integration_point =
+            static_cast<UIIntegrationPoint>(json["integration_point"].toInt());
+        info.integration_mode =
+            static_cast<UIIntegrationMode>(json["integration_mode"].toInt());
 
         QJsonObject size_obj = json["sizes"].toObject();
         info.preferred_size = QSize(size_obj["preferred_width"].toInt(400),
-                                   size_obj["preferred_height"].toInt(300));
+                                    size_obj["preferred_height"].toInt(300));
         info.minimum_size = QSize(size_obj["minimum_width"].toInt(200),
-                                 size_obj["minimum_height"].toInt(150));
+                                  size_obj["minimum_height"].toInt(150));
         info.maximum_size = QSize(size_obj["maximum_width"].toInt(),
-                                 size_obj["maximum_height"].toInt());
+                                  size_obj["maximum_height"].toInt());
 
         info.resizable = json["resizable"].toBool(true);
         info.closable = json["closable"].toBool(true);
         info.floatable = json["floatable"].toBool(true);
         info.accessible = json["accessible"].toBool(true);
-        info.allowed_areas = static_cast<Qt::DockWidgetAreas>(json["allowed_areas"].toInt(Qt::AllDockWidgetAreas));
+        info.allowed_areas = static_cast<Qt::DockWidgetAreas>(
+            json["allowed_areas"].toInt(Qt::AllDockWidgetAreas));
         info.custom_properties = json["custom_properties"].toObject();
         info.accessibility_info = json["accessibility_info"].toObject();
 
@@ -276,15 +282,15 @@ struct UIWidgetInfo {
  * @brief UI theme information (enhanced with accessibility and validation)
  */
 struct UIThemeInfo {
-    QString name;               ///< Theme name
-    QString description;        ///< Theme description
-    QString stylesheet;         ///< CSS stylesheet
-    QJsonObject color_scheme;   ///< Color scheme
-    QJsonObject font_settings;  ///< Font settings
-    QJsonObject icon_theme;     ///< Icon theme settings
-    bool dark_mode = false;     ///< Whether it's a dark theme
-    bool high_contrast = false; ///< Whether it's a high contrast theme
-    QJsonObject accessibility_settings; ///< Accessibility-specific settings
+    QString name;                        ///< Theme name
+    QString description;                 ///< Theme description
+    QString stylesheet;                  ///< CSS stylesheet
+    QJsonObject color_scheme;            ///< Color scheme
+    QJsonObject font_settings;           ///< Font settings
+    QJsonObject icon_theme;              ///< Icon theme settings
+    bool dark_mode = false;              ///< Whether it's a dark theme
+    bool high_contrast = false;          ///< Whether it's a high contrast theme
+    QJsonObject accessibility_settings;  ///< Accessibility-specific settings
 
     /**
      * @brief Convert to JSON object
@@ -346,9 +352,9 @@ using UIWidgetCallback =
 /**
  * @brief Unified UI plugin interface
  *
- * This interface combines comprehensive enterprise features with modern C++ patterns
- * for creating widget-based UI components. It includes accessibility support,
- * state management, and enhanced integration capabilities.
+ * This interface combines comprehensive enterprise features with modern C++
+ * patterns for creating widget-based UI components. It includes accessibility
+ * support, state management, and enhanced integration capabilities.
  *
  * Features from both interfaces:
  * - Comprehensive component and action management
@@ -416,7 +422,8 @@ public:
     /**
      * @brief Create configuration widget (enhanced from streamlined)
      * @param parent Parent widget (optional)
-     * @return Unique pointer to the configuration widget, or nullptr if not supported
+     * @return Unique pointer to the configuration widget, or nullptr if not
+     * supported
      */
     virtual std::unique_ptr<QWidget> create_configuration_widget(
         QWidget* parent = nullptr) {
@@ -770,37 +777,31 @@ Q_DECLARE_METATYPE(qtplugin::UIThemeInfo)
 
 Q_DECLARE_INTERFACE(qtplugin::IUIPlugin, "qtplugin.IUIPlugin/3.1")
 
-
-
 // Register interface with validator
-#include "interface_validator.hpp"
+#include "../interface_validator.hpp"
 
 namespace {
-    // Auto-register UI interface metadata
-    struct UIInterfaceRegistrar {
-        UIInterfaceRegistrar() {
-            qtplugin::InterfaceMetadata metadata;
-            metadata.interface_id = "qtplugin.IUIPlugin/3.1";
-            metadata.version = qtplugin::Version{3, 1, 0};
-            metadata.name = "UI Plugin Interface";
-            metadata.description = "Unified UI plugin interface with comprehensive widget management";
-            metadata.required_methods = {
-                "create_widget(const QString&, QWidget*)",
-                "supported_components()",
-                "get_widget_info(const QString&)"
-            };
-            metadata.optional_methods = {
-                "integration_mode()",
-                "save_ui_state()",
-                "restore_ui_state(const QJsonObject&)",
-                "on_ui_setup_complete(QWidget*)",
-                "on_ui_cleanup()"
-            };
-            metadata.dependencies = {"qtplugin.IPlugin/3.0"};
+// Auto-register UI interface metadata
+struct UIInterfaceRegistrar {
+    UIInterfaceRegistrar() {
+        qtplugin::InterfaceMetadata metadata;
+        metadata.interface_id = "qtplugin.IUIPlugin/3.1";
+        metadata.version = qtplugin::Version{3, 1, 0};
+        metadata.name = "UI Plugin Interface";
+        metadata.description =
+            "Unified UI plugin interface with comprehensive widget management";
+        metadata.required_methods = {"create_widget(const QString&, QWidget*)",
+                                     "supported_components()",
+                                     "get_widget_info(const QString&)"};
+        metadata.optional_methods = {"integration_mode()", "save_ui_state()",
+                                     "restore_ui_state(const QJsonObject&)",
+                                     "on_ui_setup_complete(QWidget*)",
+                                     "on_ui_cleanup()"};
+        metadata.dependencies = {"qtplugin.IPlugin/3.0"};
 
-            qtplugin::global_interface_validator().register_interface(metadata);
-        }
-    };
+        qtplugin::global_interface_validator().register_interface(metadata);
+    }
+};
 
-    static UIInterfaceRegistrar ui_interface_registrar;
-}
+static UIInterfaceRegistrar ui_interface_registrar;
+}  // namespace

@@ -5,15 +5,9 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Core)
-find_package(QtForge REQUIRED COMPONENTS Core)
+# Qt6 is already found by parent CMakeLists.txt find_package(Qt6 REQUIRED
+# COMPONENTS Core) find_package(QtForge REQUIRED COMPONENTS Core)
 
-add_executable(composition_basics
-    composition_basics.cpp
-)
+add_executable(composition_basics composition_basics.cpp)
 
-target_link_libraries(composition_basics PRIVATE
-    Qt6::Core
-    QtForge::Core
-)
-
+target_link_libraries(composition_basics PRIVATE Qt6::Core QtForgeCore)

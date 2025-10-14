@@ -1,6 +1,7 @@
 /**
  * @file transactions.cpp
- * @brief Implementation of plugin transaction functionality for unified workflow module
+ * @brief Implementation of plugin transaction functionality for unified
+ * workflow module
  * @version 3.1.0
  */
 
@@ -10,7 +11,9 @@
 #include <algorithm>
 #include "qtplugin/core/plugin_manager.hpp"
 
-Q_LOGGING_CATEGORY(workflowTransactionsLog, "qtplugin.workflow.transactions")
+namespace {
+Q_LOGGING_CATEGORY(workflow_transactions_log, "qtplugin.workflow.transactions")
+}  // namespace
 
 namespace qtplugin::workflow::transactions {
 
@@ -46,9 +49,10 @@ PluginTransactionManager::begin_transaction(IsolationLevel isolation,
 
     emit transaction_started(transaction_id);
 
-    qCDebug(workflowTransactionsLog) << "Started transaction:" << transaction_id
-                            << "isolation:" << static_cast<int>(isolation)
-                            << "timeout:" << timeout.count() << "ms";
+    qCDebug(workflow_transactions_log)
+        << "Started transaction:" << transaction_id
+        << "isolation:" << static_cast<int>(isolation)
+        << "timeout:" << timeout.count() << "ms";
 
     return transaction_id;
 }
@@ -78,7 +82,8 @@ PluginTransactionManager::commit_transaction(const QString& transaction_id) {
 
     context.set_state(TransactionState::Committing);
 
-    qCDebug(workflowTransactionsLog) << "Committing transaction:" << transaction_id;
+    qCDebug(workflow_transactions_log)
+        << "Committing transaction:" << transaction_id;
 
     // Execute two-phase commit
     auto commit_result = execute_two_phase_commit(context);
@@ -92,7 +97,7 @@ PluginTransactionManager::commit_transaction(const QString& transaction_id) {
 
         emit transaction_committed(transaction_id);
 
-        qCDebug(workflowTransactionsLog)
+        qCDebug(workflow_transactions_log)
             << "Transaction committed successfully:" << transaction_id;
     } else {
         context.set_state(TransactionState::Failed);
@@ -100,7 +105,7 @@ PluginTransactionManager::commit_transaction(const QString& transaction_id) {
             transaction_id,
             QString::fromStdString(commit_result.error().message));
 
-        qCWarning(workflowTransactionsLog)
+        qCWarning(workflow_transactions_log)
             << "Transaction commit failed:" << transaction_id << "error:"
             << QString::fromStdString(commit_result.error().message);
 
@@ -134,7 +139,8 @@ PluginTransactionManager::rollback_transaction(const QString& transaction_id) {
 
     context.set_state(TransactionState::Aborting);
 
-    qCDebug(workflowTransactionsLog) << "Rolling back transaction:" << transaction_id;
+    qCDebug(workflow_transactions_log)
+        << "Rolling back transaction:" << transaction_id;
 
     // Rollback all operations in reverse order
     auto operations = context.get_operations();
@@ -149,7 +155,7 @@ PluginTransactionManager::rollback_transaction(const QString& transaction_id) {
 
         emit transaction_rolled_back(transaction_id);
 
-        qCDebug(workflowTransactionsLog)
+        qCDebug(workflow_transactions_log)
             << "Transaction rolled back successfully:" << transaction_id;
     } else {
         context.set_state(TransactionState::Failed);
@@ -157,7 +163,7 @@ PluginTransactionManager::rollback_transaction(const QString& transaction_id) {
             transaction_id,
             QString::fromStdString(rollback_result.error().message));
 
-        qCWarning(workflowTransactionsLog)
+        qCWarning(workflow_transactions_log)
             << "Transaction rollback failed:" << transaction_id << "error:"
             << QString::fromStdString(rollback_result.error().message);
 
@@ -174,7 +180,7 @@ PluginTransactionManager::prepare_transaction(const QString& transaction_id) {
         return validation_result;
     }
 
-    std::shared_lock lock(m_transactions_mutex);
+    std::lock_guard lock(m_transactions_mutex);
     auto it = m_active_transactions.find(transaction_id);
     if (it == m_active_transactions.end()) {
         return make_error<void>(
@@ -191,11 +197,12 @@ PluginTransactionManager::prepare_transaction(const QString& transaction_id) {
 
     context.set_state(TransactionState::Preparing);
 
-    qCDebug(workflowTransactionsLog) << "Preparing transaction:" << transaction_id;
+    qCDebug(workflow_transactions_log)
+        << "Preparing transaction:" << transaction_id;
 
     // Prepare all participants
     auto participants = context.get_participants();
-    std::shared_lock participants_lock(m_participants_mutex);
+    std::lock_guard participants_lock(m_participants_mutex);
 
     for (const QString& plugin_id : participants) {
         auto participant_it = m_participants.find(plugin_id);
@@ -211,7 +218,7 @@ PluginTransactionManager::prepare_transaction(const QString& transaction_id) {
 
     context.set_state(TransactionState::Prepared);
 
-    qCDebug(workflowTransactionsLog)
+    qCDebug(workflow_transactions_log)
         << "Transaction prepared successfully:" << transaction_id;
 
     return make_success();
@@ -224,7 +231,7 @@ qtplugin::expected<void, PluginError> PluginTransactionManager::add_operation(
         return validation_result;
     }
 
-    std::shared_lock lock(m_transactions_mutex);
+    std::lock_guard lock(m_transactions_mutex);
     auto it = m_active_transactions.find(transaction_id);
     if (it == m_active_transactions.end()) {
         return make_error<void>(
@@ -242,7 +249,7 @@ qtplugin::expected<void, PluginError> PluginTransactionManager::add_operation(
     context.add_operation(operation);
     context.add_participant(operation.plugin_id);
 
-    qCDebug(workflowTransactionsLog)
+    qCDebug(workflow_transactions_log)
         << "Added operation to transaction:" << transaction_id
         << "operation:" << operation.operation_id
         << "plugin:" << operation.plugin_id;
@@ -258,7 +265,7 @@ PluginTransactionManager::execute_operation(const QString& transaction_id,
         return qtplugin::unexpected<PluginError>(validation_result.error());
     }
 
-    std::shared_lock lock(m_transactions_mutex);
+    std::lock_guard lock(m_transactions_mutex);
     auto it = m_active_transactions.find(transaction_id);
     if (it == m_active_transactions.end()) {
         return make_error<QJsonObject>(
@@ -270,10 +277,10 @@ PluginTransactionManager::execute_operation(const QString& transaction_id,
     auto operations = context.get_operations();
 
     // Find the operation
-    auto op_it = std::find_if(operations.begin(), operations.end(),
-                              [&operation_id](const TransactionOperation& op) {
-                                  return op.operation_id == operation_id;
-                              });
+    auto op_it = std::ranges::find_if(
+        operations, [&operation_id](const TransactionOperation& op) {
+            return op.operation_id == operation_id;
+        });
 
     if (op_it == operations.end()) {
         return make_error<QJsonObject>(
@@ -285,15 +292,15 @@ PluginTransactionManager::execute_operation(const QString& transaction_id,
     if (op_it->execute_func) {
         auto result = op_it->execute_func();
         if (result) {
-            qCDebug(workflowTransactionsLog) << "Executed operation:" << operation_id
-                                    << "in transaction:" << transaction_id;
+            qCDebug(workflow_transactions_log)
+                << "Executed operation:" << operation_id
+                << "in transaction:" << transaction_id;
             return result.value();
-        } else {
-            qCWarning(workflowTransactionsLog)
-                << "Operation execution failed:" << operation_id
-                << "error:" << QString::fromStdString(result.error().message);
-            return qtplugin::unexpected<PluginError>(result.error());
         }
+        qCWarning(workflow_transactions_log)
+            << "Operation execution failed:" << operation_id
+            << "error:" << QString::fromStdString(result.error().message);
+        return qtplugin::unexpected<PluginError>(result.error());
     }
 
     return make_error<QJsonObject>(PluginErrorCode::NotSupported,
@@ -322,7 +329,7 @@ PluginTransactionManager::execute_two_phase_commit(
 
     // Phase 1: Prepare all participants
     {
-        std::shared_lock participants_lock(m_participants_mutex);
+        std::lock_guard participants_lock(m_participants_mutex);
 
         for (const QString& plugin_id : participants) {
             auto participant_it = m_participants.find(plugin_id);
@@ -332,8 +339,9 @@ PluginTransactionManager::execute_two_phase_commit(
                 if (!prepare_result) {
                     // Abort all participants that were prepared
                     for (const QString& abort_plugin_id : participants) {
-                        if (abort_plugin_id == plugin_id)
+                        if (abort_plugin_id == plugin_id) {
                             break;
+                        }
 
                         auto abort_participant_it =
                             m_participants.find(abort_plugin_id);
@@ -351,7 +359,7 @@ PluginTransactionManager::execute_two_phase_commit(
 
     // Phase 2: Commit all participants
     {
-        std::shared_lock participants_lock(m_participants_mutex);
+        std::lock_guard participants_lock(m_participants_mutex);
 
         for (const QString& plugin_id : participants) {
             auto participant_it = m_participants.find(plugin_id);
@@ -359,7 +367,7 @@ PluginTransactionManager::execute_two_phase_commit(
                 auto commit_result =
                     participant_it->second->commit(context.transaction_id());
                 if (!commit_result) {
-                    qCWarning(workflowTransactionsLog)
+                    qCWarning(workflow_transactions_log)
                         << "Participant commit failed:" << plugin_id
                         << "transaction:" << context.transaction_id();
                     return commit_result;
@@ -381,7 +389,7 @@ PluginTransactionManager::rollback_operations(
         if (operation.rollback_func) {
             auto rollback_result = operation.rollback_func();
             if (!rollback_result) {
-                qCWarning(workflowTransactionsLog)
+                qCWarning(workflow_transactions_log)
                     << "Operation rollback failed:" << operation.operation_id
                     << "error:"
                     << QString::fromStdString(rollback_result.error().message);
@@ -405,7 +413,7 @@ PluginTransactionManager::register_participant(
     std::unique_lock lock(m_participants_mutex);
     m_participants[plugin_id] = participant;
 
-    qCDebug(workflowTransactionsLog)
+    qCDebug(workflow_transactions_log)
         << "Registered transaction participant:" << plugin_id;
 
     return make_success();
@@ -413,7 +421,7 @@ PluginTransactionManager::register_participant(
 
 std::vector<QString> PluginTransactionManager::list_active_transactions()
     const {
-    std::shared_lock lock(m_transactions_mutex);
+    std::lock_guard lock(m_transactions_mutex);
     std::vector<QString> transactions;
     transactions.reserve(m_active_transactions.size());
 
@@ -426,8 +434,9 @@ std::vector<QString> PluginTransactionManager::list_active_transactions()
 
 void PluginTransactionManager::on_transaction_timeout() {
     QTimer* timer = qobject_cast<QTimer*>(sender());
-    if (!timer)
+    if (!timer) {
         return;
+    }
 
     // Find the transaction associated with this timer
     std::unique_lock lock(m_transactions_mutex);
@@ -450,7 +459,7 @@ void PluginTransactionManager::on_transaction_timeout() {
             m_timeout_timers.erase(it);
 
             emit transaction_timeout(transaction_id);
-            qCWarning(workflowTransactionsLog)
+            qCWarning(workflow_transactions_log)
                 << "Transaction timeout:" << transaction_id;
 
             break;

@@ -8,8 +8,8 @@
 #include <QtTest/QtTest>
 #include <algorithm>
 #include <memory>
-#include "qtplugin/core/plugin_interface.hpp"
 #include "qtplugin/core/plugin_lifecycle_manager.hpp"
+#include "qtplugin/interfaces/core/plugin_interface.hpp"
 
 using namespace qtplugin;
 
@@ -21,20 +21,29 @@ private:
     std::string m_id;
     PluginState m_state = PluginState::Unloaded;
     bool m_initialization_should_fail = false;
+    QJsonObject m_config;
 
 public:
     explicit MockLifecyclePlugin(const std::string& id) : m_id(id) {}
 
     // IPlugin interface implementation
-    std::string id() const noexcept override { return m_id; }
-    std::string_view name() const noexcept override { return "Mock Plugin"; }
-    Version version() const noexcept override { return Version{1, 0, 0}; }
-    std::string_view description() const noexcept override {
-        return "Mock plugin for testing";
+    PluginMetadata metadata() const override {
+        PluginMetadata meta;
+        meta.name = m_id;  // Use the ID as the name for registration
+        meta.version = Version{1, 0, 0};
+        meta.description = "Mock plugin for testing";
+        meta.author = "Test Suite";
+        return meta;
     }
-    std::string_view author() const noexcept override { return "Test Suite"; }
-    PluginCapabilities capabilities() const noexcept override { return 0; }
+
     PluginState state() const noexcept override { return m_state; }
+    uint32_t capabilities() const noexcept override { return 0; }
+    PluginPriority priority() const noexcept override {
+        return PluginPriority::Normal;
+    }
+    bool is_initialized() const noexcept override {
+        return m_state == PluginState::Running;
+    }
 
     qtplugin::expected<void, PluginError> initialize() override {
         if (m_initialization_should_fail) {
@@ -47,7 +56,6 @@ public:
 
     void shutdown() noexcept override { m_state = PluginState::Stopped; }
 
-    // Additional required methods
     qtplugin::expected<QJsonObject, PluginError> execute_command(
         std::string_view command, const QJsonObject& params) override {
         Q_UNUSED(command)
@@ -56,6 +64,14 @@ public:
     }
 
     std::vector<std::string> available_commands() const override { return {}; }
+
+    qtplugin::expected<void, PluginError> configure(
+        const QJsonObject& config) override {
+        m_config = config;
+        return {};
+    }
+
+    QJsonObject get_configuration() const override { return m_config; }
 
     // Test control methods
     void set_initialization_should_fail(bool should_fail) {

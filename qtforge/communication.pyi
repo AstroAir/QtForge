@@ -133,5 +133,3 @@ def create_service_contract(service_name: str) -> ServiceContract:
 def get_available_features() -> List[str]:
     """Get list of available communication features."""
     ...
-
-

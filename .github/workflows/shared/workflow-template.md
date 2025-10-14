@@ -33,13 +33,13 @@ Each platform workflow should include:
   - Setup Qt (using shared action)
   - Setup build environment (using shared action)
   - Cache dependencies (using shared action)
-  
+
 - **Build Steps**:
   - Configure CMake with platform-specific settings
   - Build with performance monitoring
   - Run tests (if enabled)
   - Install artifacts
-  
+
 - **Artifact Steps**:
   - Upload build artifacts
   - Upload test results
@@ -99,7 +99,7 @@ All workflows should use the shared components:
 ## Example Workflow Structure
 
 ```yaml
-name: 'Platform CI'
+name: "Platform CI"
 
 on:
   push:
@@ -114,7 +114,7 @@ env:
 jobs:
   changes:
     # Shared change detection logic
-    
+
   build-and-test:
     needs: changes
     if: needs.changes.outputs.core == 'true'

@@ -7,4 +7,3 @@ target("composition_basics")
     add_files("composition_basics.cpp")
     add_deps("QtForgeCore")
     set_languages("c++20")
-

@@ -9,16 +9,16 @@
 
 #pragma once
 
-#include <string>
-#include <vector>
-#include <filesystem>
-#include <memory>
-#include <chrono>
 #include <QObject>
 #include <QString>
+#include <chrono>
+#include <filesystem>
+#include <memory>
+#include <string>
+#include <vector>
 
 // Include the existing types - we'll use them directly
-#include <qtplugin/core/plugin_interface.hpp>
+#include <qtplugin/interfaces/core/plugin_interface.hpp>
 #include <qtplugin/utils/error_handling.hpp>
 #include <qtplugin/utils/version.hpp>
 
@@ -41,11 +41,13 @@ struct PythonPluginInfo {
     bool hot_reload_enabled = false;
 
     std::string to_json() const {
-        return "{\"id\":\"" + id + "\",\"state\":" + std::to_string(static_cast<int>(state)) + "}";
+        return "{\"id\":\"" + id +
+               "\",\"state\":" + std::to_string(static_cast<int>(state)) + "}";
     }
 
     std::string __repr__() const {
-        return "<PluginInfo: " + id + " (" + std::to_string(static_cast<int>(state)) + ")>";
+        return "<PluginInfo: " + id + " (" +
+               std::to_string(static_cast<int>(state)) + ")>";
     }
 };
 
@@ -59,7 +61,8 @@ public:
 
     // Plugin management methods
     qtplugin::expected<std::string, PluginError> load_plugin(
-        const std::filesystem::path& file_path, const PythonPluginLoadOptions& options = {});
+        const std::filesystem::path& file_path,
+        const PythonPluginLoadOptions& options = {});
 
     qtplugin::expected<void, PluginError> unload_plugin(
         std::string_view plugin_id, bool force = false);
@@ -78,4 +81,4 @@ public:
     void on_monitoring_timer();
 };
 
-} // namespace qtplugin
+}  // namespace qtplugin

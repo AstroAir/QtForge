@@ -2,9 +2,9 @@ name: CI - Build, Test, and Package QtForge
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -25,7 +25,7 @@ jobs:
           cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DQTFORGE_BUILD_TESTS=ON
       - name: Build
         run: cmake --build build --parallel
-      - name: Smoke: install and consume
+      - name: "Smoke: install and consume"
         run: |
           python3 tests/smoke/test_install_and_consume.py
       - name: CTest
@@ -56,13 +56,13 @@ jobs:
         run: cmake --build build --parallel
       - name: CTest
         run: ctest --test-dir build --output-on-failure
-      - name: Smoke: install and consume
+      - name: "Smoke: install and consume"
         run: |
           python3 tests/smoke/test_install_and_consume.py
       - name: Package (TGZ, ZIP, DMG)
         run: |
           python3 scripts/optimize-packaging.py --build-dir build --output-dir packages --package-types TGZ ZIP DragNDrop --optimize-binaries --deploy-examples
-      - name: Optional: macOS codesign (if secrets provided)
+      - name: "Optional: macOS codesign (if secrets provided)"
         if: ${{ secrets.APPLE_ID && secrets.APPLE_TEAM_ID && secrets.APPLE_APP_SPECIFIC_PASSWORD }}
         run: |
           echo "Signing artifacts (placeholder; requires codesign identity and entitlements)"
@@ -85,10 +85,10 @@ jobs:
       - name: Install Qt 6 (msvc) via install-qt-action
         uses: jurplel/install-qt-action@v4
         with:
-          version: '6.6.3'
-          host: 'windows'
-          target: 'desktop'
-          arch: 'win64_msvc2019_64'
+          version: "6.6.3"
+          host: "windows"
+          target: "desktop"
+          arch: "win64_msvc2019_64"
       - name: Configure
         env:
           CMAKE_GENERATOR: Ninja
@@ -99,7 +99,7 @@ jobs:
         run: cmake --build build --parallel
       - name: CTest
         run: ctest --test-dir build --output-on-failure
-      - name: Smoke: install and consume
+      - name: "Smoke: install and consume"
         shell: pwsh
         run: |
           py -3 tests/smoke/test_install_and_consume.py
@@ -112,7 +112,7 @@ jobs:
         shell: pwsh
         run: |
           py -3 scripts/optimize-packaging.py --build-dir build --output-dir packages --package-types NSIS WIX --deploy-examples
-      - name: Optional: Windows code signing (if secrets provided)
+      - name: "Optional: Windows code signing (if secrets provided)"
         if: ${{ secrets.WINDOWS_CERT_PFX && secrets.WINDOWS_CERT_PASSWORD }}
         shell: pwsh
         run: |
@@ -149,7 +149,7 @@ jobs:
         run: cmake --build build --parallel
       - name: CTest
         run: ctest --test-dir build --output-on-failure
-      - name: Smoke: install and consume
+      - name: "Smoke: install and consume"
         run: |
           python3 tests/smoke/test_install_and_consume.py
       - name: Package (ZIP)
@@ -160,4 +160,3 @@ jobs:
         with:
           name: qtforge-windows-msys2-${{ github.sha }}
           path: packages/*
-

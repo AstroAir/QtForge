@@ -398,6 +398,10 @@ local qtforge_core_sources = {
     "src/monitoring/plugin_metrics_collector.cpp",
     "src/communication/message_bus.cpp",
     "src/communication/request_response_system.cpp",
+    "src/communication/factory.cpp",
+    "src/communication/message_publisher.cpp",
+    "src/communication/plugin_service_discovery.cpp",
+    "src/communication/typed_event_system.cpp",
 
     "src/managers/configuration_manager.cpp",
     "src/managers/components/configuration_storage.cpp",
@@ -413,15 +417,47 @@ local qtforge_core_sources = {
     -- Advanced plugin system sources (v3.1.0)
     "src/communication/plugin_service_contracts.cpp",
     "src/core/advanced_plugin_interface.cpp",
-    -- "src/orchestration/plugin_orchestrator.cpp", -- moved to workflow module
-    -- "src/composition/plugin_composition.cpp", -- moved to workflow module
+    -- Workflow module sources (v3.1.0+)
+    "src/workflow/error_recovery.cpp",
+    "src/workflow/rollback_manager.cpp",
+    "src/workflow/state_persistence.cpp",
+    "src/workflow/orchestration.cpp",
+    "src/workflow/progress_tracking.cpp",
+    "src/workflow/transactions.cpp",
+    "src/workflow/composition.cpp",
+    "src/workflow/integration.cpp",
+    "src/workflow/workflow_manager.cpp",
+    "src/workflow/progress_monitoring.cpp",
+    "src/workflow/progress_message_bus.cpp",
+    "src/workflow/transaction_error_handler.cpp",
+    "src/workflow/workflow_validator.cpp",
     "src/transactions/plugin_transaction_manager.cpp",
     -- Version management sources (v3.1.0)
     "src/managers/plugin_version_manager.cpp",
     -- Dynamic plugin system sources (v3.2.0)
     "src/core/dynamic_plugin_interface.cpp",
+    "src/core/plugin_capability_discovery.cpp",
+    "src/core/plugin_property_system.cpp",
     -- Multi-language plugin bridges (v3.2.0)
-    "src/bridges/python_plugin_bridge.cpp"
+    "src/bridges/python_plugin_bridge.cpp",
+    "src/bridges/lua_plugin_bridge.cpp",
+    -- Remote plugin system
+    "src/remote/http_plugin_loader.cpp",
+    "src/remote/plugin_download_manager.cpp",
+    "src/remote/remote_plugin_configuration.cpp",
+    "src/remote/remote_plugin_discovery.cpp",
+    "src/remote/remote_plugin_loader.cpp",
+    "src/remote/remote_plugin_manager.cpp",
+    "src/remote/remote_plugin_manager_extension.cpp",
+    "src/remote/remote_plugin_registry_extension.cpp",
+    "src/remote/remote_plugin_source.cpp",
+    "src/remote/remote_plugin_validator.cpp",
+    "src/remote/unified_plugin_manager.cpp",
+    -- Security components
+    "src/security/components/permission_manager.cpp",
+    "src/security/components/security_policy_engine.cpp",
+    "src/security/components/security_validator.cpp",
+    "src/security/components/signature_verifier.cpp"
 }
 
 -- Sources that require specific Qt components
@@ -470,7 +506,7 @@ end
 
 -- Core library headers (matching CMake QTFORGE_CORE_HEADERS)
 local qtforge_core_headers = {
-    "include/qtplugin/core/plugin_interface.hpp",
+    "include/qtplugin/interfaces/core/plugin_interface.hpp",
     "include/qtplugin/core/plugin_manager.hpp",
     "include/qtplugin/core/plugin_loader.hpp",
     "include/qtplugin/core/plugin_registry.hpp",
@@ -478,7 +514,7 @@ local qtforge_core_headers = {
     "include/qtplugin/core/plugin_lifecycle_manager.hpp",
     "include/qtplugin/monitoring/plugin_hot_reload_manager.hpp",
     "include/qtplugin/monitoring/plugin_metrics_collector.hpp",
-    "include/qtplugin/core/service_plugin_interface.hpp",
+    "include/qtplugin/interfaces/core/service_plugin_interface.hpp",
     "include/qtplugin/communication/message_bus.hpp",
     "include/qtplugin/communication/message_types.hpp",
     "include/qtplugin/communication/request_response_system.hpp",
@@ -505,16 +541,48 @@ local qtforge_core_headers = {
     "include/qtplugin/components.hpp",
     -- Advanced plugin system headers (v3.1.0)
     "include/qtplugin/communication/plugin_service_contracts.hpp",
-    "include/qtplugin/core/advanced_plugin_interface.hpp",
-    "include/qtplugin/orchestration/plugin_orchestrator.hpp",
-    "include/qtplugin/composition/plugin_composition.hpp",
+    "include/qtplugin/interfaces/core/advanced_plugin_interface.hpp",
     "include/qtplugin/workflow/transactions.hpp",
+    "include/qtplugin/workflow/composition.hpp",
+    "include/qtplugin/workflow/integration.hpp",
+    "include/qtplugin/workflow/workflow.hpp",
+    "include/qtplugin/workflow/error_recovery.hpp",
+    "include/qtplugin/workflow/rollback_manager.hpp",
+    "include/qtplugin/workflow/state_persistence.hpp",
+    "include/qtplugin/workflow/orchestration.hpp",
+    "include/qtplugin/workflow/progress_tracking.hpp",
+    "include/qtplugin/workflow/progress_monitoring.hpp",
+    "include/qtplugin/workflow/progress_message_bus.hpp",
+    "include/qtplugin/workflow/transaction_error_handler.hpp",
+    "include/qtplugin/workflow/workflow_validator.hpp",
+    "include/qtplugin/workflow/workflow_types.hpp",
     -- Version management headers (v3.1.0)
     "include/qtplugin/managers/plugin_version_manager.hpp",
     -- Dynamic plugin system headers (v3.2.0)
-    "include/qtplugin/core/dynamic_plugin_interface.hpp",
+    "include/qtplugin/interfaces/core/dynamic_plugin_interface.hpp",
+    "include/qtplugin/core/plugin_capability_discovery.hpp",
     -- Multi-language plugin bridge headers (v3.2.0)
     "include/qtplugin/bridges/python_plugin_bridge.hpp",
+    "include/qtplugin/bridges/lua_plugin_bridge.hpp",
+    -- Remote plugin system headers
+    "include/qtplugin/remote/http_plugin_loader.hpp",
+    "include/qtplugin/remote/plugin_download_manager.hpp",
+    "include/qtplugin/remote/remote_plugin_configuration.hpp",
+    "include/qtplugin/remote/remote_plugin_discovery.hpp",
+    "include/qtplugin/remote/remote_plugin_loader.hpp",
+    "include/qtplugin/remote/remote_plugin_manager.hpp",
+    "include/qtplugin/remote/remote_plugin_manager_extension.hpp",
+    "include/qtplugin/remote/remote_plugin_registry_extension.hpp",
+    "include/qtplugin/remote/remote_plugin_source.hpp",
+    "include/qtplugin/remote/remote_plugin_validator.hpp",
+    "include/qtplugin/remote/unified_plugin_manager.hpp",
+    "include/qtplugin/remote/remote_security_manager.hpp",
+    -- Security component headers
+    "include/qtplugin/security/components/permission_manager.hpp",
+    "include/qtplugin/security/components/security_policy_engine.hpp",
+    "include/qtplugin/security/components/security_validator.hpp",
+    "include/qtplugin/security/components/signature_verifier.hpp",
+    "include/qtplugin/security/security_manager.hpp",
 
 }
 
@@ -712,11 +780,11 @@ if has_config("lua_bindings") and has_package("lua") and has_package("sol2") the
 
         -- Lua binding sources (matching CMake QTFORGE_LUA_SOURCES - minimal components only)
         add_files("src/lua/qtforge_lua.cpp")
+        add_files("src/lua/qt_conversions.cpp")  -- Required for Qt type conversions in Lua bindings
         add_files("src/lua/core/core_bindings.cpp")
         add_files("src/lua/utils/utils_bindings.cpp")
 
         -- Temporarily disabled sources (matching CMake configuration)
-        -- add_files("src/lua/qt_conversions.cpp")  -- Temporarily disabled due to Qt dependencies
         -- add_files("src/lua/core/metadata_bindings.cpp")  -- Temporarily disabled due to Qt dependencies
         -- add_files("src/lua/utils/error_handling_bindings.cpp")  -- Temporarily disabled due to Qt dependencies
         -- Security bindings removed

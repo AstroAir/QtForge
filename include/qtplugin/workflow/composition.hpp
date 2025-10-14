@@ -14,13 +14,13 @@
 #include <QJsonObject>
 #include <QObject>
 #include <QString>
+#include <chrono>
 #include <functional>
+#include <future>
 #include <memory>
+#include <shared_mutex>
 #include <unordered_map>
 #include <vector>
-#include <shared_mutex>
-#include <future>
-#include <chrono>
 
 #include "../communication/plugin_service_contracts.hpp"
 #include "../interfaces/core/plugin_interface.hpp"
@@ -187,51 +187,23 @@ public:
     ~CompositePlugin() override;
 
     // === IPlugin Implementation ===
-    std::string_view name() const noexcept override { return m_name; }
-    std::string_view description() const noexcept override {
-        return m_description;
-    }
-    qtplugin::Version version() const noexcept override { return m_version; }
-    std::string_view author() const noexcept override { return m_author; }
-    std::string id() const noexcept override { return m_id; }
-
     qtplugin::expected<void, PluginError> initialize() override;
     void shutdown() noexcept override;
-    PluginState state() const noexcept override { return m_state; }
-    PluginCapabilities capabilities() const noexcept override {
-        return m_capabilities;
-    }
-
-    qtplugin::expected<void, PluginError> configure(
-        const QJsonObject& config) override;
     PluginMetadata metadata() const override;
-
+    PluginState state() const noexcept override { return m_state; }
+    uint32_t capabilities() const noexcept override { return m_capabilities; }
+    PluginPriority priority() const noexcept override {
+        return PluginPriority::Normal;
+    }
+    bool is_initialized() const noexcept override {
+        return m_state == PluginState::Running;
+    }
     qtplugin::expected<QJsonObject, PluginError> execute_command(
         std::string_view command, const QJsonObject& params = {}) override;
-
     std::vector<std::string> available_commands() const override;
-
-    // === IAdvancedPlugin Implementation ===
-    std::vector<contracts::ServiceContract> get_service_contracts()
-        const override;
-
-    qtplugin::expected<QJsonObject, PluginError> call_service(
-        const QString& service_name, const QString& method_name,
-        const QJsonObject& parameters = {},
-        std::chrono::milliseconds timeout = std::chrono::milliseconds{
-            30000}) override;
-
-    std::future<qtplugin::expected<QJsonObject, PluginError>>
-    call_service_async(const QString& service_name, const QString& method_name,
-                       const QJsonObject& parameters = {},
-                       std::chrono::milliseconds timeout =
-                           std::chrono::milliseconds{30000}) override;
-
-    qtplugin::expected<QJsonObject, PluginError> handle_service_call(
-        const QString& service_name, const QString& method_name,
-        const QJsonObject& parameters) override;
-
-    QJsonObject get_health_status() const override;
+    qtplugin::expected<void, PluginError> configure(
+        const QJsonObject& config) override;
+    QJsonObject get_configuration() const override;
 
     // === Composition Management ===
 
@@ -256,9 +228,9 @@ public:
     // === Event Handling ===
 
     qtplugin::expected<void, PluginError> handle_event(
-        const QString& event_type, const QJsonObject& event_data) override;
+        const QString& event_type, const QJsonObject& event_data);
 
-    std::vector<QString> get_supported_events() const override;
+    std::vector<QString> get_supported_events() const;
 
 signals:
     void component_plugin_added(const QString& plugin_id);

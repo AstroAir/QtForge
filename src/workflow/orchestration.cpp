@@ -1,6 +1,7 @@
 /**
  * @file orchestration.cpp
- * @brief Implementation of plugin orchestration functionality for unified workflow module
+ * @brief Implementation of plugin orchestration functionality for unified
+ * workflow module
  * @version 3.1.0
  */
 
@@ -14,7 +15,10 @@
 #include <set>
 #include "qtplugin/core/plugin_manager.hpp"
 
-Q_LOGGING_CATEGORY(workflowOrchestrationLog, "qtplugin.workflow.orchestration")
+namespace {
+Q_LOGGING_CATEGORY(workflow_orchestration_log,
+                   "qtplugin.workflow.orchestration")
+}  // namespace
 
 namespace qtplugin::workflow::orchestration {
 
@@ -226,7 +230,7 @@ qtplugin::expected<Workflow, PluginError> Workflow::from_json(
 // === PluginOrchestrator Implementation ===
 
 PluginOrchestrator::PluginOrchestrator(QObject* parent) : QObject(parent) {
-    qCDebug(workflowOrchestrationLog) << "Plugin orchestrator created";
+    qCDebug(workflow_orchestration_log) << "Plugin orchestrator created";
 }
 
 PluginOrchestrator::~PluginOrchestrator() {
@@ -251,7 +255,7 @@ PluginOrchestrator::~PluginOrchestrator() {
         }
     }
 
-    qCDebug(workflowOrchestrationLog) << "Plugin orchestrator destroyed";
+    qCDebug(workflow_orchestration_log) << "Plugin orchestrator destroyed";
 }
 
 qtplugin::expected<void, PluginError> PluginOrchestrator::register_workflow(
@@ -271,7 +275,8 @@ qtplugin::expected<void, PluginError> PluginOrchestrator::register_workflow(
 
     m_workflows[workflow.id()] = workflow;
 
-    qCDebug(workflowOrchestrationLog) << "Registered workflow:" << workflow.id();
+    qCDebug(workflow_orchestration_log)
+        << "Registered workflow:" << workflow.id();
 
     return make_success();
 }
@@ -289,7 +294,8 @@ qtplugin::expected<void, PluginError> PluginOrchestrator::unregister_workflow(
 
     m_workflows.erase(it);
 
-    qCDebug(workflowOrchestrationLog) << "Unregistered workflow:" << workflow_id;
+    qCDebug(workflow_orchestration_log)
+        << "Unregistered workflow:" << workflow_id;
 
     return make_success();
 }
@@ -458,7 +464,8 @@ qtplugin::expected<void, PluginError> PluginOrchestrator::cancel_workflow(
 
     emit workflow_cancelled(execution_id);
 
-    qCDebug(workflowOrchestrationLog) << "Cancelled workflow execution:" << execution_id;
+    qCDebug(workflow_orchestration_log)
+        << "Cancelled workflow execution:" << execution_id;
 
     return make_success();
 }
@@ -526,7 +533,7 @@ std::vector<QString> PluginOrchestrator::list_active_executions() const {
 qtplugin::expected<QJsonObject, PluginError>
 PluginOrchestrator::execute_workflow_impl(const Workflow& workflow,
                                           WorkflowContext& context) {
-    qCDebug(workflowOrchestrationLog)
+    qCDebug(workflow_orchestration_log)
         << "Starting workflow execution:" << context.execution_id;
 
     auto execution_order = workflow.get_execution_order();
@@ -538,7 +545,7 @@ PluginOrchestrator::execute_workflow_impl(const Workflow& workflow,
     // Execute steps in order
     for (const QString& step_id : execution_order) {
         if (context.cancelled) {
-            qCDebug(workflowOrchestrationLog)
+            qCDebug(workflow_orchestration_log)
                 << "Workflow execution cancelled:" << context.execution_id;
             return make_error<QJsonObject>(PluginErrorCode::OperationCancelled,
                                            "Workflow cancelled");
@@ -551,14 +558,14 @@ PluginOrchestrator::execute_workflow_impl(const Workflow& workflow,
 
         // Check step dependencies
         if (!check_step_dependencies(*step, context)) {
-            qCWarning(workflowOrchestrationLog)
+            qCWarning(workflow_orchestration_log)
                 << "Step dependencies not satisfied:" << step_id;
             continue;
         }
 
         // Check step condition
         if (step->condition && !step->condition(context.shared_data)) {
-            qCDebug(workflowOrchestrationLog)
+            qCDebug(workflow_orchestration_log)
                 << "Step condition not met, skipping:" << step_id;
 
             StepResult result;
@@ -597,7 +604,7 @@ PluginOrchestrator::execute_workflow_impl(const Workflow& workflow,
                                  step_result.value().error_message);
 
                 if (step->critical) {
-                    qCWarning(workflowOrchestrationLog)
+                    qCWarning(workflow_orchestration_log)
                         << "Critical step failed, stopping workflow:"
                         << step_id;
                     return make_error<QJsonObject>(
@@ -611,14 +618,14 @@ PluginOrchestrator::execute_workflow_impl(const Workflow& workflow,
                 QString::fromStdString(step_result.error().message));
 
             if (step->critical) {
-                qCWarning(workflowOrchestrationLog)
+                qCWarning(workflow_orchestration_log)
                     << "Critical step failed, stopping workflow:" << step_id;
                 return qtplugin::unexpected<PluginError>(step_result.error());
             }
         }
     }
 
-    qCDebug(workflowOrchestrationLog)
+    qCDebug(workflow_orchestration_log)
         << "Workflow execution completed:" << context.execution_id;
 
     // Return final shared data
@@ -634,7 +641,7 @@ qtplugin::expected<StepResult, PluginError> PluginOrchestrator::execute_step(
     result.status = StepStatus::Running;
     result.start_time = std::chrono::system_clock::now();
 
-    qCDebug(workflowOrchestrationLog)
+    qCDebug(workflow_orchestration_log)
         << "Executing step:" << step.id << "in plugin:" << step.plugin_id;
 
     // Note: In a real implementation, PluginManager would be injected
@@ -681,7 +688,7 @@ void PluginOrchestrator::on_execution_timeout() {
         if (state->timeout_timer.get() == timer) {
             state->context->cancelled = true;
             emit workflow_failed(execution_id, "Workflow execution timeout");
-            qCWarning(workflowOrchestrationLog)
+            qCWarning(workflow_orchestration_log)
                 << "Workflow execution timeout:" << execution_id;
             break;
         }

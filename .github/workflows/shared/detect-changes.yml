@@ -1,37 +1,37 @@
-name: 'Detect Changes'
-description: 'Detect what parts of the codebase have changed to optimize CI execution'
+name: "Detect Changes"
+description: "Detect what parts of the codebase have changed to optimize CI execution"
 
 outputs:
   core:
-    description: 'Core source code changed'
+    description: "Core source code changed"
     value: ${{ steps.changes.outputs.core }}
   cmake:
-    description: 'CMake configuration changed'
+    description: "CMake configuration changed"
     value: ${{ steps.changes.outputs.cmake }}
   scripts:
-    description: 'Build scripts changed'
+    description: "Build scripts changed"
     value: ${{ steps.changes.outputs.scripts }}
   docs:
-    description: 'Documentation changed'
+    description: "Documentation changed"
     value: ${{ steps.changes.outputs.docs }}
   examples:
-    description: 'Examples changed'
+    description: "Examples changed"
     value: ${{ steps.changes.outputs.examples }}
   packaging:
-    description: 'Packaging configuration changed'
+    description: "Packaging configuration changed"
     value: ${{ steps.changes.outputs.packaging }}
   ci:
-    description: 'CI configuration changed'
+    description: "CI configuration changed"
     value: ${{ steps.changes.outputs.ci }}
   workflows:
-    description: 'GitHub workflows changed'
+    description: "GitHub workflows changed"
     value: ${{ steps.changes.outputs.workflows }}
   dependencies:
-    description: 'Dependencies changed'
+    description: "Dependencies changed"
     value: ${{ steps.changes.outputs.dependencies }}
 
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -92,7 +92,7 @@ runs:
         echo "- **CI Config**: ${{ steps.changes.outputs.ci }}" >> $GITHUB_STEP_SUMMARY
         echo "- **Workflows**: ${{ steps.changes.outputs.workflows }}" >> $GITHUB_STEP_SUMMARY
         echo "- **Dependencies**: ${{ steps.changes.outputs.dependencies }}" >> $GITHUB_STEP_SUMMARY
-        
+
         # Determine if build is needed
         if [ "${{ steps.changes.outputs.core }}" = "true" ] || \
            [ "${{ steps.changes.outputs.cmake }}" = "true" ] || \

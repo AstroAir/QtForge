@@ -1,4 +1,4 @@
-name: 'Coordinated Release'
+name: "Coordinated Release"
 
 on:
   push:
@@ -6,17 +6,17 @@ on:
   workflow_dispatch:
     inputs:
       release_type:
-        description: 'Type of release'
+        description: "Type of release"
         required: true
-        default: 'patch'
+        default: "patch"
         type: choice
         options:
-        - patch
-        - minor
-        - major
-        - prerelease
+          - patch
+          - minor
+          - major
+          - prerelease
       create_github_release:
-        description: 'Create GitHub release'
+        description: "Create GitHub release"
         required: false
         default: true
         type: boolean
@@ -32,7 +32,7 @@ env:
 jobs:
   # Trigger all platform-specific builds
   trigger-builds:
-    name: 'Trigger Platform Builds'
+    name: "Trigger Platform Builds"
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -62,7 +62,7 @@ jobs:
                 build_type: 'release-only'
               }
             });
-            
+
             // Get the run ID (this is a simplified approach)
             const runs = await github.rest.actions.listWorkflowRuns({
               owner: context.repo.owner,
@@ -70,7 +70,7 @@ jobs:
               workflow_id: 'ci-windows.yml',
               head_sha: context.sha
             });
-            
+
             const runId = runs.data.workflow_runs[0]?.id || 'unknown';
             core.setOutput('run-id', runId);
 
@@ -123,7 +123,7 @@ jobs:
 
   # Wait for all builds to complete
   wait-for-builds:
-    name: 'Wait for Platform Builds'
+    name: "Wait for Platform Builds"
     needs: trigger-builds
     runs-on: ubuntu-latest
     timeout-minutes: 120
@@ -139,12 +139,12 @@ jobs:
             const maxWaitTime = 120 * 60 * 1000; // 120 minutes in milliseconds
             const pollInterval = 30 * 1000; // 30 seconds
             const startTime = Date.now();
-            
+
             const workflows = ['ci-windows.yml', 'ci-linux.yml', 'ci-macos.yml', 'ci-cross-platform.yml'];
-            
+
             while (Date.now() - startTime < maxWaitTime) {
               let allCompleted = true;
-              
+
               for (const workflow of workflows) {
                 const runs = await github.rest.actions.listWorkflowRuns({
                   owner: context.repo.owner,
@@ -153,41 +153,41 @@ jobs:
                   head_sha: context.sha,
                   per_page: 1
                 });
-                
+
                 if (runs.data.workflow_runs.length === 0) {
                   console.log(`No runs found for ${workflow}`);
                   allCompleted = false;
                   break;
                 }
-                
+
                 const run = runs.data.workflow_runs[0];
                 console.log(`${workflow}: ${run.status} (${run.conclusion})`);
-                
+
                 if (run.status !== 'completed') {
                   allCompleted = false;
                   break;
                 }
-                
+
                 if (run.conclusion !== 'success') {
                   core.setFailed(`Workflow ${workflow} failed with conclusion: ${run.conclusion}`);
                   return;
                 }
               }
-              
+
               if (allCompleted) {
                 console.log('All platform builds completed successfully');
                 return;
               }
-              
+
               console.log('Waiting for builds to complete...');
               await new Promise(resolve => setTimeout(resolve, pollInterval));
             }
-            
+
             core.setFailed('Timeout waiting for platform builds to complete');
 
   # Collect all artifacts
   collect-artifacts:
-    name: 'Collect Release Artifacts'
+    name: "Collect Release Artifacts"
     needs: wait-for-builds
     runs-on: ubuntu-latest
     permissions:
@@ -206,35 +206,35 @@ jobs:
       - name: Organize artifacts
         run: |
           mkdir -p organized-release/
-          
+
           # Create directory structure
           mkdir -p organized-release/{windows,linux,macos,cross-platform}
-          
+
           # Move artifacts to organized structure
           find release-artifacts/ -name "*windows*" -type f -exec mv {} organized-release/windows/ \;
           find release-artifacts/ -name "*linux*" -type f -exec mv {} organized-release/linux/ \;
           find release-artifacts/ -name "*macos*" -type f -exec mv {} organized-release/macos/ \;
           find release-artifacts/ -name "*android*" -o -name "*ios*" -o -name "*arm64*" -o -name "*riscv*" -type f -exec mv {} organized-release/cross-platform/ \;
-          
+
           # Create release manifest
           cat > organized-release/RELEASE_MANIFEST.md << EOF
           # QtForge Release Artifacts
-          
+
           **Release Tag**: ${{ github.ref_name }}
           **Build Date**: $(date -u)
           **Commit SHA**: ${{ github.sha }}
-          
+
           ## Platform Artifacts
-          
+
           ### Windows
           $(ls -la organized-release/windows/ || echo "No Windows artifacts")
-          
+
           ### Linux
           $(ls -la organized-release/linux/ || echo "No Linux artifacts")
-          
+
           ### macOS
           $(ls -la organized-release/macos/ || echo "No macOS artifacts")
-          
+
           ### Cross-Platform
           $(ls -la organized-release/cross-platform/ || echo "No cross-platform artifacts")
           EOF
@@ -248,13 +248,13 @@ jobs:
 
   # Create GitHub release
   create-release:
-    name: 'Create GitHub Release'
+    name: "Create GitHub Release"
     needs: collect-artifacts
     if: inputs.create_github_release != false
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -270,12 +270,12 @@ jobs:
         run: |
           # Generate release notes from changelog and commits
           RELEASE_NOTES="release-notes.md"
-          
+
           echo "# QtForge ${{ github.ref_name }}" > "$RELEASE_NOTES"
           echo "" >> "$RELEASE_NOTES"
           echo "## What's Changed" >> "$RELEASE_NOTES"
           echo "" >> "$RELEASE_NOTES"
-          
+
           # Extract changes from CHANGELOG.md if it exists
           if [ -f "CHANGELOG.md" ]; then
             # Extract the latest version's changes
@@ -284,14 +284,14 @@ jobs:
             # Generate from recent commits
             git log --oneline --since="1 month ago" | head -20 >> "$RELEASE_NOTES"
           fi
-          
+
           echo "" >> "$RELEASE_NOTES"
           echo "## Platform Support" >> "$RELEASE_NOTES"
           echo "- ✅ Windows (MSVC 2022, MinGW64)" >> "$RELEASE_NOTES"
           echo "- ✅ Linux (GCC, Clang)" >> "$RELEASE_NOTES"
           echo "- ✅ macOS (Intel, Apple Silicon)" >> "$RELEASE_NOTES"
           echo "- ✅ Cross-platform (Android, iOS, ARM64)" >> "$RELEASE_NOTES"
-          
+
           echo "release-notes-file=$RELEASE_NOTES" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release

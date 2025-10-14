@@ -134,7 +134,9 @@ void TestComponentArchitecture::testPluginRegistryComponent() {
 }
 
 void TestComponentArchitecture::testPluginDependencyResolverComponent() {
-    QSKIP("PluginDependencyResolver test disabled due to heap corruption during cleanup - needs investigation");
+    QSKIP(
+        "PluginDependencyResolver test disabled due to heap corruption during "
+        "cleanup - needs investigation");
 
     // Test PluginDependencyResolver component
     auto resolver = std::make_unique<PluginDependencyResolver>();
@@ -243,7 +245,8 @@ void TestComponentArchitecture::testPluginDependencyResolverComponent() {
 
 void TestComponentArchitecture::testSecurityValidatorComponent() {
     // Test SecurityValidator component
-    auto validator = std::make_unique<qtplugin::security::components::SecurityValidator>();
+    auto validator =
+        std::make_unique<qtplugin::security::components::SecurityValidator>();
     QVERIFY(validator != nullptr);
 
     // Create a test file
@@ -357,7 +360,9 @@ void TestComponentArchitecture::testResourceAllocatorComponent() {
 }
 
 void TestComponentArchitecture::testComponentInteraction() {
-    QSKIP("Component interaction test disabled due to PluginRegistry crash - needs investigation");
+    QSKIP(
+        "Component interaction test disabled due to PluginRegistry crash - "
+        "needs investigation");
 
     // Test interaction between multiple components
     // Start with just registry to isolate the issue
@@ -367,7 +372,8 @@ void TestComponentArchitecture::testComponentInteraction() {
     // Create a simple plugin info with full initialization
     auto plugin_info = std::make_unique<PluginInfo>();
     plugin_info->id = "integration.test";
-    plugin_info->file_path = "integration_test.so";  // Simple path to avoid filesystem issues
+    plugin_info->file_path =
+        "integration_test.so";  // Simple path to avoid filesystem issues
     plugin_info->state = PluginState::Unloaded;
     plugin_info->load_time = std::chrono::system_clock::now();
     plugin_info->last_activity = std::chrono::system_clock::now();
@@ -405,7 +411,9 @@ void TestComponentArchitecture::testComponentInteraction() {
 }
 
 void TestComponentArchitecture::testComponentLifecycle() {
-    QSKIP("Component lifecycle test disabled due to ResourceMonitor crash - needs investigation");
+    QSKIP(
+        "Component lifecycle test disabled due to ResourceMonitor crash - "
+        "needs investigation");
 
     // Test component lifecycle management
     auto monitor = std::make_unique<ResourceMonitor>();
@@ -435,7 +443,9 @@ void TestComponentArchitecture::testComponentLifecycle() {
 }
 
 void TestComponentArchitecture::testComponentThreadSafety() {
-    QSKIP("Component thread safety test disabled due to PluginRegistry crash - needs investigation");
+    QSKIP(
+        "Component thread safety test disabled due to PluginRegistry crash - "
+        "needs investigation");
 
     // Test thread safety of components
     auto registry = std::make_unique<PluginRegistry>();

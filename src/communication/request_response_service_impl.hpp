@@ -13,6 +13,7 @@
 #include <map>
 #include <memory>
 #include <mutex>
+#include <qtplugin/communication/factory.hpp>
 #include <qtplugin/communication/interfaces.hpp>
 
 namespace qtplugin::communication {
@@ -22,20 +23,23 @@ namespace qtplugin::communication {
  */
 class RequestResponseServiceImpl : public IRequestResponseService {
 public:
-    explicit RequestResponseServiceImpl(const CommunicationConfig::RequestResponseConfig& config = {});
+    explicit RequestResponseServiceImpl(
+        const qtplugin::communication::CommunicationConfig::
+            RequestResponseConfig& config = {});
     ~RequestResponseServiceImpl() override;
 
     Result<void> register_service(std::string_view service_name,
-                                 RequestHandler handler) override;
+                                  RequestHandler handler) override;
 
     Result<void> unregister_service(std::string_view service_name) override;
 
-    Result<QJsonObject> call_service(std::string_view service_name, const QJsonObject& request,
-                                    std::chrono::milliseconds timeout) override;
+    Result<QJsonObject> call_service(
+        std::string_view service_name, const QJsonObject& request,
+        std::chrono::milliseconds timeout) override;
 
-    std::future<Result<QJsonObject>> call_service_async(std::string_view service_name,
-                                                       const QJsonObject& request,
-                                                       std::chrono::milliseconds timeout) override;
+    std::future<Result<QJsonObject>> call_service_async(
+        std::string_view service_name, const QJsonObject& request,
+        std::chrono::milliseconds timeout) override;
 
     std::vector<std::string> list_services() const override;
 
@@ -53,7 +57,7 @@ private:
     std::condition_variable pending_cv_;
     std::atomic<bool> shutdown_{false};
 
-    CommunicationConfig::RequestResponseConfig config_;
+    qtplugin::communication::CommunicationConfig::RequestResponseConfig config_;
 
     void cleanup_expired_requests();
     std::string generate_request_id();

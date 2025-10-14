@@ -7,4 +7,3 @@ target("transactions_example")
     add_files("transactions_example.cpp")
     add_deps("QtForgeCore")
     set_languages("c++20")
-

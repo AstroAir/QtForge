@@ -235,7 +235,7 @@ void TestMessageBus::testMessageBusInitialization() {
     QVERIFY(m_message_bus->is_logging_enabled());
 
     // Test that message log is initially empty
-    auto log = m_message_bus->message_log(0); // 0 means get all messages
+    auto log = m_message_bus->message_log(0);  // 0 means get all messages
     QVERIFY(log.empty());
 }
 
@@ -317,7 +317,9 @@ void TestMessageBus::testUnsubscribeFromTopic() {
 
     // Subscribe to message type
     auto subscribe_result = m_message_bus->subscribe<TestMessage>(
-        "test_subscriber", [](const TestMessage& msg) -> qtplugin::expected<void, qtplugin::PluginError> {
+        "test_subscriber",
+        [](const TestMessage& msg)
+            -> qtplugin::expected<void, qtplugin::PluginError> {
             Q_UNUSED(msg);
             return {};
         });
@@ -356,7 +358,9 @@ void TestMessageBus::testCreateTopic() {
 
     // Subscribe to message type (this implicitly "creates" the topic)
     auto result = m_message_bus->subscribe<NewTopicMessage>(
-        "topic_subscriber", [](const NewTopicMessage& msg) -> qtplugin::expected<void, qtplugin::PluginError> {
+        "topic_subscriber",
+        [](const NewTopicMessage& msg)
+            -> qtplugin::expected<void, qtplugin::PluginError> {
             Q_UNUSED(msg);
             return {};
         });
@@ -368,9 +372,12 @@ void TestMessageBus::testCreateTopic() {
     QVERIFY(stats.contains("total_subscriptions"));
     QCOMPARE(stats["total_subscriptions"].toInt(), 1);
 
-    // Test subscribing with same ID (should work - multiple subscriptions allowed)
+    // Test subscribing with same ID (should work - multiple subscriptions
+    // allowed)
     auto duplicate_result = m_message_bus->subscribe<NewTopicMessage>(
-        "topic_subscriber", [](const NewTopicMessage& msg) -> qtplugin::expected<void, qtplugin::PluginError> {
+        "topic_subscriber",
+        [](const NewTopicMessage& msg)
+            -> qtplugin::expected<void, qtplugin::PluginError> {
             Q_UNUSED(msg);
             return {};
         });
@@ -381,7 +388,8 @@ void TestMessageBus::testDeleteTopic() {
     // Create a simple test message type
     class DeleteTestMessage : public qtplugin::Message<DeleteTestMessage> {
     public:
-        DeleteTestMessage() : qtplugin::Message<DeleteTestMessage>("test_sender") {}
+        DeleteTestMessage()
+            : qtplugin::Message<DeleteTestMessage>("test_sender") {}
         std::string content = "delete_test";
 
         QJsonObject to_json() const override {
@@ -396,7 +404,9 @@ void TestMessageBus::testDeleteTopic() {
 
     // Subscribe to message type (this implicitly "creates" the topic)
     auto create_result = m_message_bus->subscribe<DeleteTestMessage>(
-        "delete_subscriber", [](const DeleteTestMessage& msg) -> qtplugin::expected<void, qtplugin::PluginError> {
+        "delete_subscriber",
+        [](const DeleteTestMessage& msg)
+            -> qtplugin::expected<void, qtplugin::PluginError> {
             Q_UNUSED(msg);
             return {};
         });
@@ -417,7 +427,9 @@ void TestMessageBus::testMessageDeliveryOrder() {
     // Create a simple test message type
     class OrderTestMessage : public qtplugin::Message<OrderTestMessage> {
     public:
-        OrderTestMessage(const std::string& content) : qtplugin::Message<OrderTestMessage>("test_sender"), content(content) {}
+        OrderTestMessage(const std::string& content)
+            : qtplugin::Message<OrderTestMessage>("test_sender"),
+              content(content) {}
         std::string content;
 
         QJsonObject to_json() const override {
@@ -433,7 +445,9 @@ void TestMessageBus::testMessageDeliveryOrder() {
     // Subscribe to message type
     std::vector<std::string> received_messages;
     auto subscribe_result = m_message_bus->subscribe<OrderTestMessage>(
-        "order_subscriber", [&received_messages](const OrderTestMessage& msg) -> qtplugin::expected<void, qtplugin::PluginError> {
+        "order_subscriber",
+        [&received_messages](const OrderTestMessage& msg)
+            -> qtplugin::expected<void, qtplugin::PluginError> {
             received_messages.push_back(msg.content);
             return {};
         });

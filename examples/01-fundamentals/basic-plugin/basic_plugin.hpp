@@ -26,7 +26,7 @@
 #include <string>
 #include <string_view>
 
-#include "qtplugin/core/plugin_interface.hpp"
+#include "qtplugin/interfaces/core/plugin_interface.hpp"
 #include "qtplugin/utils/error_handling.hpp"
 
 /**
@@ -51,40 +51,34 @@ public:
     // === Core IPlugin Interface ===
 
     /**
-     * @brief Get plugin name
-     * @return Plugin name
+     * @brief Get plugin metadata
+     * @return Plugin metadata information
      */
-    std::string_view name() const noexcept override;
+    qtplugin::PluginMetadata metadata() const override;
 
     /**
-     * @brief Get plugin description
-     * @return Plugin description
+     * @brief Get current plugin state
+     * @return Current state
      */
-    std::string_view description() const noexcept override;
-
-    /**
-     * @brief Get plugin version
-     * @return Plugin version
-     */
-    qtplugin::Version version() const noexcept override;
-
-    /**
-     * @brief Get plugin author
-     * @return Plugin author
-     */
-    std::string_view author() const noexcept override;
-
-    /**
-     * @brief Get plugin ID
-     * @return Plugin ID
-     */
-    std::string id() const noexcept override;
+    qtplugin::PluginState state() const noexcept override;
 
     /**
      * @brief Get plugin capabilities
      * @return Plugin capabilities
      */
-    qtplugin::PluginCapabilities capabilities() const noexcept override;
+    uint32_t capabilities() const noexcept override;
+
+    /**
+     * @brief Get plugin priority
+     * @return Plugin priority
+     */
+    qtplugin::PluginPriority priority() const noexcept override;
+
+    /**
+     * @brief Check if plugin is initialized
+     * @return True if initialized
+     */
+    bool is_initialized() const noexcept override;
 
     /**
      * @brief Initialize the plugin
@@ -96,14 +90,6 @@ public:
      * @brief Shutdown the plugin
      */
     void shutdown() noexcept override;
-
-    /**
-     * @brief Configure the plugin
-     * @param config Configuration object
-     * @return Success or error information
-     */
-    qtplugin::expected<void, qtplugin::PluginError> configure(
-        const QJsonObject& config) override;
 
     /**
      * @brief Execute a plugin command
@@ -121,34 +107,18 @@ public:
     std::vector<std::string> available_commands() const override;
 
     /**
-     * @brief Get plugin metadata
-     * @return Plugin metadata information
+     * @brief Configure the plugin
+     * @param config Configuration object
+     * @return Success or error information
      */
-    qtplugin::PluginMetadata metadata() const override;
-
-    /**
-     * @brief Get current plugin state
-     * @return Current state
-     */
-    qtplugin::PluginState state() const noexcept override;
-
-    /**
-     * @brief Check if plugin is initialized
-     * @return True if initialized
-     */
-    bool is_initialized() const noexcept override;
-
-    /**
-     * @brief Get default configuration
-     * @return Default configuration object
-     */
-    std::optional<QJsonObject> default_configuration() const override;
+    qtplugin::expected<void, qtplugin::PluginError> configure(
+        const QJsonObject& config) override;
 
     /**
      * @brief Get current configuration
      * @return Current configuration object
      */
-    QJsonObject current_configuration() const override;
+    QJsonObject get_configuration() const override;
 
 private slots:
     /**

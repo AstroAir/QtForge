@@ -22,8 +22,8 @@
 #include <optional>
 #include <unordered_map>
 #include <vector>
+#include "../interfaces/core/plugin_interface.hpp"
 #include "../utils/error_handling.hpp"
-#include "plugin_interface.hpp"
 
 namespace qtplugin {
 

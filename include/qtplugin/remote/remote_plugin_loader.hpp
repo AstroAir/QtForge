@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <QObject>
 #include <QUrl>
 
 #include <functional>
@@ -244,7 +245,9 @@ public:
 /**
  * @brief Base implementation of remote plugin loader
  */
-class RemotePluginLoaderBase : public IRemotePluginLoader {
+class RemotePluginLoaderBase : public QObject, public IRemotePluginLoader {
+    Q_OBJECT
+
 public:
     /**
      * @brief Constructor

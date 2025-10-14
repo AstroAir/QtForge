@@ -27,7 +27,7 @@
 #include <vector>
 
 #include "qtplugin/communication/message_bus.hpp"
-#include "qtplugin/core/plugin_interface.hpp"
+#include "qtplugin/interfaces/core/plugin_interface.hpp"
 #include "qtplugin/monitoring/plugin_hot_reload_manager.hpp"
 #include "qtplugin/monitoring/plugin_metrics_collector.hpp"
 #include "qtplugin/utils/error_handling.hpp"

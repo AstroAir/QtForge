@@ -12,8 +12,9 @@
 #include <QLoggingCategory>
 #include <QStandardPaths>
 #include <QThread>
-#include <future>
 #include <chrono>
+#include <future>
+#include "qtplugin/communication/plugin_service_contracts.hpp"
 
 Q_LOGGING_CATEGORY(pythonBridgeLog, "qtplugin.python");
 
@@ -47,8 +48,7 @@ qtplugin::expected<void, PluginError> PythonExecutionEnvironment::initialize() {
         QCoreApplication::applicationDirPath() + "/python_bridge.py",
         QDir::currentPath() + "/python_bridge.py",
         QDir::currentPath() + "/tests/python_bridge/python_bridge.py",
-        QDir::currentPath() + "/../tests/python_bridge/python_bridge.py"
-    };
+        QDir::currentPath() + "/../tests/python_bridge/python_bridge.py"};
 
     for (const QString& path : possible_paths) {
         if (QFile::exists(path)) {
@@ -68,7 +68,8 @@ qtplugin::expected<void, PluginError> PythonExecutionEnvironment::initialize() {
     qCDebug(pythonBridgeLog)
         << "Starting Python process:" << m_python_path << arguments;
     qCDebug(pythonBridgeLog) << "Working directory:" << QDir::currentPath();
-    qCDebug(pythonBridgeLog) << "Bridge script exists:" << QFile::exists(bridge_script);
+    qCDebug(pythonBridgeLog)
+        << "Bridge script exists:" << QFile::exists(bridge_script);
 
     // Set working directory to ensure Python can find any dependencies
     m_process->setWorkingDirectory(QDir::currentPath());
@@ -76,7 +77,8 @@ qtplugin::expected<void, PluginError> PythonExecutionEnvironment::initialize() {
     m_process->start(m_python_path, arguments);
 
     if (!m_process->waitForStarted(5000)) {
-        qCCritical(pythonBridgeLog) << "Failed to start Python process. Error:" << m_process->errorString();
+        qCCritical(pythonBridgeLog) << "Failed to start Python process. Error:"
+                                    << m_process->errorString();
         qCCritical(pythonBridgeLog) << "Process state:" << m_process->state();
         qCCritical(pythonBridgeLog) << "Process error:" << m_process->error();
         return make_error<void>(PluginErrorCode::InitializationFailed,
@@ -84,7 +86,8 @@ qtplugin::expected<void, PluginError> PythonExecutionEnvironment::initialize() {
                                     m_process->errorString().toStdString());
     }
 
-    qCDebug(pythonBridgeLog) << "Python process started successfully. PID:" << m_process->processId();
+    qCDebug(pythonBridgeLog) << "Python process started successfully. PID:"
+                             << m_process->processId();
     qCDebug(pythonBridgeLog) << "Process state:" << m_process->state();
 
     // Give the Python process a moment to initialize
@@ -164,7 +167,8 @@ PythonExecutionEnvironment::load_plugin_module(const QString& plugin_path,
                                    "Python environment is not running");
     }
 
-    qCDebug(pythonBridgeLog) << "Loading plugin module:" << plugin_path << "class:" << plugin_class;
+    qCDebug(pythonBridgeLog)
+        << "Loading plugin module:" << plugin_path << "class:" << plugin_class;
 
     QJsonObject request;
     request["type"] = "load_plugin";
@@ -225,7 +229,7 @@ PythonExecutionEnvironment::get_plugin_info(const QString& plugin_id) {
 
 qtplugin::expected<QJsonObject, PluginError>
 PythonExecutionEnvironment::get_plugin_property(const QString& plugin_id,
-                                                 const QString& property_name) {
+                                                const QString& property_name) {
     if (!is_running()) {
         return make_error<QJsonObject>(PluginErrorCode::InvalidState,
                                        "Python environment is not running");
@@ -242,8 +246,8 @@ PythonExecutionEnvironment::get_plugin_property(const QString& plugin_id,
 
 qtplugin::expected<QJsonObject, PluginError>
 PythonExecutionEnvironment::set_plugin_property(const QString& plugin_id,
-                                                 const QString& property_name,
-                                                 const QJsonValue& value) {
+                                                const QString& property_name,
+                                                const QJsonValue& value) {
     if (!is_running()) {
         return make_error<QJsonObject>(PluginErrorCode::InvalidState,
                                        "Python environment is not running");
@@ -263,13 +267,15 @@ void PythonExecutionEnvironment::setup_process() {
     // Connect process signals
     QObject::connect(m_process.get(), &QProcess::readyReadStandardOutput,
                      [this]() {
-                         qCDebug(pythonBridgeLog) << "readyReadStandardOutput signal received";
+                         qCDebug(pythonBridgeLog)
+                             << "readyReadStandardOutput signal received";
                          handle_process_output();
                      });
 
     QObject::connect(m_process.get(), &QProcess::readyReadStandardError,
                      [this]() {
-                         qCDebug(pythonBridgeLog) << "readyReadStandardError signal received";
+                         qCDebug(pythonBridgeLog)
+                             << "readyReadStandardError signal received";
                          handle_process_error();
                      });
 
@@ -288,7 +294,8 @@ void PythonExecutionEnvironment::handle_process_output() {
         return;
 
     QByteArray data = m_process->readAllStandardOutput();
-    qCDebug(pythonBridgeLog) << "Received data from Python process:" << data.size() << "bytes";
+    qCDebug(pythonBridgeLog)
+        << "Received data from Python process:" << data.size() << "bytes";
     qCDebug(pythonBridgeLog) << "Raw data:" << data;
 
     QStringList lines = QString::fromUtf8(data).split('\n', Qt::SkipEmptyParts);
@@ -307,16 +314,21 @@ void PythonExecutionEnvironment::handle_process_output() {
         QJsonObject response = doc.object();
         int response_id = response["id"].toInt();
 
-        qCDebug(pythonBridgeLog) << "Received response from Python:" << doc.toJson(QJsonDocument::Compact);
-        qCDebug(pythonBridgeLog) << "Response ID:" << response_id << "Expected ID:" << m_request_id;
+        qCDebug(pythonBridgeLog) << "Received response from Python:"
+                                 << doc.toJson(QJsonDocument::Compact);
+        qCDebug(pythonBridgeLog)
+            << "Response ID:" << response_id << "Expected ID:" << m_request_id;
 
         qCDebug(pythonBridgeLog) << "Acquiring mutex to store response...";
         QMutexLocker locker(&m_mutex);
 
         // Store the response in pending responses map for polling
         m_pending_responses[response_id] = response;
-        qCDebug(pythonBridgeLog) << "Response stored for ID:" << response_id << "Total pending:" << m_pending_responses.size();
-        qCDebug(pythonBridgeLog) << "All pending IDs:" << m_pending_responses.keys();
+        qCDebug(pythonBridgeLog)
+            << "Response stored for ID:" << response_id
+            << "Total pending:" << m_pending_responses.size();
+        qCDebug(pythonBridgeLog)
+            << "All pending IDs:" << m_pending_responses.keys();
     }
 }
 
@@ -340,7 +352,8 @@ PythonExecutionEnvironment::send_request(const QJsonObject& request) {
     }
 
     if (m_process->state() != QProcess::Running) {
-        qCCritical(pythonBridgeLog) << "Python process is not running. State:" << m_process->state();
+        qCCritical(pythonBridgeLog)
+            << "Python process is not running. State:" << m_process->state();
         qCCritical(pythonBridgeLog) << "Process error:" << m_process->error();
         qCCritical(pythonBridgeLog) << "Exit code:" << m_process->exitCode();
         return make_error<QJsonObject>(PluginErrorCode::InvalidState,
@@ -355,38 +368,46 @@ PythonExecutionEnvironment::send_request(const QJsonObject& request) {
     // Send request (do this outside of mutex to avoid deadlock)
     QJsonDocument doc(modified_request);
     QByteArray data = doc.toJson(QJsonDocument::Compact) + "\n";
-    qCDebug(pythonBridgeLog) << "Sending request to Python:" << doc.toJson(QJsonDocument::Compact);
+    qCDebug(pythonBridgeLog)
+        << "Sending request to Python:" << doc.toJson(QJsonDocument::Compact);
     qint64 written = m_process->write(data);
     if (written != data.size()) {
-        return make_error<QJsonObject>(PluginErrorCode::ExecutionFailed,
-                                       "Failed to write complete request to Python process");
+        return make_error<QJsonObject>(
+            PluginErrorCode::ExecutionFailed,
+            "Failed to write complete request to Python process");
     }
     m_process->waitForBytesWritten(2000);
 
-    qCDebug(pythonBridgeLog) << "Request sent, process state:" << m_process->state();
+    qCDebug(pythonBridgeLog)
+        << "Request sent, process state:" << m_process->state();
 
     // Simplified wait mechanism - poll for response in pending map
-    const int timeout_iterations = m_request_timeout / 100; // 100ms per iteration
+    const int timeout_iterations =
+        m_request_timeout / 100;  // 100ms per iteration
     for (int i = 0; i < timeout_iterations; ++i) {
         // Check if response is available (with mutex protection)
         {
             QMutexLocker locker(&m_mutex);
             if (m_pending_responses.contains(expected_id)) {
                 m_last_response = m_pending_responses.take(expected_id);
-                qCDebug(pythonBridgeLog) << "Response found for ID:" << expected_id;
+                qCDebug(pythonBridgeLog)
+                    << "Response found for ID:" << expected_id;
                 return m_last_response;
             }
         }
 
         // Wait for data and process it (without holding mutex)
         if (m_process->waitForReadyRead(100)) {
-            qCDebug(pythonBridgeLog) << "Processing new data from Python process";
+            qCDebug(pythonBridgeLog)
+                << "Processing new data from Python process";
             handle_process_output();
             // After processing, check again if our response arrived
             QMutexLocker locker(&m_mutex);
             if (m_pending_responses.contains(expected_id)) {
                 m_last_response = m_pending_responses.take(expected_id);
-                qCDebug(pythonBridgeLog) << "Response received after processing for ID:" << expected_id;
+                qCDebug(pythonBridgeLog)
+                    << "Response received after processing for ID:"
+                    << expected_id;
                 return m_last_response;
             }
         } else {
@@ -397,7 +418,9 @@ PythonExecutionEnvironment::send_request(const QJsonObject& request) {
                 QMutexLocker locker(&m_mutex);
                 if (m_pending_responses.contains(expected_id)) {
                     m_last_response = m_pending_responses.take(expected_id);
-                    qCDebug(pythonBridgeLog) << "Response found in buffered data for ID:" << expected_id;
+                    qCDebug(pythonBridgeLog)
+                        << "Response found in buffered data for ID:"
+                        << expected_id;
                     return m_last_response;
                 }
             }
@@ -405,13 +428,16 @@ PythonExecutionEnvironment::send_request(const QJsonObject& request) {
     }
 
     // Timeout - no response received
-    qCWarning(pythonBridgeLog) << "Timeout waiting for Python response ID:" << expected_id;
+    qCWarning(pythonBridgeLog)
+        << "Timeout waiting for Python response ID:" << expected_id;
     qCWarning(pythonBridgeLog) << "Process state:" << m_process->state();
     qCWarning(pythonBridgeLog) << "Process error:" << m_process->error();
-    qCWarning(pythonBridgeLog) << "Bytes available:" << m_process->bytesAvailable();
+    qCWarning(pythonBridgeLog)
+        << "Bytes available:" << m_process->bytesAvailable();
     {
         QMutexLocker locker(&m_mutex);
-        qCWarning(pythonBridgeLog) << "Pending responses:" << m_pending_responses.keys();
+        qCWarning(pythonBridgeLog)
+            << "Pending responses:" << m_pending_responses.keys();
     }
     return make_error<QJsonObject>(PluginErrorCode::TimeoutError,
                                    "Timeout waiting for Python response");
@@ -460,17 +486,21 @@ PythonPluginBridge::initialize() {
 
     // If we have a plugin path, load the plugin
     if (!m_plugin_path.isEmpty()) {
-        qCDebug(pythonBridgeLog) << "Loading plugin from path:" << m_plugin_path;
-        auto load_result = m_environment->load_plugin_module(m_plugin_path, "create_plugin");
+        qCDebug(pythonBridgeLog)
+            << "Loading plugin from path:" << m_plugin_path;
+        auto load_result =
+            m_environment->load_plugin_module(m_plugin_path, "create_plugin");
         if (!load_result) {
-            return make_error<void>(load_result.error().code, load_result.error().message);
+            return make_error<void>(load_result.error().code,
+                                    load_result.error().message);
         }
 
         m_current_plugin_id = load_result.value();
         m_loaded_plugins[m_current_plugin_id] = m_plugin_path;
 
         // Get plugin information using the proper bridge request mechanism
-        auto info_response = m_environment->get_plugin_info(m_current_plugin_id);
+        auto info_response =
+            m_environment->get_plugin_info(m_current_plugin_id);
         if (info_response && info_response.value()["success"].toBool()) {
             QJsonObject response_data = info_response.value();
             extract_plugin_info_from_response(response_data);
@@ -481,7 +511,8 @@ PythonPluginBridge::initialize() {
                 m_available_properties.clear();
                 for (const QJsonValue& property : properties) {
                     if (property.isObject()) {
-                        QString prop_name = property.toObject()["name"].toString();
+                        QString prop_name =
+                            property.toObject()["name"].toString();
                         if (!prop_name.isEmpty()) {
                             m_available_properties.push_back(prop_name);
                         }
@@ -491,7 +522,8 @@ PythonPluginBridge::initialize() {
         }
 
         m_state = qtplugin::PluginState::Running;
-        qCDebug(pythonBridgeLog) << "Python plugin initialized:" << m_plugin_path;
+        qCDebug(pythonBridgeLog)
+            << "Python plugin initialized:" << m_plugin_path;
     }
 
     return make_success();
@@ -512,8 +544,8 @@ qtplugin::PluginState PythonPluginBridge::state() const noexcept {
 
 qtplugin::PluginCapabilities PythonPluginBridge::capabilities() const noexcept {
     return static_cast<qtplugin::PluginCapabilities>(
-        qtplugin::PluginCapability::Scripting |
-        qtplugin::PluginCapability::HotReload);
+        static_cast<uint32_t>(qtplugin::PluginCapability::Scripting) |
+        static_cast<uint32_t>(qtplugin::PluginCapability::HotReload));
 }
 
 qtplugin::expected<void, qtplugin::PluginError> PythonPluginBridge::configure(
@@ -546,9 +578,9 @@ PythonPluginBridge::execute_command(std::string_view command,
         params.append(it.value());
     }
 
-    return m_environment->call_plugin_method(m_current_plugin_id,
-                                             QString::fromUtf8(command.data(), command.size()),
-                                             params);
+    return m_environment->call_plugin_method(
+        m_current_plugin_id, QString::fromUtf8(command.data(), command.size()),
+        params);
 }
 
 std::vector<std::string> PythonPluginBridge::available_commands() const {
@@ -571,7 +603,7 @@ QJsonObject PythonPluginBridge::get_configuration_schema() const {
 
 qtplugin::expected<void, qtplugin::PluginError>
 PythonPluginBridge::handle_dependency_change(const QString& dependency_id,
-                                              qtplugin::PluginState new_state) {
+                                             qtplugin::PluginState new_state) {
     qCDebug(pythonBridgeLog) << "Handling dependency change:" << dependency_id
                              << "new state:" << static_cast<int>(new_state);
 
@@ -591,17 +623,16 @@ PythonPluginBridge::handle_dependency_change(const QString& dependency_id,
     params.append(static_cast<int>(new_state));
 
     auto result = m_environment->call_plugin_method(
-        m_current_plugin_id,
-        "handle_dependency_change",
-        params
-    );
+        m_current_plugin_id, "handle_dependency_change", params);
 
     if (result) {
-        qCDebug(pythonBridgeLog) << "Plugin handled dependency change successfully";
+        qCDebug(pythonBridgeLog)
+            << "Plugin handled dependency change successfully";
         return make_success();
     } else {
         // It's okay if the plugin doesn't have this method
-        qCDebug(pythonBridgeLog) << "Plugin doesn't have handle_dependency_change method, ignoring";
+        qCDebug(pythonBridgeLog)
+            << "Plugin doesn't have handle_dependency_change method, ignoring";
         return make_success();
     }
 }
@@ -642,10 +673,13 @@ PythonPluginBridge::hot_reload() {
     m_metadata = QJsonObject();
 
     // Reload the plugin with proper plugin class
-    auto load_result = m_environment->load_plugin_module(plugin_path, "create_plugin");
+    auto load_result =
+        m_environment->load_plugin_module(plugin_path, "create_plugin");
     if (!load_result) {
-        qCWarning(pythonBridgeLog) << "Failed to reload plugin:" << load_result.error().message.c_str();
-        return make_error<void>(load_result.error().code, load_result.error().message);
+        qCWarning(pythonBridgeLog) << "Failed to reload plugin:"
+                                   << load_result.error().message.c_str();
+        return make_error<void>(load_result.error().code,
+                                load_result.error().message);
     }
 
     // Update plugin ID and registry
@@ -662,17 +696,17 @@ PythonPluginBridge::hot_reload() {
         extract_plugin_info_from_response(response_data);
     } else {
         qCWarning(pythonBridgeLog) << "Failed to get plugin info after reload";
-        return make_error<void>(PluginErrorCode::LoadFailed,
-                                "Failed to retrieve plugin information after reload");
+        return make_error<void>(
+            PluginErrorCode::LoadFailed,
+            "Failed to retrieve plugin information after reload");
     }
 
     m_state = qtplugin::PluginState::Running;
-    qCDebug(pythonBridgeLog) << "Hot reload completed for plugin:" << plugin_path;
+    qCDebug(pythonBridgeLog)
+        << "Hot reload completed for plugin:" << plugin_path;
 
     return make_success();
 }
-
-
 
 std::vector<qtplugin::InterfaceDescriptor>
 PythonPluginBridge::get_interface_descriptors() const {
@@ -719,10 +753,8 @@ qtplugin::PluginType PythonPluginBridge::get_plugin_type() const {
 
 qtplugin::PluginExecutionContext PythonPluginBridge::get_execution_context()
     const {
-    qtplugin::PluginExecutionContext context;
-    context.type = qtplugin::PluginType::Python;
-    context.interpreter_path = "python";
-    return context;
+    // Python plugins run in isolated process context
+    return qtplugin::PluginExecutionContext::Isolated;
 }
 
 qtplugin::expected<QVariant, qtplugin::PluginError>
@@ -757,7 +789,8 @@ PythonPluginBridge::invoke_method(const QString& method_name,
         params.append(QJsonValue::fromVariant(param));
     }
 
-    auto result = m_environment->call_plugin_method(m_current_plugin_id, method_name, params);
+    auto result = m_environment->call_plugin_method(m_current_plugin_id,
+                                                    method_name, params);
     if (result) {
         QJsonObject response = result.value();
 
@@ -781,7 +814,8 @@ PythonPluginBridge::invoke_method(const QString& method_name,
             if (error_msg.contains("not found", Qt::CaseInsensitive) ||
                 error_msg.contains("AttributeError", Qt::CaseInsensitive)) {
                 error_code = PluginErrorCode::CommandNotFound;
-            } else if (error_msg.contains("not callable", Qt::CaseInsensitive) ||
+            } else if (error_msg.contains("not callable",
+                                          Qt::CaseInsensitive) ||
                        error_msg.contains("TypeError", Qt::CaseInsensitive)) {
                 error_code = PluginErrorCode::InvalidParameters;
             }
@@ -794,11 +828,10 @@ PythonPluginBridge::invoke_method(const QString& method_name,
 
 std::vector<QString> PythonPluginBridge::get_available_methods(
     const QString& interface_id) const {
-    Q_UNUSED(interface_id)  // For now, we return all available methods regardless of interface
+    Q_UNUSED(interface_id)  // For now, we return all available methods
+                            // regardless of interface
     return m_available_methods;
 }
-
-
 
 qtplugin::expected<QVariant, qtplugin::PluginError>
 PythonPluginBridge::get_property(const QString& property_name,
@@ -816,14 +849,16 @@ PythonPluginBridge::get_property(const QString& property_name,
     }
 
     // Use the new get_plugin_property method
-    auto result = m_environment->get_plugin_property(m_current_plugin_id, property_name);
+    auto result =
+        m_environment->get_plugin_property(m_current_plugin_id, property_name);
     if (result) {
         QJsonObject response = result.value();
         if (response["success"].toBool() && response.contains("value")) {
             return convert_json_to_variant(response["value"]);
         } else {
             QString error_msg = response["error"].toString();
-            return make_error<QVariant>(PluginErrorCode::ExecutionFailed, error_msg.toStdString());
+            return make_error<QVariant>(PluginErrorCode::ExecutionFailed,
+                                        error_msg.toStdString());
         }
     }
     return qtplugin::unexpected(result.error());
@@ -846,14 +881,16 @@ PythonPluginBridge::set_property(const QString& property_name,
     }
 
     // Use the new set_plugin_property method
-    auto result = m_environment->set_plugin_property(m_current_plugin_id, property_name, QJsonValue::fromVariant(value));
+    auto result = m_environment->set_plugin_property(
+        m_current_plugin_id, property_name, QJsonValue::fromVariant(value));
     if (result) {
         QJsonObject response = result.value();
         if (response["success"].toBool()) {
             return make_success();
         } else {
             QString error_msg = response["error"].toString();
-            return make_error<void>(PluginErrorCode::ExecutionFailed, error_msg.toStdString());
+            return make_error<void>(PluginErrorCode::ExecutionFailed,
+                                    error_msg.toStdString());
         }
     }
     return make_error<void>(result.error().code, result.error().message);
@@ -861,7 +898,8 @@ PythonPluginBridge::set_property(const QString& property_name,
 
 std::vector<QString> PythonPluginBridge::get_available_properties(
     const QString& interface_id) const {
-    Q_UNUSED(interface_id)  // For now, we return all available properties regardless of interface
+    Q_UNUSED(interface_id)  // For now, we return all available properties
+                            // regardless of interface
     return m_available_properties;
 }
 
@@ -876,7 +914,9 @@ PythonPluginBridge::subscribe_to_events(
 
     // Store the callback for each event
     for (const QString& event_type : event_types) {
-        QString full_event_name = source_plugin_id.isEmpty() ? event_type : source_plugin_id + "." + event_type;
+        QString full_event_name = source_plugin_id.isEmpty()
+                                      ? event_type
+                                      : source_plugin_id + "." + event_type;
         m_event_callbacks[full_event_name] = callback;
     }
 
@@ -888,14 +928,12 @@ PythonPluginBridge::subscribe_to_events(
         }
 
         auto result = m_environment->call_plugin_method(
-            m_current_plugin_id,
-            "subscribe_events",
-            event_array
-        );
+            m_current_plugin_id, "subscribe_events", event_array);
 
         if (!result) {
-            qCWarning(pythonBridgeLog) << "Failed to notify Python plugin about event subscription:"
-                                       << result.error().message.c_str();
+            qCWarning(pythonBridgeLog)
+                << "Failed to notify Python plugin about event subscription:"
+                << result.error().message.c_str();
         }
     }
 
@@ -907,7 +945,9 @@ PythonPluginBridge::unsubscribe_from_events(
     const QString& source_plugin_id, const std::vector<QString>& event_types) {
     // Remove callbacks for each event
     for (const QString& event_type : event_types) {
-        QString full_event_name = source_plugin_id.isEmpty() ? event_type : source_plugin_id + "." + event_type;
+        QString full_event_name = source_plugin_id.isEmpty()
+                                      ? event_type
+                                      : source_plugin_id + "." + event_type;
         m_event_callbacks.remove(full_event_name);
     }
 
@@ -919,14 +959,12 @@ PythonPluginBridge::unsubscribe_from_events(
         }
 
         auto result = m_environment->call_plugin_method(
-            m_current_plugin_id,
-            "unsubscribe_events",
-            event_array
-        );
+            m_current_plugin_id, "unsubscribe_events", event_array);
 
         if (!result) {
-            qCWarning(pythonBridgeLog) << "Failed to notify Python plugin about event unsubscription:"
-                                       << result.error().message.c_str();
+            qCWarning(pythonBridgeLog)
+                << "Failed to notify Python plugin about event unsubscription:"
+                << result.error().message.c_str();
         }
     }
 
@@ -941,8 +979,9 @@ qtplugin::expected<void, qtplugin::PluginError> PythonPluginBridge::emit_event(
         try {
             it.value()(event_name, event_data);
         } catch (const std::exception& e) {
-            return make_error<void>(PluginErrorCode::ExecutionFailed,
-                                    "Error in event callback: " + std::string(e.what()));
+            return make_error<void>(
+                PluginErrorCode::ExecutionFailed,
+                "Error in event callback: " + std::string(e.what()));
         }
     }
 
@@ -952,15 +991,13 @@ qtplugin::expected<void, qtplugin::PluginError> PythonPluginBridge::emit_event(
         params.append(event_name);
         params.append(event_data);
 
-        auto result = m_environment->call_plugin_method(
-            m_current_plugin_id,
-            "emit_event",
-            params
-        );
+        auto result = m_environment->call_plugin_method(m_current_plugin_id,
+                                                        "emit_event", params);
 
         if (!result) {
-            qCWarning(pythonBridgeLog) << "Failed to notify Python plugin about event emission:"
-                                       << result.error().message.c_str();
+            qCWarning(pythonBridgeLog)
+                << "Failed to notify Python plugin about event emission:"
+                << result.error().message.c_str();
         }
     }
 
@@ -985,27 +1022,32 @@ void PythonPluginBridge::handle_environment_error() {
 
         auto restart_result = m_environment->initialize();
         if (restart_result) {
-            qCDebug(pythonBridgeLog) << "Python environment restarted successfully";
+            qCDebug(pythonBridgeLog)
+                << "Python environment restarted successfully";
             m_state = qtplugin::PluginState::Loaded;
 
             // Try to reload the plugin if we have a path
             if (!m_plugin_path.isEmpty()) {
                 auto reload_result = hot_reload();
                 if (reload_result) {
-                    qCDebug(pythonBridgeLog) << "Plugin reloaded successfully after environment restart";
+                    qCDebug(pythonBridgeLog) << "Plugin reloaded successfully "
+                                                "after environment restart";
                 } else {
-                    qCWarning(pythonBridgeLog) << "Failed to reload plugin after environment restart:"
-                                               << reload_result.error().message.c_str();
+                    qCWarning(pythonBridgeLog)
+                        << "Failed to reload plugin after environment restart:"
+                        << reload_result.error().message.c_str();
                 }
             }
         } else {
-            qCCritical(pythonBridgeLog) << "Failed to restart Python environment:"
-                                        << restart_result.error().message.c_str();
+            qCCritical(pythonBridgeLog)
+                << "Failed to restart Python environment:"
+                << restart_result.error().message.c_str();
         }
     }
 }
 
-void PythonPluginBridge::extract_plugin_info_from_response(const QJsonObject& response_data) {
+void PythonPluginBridge::extract_plugin_info_from_response(
+    const QJsonObject& response_data) {
     // Extract metadata
     if (response_data.contains("metadata")) {
         m_metadata = response_data["metadata"].toObject();
@@ -1062,16 +1104,19 @@ if bridge and hasattr(bridge, 'handle_get_plugin_info'):
     json.dumps(response)
 else:
     json.dumps({'success': False, 'error': 'Bridge not available'})
-)").arg(m_current_plugin_id);
+)")
+                            .arg(m_current_plugin_id);
 
     auto info_response = m_environment->execute_code(info_code);
     if (!info_response) {
-        return make_error<void>(info_response.error().code, info_response.error().message);
+        return make_error<void>(info_response.error().code,
+                                info_response.error().message);
     }
 
     // Parse the JSON response
     QJsonParseError error;
-    QJsonDocument doc = QJsonDocument::fromJson(info_response.value()["result"].toString().toUtf8(), &error);
+    QJsonDocument doc = QJsonDocument::fromJson(
+        info_response.value()["result"].toString().toUtf8(), &error);
 
     if (error.error != QJsonParseError::NoError || !doc.isObject()) {
         return make_error<void>(PluginErrorCode::ExecutionFailed,
@@ -1081,8 +1126,9 @@ else:
     QJsonObject response_data = doc.object();
 
     if (!response_data["success"].toBool()) {
-        return make_error<void>(PluginErrorCode::ExecutionFailed,
-                                response_data["error"].toString().toStdString());
+        return make_error<void>(
+            PluginErrorCode::ExecutionFailed,
+            response_data["error"].toString().toStdString());
     }
 
     // Extract methods
@@ -1113,13 +1159,15 @@ else:
         }
     }
 
-    qCDebug(pythonBridgeLog) << "Discovered" << m_available_methods.size() << "methods and"
-                             << m_available_properties.size() << "properties";
+    qCDebug(pythonBridgeLog)
+        << "Discovered" << m_available_methods.size() << "methods and"
+        << m_available_properties.size() << "properties";
 
     return make_success();
 }
 
-QJsonArray PythonPluginBridge::convert_variant_list_to_json(const QVariantList& list) const {
+QJsonArray PythonPluginBridge::convert_variant_list_to_json(
+    const QVariantList& list) const {
     QJsonArray json_array;
     for (const QVariant& variant : list) {
         json_array.append(QJsonValue::fromVariant(variant));
@@ -1127,7 +1175,8 @@ QJsonArray PythonPluginBridge::convert_variant_list_to_json(const QVariantList& 
     return json_array;
 }
 
-QVariant PythonPluginBridge::convert_json_to_variant(const QJsonValue& value) const {
+QVariant PythonPluginBridge::convert_json_to_variant(
+    const QJsonValue& value) const {
     return value.toVariant();
 }
 
@@ -1204,7 +1253,8 @@ try:
 
 except Exception as e:
     json.dumps({'error': str(e)})
-)").arg(method_name);
+)")
+                       .arg(method_name);
 
     // This is a const method, so we can't call execute_code directly
     // We'll return a basic signature for now
@@ -1219,19 +1269,12 @@ except Exception as e:
 // === PythonPluginFactory Implementation ===
 
 QStringList PythonPluginFactory::required_python_modules() {
-    return QStringList{
-        "json",
-        "sys",
-        "os",
-        "importlib",
-        "importlib.util",
-        "traceback",
-        "logging",
-        "inspect"
-    };
+    return QStringList{"json",           "sys",       "os",      "importlib",
+                       "importlib.util", "traceback", "logging", "inspect"};
 }
 
-QStringList PythonPluginFactory::check_required_modules(const QString& python_path) {
+QStringList PythonPluginFactory::check_required_modules(
+    const QString& python_path) {
     QStringList missing_modules;
     QStringList required = required_python_modules();
 
@@ -1260,15 +1303,18 @@ QStringList PythonPluginFactory::check_required_modules(const QString& python_pa
 
 // === IAdvancedPlugin Implementation ===
 
-std::vector<contracts::ServiceContract> PythonPluginBridge::get_service_contracts() const {
-    // Return empty vector for now - Python plugins don't expose services by default
+std::vector<contracts::ServiceContract>
+PythonPluginBridge::get_service_contracts() const {
+    // Return empty vector for now - Python plugins don't expose services by
+    // default
     return {};
 }
 
-qtplugin::expected<QJsonObject, qtplugin::PluginError> PythonPluginBridge::call_service(
-    const QString& service_name, const QString& method_name,
-    const QJsonObject& parameters, std::chrono::milliseconds timeout) {
-
+qtplugin::expected<QJsonObject, qtplugin::PluginError>
+PythonPluginBridge::call_service(const QString& service_name,
+                                 const QString& method_name,
+                                 const QJsonObject& parameters,
+                                 std::chrono::milliseconds timeout) {
     Q_UNUSED(timeout)
 
     // Delegate to Python plugin's service handling
@@ -1286,19 +1332,21 @@ qtplugin::expected<QJsonObject, qtplugin::PluginError> PythonPluginBridge::call_
 }
 
 std::future<qtplugin::expected<QJsonObject, qtplugin::PluginError>>
-PythonPluginBridge::call_service_async(const QString& service_name, const QString& method_name,
-                                      const QJsonObject& parameters, std::chrono::milliseconds timeout) {
-
+PythonPluginBridge::call_service_async(const QString& service_name,
+                                       const QString& method_name,
+                                       const QJsonObject& parameters,
+                                       std::chrono::milliseconds timeout) {
     // For now, just run synchronously in a future
-    return std::async(std::launch::async, [this, service_name, method_name, parameters, timeout]() {
+    return std::async(std::launch::async, [this, service_name, method_name,
+                                           parameters, timeout]() {
         return call_service(service_name, method_name, parameters, timeout);
     });
 }
 
-qtplugin::expected<QJsonObject, qtplugin::PluginError> PythonPluginBridge::handle_service_call(
-    const QString& service_name, const QString& method_name,
-    const QJsonObject& parameters) {
-
+qtplugin::expected<QJsonObject, qtplugin::PluginError>
+PythonPluginBridge::handle_service_call(const QString& service_name,
+                                        const QString& method_name,
+                                        const QJsonObject& parameters) {
     // Delegate to Python plugin's service handling
     QVariantList params;
     params << service_name << method_name << parameters;
@@ -1311,6 +1359,162 @@ qtplugin::expected<QJsonObject, qtplugin::PluginError> PythonPluginBridge::handl
     // Convert result to QJsonObject
     QVariantMap resultMap = result.value().toMap();
     return QJsonObject::fromVariantMap(resultMap);
+}
+
+// === IPlugin Missing Methods Implementation ===
+
+qtplugin::PluginMetadata PythonPluginBridge::metadata() const {
+    PluginMetadata meta;
+    meta.name = name().data();
+    meta.version = version();
+    meta.description = description().data();
+    meta.author = author().data();
+    return meta;
+}
+
+qtplugin::PluginPriority PythonPluginBridge::priority() const noexcept {
+    return PluginPriority::Normal;
+}
+
+bool PythonPluginBridge::is_initialized() const noexcept {
+    return state() == PluginState::Running || state() == PluginState::Loaded;
+}
+
+// === IAdvancedPlugin Missing Methods Implementation ===
+
+qtplugin::expected<void, PluginError> PythonPluginBridge::apply_configuration(
+    const QJsonObject& config) {
+    return configure(config);
+}
+
+QJsonObject PythonPluginBridge::get_configuration() const {
+    return current_configuration();
+}
+
+qtplugin::expected<QVariant, PluginError> PythonPluginBridge::handle_event(
+    const QString& event_type, const QVariant& event_data) {
+    QVariantList params;
+    params << event_type << event_data;
+    return invoke_method("handle_event", params);
+}
+
+QStringList PythonPluginBridge::supported_event_types() const {
+    return QStringList();  // Python plugins can define this dynamically
+}
+
+qtplugin::expected<void, PluginError> PythonPluginBridge::pre_initialize() {
+    return make_success();  // No-op by default
+}
+
+qtplugin::expected<void, PluginError> PythonPluginBridge::post_initialize() {
+    return make_success();  // No-op by default
+}
+
+qtplugin::expected<void, PluginError> PythonPluginBridge::pre_shutdown() {
+    return make_success();  // No-op by default
+}
+
+qtplugin::expected<void, PluginError> PythonPluginBridge::post_shutdown() {
+    return make_success();  // No-op by default
+}
+
+QJsonObject PythonPluginBridge::get_resource_usage() const {
+    return QJsonObject();  // TODO: Implement resource tracking
+}
+
+qtplugin::expected<void, PluginError> PythonPluginBridge::set_resource_limits(
+    const QJsonObject& limits) {
+    Q_UNUSED(limits)
+    return make_success();  // TODO: Implement resource limits
+}
+
+qtplugin::expected<QVariant, PluginError> PythonPluginBridge::send_message(
+    const QString& target_plugin_id, const QVariant& message) {
+    QVariantList params;
+    params << target_plugin_id << message;
+    return invoke_method("send_message", params);
+}
+
+qtplugin::expected<QVariant, PluginError> PythonPluginBridge::receive_message(
+    const QString& sender_plugin_id, const QVariant& message) {
+    QVariantList params;
+    params << sender_plugin_id << message;
+    return invoke_method("receive_message", params);
+}
+
+qtplugin::expected<QJsonObject, PluginError> PythonPluginBridge::save_state() {
+    auto result = invoke_method("save_state", QVariantList());
+    if (!result.has_value()) {
+        return qtplugin::unexpected(result.error());
+    }
+    return QJsonObject::fromVariantMap(result.value().toMap());
+}
+
+qtplugin::expected<void, PluginError> PythonPluginBridge::restore_state(
+    const QJsonObject& state) {
+    QVariantList params;
+    params << state;
+    auto result = invoke_method("restore_state", params);
+    if (!result.has_value()) {
+        return qtplugin::unexpected(result.error());
+    }
+    return make_success();
+}
+
+QStringList PythonPluginBridge::get_capabilities() const {
+    return QStringList();  // Python plugins can define this dynamically
+}
+
+bool PythonPluginBridge::has_capability(const QString& capability) const {
+    Q_UNUSED(capability)
+    return false;  // Python plugins can override this
+}
+
+qtplugin::expected<void, PluginError> PythonPluginBridge::register_service(
+    const QString& service_name, const QVariant& service_interface) {
+    QVariantList params;
+    params << service_name << service_interface;
+    auto result = invoke_method("register_service", params);
+    if (!result.has_value()) {
+        return qtplugin::unexpected(result.error());
+    }
+    return make_success();
+}
+
+qtplugin::expected<void, PluginError> PythonPluginBridge::unregister_service(
+    const QString& service_name) {
+    QVariantList params;
+    params << service_name;
+    auto result = invoke_method("unregister_service", params);
+    if (!result.has_value()) {
+        return qtplugin::unexpected(result.error());
+    }
+    return make_success();
+}
+
+QStringList PythonPluginBridge::get_provided_services() const {
+    return QStringList();  // Python plugins can define this dynamically
+}
+
+QJsonObject PythonPluginBridge::get_performance_metrics() const {
+    return QJsonObject();  // TODO: Implement metrics tracking
+}
+
+void PythonPluginBridge::reset_metrics() {
+    // TODO: Implement metrics reset
+}
+
+qtplugin::expected<bool, PluginError> PythonPluginBridge::validate_integrity()
+    const {
+    return true;  // Basic validation - plugin is loaded
+}
+
+QJsonObject PythonPluginBridge::get_health_status() const {
+    QJsonObject status;
+    status["state"] = static_cast<int>(state());
+    status["initialized"] = is_initialized();
+    status["running"] = m_environment && m_environment->is_running();
+    return status;
 }
 
 }  // namespace qtplugin

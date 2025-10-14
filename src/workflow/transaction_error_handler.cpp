@@ -5,12 +5,15 @@
  */
 
 #include "qtplugin/workflow/transaction_error_handler.hpp"
+#include <QJsonArray>
 #include <QLoggingCategory>
 #include <QUuid>
-#include <QJsonArray>
 #include <algorithm>
 
-Q_LOGGING_CATEGORY(transactionErrorHandlerLog, "qtplugin.workflow.transaction_error_handler")
+namespace {
+Q_LOGGING_CATEGORY(transactionErrorHandlerLog,
+                   "qtplugin.workflow.transaction_error_handler")
+}  // namespace
 
 namespace qtplugin::workflow::transactions {
 
@@ -37,95 +40,102 @@ QJsonObject TransactionErrorInfo::to_json() const {
     json["retry_count"] = retry_count;
     json["max_retries"] = max_retries;
     json["root_cause_id"] = root_cause_id;
-    
+
     QJsonArray related_errors_array;
     for (const QString& related_error : related_errors) {
         related_errors_array.append(related_error);
     }
     json["related_errors"] = related_errors_array;
-    
+
     return json;
 }
 
-qtplugin::expected<TransactionErrorInfo, PluginError> TransactionErrorInfo::from_json(const QJsonObject& json) {
+qtplugin::expected<TransactionErrorInfo, PluginError>
+TransactionErrorInfo::from_json(const QJsonObject& json) {
     TransactionErrorInfo info;
-    
+
     if (json.contains("error_id") && json["error_id"].isString()) {
         info.error_id = json["error_id"].toString();
     }
-    
+
     if (json.contains("transaction_id") && json["transaction_id"].isString()) {
         info.transaction_id = json["transaction_id"].toString();
     }
-    
+
     if (json.contains("operation_id") && json["operation_id"].isString()) {
         info.operation_id = json["operation_id"].toString();
     }
-    
+
     if (json.contains("plugin_id") && json["plugin_id"].isString()) {
         info.plugin_id = json["plugin_id"].toString();
     }
-    
+
     if (json.contains("error_code") && json["error_code"].isDouble()) {
-        info.error_code = static_cast<PluginErrorCode>(json["error_code"].toInt());
+        info.error_code =
+            static_cast<PluginErrorCode>(json["error_code"].toInt());
     }
-    
+
     if (json.contains("category") && json["category"].isDouble()) {
-        info.category = static_cast<TransactionErrorCategory>(json["category"].toInt());
+        info.category =
+            static_cast<TransactionErrorCategory>(json["category"].toInt());
     }
-    
+
     if (json.contains("severity") && json["severity"].isDouble()) {
-        info.severity = static_cast<TransactionErrorSeverity>(json["severity"].toInt());
+        info.severity =
+            static_cast<TransactionErrorSeverity>(json["severity"].toInt());
     }
-    
+
     if (json.contains("message") && json["message"].isString()) {
         info.message = json["message"].toString();
     }
-    
+
     if (json.contains("details") && json["details"].isString()) {
         info.details = json["details"].toString();
     }
-    
+
     if (json.contains("context") && json["context"].isString()) {
         info.context = json["context"].toString();
     }
-    
+
     if (json.contains("error_data") && json["error_data"].isObject()) {
         info.error_data = json["error_data"].toObject();
     }
-    
+
     if (json.contains("timestamp") && json["timestamp"].isString()) {
-        info.timestamp = QDateTime::fromString(json["timestamp"].toString(), Qt::ISODate);
+        info.timestamp =
+            QDateTime::fromString(json["timestamp"].toString(), Qt::ISODate);
     }
-    
+
     if (json.contains("duration_ms") && json["duration_ms"].isDouble()) {
         info.duration = std::chrono::milliseconds(json["duration_ms"].toInt());
     }
-    
-    if (json.contains("recommended_action") && json["recommended_action"].isDouble()) {
-        info.recommended_action = static_cast<TransactionRecoveryAction>(json["recommended_action"].toInt());
+
+    if (json.contains("recommended_action") &&
+        json["recommended_action"].isDouble()) {
+        info.recommended_action = static_cast<TransactionRecoveryAction>(
+            json["recommended_action"].toInt());
     }
-    
+
     if (json.contains("recoverable") && json["recoverable"].isBool()) {
         info.recoverable = json["recoverable"].toBool();
     }
-    
+
     if (json.contains("retryable") && json["retryable"].isBool()) {
         info.retryable = json["retryable"].toBool();
     }
-    
+
     if (json.contains("retry_count") && json["retry_count"].isDouble()) {
         info.retry_count = json["retry_count"].toInt();
     }
-    
+
     if (json.contains("max_retries") && json["max_retries"].isDouble()) {
         info.max_retries = json["max_retries"].toInt();
     }
-    
+
     if (json.contains("root_cause_id") && json["root_cause_id"].isString()) {
         info.root_cause_id = json["root_cause_id"].toString();
     }
-    
+
     if (json.contains("related_errors") && json["related_errors"].isArray()) {
         QJsonArray related_errors_array = json["related_errors"].toArray();
         for (const QJsonValue& value : related_errors_array) {
@@ -134,7 +144,7 @@ qtplugin::expected<TransactionErrorInfo, PluginError> TransactionErrorInfo::from
             }
         }
     }
-    
+
     return info;
 }
 
@@ -149,68 +159,84 @@ QJsonObject TransactionErrorContext::to_json() const {
     json["current_plugin_id"] = current_plugin_id;
     json["operation_parameters"] = operation_parameters;
     json["failed_participant"] = failed_participant;
-    json["transaction_start_time"] = transaction_start_time.toString(Qt::ISODate);
+    json["transaction_start_time"] =
+        transaction_start_time.toString(Qt::ISODate);
     json["error_occurrence_time"] = error_occurrence_time.toString(Qt::ISODate);
     json["timeout_duration_ms"] = static_cast<int>(timeout_duration.count());
-    
+
     QJsonArray participants_array;
     for (const QString& participant : participants) {
         participants_array.append(participant);
     }
     json["participants"] = participants_array;
-    
+
     QJsonArray previous_errors_array;
     for (const TransactionErrorInfo& error : previous_errors) {
         previous_errors_array.append(error.to_json());
     }
     json["previous_errors"] = previous_errors_array;
-    
+
     return json;
 }
 
-qtplugin::expected<TransactionErrorContext, PluginError> TransactionErrorContext::from_json(const QJsonObject& json) {
+qtplugin::expected<TransactionErrorContext, PluginError>
+TransactionErrorContext::from_json(const QJsonObject& json) {
     TransactionErrorContext context;
-    
+
     if (json.contains("transaction_id") && json["transaction_id"].isString()) {
         context.transaction_id = json["transaction_id"].toString();
     }
-    
-    if (json.contains("transaction_state") && json["transaction_state"].isDouble()) {
-        context.transaction_state = static_cast<TransactionState>(json["transaction_state"].toInt());
+
+    if (json.contains("transaction_state") &&
+        json["transaction_state"].isDouble()) {
+        context.transaction_state =
+            static_cast<TransactionState>(json["transaction_state"].toInt());
     }
-    
-    if (json.contains("isolation_level") && json["isolation_level"].isDouble()) {
-        context.isolation_level = static_cast<IsolationLevel>(json["isolation_level"].toInt());
+
+    if (json.contains("isolation_level") &&
+        json["isolation_level"].isDouble()) {
+        context.isolation_level =
+            static_cast<IsolationLevel>(json["isolation_level"].toInt());
     }
-    
-    if (json.contains("current_operation_id") && json["current_operation_id"].isString()) {
+
+    if (json.contains("current_operation_id") &&
+        json["current_operation_id"].isString()) {
         context.current_operation_id = json["current_operation_id"].toString();
     }
-    
-    if (json.contains("current_plugin_id") && json["current_plugin_id"].isString()) {
+
+    if (json.contains("current_plugin_id") &&
+        json["current_plugin_id"].isString()) {
         context.current_plugin_id = json["current_plugin_id"].toString();
     }
-    
-    if (json.contains("operation_parameters") && json["operation_parameters"].isObject()) {
+
+    if (json.contains("operation_parameters") &&
+        json["operation_parameters"].isObject()) {
         context.operation_parameters = json["operation_parameters"].toObject();
     }
-    
-    if (json.contains("failed_participant") && json["failed_participant"].isString()) {
+
+    if (json.contains("failed_participant") &&
+        json["failed_participant"].isString()) {
         context.failed_participant = json["failed_participant"].toString();
     }
-    
-    if (json.contains("transaction_start_time") && json["transaction_start_time"].isString()) {
-        context.transaction_start_time = QDateTime::fromString(json["transaction_start_time"].toString(), Qt::ISODate);
+
+    if (json.contains("transaction_start_time") &&
+        json["transaction_start_time"].isString()) {
+        context.transaction_start_time = QDateTime::fromString(
+            json["transaction_start_time"].toString(), Qt::ISODate);
     }
-    
-    if (json.contains("error_occurrence_time") && json["error_occurrence_time"].isString()) {
-        context.error_occurrence_time = QDateTime::fromString(json["error_occurrence_time"].toString(), Qt::ISODate);
+
+    if (json.contains("error_occurrence_time") &&
+        json["error_occurrence_time"].isString()) {
+        context.error_occurrence_time = QDateTime::fromString(
+            json["error_occurrence_time"].toString(), Qt::ISODate);
     }
-    
-    if (json.contains("timeout_duration_ms") && json["timeout_duration_ms"].isDouble()) {
-        context.timeout_duration = std::chrono::milliseconds(json["timeout_duration_ms"].toInt());
+
+    if (json.contains("timeout_duration_ms") &&
+        json["timeout_duration_ms"].isDouble()) {
+        context.timeout_duration =
+            std::chrono::milliseconds(json["timeout_duration_ms"].toInt());
     }
-    
+
     if (json.contains("participants") && json["participants"].isArray()) {
         QJsonArray participants_array = json["participants"].toArray();
         for (const QJsonValue& value : participants_array) {
@@ -219,19 +245,20 @@ qtplugin::expected<TransactionErrorContext, PluginError> TransactionErrorContext
             }
         }
     }
-    
+
     if (json.contains("previous_errors") && json["previous_errors"].isArray()) {
         QJsonArray previous_errors_array = json["previous_errors"].toArray();
         for (const QJsonValue& value : previous_errors_array) {
             if (value.isObject()) {
-                auto error_result = TransactionErrorInfo::from_json(value.toObject());
+                auto error_result =
+                    TransactionErrorInfo::from_json(value.toObject());
                 if (error_result) {
                     context.previous_errors.push_back(error_result.value());
                 }
             }
         }
     }
-    
+
     return context;
 }
 
@@ -239,47 +266,71 @@ qtplugin::expected<TransactionErrorContext, PluginError> TransactionErrorContext
 
 TransactionErrorClassifier::TransactionErrorClassifier(QObject* parent)
     : QObject(parent) {
-    
     // Initialize default classification rules
-    register_classification_rule(PluginErrorCode::InvalidParameters, TransactionErrorCategory::Validation, TransactionErrorSeverity::Error);
-    register_classification_rule(PluginErrorCode::InvalidState, TransactionErrorCategory::State, TransactionErrorSeverity::Error);
-    register_classification_rule(PluginErrorCode::PluginNotFound, TransactionErrorCategory::Resource, TransactionErrorSeverity::Error);
-    register_classification_rule(PluginErrorCode::NetworkError, TransactionErrorCategory::Network, TransactionErrorSeverity::Error);
-    register_classification_rule(PluginErrorCode::Timeout, TransactionErrorCategory::Timeout, TransactionErrorSeverity::Warning);
-    register_classification_rule(PluginErrorCode::ExecutionFailed, TransactionErrorCategory::Participant, TransactionErrorSeverity::Error);
-    register_classification_rule(PluginErrorCode::CircularDependency, TransactionErrorCategory::Deadlock, TransactionErrorSeverity::Critical);
-    register_classification_rule(PluginErrorCode::ConcurrencyError, TransactionErrorCategory::Concurrency, TransactionErrorSeverity::Error);
-    register_classification_rule(PluginErrorCode::DataCorruption, TransactionErrorCategory::Data, TransactionErrorSeverity::Critical);
-    register_classification_rule(PluginErrorCode::SystemError, TransactionErrorCategory::System, TransactionErrorSeverity::Critical);
-    
-    qCDebug(transactionErrorHandlerLog) << "Created transaction error classifier with default rules";
+    register_classification_rule(PluginErrorCode::InvalidParameters,
+                                 TransactionErrorCategory::Validation,
+                                 TransactionErrorSeverity::Error);
+    register_classification_rule(PluginErrorCode::InvalidState,
+                                 TransactionErrorCategory::State,
+                                 TransactionErrorSeverity::Error);
+    register_classification_rule(PluginErrorCode::PluginNotFound,
+                                 TransactionErrorCategory::Resource,
+                                 TransactionErrorSeverity::Error);
+    register_classification_rule(PluginErrorCode::NetworkError,
+                                 TransactionErrorCategory::Network,
+                                 TransactionErrorSeverity::Error);
+    register_classification_rule(PluginErrorCode::Timeout,
+                                 TransactionErrorCategory::Timeout,
+                                 TransactionErrorSeverity::Warning);
+    register_classification_rule(PluginErrorCode::ExecutionFailed,
+                                 TransactionErrorCategory::Participant,
+                                 TransactionErrorSeverity::Error);
+    register_classification_rule(PluginErrorCode::CircularDependency,
+                                 TransactionErrorCategory::Deadlock,
+                                 TransactionErrorSeverity::Critical);
+    register_classification_rule(PluginErrorCode::ThreadingError,
+                                 TransactionErrorCategory::Concurrency,
+                                 TransactionErrorSeverity::Error);
+    register_classification_rule(PluginErrorCode::SystemError,
+                                 TransactionErrorCategory::Data,
+                                 TransactionErrorSeverity::Critical);
+    register_classification_rule(PluginErrorCode::SystemError,
+                                 TransactionErrorCategory::System,
+                                 TransactionErrorSeverity::Critical);
+
+    qCDebug(transactionErrorHandlerLog)
+        << "Created transaction error classifier with default rules";
 }
 
-TransactionErrorCategory TransactionErrorClassifier::classify_error(const PluginError& error, const TransactionErrorContext& context) const {
+TransactionErrorCategory TransactionErrorClassifier::classify_error(
+    const PluginError& error, const TransactionErrorContext& context) const {
     Q_UNUSED(context)
-    
+
     auto it = m_classification_rules.find(error.code);
     if (it != m_classification_rules.end()) {
         return it->second.first;
     }
-    
+
     return TransactionErrorCategory::Unknown;
 }
 
-TransactionErrorSeverity TransactionErrorClassifier::determine_severity(const PluginError& error, const TransactionErrorContext& context) const {
+TransactionErrorSeverity TransactionErrorClassifier::determine_severity(
+    const PluginError& error, const TransactionErrorContext& context) const {
     Q_UNUSED(context)
-    
+
     auto it = m_classification_rules.find(error.code);
     if (it != m_classification_rules.end()) {
         return it->second.second;
     }
-    
+
     return TransactionErrorSeverity::Error;
 }
 
-TransactionRecoveryAction TransactionErrorClassifier::recommend_action(const TransactionErrorInfo& error_info, const TransactionErrorContext& context) const {
+TransactionRecoveryAction TransactionErrorClassifier::recommend_action(
+    const TransactionErrorInfo& error_info,
+    const TransactionErrorContext& context) const {
     Q_UNUSED(context)
-    
+
     // Check recovery strategies
     for (const auto& strategy : m_recovery_strategies) {
         if (strategy.applicable_category == error_info.category) {
@@ -291,7 +342,7 @@ TransactionRecoveryAction TransactionErrorClassifier::recommend_action(const Tra
             }
         }
     }
-    
+
     // Default recommendations based on category
     switch (error_info.category) {
         case TransactionErrorCategory::Validation:
@@ -325,21 +376,30 @@ TransactionRecoveryAction TransactionErrorClassifier::recommend_action(const Tra
     }
 }
 
-void TransactionErrorClassifier::register_classification_rule(PluginErrorCode error_code, TransactionErrorCategory category, TransactionErrorSeverity severity) {
+void TransactionErrorClassifier::register_classification_rule(
+    PluginErrorCode error_code, TransactionErrorCategory category,
+    TransactionErrorSeverity severity) {
     m_classification_rules[error_code] = std::make_pair(category, severity);
-    
-    qCDebug(transactionErrorHandlerLog) << "Registered classification rule for error code:" << static_cast<int>(error_code) 
-                                        << "category:" << static_cast<int>(category) 
-                                        << "severity:" << static_cast<int>(severity);
+
+    qCDebug(transactionErrorHandlerLog)
+        << "Registered classification rule for error code:"
+        << static_cast<int>(error_code)
+        << "category:" << static_cast<int>(category)
+        << "severity:" << static_cast<int>(severity);
 }
 
-void TransactionErrorClassifier::register_recovery_strategy(const TransactionErrorRecoveryStrategy& strategy) {
+void TransactionErrorClassifier::register_recovery_strategy(
+    const TransactionErrorRecoveryStrategy& strategy) {
     m_recovery_strategies.push_back(strategy);
-    
-    qCDebug(transactionErrorHandlerLog) << "Registered recovery strategy for category:" << static_cast<int>(strategy.applicable_category);
+
+    qCDebug(transactionErrorHandlerLog)
+        << "Registered recovery strategy for category:"
+        << static_cast<int>(strategy.applicable_category);
 }
 
-TransactionErrorAnalysis TransactionErrorClassifier::analyze_transaction_errors(const QString& transaction_id, const std::vector<TransactionErrorInfo>& errors) const {
+TransactionErrorAnalysis TransactionErrorClassifier::analyze_transaction_errors(
+    const QString& transaction_id,
+    const std::vector<TransactionErrorInfo>& errors) const {
     TransactionErrorAnalysis analysis;
     analysis.analysis_id = generate_analysis_id();
     analysis.transaction_id = transaction_id;
@@ -370,18 +430,23 @@ TransactionErrorAnalysis TransactionErrorClassifier::analyze_transaction_errors(
 
         // Collect affected operations and participants
         if (!error.operation_id.isEmpty() &&
-            std::find(analysis.affected_operations.begin(), analysis.affected_operations.end(), error.operation_id) == analysis.affected_operations.end()) {
+            std::find(analysis.affected_operations.begin(),
+                      analysis.affected_operations.end(), error.operation_id) ==
+                analysis.affected_operations.end()) {
             analysis.affected_operations.push_back(error.operation_id);
         }
 
         if (!error.plugin_id.isEmpty() &&
-            std::find(analysis.affected_participants.begin(), analysis.affected_participants.end(), error.plugin_id) == analysis.affected_participants.end()) {
+            std::find(analysis.affected_participants.begin(),
+                      analysis.affected_participants.end(), error.plugin_id) ==
+                analysis.affected_participants.end()) {
             analysis.affected_participants.push_back(error.plugin_id);
         }
     }
 
     // Find primary category (most frequent)
-    auto primary_category_it = std::max_element(category_counts.begin(), category_counts.end(),
+    auto primary_category_it = std::max_element(
+        category_counts.begin(), category_counts.end(),
         [](const auto& a, const auto& b) { return a.second < b.second; });
 
     if (primary_category_it != category_counts.end()) {
@@ -398,45 +463,56 @@ TransactionErrorAnalysis TransactionErrorClassifier::analyze_transaction_errors(
     // Determine recommended action
     if (analysis.critical_errors > 0) {
         analysis.recommended_action = TransactionRecoveryAction::Abort;
-        analysis.recovery_rationale = "Critical errors detected - abort recommended";
+        analysis.recovery_rationale =
+            "Critical errors detected - abort recommended";
     } else if (analysis.has_deadlock_potential) {
         analysis.recommended_action = TransactionRecoveryAction::Rollback;
-        analysis.recovery_rationale = "Deadlock potential detected - rollback recommended";
-    } else if (analysis.retryable_errors > 0 && analysis.retryable_errors == analysis.total_errors) {
+        analysis.recovery_rationale =
+            "Deadlock potential detected - rollback recommended";
+    } else if (analysis.retryable_errors > 0 &&
+               analysis.retryable_errors == analysis.total_errors) {
         analysis.recommended_action = TransactionRecoveryAction::Retry;
-        analysis.recovery_rationale = "All errors are retryable - retry recommended";
+        analysis.recovery_rationale =
+            "All errors are retryable - retry recommended";
     } else {
         analysis.recommended_action = TransactionRecoveryAction::Rollback;
-        analysis.recovery_rationale = "Mixed error types - rollback recommended";
+        analysis.recovery_rationale =
+            "Mixed error types - rollback recommended";
     }
 
     analysis.recovery_confidence = calculate_recovery_confidence(analysis);
 
     // Generate root cause analysis
     if (analysis.has_cascading_errors) {
-        analysis.root_cause_analysis = "Cascading failure pattern detected - likely root cause in first error";
+        analysis.root_cause_analysis =
+            "Cascading failure pattern detected - likely root cause in first "
+            "error";
     } else if (analysis.has_recurring_errors) {
-        analysis.root_cause_analysis = "Recurring error pattern detected - systematic issue likely";
-    } else if (analysis.primary_category == TransactionErrorCategory::Resource) {
+        analysis.root_cause_analysis =
+            "Recurring error pattern detected - systematic issue likely";
+    } else if (analysis.primary_category ==
+               TransactionErrorCategory::Resource) {
         analysis.root_cause_analysis = "Resource availability issues detected";
     } else if (analysis.primary_category == TransactionErrorCategory::Network) {
         analysis.root_cause_analysis = "Network connectivity issues detected";
     } else {
-        analysis.root_cause_analysis = "Multiple error types - complex failure scenario";
+        analysis.root_cause_analysis =
+            "Multiple error types - complex failure scenario";
     }
 
     return analysis;
 }
 
-bool TransactionErrorClassifier::detect_cascading_errors(const std::vector<TransactionErrorInfo>& errors) const {
+bool TransactionErrorClassifier::detect_cascading_errors(
+    const std::vector<TransactionErrorInfo>& errors) const {
     if (errors.size() < 2) {
         return false;
     }
 
     // Check if errors occurred in rapid succession
     for (size_t i = 1; i < errors.size(); ++i) {
-        auto time_diff = errors[i].timestamp.msecsTo(errors[i-1].timestamp);
-        if (std::abs(time_diff) < 1000) { // Within 1 second
+        auto time_diff = errors[i].timestamp.msecsTo(errors[i - 1].timestamp);
+        if (std::abs(time_diff) < 1000) {  // Within 1 second
             return true;
         }
     }
@@ -444,7 +520,8 @@ bool TransactionErrorClassifier::detect_cascading_errors(const std::vector<Trans
     return false;
 }
 
-bool TransactionErrorClassifier::detect_recurring_errors(const std::vector<TransactionErrorInfo>& errors) const {
+bool TransactionErrorClassifier::detect_recurring_errors(
+    const std::vector<TransactionErrorInfo>& errors) const {
     if (errors.size() < 2) {
         return false;
     }
@@ -461,7 +538,8 @@ bool TransactionErrorClassifier::detect_recurring_errors(const std::vector<Trans
     return false;
 }
 
-bool TransactionErrorClassifier::detect_deadlock_potential(const std::vector<TransactionErrorInfo>& errors) const {
+bool TransactionErrorClassifier::detect_deadlock_potential(
+    const std::vector<TransactionErrorInfo>& errors) const {
     // Check for deadlock-related error categories
     for (const auto& error : errors) {
         if (error.category == TransactionErrorCategory::Deadlock ||
@@ -478,20 +556,21 @@ QString TransactionErrorClassifier::generate_analysis_id() const {
     return "analysis_" + QUuid::createUuid().toString(QUuid::WithoutBraces);
 }
 
-double TransactionErrorClassifier::calculate_recovery_confidence(const TransactionErrorAnalysis& analysis) const {
-    double confidence = 0.5; // Base confidence
+double TransactionErrorClassifier::calculate_recovery_confidence(
+    const TransactionErrorAnalysis& analysis) const {
+    double confidence = 0.5;  // Base confidence
 
     // Increase confidence for clear patterns
     if (analysis.retryable_errors == analysis.total_errors) {
-        confidence += 0.3; // All errors retryable
+        confidence += 0.3;  // All errors retryable
     }
 
     if (analysis.critical_errors == 0) {
-        confidence += 0.2; // No critical errors
+        confidence += 0.2;  // No critical errors
     }
 
     if (!analysis.has_cascading_errors && !analysis.has_recurring_errors) {
-        confidence += 0.1; // No complex patterns
+        confidence += 0.1;  // No complex patterns
     }
 
     // Decrease confidence for complex scenarios
@@ -500,7 +579,7 @@ double TransactionErrorClassifier::calculate_recovery_confidence(const Transacti
     }
 
     if (analysis.affected_participants.size() > 3) {
-        confidence -= 0.1; // Many participants affected
+        confidence -= 0.1;  // Many participants affected
     }
 
     return std::max(0.0, std::min(1.0, confidence));
@@ -510,7 +589,6 @@ double TransactionErrorClassifier::calculate_recovery_confidence(const Transacti
 
 TransactionErrorHandler::TransactionErrorHandler(QObject* parent)
     : QObject(parent) {
-
     m_classifier = std::make_unique<TransactionErrorClassifier>(this);
 
     qCDebug(transactionErrorHandlerLog) << "Created transaction error handler";
@@ -532,7 +610,8 @@ qtplugin::expected<void, PluginError> TransactionErrorHandler::initialize() {
 
     m_initialized = true;
 
-    qCDebug(transactionErrorHandlerLog) << "Initialized transaction error handler";
+    qCDebug(transactionErrorHandlerLog)
+        << "Initialized transaction error handler";
 
     return make_success();
 }
@@ -556,4 +635,18 @@ TransactionErrorHandler& TransactionErrorHandler::instance() {
     return handler;
 }
 
-} // namespace qtplugin::workflow::transactions
+void TransactionErrorHandler::initialize_default_classification_rules() {
+    // Default classification rules are already registered in the constructor
+    // This method is a placeholder for future extensibility
+    qCDebug(transactionErrorHandlerLog)
+        << "Initialized default classification rules";
+}
+
+void TransactionErrorHandler::initialize_default_recovery_strategies() {
+    // Default recovery strategies are already registered in the constructor
+    // This method is a placeholder for future extensibility
+    qCDebug(transactionErrorHandlerLog)
+        << "Initialized default recovery strategies";
+}
+
+}  // namespace qtplugin::workflow::transactions

@@ -7,4 +7,3 @@ target("threading_example")
     add_files("threading_example.cpp")
     add_deps("QtForgeCore")
     set_languages("c++20")
-

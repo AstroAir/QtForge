@@ -4,26 +4,26 @@
  * @version 3.2.0
  */
 
+#include <QDateTime>
+#include <QFuture>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QLoggingCategory>
-#include <QTimer>
 #include <QThread>
+#include <QTimer>
 #include <QtConcurrent>
-#include <QFuture>
-#include <QDateTime>
 #include <algorithm>
 #include <atomic>
 #include <chrono>
 #include <future>
+#include <memory>
 #include <qtplugin/communication/message_bus.hpp>
 #include <qtplugin/utils/error_handling.hpp>
 #include <random>
-#include <thread>
 #include <shared_mutex>
+#include <thread>
 #include <unordered_map>
 #include <unordered_set>
-#include <memory>
 
 Q_LOGGING_CATEGORY(messageBusLog, "qtplugin.messagebus")
 
@@ -42,45 +42,43 @@ constexpr int NORMAL_PRIORITY_WEIGHT = 50;
 constexpr int LOW_PRIORITY_WEIGHT = 25;
 
 // Priority weight function removed - was unused
-} // namespace
+}  // namespace
 
 class MessageBus::Impl {
 public:
-        explicit Impl(MessageBus* owner)
-                : cleanup_timer(new QTimer(owner)),
-                    delivery_thread_pool(owner) {
-                message_log.reserve(MessageBus::MAX_LOG_SIZE);
-                delivery_thread_pool.setMaxThreadCount(MAX_CONCURRENT_DELIVERIES);
-        }
+    explicit Impl(MessageBus* owner)
+        : cleanup_timer(new QTimer(owner)), delivery_thread_pool(owner) {
+        message_log.reserve(MessageBus::MAX_LOG_SIZE);
+        delivery_thread_pool.setMaxThreadCount(MAX_CONCURRENT_DELIVERIES);
+    }
 
-        QTimer* cleanup_timer;
-        QThreadPool delivery_thread_pool;
+    QTimer* cleanup_timer;
+    QThreadPool delivery_thread_pool;
 
-        mutable std::shared_mutex subscriptions_mutex;
-        std::unordered_map<std::type_index,
-                                             std::vector<std::shared_ptr<Subscription>>>
-                subscriptions;
-        std::unordered_map<std::string, std::unordered_set<std::type_index>>
-                subscriber_types;
+    mutable std::shared_mutex subscriptions_mutex;
+    std::unordered_map<std::type_index,
+                       std::vector<std::shared_ptr<Subscription>>>
+        subscriptions;
+    std::unordered_map<std::string, std::unordered_set<std::type_index>>
+        subscriber_types;
 
-        mutable std::shared_mutex log_mutex;
-        std::atomic<bool> logging_enabled{false};
-        std::vector<QJsonObject> message_log;
+    mutable std::shared_mutex log_mutex;
+    std::atomic<bool> logging_enabled{false};
+    std::vector<QJsonObject> message_log;
 
-        std::atomic<uint64_t> messages_published{0};
-        std::atomic<uint64_t> messages_delivered{0};
-        std::atomic<uint64_t> delivery_failures{0};
+    std::atomic<uint64_t> messages_published{0};
+    std::atomic<uint64_t> messages_delivered{0};
+    std::atomic<uint64_t> delivery_failures{0};
 };
 
 MessageBus::MessageBus(QObject* parent)
-        : QObject(parent),
-            m_impl(std::make_unique<Impl>(this)) {
+    : QObject(parent), m_impl(std::make_unique<Impl>(this)) {
+    connect(m_impl->cleanup_timer, &QTimer::timeout, this,
+            &MessageBus::cleanup_expired_messages);
+    m_impl->cleanup_timer->start(std::chrono::minutes(5));
 
-        connect(m_impl->cleanup_timer, &QTimer::timeout,
-                        this, &MessageBus::cleanup_expired_messages);
-        m_impl->cleanup_timer->start(std::chrono::minutes(5));
-
-        qCDebug(messageBusLog) << "MessageBus initialized with" << MAX_CONCURRENT_DELIVERIES << "delivery threads";
+    qCDebug(messageBusLog) << "MessageBus initialized with"
+                           << MAX_CONCURRENT_DELIVERIES << "delivery threads";
 }
 
 MessageBus::~MessageBus() = default;
@@ -135,7 +133,8 @@ qtplugin::expected<void, PluginError> MessageBus::unsubscribe(
         }
 
         // Remove empty subscription lists
-        for (auto it = impl.subscriptions.begin(); it != impl.subscriptions.end();) {
+        for (auto it = impl.subscriptions.begin();
+             it != impl.subscriptions.end();) {
             if (it->second.empty()) {
                 it = impl.subscriptions.erase(it);
             } else {
@@ -217,7 +216,8 @@ QJsonObject MessageBus::statistics() const {
          static_cast<qint64>(impl.messages_published.load())},
         {"messages_delivered",
          static_cast<qint64>(impl.messages_delivered.load())},
-        {"delivery_failures", static_cast<qint64>(impl.delivery_failures.load())},
+        {"delivery_failures",
+         static_cast<qint64>(impl.delivery_failures.load())},
         {"logging_enabled", impl.logging_enabled.load()}};
 }
 
@@ -235,7 +235,9 @@ void MessageBus::set_logging_enabled(bool enabled) {
     m_impl->logging_enabled.store(enabled);
 }
 
-bool MessageBus::is_logging_enabled() const { return m_impl->logging_enabled.load(); }
+bool MessageBus::is_logging_enabled() const {
+    return m_impl->logging_enabled.load();
+}
 
 std::vector<QJsonObject> MessageBus::message_log(size_t limit) const {
     auto& impl = *m_impl;
@@ -271,7 +273,8 @@ qtplugin::expected<void, PluginError> MessageBus::publish_impl(
     // Find recipients based on delivery mode
     std::vector<std::string> target_recipients;
     if (mode == DeliveryMode::Broadcast) {
-    target_recipients = get_all_subscribers(std::type_index(typeid(*message)));
+        target_recipients =
+            get_all_subscribers(std::type_index(typeid(*message)));
     } else if (mode == DeliveryMode::Targeted) {
         target_recipients = recipients;
     } else {
@@ -299,7 +302,6 @@ qtplugin::expected<void, PluginError> MessageBus::publish_impl(
 qtplugin::expected<void, PluginError> MessageBus::deliver_sync(
     std::shared_ptr<IMessage> message,
     const std::vector<std::string>& recipients) {
-
     size_t successful_deliveries = 0;
     std::vector<std::string> failed_recipients;
 
@@ -316,10 +318,13 @@ qtplugin::expected<void, PluginError> MessageBus::deliver_sync(
         bool delivered = false;
 
         for (const auto& subscription : subscriptions_it->second) {
-            if (subscription->subscriber_id == recipient && subscription->is_active) {
+            if (subscription->subscriber_id == recipient &&
+                subscription->is_active) {
                 try {
                     // Cast handler back to function type and invoke
-                    auto handler_func = std::any_cast<std::function<qtplugin::expected<void, PluginError>(std::shared_ptr<IMessage>)>>(subscription->handler);
+                    auto handler_func = std::any_cast<
+                        std::function<qtplugin::expected<void, PluginError>(
+                            std::shared_ptr<IMessage>)>>(subscription->handler);
                     auto result = handler_func(message);
                     if (result) {
                         delivered = true;
@@ -328,15 +333,17 @@ qtplugin::expected<void, PluginError> MessageBus::deliver_sync(
 
                         // Update subscription statistics
                         subscription->messages_received++;
-                        subscription->last_message_time = std::chrono::system_clock::now();
+                        subscription->last_message_time =
+                            std::chrono::system_clock::now();
                     }
-                    subscription->last_message_time = std::chrono::system_clock::now();
+                    subscription->last_message_time =
+                        std::chrono::system_clock::now();
 
                     break;  // Only deliver once per recipient
                 } catch (const std::exception& e) {
-                    qCWarning(messageBusLog) << "Error delivering message to"
-                                             << QString::fromStdString(recipient)
-                                             << ":" << e.what();
+                    qCWarning(messageBusLog)
+                        << "Error delivering message to"
+                        << QString::fromStdString(recipient) << ":" << e.what();
                     impl.delivery_failures.fetch_add(1);
                 }
             }
@@ -351,7 +358,8 @@ qtplugin::expected<void, PluginError> MessageBus::deliver_sync(
     if (!failed_recipients.empty()) {
         std::string error_msg = "Failed to deliver to: ";
         for (size_t i = 0; i < failed_recipients.size(); ++i) {
-            if (i > 0) error_msg += ", ";
+            if (i > 0)
+                error_msg += ", ";
             error_msg += failed_recipients[i];
         }
         qCWarning(messageBusLog) << QString::fromStdString(error_msg);
@@ -364,7 +372,6 @@ qtplugin::expected<void, PluginError> MessageBus::deliver_sync(
 qtplugin::expected<void, PluginError> MessageBus::deliver_async(
     std::shared_ptr<IMessage> message,
     const std::vector<std::string>& recipients) {
-
     // Create delivery tasks
     std::vector<QFuture<bool>> delivery_futures;
     delivery_futures.reserve(recipients.size());
@@ -384,34 +391,42 @@ qtplugin::expected<void, PluginError> MessageBus::deliver_async(
         std::shared_ptr<Subscription> target_subscription;
 
         for (const auto& subscription : subscriptions_it->second) {
-            if (subscription->subscriber_id == recipient && subscription->is_active) {
+            if (subscription->subscriber_id == recipient &&
+                subscription->is_active) {
                 target_subscription = subscription;
                 break;
             }
         }
 
         if (target_subscription) {
-            auto future = QtConcurrent::run(&impl.delivery_thread_pool,
+            auto future = QtConcurrent::run(
+                &impl.delivery_thread_pool,
                 [message, target_subscription, impl_ptr = &impl]() -> bool {
                     try {
                         // Cast handler back to function type and invoke
-                        auto handler_func = std::any_cast<std::function<qtplugin::expected<void, PluginError>(std::shared_ptr<IMessage>)>>(target_subscription->handler);
+                        auto handler_func =
+                            std::any_cast<std::function<qtplugin::expected<
+                                void, PluginError>(std::shared_ptr<IMessage>)>>(
+                                target_subscription->handler);
                         auto result = handler_func(message);
 
                         if (result) {
                             // Update statistics atomically
                             impl_ptr->messages_delivered.fetch_add(1);
                             target_subscription->messages_received++;
-                            target_subscription->last_message_time = std::chrono::system_clock::now();
+                            target_subscription->last_message_time =
+                                std::chrono::system_clock::now();
                             return true;
                         } else {
                             impl_ptr->delivery_failures.fetch_add(1);
                             return false;
                         }
                     } catch (const std::exception& e) {
-                        qCWarning(messageBusLog) << "Async delivery error to"
-                                                 << QString::fromStdString(target_subscription->subscriber_id)
-                                                 << ":" << e.what();
+                        qCWarning(messageBusLog)
+                            << "Async delivery error to"
+                            << QString::fromStdString(
+                                   target_subscription->subscriber_id)
+                            << ":" << e.what();
                         impl_ptr->delivery_failures.fetch_add(1);
                         return false;
                     }
@@ -438,13 +453,15 @@ qtplugin::expected<void, PluginError> MessageBus::deliver_async(
 
     qCDebug(messageBusLog) << "Async delivery completed:"
                            << successful_deliveries << "successful,"
-                           << (delivery_futures.size() - successful_deliveries) << "failed";
+                           << (delivery_futures.size() - successful_deliveries)
+                           << "failed";
 
     return make_success();
 }
 
 // Get all subscribers for a message type
-std::vector<std::string> MessageBus::get_all_subscribers(std::type_index message_type) const {
+std::vector<std::string> MessageBus::get_all_subscribers(
+    std::type_index message_type) const {
     auto& impl = *m_impl;
     std::shared_lock lock(impl.subscriptions_mutex);
     std::vector<std::string> result;
@@ -470,7 +487,8 @@ void MessageBus::log_message(const IMessage& message,
 
     QJsonObject log_entry;
     log_entry["timestamp"] = QDateTime::currentDateTime().toString(Qt::ISODate);
-    log_entry["message_type"] = QString::fromStdString(std::string(message.type()));
+    log_entry["message_type"] =
+        QString::fromStdString(std::string(message.type()));
     log_entry["message_id"] = QString::fromStdString(std::string(message.id()));
     log_entry["sender"] = QString::fromStdString(std::string(message.sender()));
     log_entry["priority"] = static_cast<int>(message.priority());
@@ -495,7 +513,8 @@ void MessageBus::log_message(const IMessage& message,
     // Maintain log size limit
     if (impl.message_log.size() > MAX_LOG_SIZE) {
         impl.message_log.erase(impl.message_log.begin(),
-                           impl.message_log.begin() + (impl.message_log.size() - MAX_LOG_SIZE));
+                               impl.message_log.begin() +
+                                   (impl.message_log.size() - MAX_LOG_SIZE));
     }
 }
 
@@ -510,9 +529,12 @@ void MessageBus::cleanup_expired_messages() {
     size_t removed_subscriptions = 0;
 
     for (auto& [type, subscriptions] : impl.subscriptions) {
-        auto it = std::remove_if(subscriptions.begin(), subscriptions.end(),
-            [now, SUBSCRIPTION_TIMEOUT](const std::shared_ptr<Subscription>& sub) {
-                // Remove inactive subscriptions that haven't received messages recently
+        auto it = std::remove_if(
+            subscriptions.begin(), subscriptions.end(),
+            [now,
+             SUBSCRIPTION_TIMEOUT](const std::shared_ptr<Subscription>& sub) {
+                // Remove inactive subscriptions that haven't received messages
+                // recently
                 return !sub->is_active ||
                        (now - sub->last_message_time) > SUBSCRIPTION_TIMEOUT;
             });
@@ -522,7 +544,8 @@ void MessageBus::cleanup_expired_messages() {
     }
 
     // Remove empty subscription lists
-    for (auto it = impl.subscriptions.begin(); it != impl.subscriptions.end();) {
+    for (auto it = impl.subscriptions.begin();
+         it != impl.subscriptions.end();) {
         if (it->second.empty()) {
             it = impl.subscriptions.erase(it);
         } else {
@@ -531,7 +554,8 @@ void MessageBus::cleanup_expired_messages() {
     }
 
     if (removed_subscriptions > 0) {
-        qCDebug(messageBusLog) << "Cleanup removed" << removed_subscriptions << "expired subscriptions";
+        qCDebug(messageBusLog) << "Cleanup removed" << removed_subscriptions
+                               << "expired subscriptions";
     }
 }
 
@@ -543,31 +567,41 @@ QJsonObject MessageBus::get_detailed_statistics() const {
     QJsonObject stats;
 
     // Basic statistics
-    stats["total_subscriptions"] = static_cast<int>(get_total_subscription_count());
-    stats["active_subscriptions"] = static_cast<int>(get_active_subscription_count());
-    stats["unique_subscribers"] = static_cast<int>(impl.subscriber_types.size());
+    stats["total_subscriptions"] =
+        static_cast<int>(get_total_subscription_count());
+    stats["active_subscriptions"] =
+        static_cast<int>(get_active_subscription_count());
+    stats["unique_subscribers"] =
+        static_cast<int>(impl.subscriber_types.size());
     stats["message_types"] = static_cast<int>(impl.subscriptions.size());
-    stats["messages_published"] = static_cast<qint64>(impl.messages_published.load());
-    stats["messages_delivered"] = static_cast<qint64>(impl.messages_delivered.load());
-    stats["delivery_failures"] = static_cast<qint64>(impl.delivery_failures.load());
+    stats["messages_published"] =
+        static_cast<qint64>(impl.messages_published.load());
+    stats["messages_delivered"] =
+        static_cast<qint64>(impl.messages_delivered.load());
+    stats["delivery_failures"] =
+        static_cast<qint64>(impl.delivery_failures.load());
 
     // Performance metrics
     double delivery_success_rate = 0.0;
     auto total_messages = impl.messages_published.load();
     if (total_messages > 0) {
-        delivery_success_rate = static_cast<double>(impl.messages_delivered.load()) / total_messages * 100.0;
+        delivery_success_rate =
+            static_cast<double>(impl.messages_delivered.load()) /
+            total_messages * 100.0;
     }
     stats["delivery_success_rate_percent"] = delivery_success_rate;
 
     // Thread pool statistics
-    stats["delivery_thread_pool_size"] = static_cast<int>(MAX_CONCURRENT_DELIVERIES);
+    stats["delivery_thread_pool_size"] =
+        static_cast<int>(MAX_CONCURRENT_DELIVERIES);
     stats["active_threads"] = impl.delivery_thread_pool.activeThreadCount();
 
     // Message type breakdown
     QJsonObject type_stats;
     for (const auto& [type, subscriptions] : impl.subscriptions) {
         QJsonObject type_info;
-        type_info["subscription_count"] = static_cast<int>(subscriptions.size());
+        type_info["subscription_count"] =
+            static_cast<int>(subscriptions.size());
 
         int active_count = 0;
         for (const auto& sub : subscriptions) {

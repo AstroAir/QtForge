@@ -10,9 +10,9 @@ qtforge_core_sources = [
 # Add conditional sources based on what actually exists
 conditional_sources = [
   'core/plugin_interface.cpp',
-  # 'core/plugin_manager.cpp',  # Temporarily disabled due to Qt MOC issues
+  'core/plugin_manager.cpp',  # Re-enabled - should work with other build systems
   # 'core/plugin_manager_minimal.cpp',  # Temporarily disabled - incomplete type issues
-  'core/plugin_manager_stub.cpp',  # Stub to provide linking symbols
+  # 'core/plugin_manager_stub.cpp',  # Stub no longer needed
   # 'core/plugin_manager_moc.cpp',  # Removed - MOC implementation too complex
   'core/plugin_manager_factory_stub.cpp',  # Temporary stub for factory function
   'core/plugin_loader.cpp',
@@ -23,6 +23,11 @@ conditional_sources = [
   'monitoring/plugin_metrics_collector.cpp',
   'communication/message_bus.cpp',
   'communication/request_response_system.cpp',
+  'communication/factory.cpp',
+  'communication/message_publisher.cpp',
+  'communication/plugin_service_contracts.cpp',
+  'communication/plugin_service_discovery.cpp',
+  'communication/typed_event_system.cpp',
 
   'managers/configuration_manager.cpp',
   'managers/components/configuration_storage.cpp',
@@ -30,25 +35,57 @@ conditional_sources = [
   'managers/components/configuration_merger.cpp',
   'managers/components/configuration_watcher.cpp',
   'managers/logging_manager.cpp',
-  # 'managers/plugin_version_manager.cpp',  # Temporarily removed due to MOC issues
-  'managers/plugin_version_manager_stub.cpp',  # Temporary stub to provide factory function
+  'managers/plugin_version_manager.cpp',  # Re-enabled - should work with other build systems
+  # 'managers/plugin_version_manager_stub.cpp',  # Stub no longer needed
   'managers/resource_manager.cpp',
   'managers/resource_lifecycle.cpp',
   'managers/components/resource_pool.cpp',
   'managers/components/resource_allocator.cpp',
   'managers/resource_monitor.cpp',
-  # Advanced plugin system sources (v3.1.0) - temporarily disabled due to MOC issues
-  # 'communication/plugin_service_contracts.cpp',
-  # 'core/advanced_plugin_interface.cpp',
-  # 'orchestration/plugin_orchestrator.cpp', - moved to workflow module
-  # 'composition/plugin_composition.cpp', - moved to workflow module
-  # 'transactions/plugin_transaction_manager.cpp',
-  # Version management sources (v3.1.0) - temporarily disabled due to conflicts
-  # 'managers/plugin_version_manager.cpp',
-  # Dynamic plugin system sources (v3.2.0) - temporarily disabled due to MOC issues
-  # 'core/dynamic_plugin_interface.cpp',
-  # Multi-language plugin bridges (v3.2.0) - temporarily disabled due to MOC issues
-  # 'bridges/python_plugin_bridge.cpp',
+  # Advanced plugin system sources (v3.1.0)
+  'communication/plugin_service_contracts.cpp',
+  'core/advanced_plugin_interface.cpp',
+  # Workflow module sources (moved from orchestration/composition)
+  'workflow/error_recovery.cpp',
+  'workflow/rollback_manager.cpp',
+  'workflow/state_persistence.cpp',
+  'workflow/orchestration.cpp',
+  'workflow/progress_tracking.cpp',
+  'workflow/transactions.cpp',
+  'workflow/composition.cpp',
+  'workflow/integration.cpp',
+  'workflow/workflow_manager.cpp',
+  'workflow/progress_monitoring.cpp',
+  'workflow/progress_message_bus.cpp',
+  'workflow/transaction_error_handler.cpp',
+  'workflow/workflow_validator.cpp',
+  'transactions/plugin_transaction_manager.cpp',
+  # Version management sources (v3.1.0)
+  'managers/plugin_version_manager.cpp',
+  # Dynamic plugin system sources (v3.2.0)
+  'core/dynamic_plugin_interface.cpp',
+  'core/plugin_capability_discovery.cpp',
+  'core/plugin_property_system.cpp',
+  # Multi-language plugin bridges (v3.2.0)
+  'bridges/python_plugin_bridge.cpp',
+  'bridges/lua_plugin_bridge.cpp',
+  # Remote plugin system
+  'remote/http_plugin_loader.cpp',
+  'remote/plugin_download_manager.cpp',
+  'remote/remote_plugin_configuration.cpp',
+  'remote/remote_plugin_discovery.cpp',
+  'remote/remote_plugin_loader.cpp',
+  'remote/remote_plugin_manager.cpp',
+  'remote/remote_plugin_manager_extension.cpp',
+  'remote/remote_plugin_registry_extension.cpp',
+  'remote/remote_plugin_source.cpp',
+  'remote/remote_plugin_validator.cpp',
+  'remote/unified_plugin_manager.cpp',
+  # Security components
+  'security/components/permission_manager.cpp',
+  'security/components/security_policy_engine.cpp',
+  'security/components/security_validator.cpp',
+  'security/components/signature_verifier.cpp'
 
 ]
 
@@ -116,9 +153,8 @@ endforeach
 
 # All core library headers (combine MOC headers with other headers)
 qtforge_core_headers = qtforge_existing_moc_headers + [
-  '../include/qtplugin/core/plugin_interface.hpp',
-  '../include/qtplugin/core/plugin_loader.hpp',
-  '../include/qtplugin/core/service_plugin_interface.hpp',
+  '../include/qtplugin/interfaces/core/plugin_interface.hpp',
+  '../include/qtplugin/interfaces/core/service_plugin_interface.hpp',
   '../include/qtplugin/utils/version.hpp',
   '../include/qtplugin/utils/error_handling.hpp',
 
@@ -133,12 +169,12 @@ conditional_headers = [
   '../include/qtplugin/managers/resource_pools.hpp',
   '../include/qtplugin/managers/components/configuration_validator.hpp',
   # Advanced plugin system headers (v3.1.0)
-  '../include/qtplugin/core/advanced_plugin_interface.hpp',
+  '../include/qtplugin/interfaces/core/advanced_plugin_interface.hpp',
   '../include/qtplugin/orchestration/plugin_orchestrator.hpp',
   '../include/qtplugin/composition/plugin_composition.hpp',
   '../include/qtplugin/workflow/transactions.hpp',
   # Dynamic plugin system headers (v3.2.0)
-  '../include/qtplugin/core/dynamic_plugin_interface.hpp',
+  '../include/qtplugin/interfaces/core/dynamic_plugin_interface.hpp',
   # Multi-language plugin bridge headers (v3.2.0)
   '../include/qtplugin/bridges/python_plugin_bridge.hpp',
 

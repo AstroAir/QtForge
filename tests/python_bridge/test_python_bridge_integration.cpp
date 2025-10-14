@@ -3,23 +3,22 @@
  * @brief Integration tests for Python bridge functionality
  */
 
-#include <QtTest/QtTest>
 #include <QCoreApplication>
+#include <QDateTime>
 #include <QDir>
-#include <QTemporaryDir>
+#include <QElapsedTimer>
+#include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <QJsonArray>
-#include <QTimer>
-#include <QThread>
-#include <QDateTime>
-#include <QElapsedTimer>
 #include <QProcess>
+#include <QTemporaryDir>
+#include <QThread>
+#include <QTimer>
+#include <QtTest/QtTest>
 
 #include <qtplugin/bridges/python_plugin_bridge.hpp>
 
-class TestPythonBridgeIntegration : public QObject
-{
+class TestPythonBridgeIntegration : public QObject {
     Q_OBJECT
 
 private slots:
@@ -56,16 +55,19 @@ private:
     void createComplexTestPlugin();
     void createDataProcessingPlugin();
     void createConfigurationPlugin();
+    bool isPythonAvailable();
 
     QTemporaryDir* m_tempDir;
     QString m_complexPluginPath;
     QString m_dataPluginPath;
     QString m_configPluginPath;
     std::vector<std::unique_ptr<qtplugin::PythonPluginBridge>> m_bridges;
+    bool m_pythonAvailable;
 };
 
-void TestPythonBridgeIntegration::initTestCase()
-{
+void TestPythonBridgeIntegration::initTestCase() {
+    m_pythonAvailable = isPythonAvailable();
+
     m_tempDir = new QTemporaryDir();
     QVERIFY(m_tempDir->isValid());
 
@@ -74,18 +76,17 @@ void TestPythonBridgeIntegration::initTestCase()
     createConfigurationPlugin();
 }
 
-void TestPythonBridgeIntegration::cleanupTestCase()
-{
-    delete m_tempDir;
-}
+void TestPythonBridgeIntegration::cleanupTestCase() { delete m_tempDir; }
 
-void TestPythonBridgeIntegration::init()
-{
+void TestPythonBridgeIntegration::init() {
+    if (!m_pythonAvailable) {
+        QSKIP("Python not available for testing");
+    }
+
     m_bridges.clear();
 }
 
-void TestPythonBridgeIntegration::cleanup()
-{
+void TestPythonBridgeIntegration::cleanup() {
     for (auto& bridge : m_bridges) {
         if (bridge) {
             bridge->shutdown();
@@ -94,8 +95,7 @@ void TestPythonBridgeIntegration::cleanup()
     m_bridges.clear();
 }
 
-void TestPythonBridgeIntegration::createComplexTestPlugin()
-{
+void TestPythonBridgeIntegration::createComplexTestPlugin() {
     QString pluginContent = R"(
 import json
 import time
@@ -232,8 +232,7 @@ def create_plugin():
     file.close();
 }
 
-void TestPythonBridgeIntegration::createDataProcessingPlugin()
-{
+void TestPythonBridgeIntegration::createDataProcessingPlugin() {
     QString pluginContent = R"(
 import json
 import hashlib
@@ -288,8 +287,7 @@ def create_plugin():
     file.close();
 }
 
-void TestPythonBridgeIntegration::createConfigurationPlugin()
-{
+void TestPythonBridgeIntegration::createConfigurationPlugin() {
     QString pluginContent = R"(
 import json
 import os
@@ -331,10 +329,10 @@ def create_plugin():
     file.close();
 }
 
-void TestPythonBridgeIntegration::testCompletePluginLifecycle()
-{
+void TestPythonBridgeIntegration::testCompletePluginLifecycle() {
     // Create and initialize bridge
-    auto bridge = std::make_unique<qtplugin::PythonPluginBridge>(m_complexPluginPath);
+    auto bridge =
+        std::make_unique<qtplugin::PythonPluginBridge>(m_complexPluginPath);
     QVERIFY(bridge->initialize().has_value());
 
     // Test initial state
@@ -365,6 +363,32 @@ void TestPythonBridgeIntegration::testCompletePluginLifecycle()
     QCOMPARE(bridge->state(), qtplugin::PluginState::Unloaded);
 
     m_bridges.push_back(std::move(bridge));
+}
+
+bool TestPythonBridgeIntegration::isPythonAvailable() {
+    QProcess process;
+    QStringList python_names = {"python3",   "python",     "python3.8",
+                                "python3.9", "python3.10", "python3.11",
+                                "python3.12"};
+
+    for (const QString& name : python_names) {
+        process.start(name, QStringList() << "--version");
+
+        if (!process.waitForFinished(3000)) {
+            continue;
+        }
+
+        if (process.exitCode() != 0) {
+            continue;
+        }
+
+        QString output = process.readAllStandardOutput();
+        if (output.contains("Python", Qt::CaseInsensitive)) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 QTEST_MAIN(TestPythonBridgeIntegration)

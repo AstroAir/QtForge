@@ -7,4 +7,3 @@ target("security_example")
     add_files("security_example.cpp")
     add_deps("QtForgeCore")
     set_languages("c++20")
-

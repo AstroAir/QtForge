@@ -277,7 +277,8 @@ public:
      * @return Success or PluginError
      */
     qtplugin::expected<QJsonObject, PluginError> set_plugin_property(
-        const QString& plugin_id, const QString& property_name, const QJsonValue& value);
+        const QString& plugin_id, const QString& property_name,
+        const QJsonValue& value);
 
     /**
      * @brief Check if environment is running
@@ -512,6 +513,24 @@ public:
     qtplugin::PluginCapabilities capabilities() const noexcept override;
 
     /**
+     * @brief Get plugin metadata
+     * @return Plugin metadata
+     */
+    qtplugin::PluginMetadata metadata() const override;
+
+    /**
+     * @brief Get plugin priority
+     * @return Plugin priority
+     */
+    qtplugin::PluginPriority priority() const noexcept override;
+
+    /**
+     * @brief Check if plugin is initialized
+     * @return True if initialized
+     */
+    bool is_initialized() const noexcept override;
+
+    /**
      * @brief Configure the plugin
      *
      * Applies configuration settings to the plugin. The configuration
@@ -621,6 +640,41 @@ public:
      */
     qtplugin::expected<void, qtplugin::PluginError> handle_dependency_change(
         const QString& dependency_id, qtplugin::PluginState new_state);
+
+    // === IAdvancedPlugin Implementation ===
+
+    qtplugin::expected<void, PluginError> apply_configuration(
+        const QJsonObject& config) override;
+    QJsonObject get_configuration() const override;
+    qtplugin::expected<QVariant, PluginError> handle_event(
+        const QString& event_type, const QVariant& event_data) override;
+    QStringList supported_event_types() const override;
+    qtplugin::expected<void, PluginError> pre_initialize() override;
+    qtplugin::expected<void, PluginError> post_initialize() override;
+    qtplugin::expected<void, PluginError> pre_shutdown() override;
+    qtplugin::expected<void, PluginError> post_shutdown() override;
+    QJsonObject get_resource_usage() const override;
+    qtplugin::expected<void, PluginError> set_resource_limits(
+        const QJsonObject& limits) override;
+    qtplugin::expected<QVariant, PluginError> send_message(
+        const QString& target_plugin_id, const QVariant& message) override;
+    qtplugin::expected<QVariant, PluginError> receive_message(
+        const QString& sender_plugin_id, const QVariant& message) override;
+    qtplugin::expected<QJsonObject, PluginError> save_state() override;
+    qtplugin::expected<void, PluginError> restore_state(
+        const QJsonObject& state) override;
+    QStringList get_capabilities() const override;
+    bool has_capability(const QString& capability) const override;
+    qtplugin::expected<void, PluginError> register_service(
+        const QString& service_name,
+        const QVariant& service_interface) override;
+    qtplugin::expected<void, PluginError> unregister_service(
+        const QString& service_name) override;
+    QStringList get_provided_services() const override;
+    QJsonObject get_performance_metrics() const override;
+    void reset_metrics() override;
+    qtplugin::expected<bool, PluginError> validate_integrity() const override;
+    QJsonObject get_health_status() const override;
 
     // === IDynamicPlugin Implementation ===
 
@@ -879,7 +933,8 @@ public:
      * @brief Get service contracts provided by this plugin
      * @return Vector of service contracts
      */
-    std::vector<contracts::ServiceContract> get_service_contracts() const override;
+    std::vector<contracts::ServiceContract> get_service_contracts()
+        const override;
 
     /**
      * @brief Call a service method
@@ -892,7 +947,8 @@ public:
     qtplugin::expected<QJsonObject, qtplugin::PluginError> call_service(
         const QString& service_name, const QString& method_name,
         const QJsonObject& parameters,
-        std::chrono::milliseconds timeout = std::chrono::milliseconds(5000)) override;
+        std::chrono::milliseconds timeout =
+            std::chrono::milliseconds(5000)) override;
 
     /**
      * @brief Call a service method asynchronously
@@ -904,8 +960,9 @@ public:
      */
     std::future<qtplugin::expected<QJsonObject, qtplugin::PluginError>>
     call_service_async(const QString& service_name, const QString& method_name,
-                      const QJsonObject& parameters,
-                      std::chrono::milliseconds timeout = std::chrono::milliseconds(5000)) override;
+                       const QJsonObject& parameters,
+                       std::chrono::milliseconds timeout =
+                           std::chrono::milliseconds(5000)) override;
 
     /**
      * @brief Handle incoming service call
@@ -948,9 +1005,12 @@ private:
     std::vector<QString> m_available_methods;     ///< Available method names
     std::vector<QString> m_available_properties;  ///< Available property names
     QJsonObject m_configuration;                  ///< Current configuration
-    QString m_current_plugin_id;                  ///< Current loaded plugin ID in Python environment
-    QHash<QString, QString> m_loaded_plugins;     ///< Map of plugin IDs to their paths
-    QHash<QString, std::function<void(const QString&, const QJsonObject&)>> m_event_callbacks;  ///< Event callbacks
+    QString m_current_plugin_id;  ///< Current loaded plugin ID in Python
+                                  ///< environment
+    QHash<QString, QString>
+        m_loaded_plugins;  ///< Map of plugin IDs to their paths
+    QHash<QString, std::function<void(const QString&, const QJsonObject&)>>
+        m_event_callbacks;  ///< Event callbacks
 
     /**
      * @brief Load plugin metadata

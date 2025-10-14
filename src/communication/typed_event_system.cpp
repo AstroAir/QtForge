@@ -33,27 +33,28 @@ public:
         queued_timer = new QTimer(q);
         deferred_timer = new QTimer(q);
         batched_timer = new QTimer(q);
-        
+
         // Connect timer signals
-        QObject::connect(queued_timer, &QTimer::timeout, 
-                        q, &TypedEventSystem::process_queued_events);
-        QObject::connect(deferred_timer, &QTimer::timeout,
-                        q, &TypedEventSystem::process_deferred_events);
-        QObject::connect(batched_timer, &QTimer::timeout,
-                        q, &TypedEventSystem::process_batched_events);
-        
+        QObject::connect(queued_timer, &QTimer::timeout, q,
+                         &TypedEventSystem::process_queued_events);
+        QObject::connect(deferred_timer, &QTimer::timeout, q,
+                         &TypedEventSystem::process_deferred_events);
+        QObject::connect(batched_timer, &QTimer::timeout, q,
+                         &TypedEventSystem::process_batched_events);
+
         // Configure timers
         queued_timer->setInterval(10);  // Process queued events every 10ms
-        deferred_timer->setInterval(100);  // Process deferred events every 100ms
-        batched_timer->setInterval(50);   // Process batched events every 50ms
-        
+        deferred_timer->setInterval(
+            100);                        // Process deferred events every 100ms
+        batched_timer->setInterval(50);  // Process batched events every 50ms
+
         queued_timer->start();
         deferred_timer->start();
         batched_timer->start();
     }
-    
+
     ~Private() = default;
-    
+
     struct EventSubscription {
         QString subscription_id;
         QString subscriber_id;
@@ -64,7 +65,7 @@ public:
         bool enabled = true;
         std::chrono::system_clock::time_point created_at;
     };
-    
+
     struct PendingEvent {
         std::unique_ptr<IEvent> event;
         EventDeliveryMode delivery_mode;
@@ -72,35 +73,37 @@ public:
         std::vector<QString> recipients;
         std::chrono::system_clock::time_point created_at;
     };
-    
+
     TypedEventSystem* q;
-    
+
     // Event storage
     mutable QMutex events_mutex;
     std::queue<PendingEvent> queued_events;
     std::queue<PendingEvent> deferred_events;
     std::vector<PendingEvent> batched_events;
-    
+
     // Subscription management
     mutable QMutex subscriptions_mutex;
     std::unordered_map<QString, EventSubscription> subscriptions;
-    std::unordered_map<QString, std::vector<QString>> type_index;  // event_type -> subscription_ids
-    std::unordered_map<QString, std::vector<QString>> subscriber_index;  // subscriber_id -> subscription_ids
-    
+    std::unordered_map<QString, std::vector<QString>>
+        type_index;  // event_type -> subscription_ids
+    std::unordered_map<QString, std::vector<QString>>
+        subscriber_index;  // subscriber_id -> subscription_ids
+
     // Statistics
     mutable QMutex stats_mutex;
     EventStatistics statistics;
-    
+
     // Event history
     bool history_enabled = false;
     size_t max_history_size = 1000;
     std::vector<QJsonObject> event_history;
-    
+
     // Timers
     QTimer* queued_timer;
     QTimer* deferred_timer;
     QTimer* batched_timer;
-    
+
     // Helper methods
     QString generate_subscription_id() {
         return QUuid::createUuid().toString(QUuid::WithoutBraces);
@@ -115,10 +118,10 @@ public:
         // Fallback to generating a new ID
         return QUuid::createUuid().toString();
     }
-    
+
     std::vector<QString> find_matching_subscriptions(const IEvent& event) {
         std::vector<QString> matching_subscriptions;
-        
+
         QString event_type = event.event_type();
         auto type_it = type_index.find(event_type);
         if (type_it != type_index.end()) {
@@ -126,33 +129,33 @@ public:
                 auto sub_it = subscriptions.find(subscription_id);
                 if (sub_it != subscriptions.end() && sub_it->second.enabled) {
                     const auto& subscription = sub_it->second;
-                    
+
                     // Check priority
                     if (event.priority() < subscription.min_priority) {
                         continue;
                     }
-                    
+
                     // Check filter
                     if (subscription.filter && !subscription.filter(event)) {
                         continue;
                     }
-                    
+
                     matching_subscriptions.push_back(subscription_id);
                 }
             }
         }
-        
+
         return matching_subscriptions;
     }
-    
-    EventDeliveryResult deliver_to_subscriptions(const IEvent& event,
-                                                 const std::vector<QString>& subscription_ids) {
+
+    EventDeliveryResult deliver_to_subscriptions(
+        const IEvent& event, const std::vector<QString>& subscription_ids) {
         EventDeliveryResult result;
         result.event_id = get_event_id(event);
         result.success = true;
-        
+
         auto start_time = std::chrono::steady_clock::now();
-        
+
         for (const QString& subscription_id : subscription_ids) {
             auto sub_it = subscriptions.find(subscription_id);
             if (sub_it != subscriptions.end()) {
@@ -160,59 +163,65 @@ public:
                     sub_it->second.handler(event);
                     result.delivered_count++;
                     result.delivered_to.push_back(sub_it->second.subscriber_id);
-                    
+
                     emit q->event_delivered(result.event_id,
-                                          sub_it->second.subscriber_id, true);
+                                            sub_it->second.subscriber_id, true);
                 } catch (const std::exception& e) {
                     result.failed_count++;
                     result.failed_to.push_back(sub_it->second.subscriber_id);
                     result.error_message = QString::fromStdString(e.what());
-                    
-                    emit q->event_delivered(result.event_id,
-                                          sub_it->second.subscriber_id, false);
-                    
-                    qCWarning(typedEventLog) << "Event delivery failed:" << e.what();
+
+                    emit q->event_delivered(
+                        result.event_id, sub_it->second.subscriber_id, false);
+
+                    qCWarning(typedEventLog)
+                        << "Event delivery failed:" << e.what();
                 }
             }
         }
-        
+
         auto end_time = std::chrono::steady_clock::now();
-        result.delivery_time = std::chrono::duration_cast<std::chrono::milliseconds>(
-            end_time - start_time);
-        
+        result.delivery_time =
+            std::chrono::duration_cast<std::chrono::milliseconds>(end_time -
+                                                                  start_time);
+
         if (result.failed_count > 0) {
             result.success = false;
         }
-        
+
         return result;
     }
-    
+
     void record_event_in_history(const IEvent& event) {
-        if (!history_enabled) return;
-        
+        if (!history_enabled)
+            return;
+
         QJsonObject event_json = event.to_json();
-        event_json["recorded_at"] = QDateTime::currentDateTime().toString(Qt::ISODate);
-        
+        event_json["recorded_at"] =
+            QDateTime::currentDateTime().toString(Qt::ISODate);
+
         event_history.push_back(event_json);
-        
+
         // Maintain history size limit
         if (event_history.size() > max_history_size) {
-            event_history.erase(event_history.begin(), 
-                               event_history.begin() + (event_history.size() - max_history_size));
+            event_history.erase(event_history.begin(),
+                                event_history.begin() +
+                                    (event_history.size() - max_history_size));
         }
     }
-    
+
     void update_statistics(const EventDeliveryResult& result) {
         QMutexLocker locker(&stats_mutex);
-        
+
         statistics.total_events_published++;
         statistics.total_events_delivered += result.delivered_count;
         statistics.total_events_failed += result.failed_count;
 
         // Update average delivery time
         if (statistics.total_events_published > 0) {
-            auto total_time = statistics.average_delivery_time.count() * (statistics.total_events_published - 1) +
-                             result.delivery_time.count();
+            auto total_time = statistics.average_delivery_time.count() *
+                                  (statistics.total_events_published - 1) +
+                              result.delivery_time.count();
             statistics.average_delivery_time = std::chrono::milliseconds(
                 total_time / statistics.total_events_published);
         }
@@ -229,35 +238,39 @@ TypedEventSystem::~TypedEventSystem() {
     qCDebug(typedEventLog) << "TypedEventSystem destroyed";
 }
 
-qtplugin::expected<EventDeliveryResult, PluginError> 
+qtplugin::expected<EventDeliveryResult, PluginError>
 TypedEventSystem::publish_event(std::unique_ptr<IEvent> event,
                                 EventDeliveryMode delivery_mode,
                                 EventRoutingMode routing_mode,
                                 const std::vector<QString>& recipients) {
     if (!event) {
-        return qtplugin::unexpected(PluginError(PluginErrorCode::InvalidArgument, "Event is null"));
+        return qtplugin::unexpected(
+            PluginError(PluginErrorCode::InvalidArgument, "Event is null"));
     }
-    
-    qCDebug(typedEventLog) << "Publishing event:" << event->event_type() 
-                          << "from" << event->source();
-    
-    emit event_published(event->event_type(), event->source(), d->get_event_id(*event));
-    
+
+    qCDebug(typedEventLog) << "Publishing event:" << event->event_type()
+                           << "from" << event->source();
+
+    emit event_published(event->event_type(), event->source(),
+                         d->get_event_id(*event));
+
     // Record in history
     d->record_event_in_history(*event);
-    
+
     EventDeliveryResult result;
-    
+
     switch (delivery_mode) {
         case EventDeliveryMode::Immediate: {
             QMutexLocker locker(&d->subscriptions_mutex);
-            auto matching_subscriptions = d->find_matching_subscriptions(*event);
+            auto matching_subscriptions =
+                d->find_matching_subscriptions(*event);
             locker.unlock();
-            
-            result = d->deliver_to_subscriptions(*event, matching_subscriptions);
+
+            result =
+                d->deliver_to_subscriptions(*event, matching_subscriptions);
             break;
         }
-        
+
         case EventDeliveryMode::Queued: {
             QMutexLocker locker(&d->events_mutex);
             Private::PendingEvent pending;
@@ -266,14 +279,14 @@ TypedEventSystem::publish_event(std::unique_ptr<IEvent> event,
             pending.routing_mode = routing_mode;
             pending.recipients = recipients;
             pending.created_at = std::chrono::system_clock::now();
-            
+
             d->queued_events.push(std::move(pending));
-            
+
             result.success = true;
             result.event_id = d->get_event_id(*event);
             break;
         }
-        
+
         case EventDeliveryMode::Deferred: {
             QMutexLocker locker(&d->events_mutex);
             Private::PendingEvent pending;
@@ -282,14 +295,14 @@ TypedEventSystem::publish_event(std::unique_ptr<IEvent> event,
             pending.routing_mode = routing_mode;
             pending.recipients = recipients;
             pending.created_at = std::chrono::system_clock::now();
-            
+
             d->deferred_events.push(std::move(pending));
-            
+
             result.success = true;
             result.event_id = d->get_event_id(*event);
             break;
         }
-        
+
         case EventDeliveryMode::Batched: {
             QMutexLocker locker(&d->events_mutex);
             Private::PendingEvent pending;
@@ -298,15 +311,15 @@ TypedEventSystem::publish_event(std::unique_ptr<IEvent> event,
             pending.routing_mode = routing_mode;
             pending.recipients = recipients;
             pending.created_at = std::chrono::system_clock::now();
-            
+
             d->batched_events.push_back(std::move(pending));
-            
+
             result.success = true;
             result.event_id = d->get_event_id(*event);
             break;
         }
     }
-    
+
     d->update_statistics(result);
     return result;
 }
@@ -316,10 +329,12 @@ TypedEventSystem::publish_event_async(std::unique_ptr<IEvent> event,
                                       EventDeliveryMode delivery_mode,
                                       EventRoutingMode routing_mode,
                                       const std::vector<QString>& recipients) {
-    return std::async(std::launch::async, [this, event = std::move(event),
-                      delivery_mode, routing_mode, recipients]() mutable {
-        return publish_event(std::move(event), delivery_mode, routing_mode, recipients);
-    });
+    return std::async(std::launch::async,
+                      [this, event = std::move(event), delivery_mode,
+                       routing_mode, recipients]() mutable {
+                          return publish_event(std::move(event), delivery_mode,
+                                               routing_mode, recipients);
+                      });
 }
 
 std::vector<qtplugin::expected<EventDeliveryResult, PluginError>>
@@ -335,14 +350,14 @@ TypedEventSystem::publish_batch(std::vector<std::unique_ptr<IEvent>> events,
     return results;
 }
 
-qtplugin::expected<QString, PluginError>
-TypedEventSystem::subscribe(const QString& subscriber_id,
-                           const QString& event_type,
-                           std::function<void(const IEvent&)> handler,
-                           std::function<bool(const IEvent&)> filter,
-                           EventPriority min_priority) {
+qtplugin::expected<QString, PluginError> TypedEventSystem::subscribe(
+    const QString& subscriber_id, const QString& event_type,
+    std::function<void(const IEvent&)> handler,
+    std::function<bool(const IEvent&)> filter, EventPriority min_priority) {
     if (subscriber_id.isEmpty() || event_type.isEmpty() || !handler) {
-        return qtplugin::unexpected(PluginError(PluginErrorCode::InvalidArgument, "Invalid subscription parameters"));
+        return qtplugin::unexpected(
+            PluginError(PluginErrorCode::InvalidArgument,
+                        "Invalid subscription parameters"));
     }
 
     QMutexLocker locker(&d->subscriptions_mutex);
@@ -363,24 +378,26 @@ TypedEventSystem::subscribe(const QString& subscriber_id,
     d->subscriber_index[subscriber_id].push_back(subscription_id);
 
     qCDebug(typedEventLog) << "Created subscription:" << subscription_id
-                          << "for" << subscriber_id << "to" << event_type;
+                           << "for" << subscriber_id << "to" << event_type;
 
     emit subscription_created(subscription_id, subscriber_id, event_type);
 
     return subscription_id;
 }
 
-qtplugin::expected<void, PluginError>
-TypedEventSystem::unsubscribe(const QString& subscription_id) {
+qtplugin::expected<void, PluginError> TypedEventSystem::unsubscribe(
+    const QString& subscription_id) {
     if (subscription_id.isEmpty()) {
-        return qtplugin::unexpected(PluginError(PluginErrorCode::InvalidArgument, "Subscription ID is empty"));
+        return qtplugin::unexpected(PluginError(
+            PluginErrorCode::InvalidArgument, "Subscription ID is empty"));
     }
 
     QMutexLocker locker(&d->subscriptions_mutex);
 
     auto sub_it = d->subscriptions.find(subscription_id);
     if (sub_it == d->subscriptions.end()) {
-        return qtplugin::unexpected(PluginError(PluginErrorCode::NotFound, "Subscription not found"));
+        return qtplugin::unexpected(
+            PluginError(PluginErrorCode::NotFound, "Subscription not found"));
     }
 
     const auto& subscription = sub_it->second;
@@ -392,7 +409,8 @@ TypedEventSystem::unsubscribe(const QString& subscription_id) {
     if (type_it != d->type_index.end()) {
         auto& subscription_ids = type_it->second;
         subscription_ids.erase(
-            std::remove(subscription_ids.begin(), subscription_ids.end(), subscription_id),
+            std::remove(subscription_ids.begin(), subscription_ids.end(),
+                        subscription_id),
             subscription_ids.end());
 
         if (subscription_ids.empty()) {
@@ -405,7 +423,8 @@ TypedEventSystem::unsubscribe(const QString& subscription_id) {
     if (subscriber_it != d->subscriber_index.end()) {
         auto& subscription_ids = subscriber_it->second;
         subscription_ids.erase(
-            std::remove(subscription_ids.begin(), subscription_ids.end(), subscription_id),
+            std::remove(subscription_ids.begin(), subscription_ids.end(),
+                        subscription_id),
             subscription_ids.end());
 
         if (subscription_ids.empty()) {
@@ -448,8 +467,8 @@ int TypedEventSystem::unsubscribe_all(const QString& subscriber_id) {
     return removed_count;
 }
 
-std::vector<EventSubscription>
-TypedEventSystem::get_subscriptions(const QString& subscriber_id) const {
+std::vector<EventSubscription> TypedEventSystem::get_subscriptions(
+    const QString& subscriber_id) const {
     std::vector<EventSubscription> result;
 
     QMutexLocker locker(&d->subscriptions_mutex);
@@ -476,29 +495,33 @@ TypedEventSystem::get_subscriptions(const QString& subscriber_id) const {
 }
 
 qtplugin::expected<void, PluginError>
-TypedEventSystem::set_subscription_enabled(const QString& subscription_id, bool enabled) {
+TypedEventSystem::set_subscription_enabled(const QString& subscription_id,
+                                           bool enabled) {
     if (subscription_id.isEmpty()) {
-        return qtplugin::unexpected(PluginError(PluginErrorCode::InvalidArgument, "Subscription ID is empty"));
+        return qtplugin::unexpected(PluginError(
+            PluginErrorCode::InvalidArgument, "Subscription ID is empty"));
     }
 
     QMutexLocker locker(&d->subscriptions_mutex);
 
     auto sub_it = d->subscriptions.find(subscription_id);
     if (sub_it == d->subscriptions.end()) {
-        return qtplugin::unexpected(PluginError(PluginErrorCode::NotFound, "Subscription not found"));
+        return qtplugin::unexpected(
+            PluginError(PluginErrorCode::NotFound, "Subscription not found"));
     }
 
     sub_it->second.enabled = enabled;
 
     qCDebug(typedEventLog) << "Subscription" << subscription_id
-                          << (enabled ? "enabled" : "disabled");
+                           << (enabled ? "enabled" : "disabled");
 
     return {};
 }
 
 size_t TypedEventSystem::get_pending_events_count() const {
     QMutexLocker locker(&d->events_mutex);
-    return d->queued_events.size() + d->deferred_events.size() + d->batched_events.size();
+    return d->queued_events.size() + d->deferred_events.size() +
+           d->batched_events.size();
 }
 
 size_t TypedEventSystem::process_pending_events(size_t max_events) {
@@ -512,7 +535,8 @@ size_t TypedEventSystem::process_pending_events(size_t max_events) {
         locker.unlock();
 
         QMutexLocker sub_locker(&d->subscriptions_mutex);
-        auto matching_subscriptions = d->find_matching_subscriptions(*pending.event);
+        auto matching_subscriptions =
+            d->find_matching_subscriptions(*pending.event);
         sub_locker.unlock();
 
         d->deliver_to_subscriptions(*pending.event, matching_subscriptions);
@@ -579,7 +603,8 @@ void TypedEventSystem::reset_statistics() {
     d->statistics = EventStatistics{};
 }
 
-void TypedEventSystem::set_event_history_enabled(bool enabled, size_t max_history_size) {
+void TypedEventSystem::set_event_history_enabled(bool enabled,
+                                                 size_t max_history_size) {
     d->history_enabled = enabled;
     d->max_history_size = max_history_size;
 
@@ -588,12 +613,13 @@ void TypedEventSystem::set_event_history_enabled(bool enabled, size_t max_histor
     }
 }
 
-std::vector<QJsonObject> TypedEventSystem::get_event_history(const QString& event_type,
-                                                             size_t max_events) const {
+std::vector<QJsonObject> TypedEventSystem::get_event_history(
+    const QString& event_type, size_t max_events) const {
     std::vector<QJsonObject> result;
 
     for (const auto& event_json : d->event_history) {
-        if (event_type.isEmpty() || event_json["event_type"].toString() == event_type) {
+        if (event_type.isEmpty() ||
+            event_json["event_type"].toString() == event_type) {
             result.push_back(event_json);
             if (result.size() >= max_events) {
                 break;
@@ -653,7 +679,8 @@ void TypedEventSystem::process_batched_events() {
 
     for (auto& pending : events_to_process) {
         QMutexLocker sub_locker(&d->subscriptions_mutex);
-        auto matching_subscriptions = d->find_matching_subscriptions(*pending.event);
+        auto matching_subscriptions =
+            d->find_matching_subscriptions(*pending.event);
         sub_locker.unlock();
 
         d->deliver_to_subscriptions(*pending.event, matching_subscriptions);

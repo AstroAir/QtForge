@@ -14,8 +14,7 @@
 #include <atomic>
 #include <memory>
 
-#include "qtplugin/core/plugin_interface.hpp"
-#include "qtplugin/managers/configuration_manager.hpp"
+#include "qtplugin/interfaces/core/plugin_interface.hpp"
 
 namespace qtplugin::examples {
 
@@ -39,17 +38,21 @@ public:
     ~ConfigurationPlugin() override;
 
     // IPlugin interface
-    bool initialize(const QJsonObject& config = {}) override;
-    void shutdown() override;
-    QString name() const override { return "ConfigurationPlugin"; }
-    QString version() const override { return "1.0.0"; }
-    QString description() const override {
-        return "Advanced configuration management example";
+    qtplugin::expected<void, qtplugin::PluginError> initialize() override;
+    void shutdown() noexcept override;
+    qtplugin::PluginMetadata metadata() const override;
+    qtplugin::PluginState state() const noexcept override {
+        return m_state.load();
     }
-    qtplugin::PluginState state() const override { return m_state.load(); }
-    QJsonObject metadata() const override;
-    QJsonObject execute_command(const QString& command,
-                                const QJsonObject& params = {}) override;
+    uint32_t capabilities() const noexcept override;
+    qtplugin::PluginPriority priority() const noexcept override;
+    bool is_initialized() const noexcept override;
+    qtplugin::expected<QJsonObject, qtplugin::PluginError> execute_command(
+        std::string_view command, const QJsonObject& params = {}) override;
+    std::vector<std::string> available_commands() const override;
+    qtplugin::expected<void, qtplugin::PluginError> configure(
+        const QJsonObject& config) override;
+    QJsonObject get_configuration() const override;
 
 public slots:
     void on_configuration_changed(const QString& key, const QJsonValue& value);
@@ -83,7 +86,6 @@ private:
     QString m_config_file_path;
 
     // Configuration management components
-    std::unique_ptr<qtplugin::ConfigurationManager> m_config_manager;
     std::unique_ptr<QTimer> m_validation_timer;
 
     // Statistics

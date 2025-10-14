@@ -24,7 +24,8 @@
 #include <unordered_set>
 #include <vector>
 
-// #include "../core/advanced_plugin_interface.hpp" // Temporarily disabled - file not found
+// #include "../core/advanced_plugin_interface.hpp" // Temporarily disabled -
+// file not found
 #include "../interfaces/core/plugin_interface.hpp"
 #include "../utils/error_handling.hpp"
 #include "workflow_types.hpp"
@@ -324,11 +325,11 @@ private slots:
 private:
     PluginTransactionManager() = default;
 
-    mutable std::shared_mutex m_transactions_mutex;
+    mutable std::mutex m_transactions_mutex;
     std::unordered_map<QString, std::unique_ptr<TransactionContext>>
         m_active_transactions;
 
-    mutable std::shared_mutex m_participants_mutex;
+    mutable std::mutex m_participants_mutex;
     std::unordered_map<QString, std::shared_ptr<ITransactionParticipant>>
         m_participants;
 

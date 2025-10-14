@@ -40,7 +40,8 @@ public:
 
 // === ServiceContract Implementation ===
 
-ServiceContract::ServiceContract(const QString& service_name, const ServiceVersion& version)
+ServiceContract::ServiceContract(const QString& service_name,
+                                 const ServiceVersion& version)
     : d(std::make_unique<Private>(service_name, version)) {}
 
 ServiceContract::ServiceContract(const ServiceContract& other)
@@ -54,7 +55,8 @@ ServiceContract& ServiceContract::operator=(const ServiceContract& other) {
 }
 
 ServiceContract::ServiceContract(ServiceContract&& other) noexcept = default;
-ServiceContract& ServiceContract::operator=(ServiceContract&& other) noexcept = default;
+ServiceContract& ServiceContract::operator=(ServiceContract&& other) noexcept =
+    default;
 ServiceContract::~ServiceContract() = default;
 
 ServiceContract& ServiceContract::set_description(const QString& desc) {
@@ -77,8 +79,8 @@ ServiceContract& ServiceContract::set_capabilities(ServiceCapabilities caps) {
     return *this;
 }
 
-ServiceContract& ServiceContract::add_dependency(const QString& service_name,
-                                                  const ServiceVersion& min_version) {
+ServiceContract& ServiceContract::add_dependency(
+    const QString& service_name, const ServiceVersion& min_version) {
     d->dependencies[service_name] = min_version;
     return *this;
 }
@@ -103,11 +105,13 @@ ServiceCapabilities ServiceContract::capabilities() const noexcept {
     return d->capabilities;
 }
 
-const std::unordered_map<QString, ServiceMethod>& ServiceContract::methods() const noexcept {
+const std::unordered_map<QString, ServiceMethod>& ServiceContract::methods()
+    const noexcept {
     return d->methods;
 }
 
-const std::unordered_map<QString, ServiceVersion>& ServiceContract::dependencies() const noexcept {
+const std::unordered_map<QString, ServiceVersion>&
+ServiceContract::dependencies() const noexcept {
     return d->dependencies;
 }
 
@@ -115,7 +119,8 @@ bool ServiceContract::has_method(const QString& method_name) const {
     return d->methods.find(method_name) != d->methods.end();
 }
 
-const ServiceMethod* ServiceContract::get_method(const QString& method_name) const {
+const ServiceMethod* ServiceContract::get_method(
+    const QString& method_name) const {
     auto it = d->methods.find(method_name);
     return it != d->methods.end() ? &it->second : nullptr;
 }
@@ -234,9 +239,10 @@ qtplugin::expected<void, PluginError> ServiceContract::validate_method_call(
 QJsonObject ServiceContract::to_json() const {
     QJsonObject json;
     json["service_name"] = d->service_name;
-    json["version"] = QJsonObject{{"major", static_cast<int>(d->version.major)},
-                                  {"minor", static_cast<int>(d->version.minor)},
-                                  {"patch", static_cast<int>(d->version.patch)}};
+    json["version"] =
+        QJsonObject{{"major", static_cast<int>(d->version.major)},
+                    {"minor", static_cast<int>(d->version.minor)},
+                    {"patch", static_cast<int>(d->version.patch)}};
     json["description"] = d->description;
     json["provider"] = d->provider;
     json["capabilities"] = static_cast<int>(d->capabilities);
@@ -482,10 +488,11 @@ ServiceContractRegistry::unregister_contract(const QString& plugin_id,
     }
 
     auto& contracts = contracts_it->second;
-    auto contract_it = std::find_if(contracts.begin(), contracts.end(),
-                                    [&plugin_id](const Private::ContractInfo& info) {
-                                        return info.plugin_id == plugin_id;
-                                    });
+    auto contract_it =
+        std::find_if(contracts.begin(), contracts.end(),
+                     [&plugin_id](const Private::ContractInfo& info) {
+                         return info.plugin_id == plugin_id;
+                     });
 
     if (contract_it == contracts.end()) {
         return make_error<void>(

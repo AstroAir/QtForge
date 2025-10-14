@@ -48,10 +48,15 @@ int main(int argc, char* argv[]) {
     }
 
     qInfo() << "✅ UI plugin instance obtained";
-    qInfo() << "Plugin name:"
-            << QString::fromStdString(std::string(plugin->name()));
-    qInfo() << "Plugin ID:" << QString::fromStdString(plugin->id());
-    qInfo() << "Plugin version:" << plugin->version().to_string().c_str();
+
+    // Get plugin metadata
+    auto meta = plugin->metadata();
+    qInfo() << "Plugin name:" << QString::fromStdString(meta.name);
+    qInfo() << "Plugin version:"
+            << QString::fromStdString(meta.version.to_string());
+    qInfo() << "Plugin description:"
+            << QString::fromStdString(meta.description);
+    qInfo() << "Plugin author:" << QString::fromStdString(meta.author);
 
     // Test basic plugin interface without full initialization
     qInfo() << "\n=== Testing Basic Plugin Interface ===";
@@ -60,21 +65,19 @@ int main(int argc, char* argv[]) {
     qInfo() << "Plugin capabilities:"
             << static_cast<int>(plugin->capabilities());
     qInfo() << "Plugin priority:" << static_cast<int>(plugin->priority());
-    qInfo() << "Is thread safe:" << plugin->is_thread_safe();
-    qInfo() << "Thread model:"
-            << QString::fromStdString(std::string(plugin->thread_model()));
+    qInfo() << "Plugin category:" << meta.category;
+    qInfo() << "Plugin license:" << meta.license;
 
     // Test dependencies
-    auto deps = plugin->dependencies();
-    qInfo() << "Required dependencies:" << deps.size();
-    for (const auto& dep : deps) {
-        qInfo() << " -" << QString::fromStdString(dep);
+    qInfo() << "Required dependencies:" << meta.dependencies.size();
+    for (const auto& dep : meta.dependencies) {
+        qInfo() << " -" << dep;
     }
 
-    auto opt_deps = plugin->optional_dependencies();
-    qInfo() << "Optional dependencies:" << opt_deps.size();
-    for (const auto& dep : opt_deps) {
-        qInfo() << " -" << QString::fromStdString(dep);
+    // Test tags
+    qInfo() << "Plugin tags:" << meta.tags.size();
+    for (const auto& tag : meta.tags) {
+        qInfo() << " -" << tag;
     }
 
     // Test available commands without initialization
@@ -84,13 +87,10 @@ int main(int argc, char* argv[]) {
         qInfo() << " -" << QString::fromStdString(cmd);
     }
 
-    // Test default configuration
-    auto default_config = plugin->default_configuration();
-    if (default_config) {
-        qInfo() << "Default configuration available:"
-                << QJsonDocument(default_config.value())
-                       .toJson(QJsonDocument::Compact);
-    }
+    // Test current configuration
+    auto current_config = plugin->get_configuration();
+    qInfo() << "Current configuration:"
+            << QJsonDocument(current_config).toJson(QJsonDocument::Compact);
 
     qInfo() << "✅ Basic plugin interface tested successfully";
     qInfo() << "⚠️  Skipping full initialization to avoid GUI dependencies in "
@@ -178,21 +178,9 @@ int main(int argc, char* argv[]) {
                    << QString::fromStdString(status_result.error().message);
     }
 
-    // Test performance metrics (should work without initialization)
-    qInfo() << "\n=== Testing Performance Metrics ===";
-    auto perf_metrics = plugin->performance_metrics();
-    qInfo() << "Performance metrics:"
-            << QJsonDocument(perf_metrics).toJson(QJsonDocument::Compact);
-
-    // Test resource usage (should work without initialization)
-    auto resource_usage = plugin->resource_usage();
-    qInfo() << "Resource usage:"
-            << QJsonDocument(resource_usage).toJson(QJsonDocument::Compact);
-
     qInfo() << "\n🎉 UI Plugin command-line test completed successfully!";
     qInfo() << "✅ Plugin loading and basic interface verified";
     qInfo() << "✅ Command interface tested (full functionality requires GUI)";
-    qInfo() << "✅ Performance metrics working";
     qInfo() << "ℹ️  For full UI testing, use the GUI test application";
 
     return 0;

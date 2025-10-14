@@ -8,14 +8,14 @@
 
 namespace qtplugin::communication {
 
-MessageRouter::MessageRouter(std::shared_ptr<ISubscriptionManager> subscription_manager)
-    : subscription_manager_(std::move(subscription_manager)) {
-}
+MessageRouter::MessageRouter(
+    std::shared_ptr<ISubscriptionManager> subscription_manager)
+    : subscription_manager_(std::move(subscription_manager)) {}
 
-Result<std::vector<std::shared_ptr<ISubscription>>> MessageRouter::find_subscribers(
+Result<std::vector<std::shared_ptr<ISubscription>>>
+MessageRouter::find_subscribers(
     const IMessage& message, DeliveryMode mode,
     const std::vector<std::string>& recipients) const {
-
     std::vector<std::shared_ptr<ISubscription>> all_subscriptions;
 
     if (mode == DeliveryMode::Broadcast) {
@@ -47,18 +47,18 @@ Result<std::vector<std::shared_ptr<ISubscription>>> MessageRouter::find_subscrib
         // For unicast/multicast, check if subscriber is in recipients list
         if (mode == DeliveryMode::Unicast || mode == DeliveryMode::Multicast) {
             std::string subscriber_id(subscription->subscriber_id());
-            if (std::find(recipients.begin(), recipients.end(), subscriber_id) != recipients.end()) {
+            if (std::find(recipients.begin(), recipients.end(),
+                          subscriber_id) != recipients.end()) {
                 matching_subscriptions.push_back(subscription);
             }
         }
     }
 
     if (matching_subscriptions.empty()) {
-        return qtplugin::unexpected(CommunicationError{
-            CommunicationError::Type::NoSubscribers,
-            "No active subscribers found for message type",
-            "Message type: " + std::string(message.type())
-        });
+        return qtplugin::unexpected(
+            CommunicationError{CommunicationError::Type::NoSubscribers,
+                               "No active subscribers found for message type",
+                               "Message type: " + std::string(message.type())});
     }
 
     return matching_subscriptions;
@@ -67,40 +67,64 @@ Result<std::vector<std::shared_ptr<ISubscription>>> MessageRouter::find_subscrib
 Result<void> MessageRouter::deliver_message(
     const IMessage& message,
     const std::vector<std::shared_ptr<ISubscription>>& subscriptions) {
-
     if (subscriptions.empty()) {
         return qtplugin::unexpected(CommunicationError{
             CommunicationError::Type::NoSubscribers,
-            "No subscriptions provided for message delivery",
-            ""
-        });
+            "No subscriptions provided for message delivery", ""});
     }
 
     size_t successful_deliveries = 0;
+    size_t filtered_deliveries = 0;
     std::vector<std::string> failed_subscribers;
+    std::string last_error_message;
 
-    // Note: This is a simplified delivery mechanism
-    // In a real implementation, this would be asynchronous and handle errors more gracefully
+    // Deliver message to each subscription
+    // Note: This is synchronous delivery. For async delivery with >5
+    // subscribers, the MessageBus uses a thread pool (see message_bus.cpp)
     for (const auto& subscription : subscriptions) {
+        if (!subscription) {
+            continue;  // Skip null subscriptions
+        }
+
         if (!subscription->is_active()) {
             failed_subscribers.emplace_back(subscription->subscriber_id());
             continue;
         }
 
-        // Get the message handler for this subscription
-        // Note: We need to access the handler somehow - this is a limitation in the current interface design
-        // For now, we'll simulate successful delivery
-        successful_deliveries++;
+        // Use the new deliver() method from ISubscription interface
+        auto result = subscription->deliver(message);
+        if (result.has_value()) {
+            successful_deliveries++;
+        } else {
+            // Check if it was filtered (not an error) or actual failure
+            const auto& error = result.error();
+            if (error.type == CommunicationError::Type::DeliveryFailed) {
+                failed_subscribers.emplace_back(subscription->subscriber_id());
+                last_error_message = error.message;
+            } else {
+                // Message was filtered or other non-critical issue
+                filtered_deliveries++;
+            }
+        }
     }
 
-    if (successful_deliveries == 0) {
+    // Consider filtered messages as successful (they were processed, just
+    // skipped)
+    const size_t total_processed = successful_deliveries + filtered_deliveries;
+
+    if (total_processed == 0 && !failed_subscribers.empty()) {
         return qtplugin::unexpected(CommunicationError{
             CommunicationError::Type::DeliveryFailed,
             "Failed to deliver message to any subscribers",
-            "Failed subscriber count: " + std::to_string(failed_subscribers.size())
-        });
+            "Failed subscriber count: " +
+                std::to_string(failed_subscribers.size()) +
+                (last_error_message.empty()
+                     ? ""
+                     : ", Last error: " + last_error_message)});
     }
 
+    // Partial success is still success - at least some subscribers got the
+    // message
     return {};
 }
 

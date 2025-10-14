@@ -1,0 +1,101 @@
+<?xml version="1.0"?>
+<!--
+    QtForge cppcheck Configuration
+    Version: 1.0
+    Purpose: Dead code detection and static analysis
+
+    Usage:
+        cppcheck [options] project=tools/static-analysis/cppcheck.xml
+                 enable=all
+                 inconclusive
+                 suppress=missingIncludeSystem
+                 xml
+                 output-file=cppcheck-report.xml
+-->
+<project version="1">
+    <root name="QtForge"/>
+    <builddir>build/cppcheck</builddir>
+
+    <!-- Analysis Configuration -->
+    <analyze-all-vs-configs>true</analyze-all-vs-configs>
+    <check-headers>true</check-headers>
+    <check-unused-templates>true</check-unused-templates>
+    <max-ctu-depth>4</max-ctu-depth>
+    <max-template-recursion>100</max-template-recursion>
+
+    <!-- Include Directories -->
+    <includedir>
+        <dir name="include/"/>
+        <dir name="src/"/>
+    </includedir>
+
+    <!-- Paths to Analyze -->
+    <paths>
+        <dir name="src/"/>
+        <dir name="include/"/>
+    </paths>
+
+    <!-- Excluded Paths -->
+    <exclude>
+        <path name="build/"/>
+        <path name="build_*/"/>
+        <path name="__pycache__/"/>
+        <path name="site/"/>
+        <path name="third-party/"/>
+        <path name="external/"/>
+        <path name="vendor/"/>
+        <path name=".git/"/>
+        <path name="node_modules/"/>
+        <path name="*_autogen/"/>
+        <path name="*.autogen/"/>
+    </exclude>
+
+    <!-- Suppressions -->
+    <suppressions>
+        <!-- Qt Meta-Object System -->
+        <suppression>unusedFunction:*moc_*.cpp</suppression>
+        <suppression>unusedFunction:*_autogen/*.cpp</suppression>
+
+        <!-- Test Files -->
+        <suppression>unusedFunction:tests/*</suppression>
+
+        <!-- Example Files -->
+        <suppression>unusedFunction:examples/*</suppression>
+
+        <!-- Plugin API Functions (may be called via Qt meta-object) -->
+        <suppression>unusedFunction:*plugin_interface.cpp</suppression>
+
+        <!-- System Headers -->
+        <suppression>missingIncludeSystem</suppression>
+        <suppression>unmatchedSuppression</suppression>
+    </suppressions>
+
+    <!-- Platform Configuration -->
+    <platform>native</platform>
+
+    <!-- Standards -->
+    <standards>
+        <c>c11</c>
+        <cpp>c++20</cpp>
+    </standards>
+
+    <!-- Defines -->
+    <defines>
+        <define name="QT_VERSION=0x060000"/>
+        <define name="QT_CORE_LIB"/>
+        <define name="QT_NETWORK_LIB"/>
+        <define name="QT_WIDGETS_LIB"/>
+        <define name="QTFORGE_VERSION_MAJOR=3"/>
+        <define name="QTFORGE_VERSION_MINOR=2"/>
+        <define name="QTFORGE_VERSION_PATCH=0"/>
+    </defines>
+
+    <!-- Undefines (for conditional compilation analysis) -->
+    <!-- Uncomment to analyze specific configurations -->
+    <!--
+    <undefines>
+        <undefine name="QTFORGE_LUA_BINDINGS"/>
+        <undefine name="QTFORGE_PYTHON_BINDINGS"/>
+    </undefines>
+    -->
+</project>

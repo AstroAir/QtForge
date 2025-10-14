@@ -18,7 +18,7 @@
 #include "../../../include/qtplugin/interfaces/core/plugin_interface.hpp"
 #include "../../../include/qtplugin/utils/error_handling.hpp"
 #include "../../../include/qtplugin/utils/version.hpp"
-#include "../qt_conversions.cpp"
+#include "../qt_conversions.hpp"
 
 Q_LOGGING_CATEGORY(pluginManagerBindingsLog, "qtforge.lua.core.plugin_manager");
 

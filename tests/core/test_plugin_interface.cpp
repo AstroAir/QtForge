@@ -8,7 +8,7 @@
 #include <memory>
 #include <string>
 
-#include <qtplugin/core/plugin_interface.hpp>
+#include <qtplugin/interfaces/core/plugin_interface.hpp>
 #include <qtplugin/utils/error_handling.hpp>
 #include <qtplugin/utils/version.hpp>
 
@@ -17,42 +17,49 @@ using namespace qtplugin;
 // Mock plugin implementation for testing
 class MockPlugin : public IPlugin {
 public:
-    MockPlugin() : m_initialized(false) {}
-
-    // IPlugin interface - Metadata
-    std::string_view name() const noexcept override { return "MockPlugin"; }
-
-    std::string_view description() const noexcept override {
-        return "Mock plugin for testing";
-    }
-
-    Version version() const noexcept override { return Version(1, 0, 0); }
-
-    std::string_view author() const noexcept override { return "Test Suite"; }
-
-    std::string id() const noexcept override { return "mock_plugin"; }
+    MockPlugin() : m_state(PluginState::Unloaded) {}
 
     // IPlugin interface - Lifecycle
     expected<void, PluginError> initialize() override {
-        if (m_initialized) {
+        if (m_state == PluginState::Running) {
             return make_error<void>(PluginErrorCode::AlreadyExists,
                                     "Plugin already initialized");
         }
-        m_initialized = true;
-        return make_success();
+        m_state = PluginState::Running;
+        return {};
     }
 
-    void shutdown() noexcept override { m_initialized = false; }
+    void shutdown() noexcept override { m_state = PluginState::Unloaded; }
 
-    PluginState state() const noexcept override {
-        return m_initialized ? PluginState::Running : PluginState::Unloaded;
+    // IPlugin interface - Metadata
+    PluginMetadata metadata() const override {
+        PluginMetadata meta;
+        meta.name = "MockPlugin";
+        meta.version = Version(1, 0, 0);
+        meta.description = "Mock plugin for testing";
+        meta.author = "Test Suite";
+        meta.license = "MIT";
+        meta.category = "test";
+        meta.capabilities = static_cast<uint32_t>(PluginCapability::Service);
+        meta.priority = PluginPriority::Normal;
+        return meta;
     }
 
-    // IPlugin interface - Capabilities and Commands
-    PluginCapabilities capabilities() const noexcept override {
-        return static_cast<PluginCapabilities>(PluginCapability::Service);
+    PluginState state() const noexcept override { return m_state; }
+
+    uint32_t capabilities() const noexcept override {
+        return static_cast<uint32_t>(PluginCapability::Service);
     }
 
+    PluginPriority priority() const noexcept override {
+        return PluginPriority::Normal;
+    }
+
+    bool is_initialized() const noexcept override {
+        return m_state == PluginState::Running;
+    }
+
+    // IPlugin interface - Commands
     expected<QJsonObject, PluginError> execute_command(
         std::string_view command, const QJsonObject& params = {}) override {
         Q_UNUSED(params)
@@ -69,13 +76,17 @@ public:
         return {"test"};
     }
 
-    // IPlugin interface - Dependencies
-    std::vector<std::string> dependencies() const override { return {}; }
+    // IPlugin interface - Configuration
+    expected<void, PluginError> configure(const QJsonObject& config) override {
+        m_config = config;
+        return {};
+    }
 
-    bool is_initialized() const noexcept override { return m_initialized; }
+    QJsonObject get_configuration() const override { return m_config; }
 
 private:
-    bool m_initialized;
+    PluginState m_state;
+    QJsonObject m_config;
 };
 
 class TestPluginInterface : public QObject {
@@ -169,15 +180,13 @@ void TestPluginInterface::testPluginDestruction() {
 }
 
 void TestPluginInterface::testPluginInfo() {
-    // Verify basic info fields
-    QCOMPARE(QString::fromStdString(std::string(m_plugin->name())),
-             "MockPlugin");
-    QCOMPARE(m_plugin->version().to_string(), "1.0.0");
-    QCOMPARE(QString::fromStdString(std::string(m_plugin->description())),
+    // Verify basic info fields through metadata
+    auto meta = m_plugin->metadata();
+    QCOMPARE(QString::fromStdString(meta.name), "MockPlugin");
+    QCOMPARE(meta.version.to_string(), "1.0.0");
+    QCOMPARE(QString::fromStdString(meta.description),
              "Mock plugin for testing");
-    QCOMPARE(QString::fromStdString(std::string(m_plugin->author())),
-             "Test Suite");
-    QCOMPARE(QString::fromStdString(m_plugin->id()), "mock_plugin");
+    QCOMPARE(QString::fromStdString(meta.author), "Test Suite");
     QCOMPARE(m_plugin->state(), PluginState::Unloaded);
 }
 
@@ -275,27 +284,26 @@ void TestPluginInterface::testDoubleShutdown() {
 }
 
 void TestPluginInterface::testApiVersionCompatibility() {
-    // Test plugin version
-    Version plugin_version = m_plugin->version();
-    QCOMPARE(plugin_version.to_string(), "1.0.0");
+    // Test plugin version through metadata
+    auto meta = m_plugin->metadata();
+    QCOMPARE(meta.version.to_string(), "1.0.0");
 
     // Test version compatibility
     Version current_api(3, 0, 0);
-    QVERIFY(plugin_version.major() >= 1);
+    QVERIFY(meta.version.major() >= 1);
 }
 
 void TestPluginInterface::testPluginInfoValidation() {
-    // Verify required fields are not empty
-    QVERIFY(!std::string(m_plugin->name()).empty());
-    QVERIFY(!std::string(m_plugin->description()).empty());
-    QVERIFY(!std::string(m_plugin->author()).empty());
-    QVERIFY(!m_plugin->id().empty());
+    // Verify required fields are not empty through metadata
+    auto meta = m_plugin->metadata();
+    QVERIFY(!meta.name.empty());
+    QVERIFY(!meta.description.empty());
+    QVERIFY(!meta.author.empty());
 
     // Verify version is valid
-    Version version = m_plugin->version();
-    QVERIFY(version.major() >= 0);
-    QVERIFY(version.minor() >= 0);
-    QVERIFY(version.patch() >= 0);
+    QVERIFY(meta.version.major() >= 0);
+    QVERIFY(meta.version.minor() >= 0);
+    QVERIFY(meta.version.patch() >= 0);
 }
 
 void TestPluginInterface::testPluginStateConsistency() {
@@ -324,10 +332,11 @@ void TestPluginInterface::verifyPluginState(PluginState expected_state) {
 void TestPluginInterface::verifyPluginInfo(const std::string& expected_name,
                                            const std::string& expected_name2) {
     Q_UNUSED(expected_name2)
-    QCOMPARE(QString::fromStdString(std::string(m_plugin->name())),
+    auto meta = m_plugin->metadata();
+    QCOMPARE(QString::fromStdString(meta.name),
              QString::fromStdString(expected_name));
-    QVERIFY(!std::string(m_plugin->description()).empty());
-    QVERIFY(!std::string(m_plugin->author()).empty());
+    QVERIFY(!meta.description.empty());
+    QVERIFY(!meta.author.empty());
 }
 
 void TestPluginInterface::testStateTransition(PluginState from, PluginState to,

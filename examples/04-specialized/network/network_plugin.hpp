@@ -29,7 +29,7 @@
 #include <vector>
 
 #include "qtplugin/communication/message_bus.hpp"
-#include "qtplugin/core/plugin_interface.hpp"
+#include "qtplugin/interfaces/core/plugin_interface.hpp"
 #include "qtplugin/utils/error_handling.hpp"
 
 /**

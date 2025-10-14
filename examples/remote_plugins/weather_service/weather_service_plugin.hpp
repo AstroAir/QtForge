@@ -6,22 +6,22 @@
 
 #pragma once
 
-#include <QObject>
+#include <QGeoCoordinate>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
+#include <QObject>
 #include <QTimer>
-#include <QJsonObject>
-#include <QJsonDocument>
 #include <QUrl>
-#include <QGeoCoordinate>
 #include <memory>
 
-#include "../../../include/qtplugin/core/plugin_interface.hpp"
+#include "../../../include/qtplugin/interfaces/core/plugin_interface.hpp"
 #include "../../../include/qtplugin/utils/error_handling.hpp"
 
 /**
  * @brief Weather service remote plugin example
- * 
+ *
  * This example demonstrates:
  * - Remote plugin architecture integration
  * - Secure API communication
@@ -33,7 +33,8 @@
  */
 class WeatherServicePlugin : public QObject, public qtplugin::IPlugin {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "qtforge.examples.WeatherServicePlugin" FILE "weather_service_plugin.json")
+    Q_PLUGIN_METADATA(IID "qtforge.examples.WeatherServicePlugin" FILE
+                          "weather_service_plugin.json")
     Q_INTERFACES(qtplugin::IPlugin)
 
 public:
@@ -41,27 +42,28 @@ public:
     ~WeatherServicePlugin() override;
 
     // === IPlugin Interface ===
-    
+
     qtplugin::expected<void, qtplugin::PluginError> initialize() override;
     void shutdown() override;
     qtplugin::PluginState state() const override { return m_state; }
     bool is_initialized() const override { return m_initialized; }
 
     qtplugin::PluginMetadata metadata() const override;
-    std::string id() const override { return "qtforge.examples.weather_service"; }
+    std::string id() const override {
+        return "qtforge.examples.weather_service";
+    }
     std::string name() const override { return "Weather Service Plugin"; }
     std::string version() const override { return "1.2.0"; }
-    std::string description() const override { 
-        return "Remote weather service plugin with secure API integration"; 
+    std::string description() const override {
+        return "Remote weather service plugin with secure API integration";
     }
 
-    qtplugin::expected<void, qtplugin::PluginError> configure(const QJsonObject& config) override;
+    qtplugin::expected<void, qtplugin::PluginError> configure(
+        const QJsonObject& config) override;
     QJsonObject current_configuration() const override;
 
     qtplugin::expected<QJsonObject, qtplugin::PluginError> execute_command(
-        std::string_view command,
-        const QJsonObject& params = {}
-    ) override;
+        std::string_view command, const QJsonObject& params = {}) override;
 
     std::vector<std::string> supported_commands() const override;
     bool supports_command(std::string_view command) const override;
@@ -110,9 +112,8 @@ public:
      * @param location Location name or coordinates
      * @return Future with weather data
      */
-    QFuture<qtplugin::expected<WeatherData, qtplugin::PluginError>> get_current_weather(
-        const QString& location
-    );
+    QFuture<qtplugin::expected<WeatherData, qtplugin::PluginError>>
+    get_current_weather(const QString& location);
 
     /**
      * @brief Get weather forecast
@@ -120,19 +121,17 @@ public:
      * @param days Number of forecast days (1-7)
      * @return Future with forecast data
      */
-    QFuture<qtplugin::expected<std::vector<ForecastEntry>, qtplugin::PluginError>> get_forecast(
-        const QString& location,
-        int days = 5
-    );
+    QFuture<
+        qtplugin::expected<std::vector<ForecastEntry>, qtplugin::PluginError>>
+    get_forecast(const QString& location, int days = 5);
 
     /**
      * @brief Search for locations
      * @param query Location search query
      * @return Future with location suggestions
      */
-    QFuture<qtplugin::expected<QStringList, qtplugin::PluginError>> search_locations(
-        const QString& query
-    );
+    QFuture<qtplugin::expected<QStringList, qtplugin::PluginError>>
+    search_locations(const QString& query);
 
 signals:
     /**
@@ -141,9 +140,10 @@ signals:
     void weather_updated(const QString& location, const WeatherData& data);
 
     /**
-     * @brief Emitted when forecast is updated  
+     * @brief Emitted when forecast is updated
      */
-    void forecast_updated(const QString& location, const std::vector<ForecastEntry>& forecast);
+    void forecast_updated(const QString& location,
+                          const std::vector<ForecastEntry>& forecast);
 
     /**
      * @brief Emitted when API rate limit is approached
@@ -182,7 +182,7 @@ private:
         QDateTime expiry;
         bool is_valid() const { return expiry > QDateTime::currentDateTime(); }
     };
-    
+
     struct ForecastCacheEntry {
         std::vector<ForecastEntry> forecast;
         QDateTime expiry;
@@ -203,9 +203,10 @@ private:
     struct PendingRequest {
         QString request_id;
         QString location;
-        QString type; // "current", "forecast", "search"
+        QString type;  // "current", "forecast", "search"
         QDateTime timestamp;
-        QFutureInterface<qtplugin::expected<QJsonObject, qtplugin::PluginError>> future;
+        QFutureInterface<qtplugin::expected<QJsonObject, qtplugin::PluginError>>
+            future;
     };
 
     mutable QMutex m_requests_mutex;
@@ -219,8 +220,8 @@ private:
      * @param params Query parameters
      * @return Configured network request
      */
-    QNetworkRequest create_api_request(const QString& endpoint, 
-                                      const QUrlQuery& params = {}) const;
+    QNetworkRequest create_api_request(const QString& endpoint,
+                                       const QUrlQuery& params = {}) const;
 
     /**
      * @brief Check and update rate limiting
@@ -235,9 +236,7 @@ private:
      * @return Parsed data or error
      */
     qtplugin::expected<QJsonObject, qtplugin::PluginError> parse_api_response(
-        const QByteArray& data,
-        const QString& type
-    ) const;
+        const QByteArray& data, const QString& type) const;
 
     /**
      * @brief Convert API weather data to WeatherData
@@ -248,10 +247,11 @@ private:
 
     /**
      * @brief Convert API forecast data to ForecastEntry list
-     * @param api_data Raw API response  
+     * @param api_data Raw API response
      * @return Structured forecast data
      */
-    std::vector<ForecastEntry> convert_api_forecast_data(const QJsonObject& api_data) const;
+    std::vector<ForecastEntry> convert_api_forecast_data(
+        const QJsonObject& api_data) const;
 
     /**
      * @brief Validate configuration
@@ -259,8 +259,7 @@ private:
      * @return Validation result
      */
     qtplugin::expected<void, qtplugin::PluginError> validate_configuration(
-        const QJsonObject& config
-    ) const;
+        const QJsonObject& config) const;
 
     /**
      * @brief Setup network security
@@ -277,7 +276,8 @@ private:
      * @param location Location identifier
      * @return Cached data if valid
      */
-    std::optional<WeatherData> get_cached_weather(const QString& location) const;
+    std::optional<WeatherData> get_cached_weather(
+        const QString& location) const;
 
     /**
      * @brief Cache weather data
@@ -291,14 +291,16 @@ private:
      * @param location Location identifier
      * @return Cached forecast if valid
      */
-    std::optional<std::vector<ForecastEntry>> get_cached_forecast(const QString& location) const;
+    std::optional<std::vector<ForecastEntry>> get_cached_forecast(
+        const QString& location) const;
 
     /**
      * @brief Cache forecast data
      * @param location Location identifier
      * @param forecast Forecast data to cache
      */
-    void cache_forecast_data(const QString& location, const std::vector<ForecastEntry>& forecast);
+    void cache_forecast_data(const QString& location,
+                             const std::vector<ForecastEntry>& forecast);
 
     /**
      * @brief Generate request ID
@@ -319,8 +321,8 @@ private:
      * @param message Log message
      * @param details Additional details
      */
-    void log(const QString& level, const QString& message, 
-            const QJsonObject& details = {}) const;
+    void log(const QString& level, const QString& message,
+             const QJsonObject& details = {}) const;
 
     // === Command Handlers ===
     QJsonObject handle_get_weather_command(const QJsonObject& params);
@@ -351,6 +353,6 @@ public:
 
 // Export plugin factory function
 extern "C" {
-    Q_DECL_EXPORT std::unique_ptr<qtplugin::IPlugin> create_plugin();
-    Q_DECL_EXPORT qtplugin::PluginMetadata get_plugin_metadata();
+Q_DECL_EXPORT std::unique_ptr<qtplugin::IPlugin> create_plugin();
+Q_DECL_EXPORT qtplugin::PluginMetadata get_plugin_metadata();
 }

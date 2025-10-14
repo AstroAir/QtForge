@@ -18,7 +18,7 @@
 #include <unordered_map>
 
 #include "qtplugin/communication/message_bus.hpp"
-#include "qtplugin/core/plugin_interface.hpp"
+#include "qtplugin/interfaces/core/plugin_interface.hpp"
 
 namespace qtplugin::examples {
 

@@ -3,25 +3,24 @@
  * @brief Comprehensive tests for PythonPluginBridge functionality
  */
 
-#include <QtTest/QtTest>
 #include <QCoreApplication>
+#include <QDateTime>
 #include <QDir>
-#include <QTemporaryDir>
+#include <QElapsedTimer>
+#include <QFuture>
+#include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <QJsonArray>
-#include <QTimer>
 #include <QSignalSpy>
+#include <QTemporaryDir>
 #include <QThread>
-#include <QDateTime>
-#include <QElapsedTimer>
+#include <QTimer>
 #include <QtConcurrent/QtConcurrent>
-#include <QFuture>
+#include <QtTest/QtTest>
 
 #include <qtplugin/bridges/python_plugin_bridge.hpp>
 
-class TestPythonPluginBridgeComplete : public QObject
-{
+class TestPythonPluginBridgeComplete : public QObject {
     Q_OBJECT
 
 private slots:
@@ -79,15 +78,20 @@ private slots:
 
 private:
     void createTestPlugin(const QString& filename, const QString& content);
-    void waitForCondition(std::function<bool()> condition, int timeoutMs = 5000);
+    void waitForCondition(std::function<bool()> condition,
+                          int timeoutMs = 5000);
+    bool isPythonAvailable();
 
     QTemporaryDir* m_tempDir;
     QString m_testPluginPath;
     std::unique_ptr<qtplugin::PythonPluginBridge> m_bridge;
+    bool m_pythonAvailable;
 };
 
-void TestPythonPluginBridgeComplete::initTestCase()
-{
+void TestPythonPluginBridgeComplete::initTestCase() {
+    // Check if Python is available
+    m_pythonAvailable = isPythonAvailable();
+
     // Create temporary directory for test plugins
     m_tempDir = new QTemporaryDir();
     QVERIFY(m_tempDir->isValid());
@@ -180,26 +184,24 @@ def create_plugin():
     createTestPlugin("test_plugin.py", testPluginContent);
 }
 
-void TestPythonPluginBridgeComplete::cleanupTestCase()
-{
-    delete m_tempDir;
-}
+void TestPythonPluginBridgeComplete::cleanupTestCase() { delete m_tempDir; }
 
-void TestPythonPluginBridgeComplete::init()
-{
+void TestPythonPluginBridgeComplete::init() {
+    if (!m_pythonAvailable) {
+        QSKIP("Python not available for testing");
+    }
+
     m_bridge = std::make_unique<qtplugin::PythonPluginBridge>(m_testPluginPath);
 }
 
-void TestPythonPluginBridgeComplete::cleanup()
-{
+void TestPythonPluginBridgeComplete::cleanup() {
     if (m_bridge) {
         m_bridge->shutdown();
         m_bridge.reset();
     }
 }
 
-void TestPythonPluginBridgeComplete::testPluginInitialization()
-{
+void TestPythonPluginBridgeComplete::testPluginInitialization() {
     QVERIFY(m_bridge != nullptr);
 
     auto result = m_bridge->initialize();
@@ -210,16 +212,14 @@ void TestPythonPluginBridgeComplete::testPluginInitialization()
     QVERIFY(!m_bridge->description().empty());
 }
 
-void TestPythonPluginBridgeComplete::testPluginShutdown()
-{
+void TestPythonPluginBridgeComplete::testPluginShutdown() {
     QVERIFY(m_bridge->initialize().has_value());
 
     m_bridge->shutdown();
     QCOMPARE(m_bridge->state(), qtplugin::PluginState::Unloaded);
 }
 
-void TestPythonPluginBridgeComplete::testMethodInvocation()
-{
+void TestPythonPluginBridgeComplete::testMethodInvocation() {
     QVERIFY(m_bridge->initialize().has_value());
 
     // Test simple method call
@@ -228,8 +228,7 @@ void TestPythonPluginBridgeComplete::testMethodInvocation()
     QCOMPARE(result.value().toString(), QString("simple_result"));
 }
 
-void TestPythonPluginBridgeComplete::testMethodInvocationWithParameters()
-{
+void TestPythonPluginBridgeComplete::testMethodInvocationWithParameters() {
     QVERIFY(m_bridge->initialize().has_value());
 
     QVariantList params;
@@ -244,12 +243,12 @@ void TestPythonPluginBridgeComplete::testMethodInvocationWithParameters()
     QCOMPARE(resultMap["param2"].toString(), QString("test_param2"));
 }
 
-void TestPythonPluginBridgeComplete::testMethodInvocationErrors()
-{
+void TestPythonPluginBridgeComplete::testMethodInvocationErrors() {
     QVERIFY(m_bridge->initialize().has_value());
 
     // Test calling non-existent method
-    auto result = m_bridge->invoke_method("non_existent_method", QVariantList());
+    auto result =
+        m_bridge->invoke_method("non_existent_method", QVariantList());
     QVERIFY(!result.has_value());
     QCOMPARE(result.error().code, qtplugin::PluginErrorCode::ExecutionFailed);
 
@@ -258,8 +257,7 @@ void TestPythonPluginBridgeComplete::testMethodInvocationErrors()
     QVERIFY(!error_result.has_value());
 }
 
-void TestPythonPluginBridgeComplete::testAvailableMethodsDiscovery()
-{
+void TestPythonPluginBridgeComplete::testAvailableMethodsDiscovery() {
     QVERIFY(m_bridge->initialize().has_value());
 
     auto methods = m_bridge->get_available_methods();
@@ -277,8 +275,7 @@ void TestPythonPluginBridgeComplete::testAvailableMethodsDiscovery()
     QVERIFY(methodNames.contains("set_counter"));
 }
 
-void TestPythonPluginBridgeComplete::testMethodSignatureRetrieval()
-{
+void TestPythonPluginBridgeComplete::testMethodSignatureRetrieval() {
     QVERIFY(m_bridge->initialize().has_value());
 
     auto signature = m_bridge->get_method_signature("method_with_params");
@@ -289,8 +286,7 @@ void TestPythonPluginBridgeComplete::testMethodSignatureRetrieval()
     QVERIFY(sigObj.contains("signature"));
 }
 
-void TestPythonPluginBridgeComplete::testPropertyAccess()
-{
+void TestPythonPluginBridgeComplete::testPropertyAccess() {
     QVERIFY(m_bridge->initialize().has_value());
 
     // Test getting a property
@@ -304,8 +300,7 @@ void TestPythonPluginBridgeComplete::testPropertyAccess()
     QCOMPARE(name_result.value().toString(), QString("Test Plugin"));
 }
 
-void TestPythonPluginBridgeComplete::testPropertyModification()
-{
+void TestPythonPluginBridgeComplete::testPropertyModification() {
     QVERIFY(m_bridge->initialize().has_value());
 
     // Set a property
@@ -318,18 +313,19 @@ void TestPythonPluginBridgeComplete::testPropertyModification()
     QCOMPARE(get_result.value().toInt(), 42);
 }
 
-void TestPythonPluginBridgeComplete::testPropertyErrors()
-{
+void TestPythonPluginBridgeComplete::testPropertyErrors() {
     QVERIFY(m_bridge->initialize().has_value());
 
     // Test accessing non-existent property
     auto result = m_bridge->get_property("non_existent_property");
-    // This might return None/null rather than error, depending on implementation
-    QVERIFY(result.has_value()); // getattr returns None for non-existent properties
+    // This might return None/null rather than error, depending on
+    // implementation
+    QVERIFY(
+        result
+            .has_value());  // getattr returns None for non-existent properties
 }
 
-void TestPythonPluginBridgeComplete::testAvailablePropertiesDiscovery()
-{
+void TestPythonPluginBridgeComplete::testAvailablePropertiesDiscovery() {
     QVERIFY(m_bridge->initialize().has_value());
 
     auto properties = m_bridge->get_available_properties();
@@ -345,15 +341,15 @@ void TestPythonPluginBridgeComplete::testAvailablePropertiesDiscovery()
     QVERIFY(propNames.contains("counter"));
 }
 
-void TestPythonPluginBridgeComplete::testEventSubscription()
-{
+void TestPythonPluginBridgeComplete::testEventSubscription() {
     QVERIFY(m_bridge->initialize().has_value());
 
     bool eventReceived = false;
     QString receivedEventName;
     QJsonObject receivedEventData;
 
-    auto callback = [&](const QString& eventName, const QJsonObject& eventData) {
+    auto callback = [&](const QString& eventName,
+                        const QJsonObject& eventData) {
         eventReceived = true;
         receivedEventName = eventName;
         receivedEventData = eventData;
@@ -364,8 +360,7 @@ void TestPythonPluginBridgeComplete::testEventSubscription()
     QVERIFY(result.has_value());
 }
 
-void TestPythonPluginBridgeComplete::testEventUnsubscription()
-{
+void TestPythonPluginBridgeComplete::testEventUnsubscription() {
     QVERIFY(m_bridge->initialize().has_value());
 
     auto callback = [](const QString&, const QJsonObject&) {};
@@ -380,8 +375,7 @@ void TestPythonPluginBridgeComplete::testEventUnsubscription()
     QVERIFY(unsub_result.has_value());
 }
 
-void TestPythonPluginBridgeComplete::testEventEmission()
-{
+void TestPythonPluginBridgeComplete::testEventEmission() {
     QVERIFY(m_bridge->initialize().has_value());
 
     QJsonObject eventData;
@@ -392,15 +386,15 @@ void TestPythonPluginBridgeComplete::testEventEmission()
     QVERIFY(result.has_value());
 }
 
-void TestPythonPluginBridgeComplete::testEventCallbacks()
-{
+void TestPythonPluginBridgeComplete::testEventCallbacks() {
     QVERIFY(m_bridge->initialize().has_value());
 
     bool eventReceived = false;
     QString receivedEventName;
     QJsonObject receivedEventData;
 
-    auto callback = [&](const QString& eventName, const QJsonObject& eventData) {
+    auto callback = [&](const QString& eventName,
+                        const QJsonObject& eventData) {
         eventReceived = true;
         receivedEventName = eventName;
         receivedEventData = eventData;
@@ -424,8 +418,7 @@ void TestPythonPluginBridgeComplete::testEventCallbacks()
     QCOMPARE(receivedEventData["test_key"].toString(), QString("test_value"));
 }
 
-void TestPythonPluginBridgeComplete::testMultipleEventSubscriptions()
-{
+void TestPythonPluginBridgeComplete::testMultipleEventSubscriptions() {
     QVERIFY(m_bridge->initialize().has_value());
 
     int eventsReceived = 0;
@@ -454,8 +447,7 @@ void TestPythonPluginBridgeComplete::testMultipleEventSubscriptions()
     QVERIFY(receivedEvents.contains("event3"));
 }
 
-void TestPythonPluginBridgeComplete::testHotReload()
-{
+void TestPythonPluginBridgeComplete::testHotReload() {
     QVERIFY(m_bridge->initialize().has_value());
 
     // Get initial counter value
@@ -471,21 +463,21 @@ void TestPythonPluginBridgeComplete::testHotReload()
     QVERIFY(reload_result.has_value());
 
     // Verify plugin is still functional after reload
-    auto method_result = m_bridge->invoke_method("simple_method", QVariantList());
+    auto method_result =
+        m_bridge->invoke_method("simple_method", QVariantList());
     QVERIFY(method_result.has_value());
     QCOMPARE(method_result.value().toString(), QString("simple_result"));
 }
 
-void TestPythonPluginBridgeComplete::testDependencyChangeHandling()
-{
+void TestPythonPluginBridgeComplete::testDependencyChangeHandling() {
     QVERIFY(m_bridge->initialize().has_value());
 
-    auto result = m_bridge->handle_dependency_change("test_dependency", qtplugin::PluginState::Running);
+    auto result = m_bridge->handle_dependency_change(
+        "test_dependency", qtplugin::PluginState::Running);
     QVERIFY(result.has_value());
 }
 
-void TestPythonPluginBridgeComplete::testCodeExecution()
-{
+void TestPythonPluginBridgeComplete::testCodeExecution() {
     QVERIFY(m_bridge->initialize().has_value());
 
     QString code = "plugin.get_counter()";
@@ -493,8 +485,7 @@ void TestPythonPluginBridgeComplete::testCodeExecution()
     QVERIFY(result.has_value());
 }
 
-void TestPythonPluginBridgeComplete::testPluginMetadataExtraction()
-{
+void TestPythonPluginBridgeComplete::testPluginMetadataExtraction() {
     QVERIFY(m_bridge->initialize().has_value());
 
     // Test that metadata was extracted during initialization
@@ -510,15 +501,14 @@ void TestPythonPluginBridgeComplete::testPluginMetadataExtraction()
     QCOMPARE(infoMap["version"].toString(), QString("1.0.0"));
 }
 
-void TestPythonPluginBridgeComplete::testInvalidPluginPath()
-{
-    auto invalid_bridge = std::make_unique<qtplugin::PythonPluginBridge>("/invalid/path/plugin.py");
+void TestPythonPluginBridgeComplete::testInvalidPluginPath() {
+    auto invalid_bridge = std::make_unique<qtplugin::PythonPluginBridge>(
+        "/invalid/path/plugin.py");
     auto result = invalid_bridge->initialize();
     QVERIFY(!result.has_value());
 }
 
-void TestPythonPluginBridgeComplete::testPythonRuntimeErrors()
-{
+void TestPythonPluginBridgeComplete::testPythonRuntimeErrors() {
     QVERIFY(m_bridge->initialize().has_value());
 
     // Test method that raises an exception
@@ -527,8 +517,7 @@ void TestPythonPluginBridgeComplete::testPythonRuntimeErrors()
     QCOMPARE(result.error().code, qtplugin::PluginErrorCode::ExecutionFailed);
 }
 
-void TestPythonPluginBridgeComplete::testTimeoutHandling()
-{
+void TestPythonPluginBridgeComplete::testTimeoutHandling() {
     QVERIFY(m_bridge->initialize().has_value());
 
     // Create a plugin method that takes a long time
@@ -543,11 +532,11 @@ time.sleep(0.1)  # Short sleep for testing
     QCOMPARE(result.value().toString(), QString("completed"));
 }
 
-void TestPythonPluginBridgeComplete::testMemoryManagement()
-{
+void TestPythonPluginBridgeComplete::testMemoryManagement() {
     // Test multiple initialization and cleanup cycles
     for (int i = 0; i < 5; ++i) {
-        auto bridge = std::make_unique<qtplugin::PythonPluginBridge>(m_testPluginPath);
+        auto bridge =
+            std::make_unique<qtplugin::PythonPluginBridge>(m_testPluginPath);
         QVERIFY(bridge->initialize().has_value());
 
         // Perform some operations
@@ -558,8 +547,7 @@ void TestPythonPluginBridgeComplete::testMemoryManagement()
     }
 }
 
-void TestPythonPluginBridgeComplete::testLargeDataHandling()
-{
+void TestPythonPluginBridgeComplete::testLargeDataHandling() {
     QVERIFY(m_bridge->initialize().has_value());
 
     // Test with large string parameter
@@ -574,8 +562,7 @@ void TestPythonPluginBridgeComplete::testLargeDataHandling()
     QCOMPARE(resultMap["param1"].toString().length(), 10000);
 }
 
-void TestPythonPluginBridgeComplete::testConcurrentAccess()
-{
+void TestPythonPluginBridgeComplete::testConcurrentAccess() {
     QVERIFY(m_bridge->initialize().has_value());
 
     // Test concurrent method calls (simplified test)
@@ -602,8 +589,7 @@ void TestPythonPluginBridgeComplete::testConcurrentAccess()
     QVERIFY(counter_result.value().toInt() > 0);
 }
 
-void TestPythonPluginBridgeComplete::testRepeatedOperations()
-{
+void TestPythonPluginBridgeComplete::testRepeatedOperations() {
     QVERIFY(m_bridge->initialize().has_value());
 
     // Test repeated method calls
@@ -614,9 +600,9 @@ void TestPythonPluginBridgeComplete::testRepeatedOperations()
     }
 }
 
-void TestPythonPluginBridgeComplete::testPythonModuleRequirements()
-{
-    auto required_modules = qtplugin::PythonPluginFactory::required_python_modules();
+void TestPythonPluginBridgeComplete::testPythonModuleRequirements() {
+    auto required_modules =
+        qtplugin::PythonPluginFactory::required_python_modules();
     QVERIFY(!required_modules.isEmpty());
 
     QVERIFY(required_modules.contains("json"));
@@ -625,24 +611,23 @@ void TestPythonPluginBridgeComplete::testPythonModuleRequirements()
     QVERIFY(required_modules.contains("importlib"));
 }
 
-void TestPythonPluginBridgeComplete::testModuleAvailabilityCheck()
-{
-    QString pythonPath = "python"; // Assume python is in PATH
-    auto missing_modules = qtplugin::PythonPluginFactory::check_required_modules(pythonPath);
+void TestPythonPluginBridgeComplete::testModuleAvailabilityCheck() {
+    QString pythonPath = "python";  // Assume python is in PATH
+    auto missing_modules =
+        qtplugin::PythonPluginFactory::check_required_modules(pythonPath);
 
     // In a proper environment, no modules should be missing
-    QVERIFY(missing_modules.isEmpty() || missing_modules.size() < 3); // Allow some tolerance
+    QVERIFY(missing_modules.isEmpty() ||
+            missing_modules.size() < 3);  // Allow some tolerance
 }
 
-void TestPythonPluginBridgeComplete::testPluginLoading()
-{
+void TestPythonPluginBridgeComplete::testPluginLoading() {
     // Test is covered by initialization test
     QVERIFY(m_bridge->initialize().has_value());
     QCOMPARE(m_bridge->state(), qtplugin::PluginState::Running);
 }
 
-void TestPythonPluginBridgeComplete::testPluginUnloading()
-{
+void TestPythonPluginBridgeComplete::testPluginUnloading() {
     QVERIFY(m_bridge->initialize().has_value());
     QCOMPARE(m_bridge->state(), qtplugin::PluginState::Running);
 
@@ -650,8 +635,8 @@ void TestPythonPluginBridgeComplete::testPluginUnloading()
     QCOMPARE(m_bridge->state(), qtplugin::PluginState::Unloaded);
 }
 
-void TestPythonPluginBridgeComplete::createTestPlugin(const QString& filename, const QString& content)
-{
+void TestPythonPluginBridgeComplete::createTestPlugin(const QString& filename,
+                                                      const QString& content) {
     QString fullPath = m_tempDir->path() + "/" + filename;
     QFile file(fullPath);
     QVERIFY(file.open(QIODevice::WriteOnly | QIODevice::Text));
@@ -661,8 +646,8 @@ void TestPythonPluginBridgeComplete::createTestPlugin(const QString& filename, c
     file.close();
 }
 
-void TestPythonPluginBridgeComplete::waitForCondition(std::function<bool()> condition, int timeoutMs)
-{
+void TestPythonPluginBridgeComplete::waitForCondition(
+    std::function<bool()> condition, int timeoutMs) {
     QElapsedTimer timer;
     timer.start();
 
@@ -672,6 +657,33 @@ void TestPythonPluginBridgeComplete::waitForCondition(std::function<bool()> cond
     }
 
     QVERIFY2(condition(), "Condition not met within timeout");
+}
+
+bool TestPythonPluginBridgeComplete::isPythonAvailable() {
+    QProcess process;
+    QStringList python_names = {"python3",   "python",     "python3.8",
+                                "python3.9", "python3.10", "python3.11",
+                                "python3.12"};
+
+    for (const QString& name : python_names) {
+        process.start(name, QStringList() << "--version");
+
+        if (!process.waitForFinished(3000)) {
+            continue;  // Process didn't finish in time
+        }
+
+        if (process.exitCode() != 0) {
+            continue;  // Process exited with error
+        }
+
+        // Check if output contains "Python" to verify it's actually Python
+        QString output = process.readAllStandardOutput();
+        if (output.contains("Python", Qt::CaseInsensitive)) {
+            return true;  // Found a working Python installation
+        }
+    }
+
+    return false;  // No working Python installation found
 }
 
 QTEST_MAIN(TestPythonPluginBridgeComplete)

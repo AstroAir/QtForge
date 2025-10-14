@@ -48,9 +48,12 @@ RemotePluginLoadOptions RemotePluginLoadOptions::from_json(
 QJsonObject RemotePluginLoadResult::to_json() const {
     QJsonObject json;
     if (plugin) {
-        json["plugin_id"] = QString::fromStdString(plugin->id());
-        json["plugin_name"] = QString::fromStdString(plugin->name());
-        json["plugin_version"] = QString::fromStdString(plugin->version());
+        auto plugin_metadata = plugin->metadata();
+        json["plugin_name"] = QString::fromStdString(plugin_metadata.name);
+        json["plugin_version"] =
+            QString::fromStdString(plugin_metadata.version.to_string());
+        json["plugin_description"] =
+            QString::fromStdString(plugin_metadata.description);
     }
     json["source"] = source.to_json();
     json["download_result"] = download_result.to_json();
@@ -116,16 +119,16 @@ RemotePluginLoaderBase::load(const std::filesystem::path& file_path) {
         if (can_load_remote(url)) {
             auto result = load_remote(url, RemotePluginLoadOptions{});
             if (result) {
-                return result->plugin;
+                return result.value().plugin;
             } else {
                 return qtplugin::unexpected(result.error());
             }
         }
     }
 
-    return qtplugin::unexpected(PluginError{
-        PluginErrorCode::InvalidFormat,
-        "File format not supported by remote plugin loader"});
+    return qtplugin::unexpected(
+        PluginError{PluginErrorCode::InvalidFormat,
+                    "File format not supported by remote plugin loader"});
 }
 
 qtplugin::expected<void, PluginError> RemotePluginLoaderBase::unload(
@@ -134,9 +137,9 @@ qtplugin::expected<void, PluginError> RemotePluginLoaderBase::unload(
         return m_local_loader->unload(plugin_id);
     }
 
-    return qtplugin::unexpected(PluginError{
-        PluginErrorCode::NotImplemented,
-        "Unload not implemented for remote plugin loader"});
+    return qtplugin::unexpected(
+        PluginError{PluginErrorCode::NotImplemented,
+                    "Unload not implemented for remote plugin loader"});
 }
 
 std::vector<std::string> RemotePluginLoaderBase::supported_extensions() const {
@@ -171,8 +174,9 @@ bool RemotePluginLoaderBase::can_load_remote(const QUrl& url) const {
 qtplugin::expected<void, PluginError> RemotePluginLoaderBase::add_source(
     const RemotePluginSource& source) {
     if (!m_configuration) {
-        return qtplugin::unexpected(PluginError{PluginErrorCode::InvalidConfiguration,
-                                          "No configuration available"});
+        return qtplugin::unexpected(
+            PluginError{PluginErrorCode::InvalidConfiguration,
+                        "No configuration available"});
     }
 
     return m_configuration->add_trusted_source(source);
@@ -181,8 +185,9 @@ qtplugin::expected<void, PluginError> RemotePluginLoaderBase::add_source(
 qtplugin::expected<void, PluginError> RemotePluginLoaderBase::remove_source(
     const QString& source_id) {
     if (!m_configuration) {
-        return qtplugin::unexpected(PluginError{PluginErrorCode::InvalidConfiguration,
-                                          "No configuration available"});
+        return qtplugin::unexpected(
+            PluginError{PluginErrorCode::InvalidConfiguration,
+                        "No configuration available"});
     }
 
     return m_configuration->remove_source(source_id);
@@ -212,13 +217,13 @@ std::optional<RemotePluginSource> RemotePluginLoaderBase::find_source_for_url(
 
 qtplugin::expected<RemotePluginLoadResult, PluginError>
 RemotePluginLoaderBase::load_remote(const RemotePluginSource& source,
-                                   const RemotePluginLoadOptions& options) {
+                                    const RemotePluginLoadOptions& options) {
     return perform_remote_load(source, options);
 }
 
 qtplugin::expected<RemotePluginLoadResult, PluginError>
 RemotePluginLoaderBase::load_remote(const QUrl& url,
-                                   const RemotePluginLoadOptions& options) {
+                                    const RemotePluginLoadOptions& options) {
     // Try to find an existing source for this URL
     auto source_opt = find_source_for_url(url);
     if (source_opt) {
@@ -356,9 +361,9 @@ qtplugin::expected<std::shared_ptr<IPlugin>, PluginError>
 RemotePluginLoaderBase::load_from_cache(
     const std::filesystem::path& cached_path) {
     if (!m_local_loader) {
-        return qtplugin::unexpected(PluginError{
-            PluginErrorCode::InvalidConfiguration,
-            "No local plugin loader available"});
+        return qtplugin::unexpected(
+            PluginError{PluginErrorCode::InvalidConfiguration,
+                        "No local plugin loader available"});
     }
 
     if (!std::filesystem::exists(cached_path)) {
@@ -373,8 +378,7 @@ RemotePluginLoaderBase::load_from_cache(
 void RemotePluginLoaderBase::initialize_components() {
     // Create default components if not provided
     if (!m_configuration) {
-        m_configuration = std::make_shared<RemotePluginConfiguration>(
-            RemotePluginConfiguration::create_default());
+        m_configuration = RemotePluginConfiguration::create_default();
     }
 
     if (!m_download_manager) {

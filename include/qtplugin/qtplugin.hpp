@@ -54,14 +54,14 @@
 #define QTPLUGIN_VERSION "3.2.0"
 
 // Core components
-#include "interfaces/core/plugin_interface.hpp"
+#include "core/plugin_capability_discovery.hpp"
+#include "core/plugin_dependency_resolver.hpp"
 #include "core/plugin_lifecycle_manager.hpp"
 #include "core/plugin_loader.hpp"
 #include "core/plugin_manager.hpp"
-#include "interfaces/core/service_plugin_interface.hpp"
-#include "core/plugin_capability_discovery.hpp"
-#include "core/plugin_dependency_resolver.hpp"
 #include "core/plugin_registry.hpp"
+#include "interfaces/core/plugin_interface.hpp"
+#include "interfaces/core/service_plugin_interface.hpp"
 
 // Enhanced plugin interfaces
 #include "interfaces/data/data_processor_plugin_interface.hpp"
@@ -71,20 +71,21 @@
 #ifdef QTFORGE_HAS_WIDGETS
 #include "interfaces/ui/ui_plugin_interface.hpp"
 #endif
-// #include "interfaces/scripting/scripting_plugin_interface.hpp" // Temporarily disabled - requires Qt6Qml
+// #include "interfaces/scripting/scripting_plugin_interface.hpp" // Temporarily
+// disabled - requires Qt6Qml
 
 // Platform-specific components
-#include "platform/platform_plugin_loader.hpp"
 #include "platform/platform_error_handler.hpp"
 #include "platform/platform_performance_monitor.hpp"
+#include "platform/platform_plugin_loader.hpp"
 
 // Communication system
 #include "communication/message_bus.hpp"
 #include "communication/message_types.hpp"
-#include "communication/typed_event_system.hpp"
-#include "communication/request_response_system.hpp"
-#include "communication/plugin_service_discovery.hpp"
 #include "communication/plugin_service_contracts.hpp"
+#include "communication/plugin_service_discovery.hpp"
+#include "communication/request_response_system.hpp"
+#include "communication/typed_event_system.hpp"
 
 // Security components - Removed
 // SHA256 verification functionality is preserved in PluginManager
@@ -92,15 +93,15 @@
 // Managers
 #include "managers/configuration_manager.hpp"
 #include "managers/logging_manager.hpp"
+#include "managers/plugin_version_manager.hpp"
 #include "managers/resource_lifecycle.hpp"
 #include "managers/resource_manager.hpp"
 #include "managers/resource_monitor.hpp"
-#include "managers/plugin_version_manager.hpp"
 
 // Manager components
+#include "managers/components/configuration_merger.hpp"
 #include "managers/components/configuration_storage.hpp"
 #include "managers/components/configuration_validator.hpp"
-#include "managers/components/configuration_merger.hpp"
 #include "managers/components/configuration_watcher.hpp"
 #include "managers/components/resource_allocator.hpp"
 #include "managers/components/resource_monitor.hpp"
@@ -119,21 +120,22 @@
 #include "threading/plugin_thread_pool.hpp"
 
 // Workflow components
-#include "workflow/workflow.hpp"
-#include "workflow/workflow_types.hpp"
 #include "workflow/composition.hpp"
 #include "workflow/integration.hpp"
 #include "workflow/orchestration.hpp"
 #include "workflow/transactions.hpp"
+#include "workflow/workflow.hpp"
+#include "workflow/workflow_types.hpp"
 
 // Bridge components
-#include "bridges/python_plugin_bridge.hpp"
-#include "bridges/lua_plugin_bridge.hpp"
+// Temporarily disabled due to interface compatibility issues
+// #include "bridges/lua_plugin_bridge.hpp"
+// #include "bridges/python_plugin_bridge.hpp"
 
 // Remote plugin components (require network support)
 #ifdef QTFORGE_HAS_NETWORK
-#include "remote/remote_plugin_manager.hpp"
 #include "remote/remote_plugin_loader.hpp"
+#include "remote/remote_plugin_manager.hpp"
 #include "remote/remote_security_manager.hpp"
 #include "remote/unified_plugin_manager.hpp"
 #endif

@@ -1,18 +1,17 @@
 #!/usr/bin/env python3
-"""
-QtForge Plugin Generator
+"""QtForge Plugin Generator
 A comprehensive tool for generating plugin projects with templates and scaffolding.
 """
 
+from __future__ import annotations
+
 import argparse
 import json
-import os
-import shutil
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Any
-import uuid
+from typing import Any
+
 
 class PluginTemplate:
     """Base class for plugin templates"""
@@ -20,9 +19,9 @@ class PluginTemplate:
     def __init__(self, name: str, description: str) -> None:
         self.name = name
         self.description = description
-        self.variables = {}
+        self.variables: dict[str, Any] = {}
 
-    def set_variables(self, variables: Dict[str, Any]) -> None:
+    def set_variables(self, variables: dict[str, Any]) -> None:
         """Set template variables"""
         self.variables.update(variables)
 
@@ -33,9 +32,10 @@ class PluginTemplate:
             template_content = template_content.replace(placeholder, str(value))
         return template_content
 
-    def generate_files(self, output_dir: Path) -> List[Path]:
+    def generate_files(self, output_dir: Path) -> list[Path]:
         """Generate files for this template"""
         raise NotImplementedError
+
 
 class NativePluginTemplate(PluginTemplate):
     """Template for native C++ plugins"""
@@ -43,7 +43,7 @@ class NativePluginTemplate(PluginTemplate):
     def __init__(self) -> None:
         super().__init__("native", "Native C++ plugin with full QtForge integration")
 
-    def generate_files(self, output_dir: Path) -> List[Path]:
+    def generate_files(self, output_dir: Path) -> list[Path]:
         """Generate native plugin files"""
         generated_files = []
 
@@ -89,7 +89,7 @@ class NativePluginTemplate(PluginTemplate):
 
     def _generate_header(self) -> str:
         """Generate plugin header file"""
-        return self.render_template('''/**
+        return self.render_template("""/**
  * @file {{class_name_lower}}.hpp
  * @brief {{description}}
  * @version {{version}}
@@ -98,7 +98,7 @@ class NativePluginTemplate(PluginTemplate):
 
 #pragma once
 
-#include <qtplugin/core/dynamic_plugin_interface.hpp>
+#include <qtplugin/interfaces/core/dynamic_plugin_interface.hpp>
 #include <QObject>
 #include <QString>
 #include <QJsonObject>
@@ -161,11 +161,11 @@ private:
 
     void setup_interfaces();
 };
-''')
+""")
 
     def _generate_source(self) -> str:
         """Generate plugin source file"""
-        return self.render_template('''/**
+        return self.render_template("""/**
  * @file {{class_name_lower}}.cpp
  * @brief Implementation of {{class_name}}
  * @version {{version}}
@@ -357,11 +357,11 @@ void {{class_name}}::setup_interfaces() {
 }
 
 #include "{{class_name_lower}}.moc"
-''')
+""")
 
     def _generate_cmake(self) -> str:
         """Generate CMakeLists.txt"""
-        return self.render_template('''cmake_minimum_required(VERSION 3.21)
+        return self.render_template("""cmake_minimum_required(VERSION 3.21)
 project({{project_name}} VERSION {{version}} LANGUAGES CXX)
 
 # Set C++20 standard
@@ -433,38 +433,38 @@ if(BUILD_TESTING)
 
     add_test(NAME {{target_name}}_test COMMAND {{target_name}}_test)
 endif()
-''')
+""")
 
     def _generate_metadata(self) -> str:
         """Generate metadata.json"""
         metadata = {
-            "id": self.variables['plugin_id'],
-            "name": self.variables['name'],
-            "version": self.variables['version'],
-            "description": self.variables['description'],
-            "author": self.variables['author'],
-            "license": self.variables.get('license', 'MIT'),
-            "category": self.variables.get('category', 'General'),
-            "capabilities": [self.variables.get('capability', 'Service')],
+            "id": self.variables["plugin_id"],
+            "name": self.variables["name"],
+            "version": self.variables["version"],
+            "description": self.variables["description"],
+            "author": self.variables["author"],
+            "license": self.variables.get("license", "MIT"),
+            "category": self.variables.get("category", "General"),
+            "capabilities": [self.variables.get("capability", "Service")],
             "dependencies": [],
             "interfaces": [
                 {
                     "id": f"{self.variables['plugin_id']}.main",
-                    "version": self.variables['version'],
-                    "description": self.variables['description']
+                    "version": self.variables["version"],
+                    "description": self.variables["description"],
                 }
             ],
             "generated": {
                 "timestamp": datetime.now().isoformat(),
                 "generator": "QtForge Plugin Generator v1.0",
-                "template": "native"
-            }
+                "template": "native",
+            },
         }
         return json.dumps(metadata, indent=2)
 
     def _generate_test(self) -> str:
         """Generate test file"""
-        return self.render_template('''/**
+        return self.render_template("""/**
  * @file test_{{class_name_lower}}.cpp
  * @brief Unit tests for {{class_name}}
  */
@@ -534,7 +534,8 @@ void Test{{class_name}}::testConfiguration() {
 
 QTEST_MAIN(Test{{class_name}})
 #include "test_{{class_name_lower}}.moc"
-''')
+""")
+
 
 class PythonPluginTemplate(PluginTemplate):
     """Template for Python script plugins"""
@@ -542,7 +543,7 @@ class PythonPluginTemplate(PluginTemplate):
     def __init__(self) -> None:
         super().__init__("python", "Python script plugin with QtForge integration")
 
-    def generate_files(self, output_dir: Path) -> List[Path]:
+    def generate_files(self, output_dir: Path) -> list[Path]:
         """Generate Python plugin files"""
         generated_files = []
 
@@ -661,7 +662,7 @@ class {{class_name}}:
     def capabilities(self) -> List[str]:
         return ["{{capability}}"]
 
-    def configure(self, config: Dict[str, Any]) -> Dict[str, Any]:
+    def configure(self, config: dict[str, Any]) -> dict[str, Any]:
         """Configure the plugin"""
         try:
             self.configuration.update(config)
@@ -675,7 +676,7 @@ class {{class_name}}:
     def current_configuration(self) -> Dict[str, Any]:
         return self.configuration.copy()
 
-    def execute_command(self, command: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def execute_command(self, command: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
         """Execute a plugin command"""
         if params is None:
             params = {}
@@ -728,7 +729,7 @@ class {{class_name}}:
             "timeout": 60000
         }
 
-    def execute_code(self, code: str, context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def execute_code(self, code: str, context: dict[str, Any] | None = None) -> dict[str, Any]:
         """Execute Python code in plugin context"""
         if context is None:
             context = {}
@@ -759,8 +760,8 @@ class {{class_name}}:
             logger.error(f"Code execution failed: {e}")
             return {"success": False, "error": str(e)}
 
-    def invoke_method(self, method_name: str, parameters: Optional[List[Any]] = None,
-                     interface_id: str = "") -> Dict[str, Any]:
+    def invoke_method(self, method_name: str, parameters: list[Any] | None = None,
+                     interface_id: str = "") -> dict[str, Any]:
         """Invoke a method dynamically"""
         if parameters is None:
             parameters = []
@@ -818,39 +819,39 @@ if __name__ == "__main__":
     def _generate_metadata(self) -> str:
         """Generate metadata.json for Python plugin"""
         metadata = {
-            "id": self.variables['plugin_id'],
-            "name": self.variables['name'],
-            "version": self.variables['version'],
-            "description": self.variables['description'],
-            "author": self.variables['author'],
-            "license": self.variables.get('license', 'MIT'),
-            "category": self.variables.get('category', 'General'),
+            "id": self.variables["plugin_id"],
+            "name": self.variables["name"],
+            "version": self.variables["version"],
+            "description": self.variables["description"],
+            "author": self.variables["author"],
+            "license": self.variables.get("license", "MIT"),
+            "category": self.variables.get("category", "General"),
             "type": "python",
             "entry_point": f"{self.variables['plugin_name']}.py",
-            "main_class": self.variables['class_name'],
-            "capabilities": [self.variables.get('capability', 'Service')],
+            "main_class": self.variables["class_name"],
+            "capabilities": [self.variables.get("capability", "Service")],
             "dependencies": [],
             "python_requirements": ["qtforge-python-bridge"],
             "interfaces": [
                 {
                     "id": f"{self.variables['plugin_id']}.main",
-                    "version": self.variables['version'],
-                    "description": self.variables['description']
+                    "version": self.variables["version"],
+                    "description": self.variables["description"],
                 }
             ],
             "generated": {
                 "timestamp": datetime.now().isoformat(),
                 "generator": "QtForge Plugin Generator v1.0",
-                "template": "python"
-            }
+                "template": "python",
+            },
         }
         return json.dumps(metadata, indent=2)
 
     def _generate_requirements(self) -> str:
         """Generate requirements.txt"""
-        return '''# QtForge Python Plugin Requirements
+        return """# QtForge Python Plugin Requirements
 qtforge-python-bridge>=1.0.0
-'''
+"""
 
     def _generate_test(self) -> str:
         """Generate test file"""
@@ -960,6 +961,7 @@ if __name__ == "__main__":
     unittest.main()
 ''')
 
+
 class PluginGenerator:
     """Main plugin generator class"""
 
@@ -969,7 +971,9 @@ class PluginGenerator:
             "python": PythonPluginTemplate(),
         }
 
-    def generate_plugin(self, template_name: str, output_dir: Path, variables: Dict[str, Any]) -> List[Path]:
+    def generate_plugin(
+        self, template_name: str, output_dir: Path, variables: dict[str, Any]
+    ) -> list[Path]:
         """Generate a plugin using the specified template"""
         if template_name not in self.templates:
             raise ValueError(f"Unknown template: {template_name}")
@@ -988,7 +992,7 @@ class PluginGenerator:
 
         return generated_files
 
-    def _get_default_variables(self, user_variables: Dict[str, Any]) -> Dict[str, Any]:
+    def _get_default_variables(self, user_variables: dict[str, Any]) -> dict[str, Any]:
         """Get default variables with user overrides"""
         defaults = {
             "version": "1.0.0",
@@ -1004,7 +1008,9 @@ class PluginGenerator:
         # Generate derived variables
         if "name" in defaults and "class_name" not in defaults:
             # Convert name to class name (e.g., "My Plugin" -> "MyPlugin")
-            defaults["class_name"] = "".join(word.capitalize() for word in defaults["name"].split())
+            defaults["class_name"] = "".join(
+                word.capitalize() for word in defaults["name"].split()
+            )
 
         if "class_name" in defaults and "class_name_lower" not in defaults:
             defaults["class_name_lower"] = defaults["class_name"].lower()
@@ -1026,54 +1032,62 @@ class PluginGenerator:
 
         return defaults
 
-    def list_templates(self) -> List[str]:
+    def list_templates(self) -> list[str]:
         """Get list of available templates"""
         return list(self.templates.keys())
 
-    def get_template_info(self, template_name: str) -> Optional[Dict[str, str]]:
+    def get_template_info(self, template_name: str) -> dict[str, str] | None:
         """Get information about a template"""
         if template_name not in self.templates:
             return None
 
         template = self.templates[template_name]
-        return {
-            "name": template.name,
-            "description": template.description
-        }
+        return {"name": template.name, "description": template.description}
 
-def main() -> None:
-    """Main entry point"""
+
+def main() -> int:
+    """Main entry point."""
     parser = argparse.ArgumentParser(
         description="QtForge Plugin Generator - Create plugin projects with templates and scaffolding"
     )
 
-    parser.add_argument("--version", action="version", version="QtForge Plugin Generator v1.0")
+    parser.add_argument(
+        "--version", action="version", version="QtForge Plugin Generator v1.0"
+    )
 
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
     # Generate command
     generate_parser = subparsers.add_parser("generate", help="Generate a new plugin")
-    generate_parser.add_argument("template", choices=["native", "python"],
-                               help="Plugin template to use")
+    generate_parser.add_argument(
+        "template", choices=["native", "python"], help="Plugin template to use"
+    )
     generate_parser.add_argument("name", help="Plugin name")
-    generate_parser.add_argument("-o", "--output", type=Path, default=Path("."),
-                               help="Output directory (default: current directory)")
-    generate_parser.add_argument("--author", default="Plugin Developer",
-                               help="Plugin author name")
-    generate_parser.add_argument("--description",
-                               help="Plugin description")
-    generate_parser.add_argument("--version", default="1.0.0",
-                               help="Plugin version")
-    generate_parser.add_argument("--license", default="MIT",
-                               help="Plugin license")
-    generate_parser.add_argument("--category", default="General",
-                               help="Plugin category")
-    generate_parser.add_argument("--capability", default="Service",
-                               help="Plugin capability")
-    generate_parser.add_argument("--plugin-id",
-                               help="Plugin ID (default: auto-generated)")
-    generate_parser.add_argument("--class-name",
-                               help="Plugin class name (default: auto-generated)")
+    generate_parser.add_argument(
+        "-o",
+        "--output",
+        type=Path,
+        default=Path(),
+        help="Output directory (default: current directory)",
+    )
+    generate_parser.add_argument(
+        "--author", default="Plugin Developer", help="Plugin author name"
+    )
+    generate_parser.add_argument("--description", help="Plugin description")
+    generate_parser.add_argument("--version", default="1.0.0", help="Plugin version")
+    generate_parser.add_argument("--license", default="MIT", help="Plugin license")
+    generate_parser.add_argument(
+        "--category", default="General", help="Plugin category"
+    )
+    generate_parser.add_argument(
+        "--capability", default="Service", help="Plugin capability"
+    )
+    generate_parser.add_argument(
+        "--plugin-id", help="Plugin ID (default: auto-generated)"
+    )
+    generate_parser.add_argument(
+        "--class-name", help="Plugin class name (default: auto-generated)"
+    )
 
     # List command
     list_parser = subparsers.add_parser("list", help="List available templates")
@@ -1104,7 +1118,9 @@ def main() -> None:
         if args.description:
             variables["description"] = args.description
         else:
-            variables["description"] = f"A {args.template} plugin generated by QtForge Plugin Generator"
+            variables["description"] = (
+                f"A {args.template} plugin generated by QtForge Plugin Generator"
+            )
 
         if args.plugin_id:
             variables["plugin_id"] = args.plugin_id
@@ -1114,8 +1130,13 @@ def main() -> None:
 
         try:
             # Generate plugin
-            output_dir = args.output / variables.get("plugin_name", args.name.lower().replace(" ", "_"))
-            generated_files = generator.generate_plugin(args.template, output_dir, variables)
+            plugin_name = variables.get("plugin_name")
+            if plugin_name is None:
+                plugin_name = args.name.lower().replace(" ", "_")
+            output_dir = args.output / plugin_name
+            generated_files = generator.generate_plugin(
+                args.template, output_dir, variables
+            )
 
             print(f"✅ Successfully generated {args.template} plugin '{args.name}'")
             print(f"📁 Output directory: {output_dir.absolute()}")
@@ -1145,7 +1166,8 @@ def main() -> None:
         print("Available plugin templates:")
         for template_name in generator.list_templates():
             info = generator.get_template_info(template_name)
-            print(f"  {template_name:10} - {info['description']}")
+            if info:
+                print(f"  {template_name:10} - {info['description']}")
         return 0
 
     elif args.command == "info":
@@ -1154,11 +1176,11 @@ def main() -> None:
             print(f"Template: {info['name']}")
             print(f"Description: {info['description']}")
             return 0
-        else:
-            print(f"❌ Unknown template: {args.template}")
-            return 1
+        print(f"❌ Unknown template: {args.template}")
+        return 1
 
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(main())

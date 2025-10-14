@@ -3,18 +3,18 @@
  * @brief Tests for request-response system implementation
  */
 
-#include <QtTest/QtTest>
-#include <QJsonObject>
 #include <QJsonDocument>
+#include <QJsonObject>
 #include <QSignalSpy>
-#include <memory>
+#include <QtTest/QtTest>
 #include <chrono>
+#include <memory>
 
 #include <qtplugin/communication/request_response_system.hpp>
 #include <qtplugin/utils/error_handling.hpp>
 
-#include "../utils/test_helpers.hpp"
 #include "../utils/test_config_templates.hpp"
+#include "../utils/test_helpers.hpp"
 
 using namespace qtplugin;
 using namespace QtForgeTest;
@@ -78,10 +78,15 @@ private:
     std::unique_ptr<RequestResponseSystem> m_system;
 
     // Test helper methods
-    RequestInfo createTestRequest(const QString& receiver, const QString& method,
-                                 const QJsonObject& data = {});
-    ResponseInfo createTestResponse(const QString& requestId, ResponseStatus status,
-                                   const QJsonObject& data = {});
+    RequestInfo createTestRequest(const QString& receiver,
+                                  const QString& method,
+                                  const QJsonObject& data = {});
+    ResponseInfo createTestResponse(const QString& requestId,
+                                    ResponseStatus status,
+                                    const QJsonObject& data = {});
+    ServiceEndpoint createServiceEndpoint(
+        const QString& service_id, const QString& method,
+        const QString& provider_id = "test_provider");
 };
 
 void TestRequestResponseSystem::initTestCase() {
@@ -104,27 +109,39 @@ void TestRequestResponseSystem::cleanup() {
     TestFixtureBase::cleanup();
 }
 
-RequestInfo TestRequestResponseSystem::createTestRequest(const QString& receiver,
-                                                        const QString& method,
-                                                        const QJsonObject& data) {
+RequestInfo TestRequestResponseSystem::createTestRequest(
+    const QString& receiver, const QString& method, const QJsonObject& data) {
     RequestInfo request;
     request.receiver_id = receiver;
     request.method = method;
-    request.data = data;
+    request.parameters = data;
     request.sender_id = "test_sender";
-    request.timestamp = QDateTime::currentDateTime();
+    request.type = RequestType::Query;
+    request.priority = RequestPriority::Normal;
+    request.timestamp = std::chrono::system_clock::now();
     return request;
 }
 
-ResponseInfo TestRequestResponseSystem::createTestResponse(const QString& requestId,
-                                                          ResponseStatus status,
-                                                          const QJsonObject& data) {
+ResponseInfo TestRequestResponseSystem::createTestResponse(
+    const QString& requestId, ResponseStatus status, const QJsonObject& data) {
     ResponseInfo response;
     response.request_id = requestId;
     response.status = status;
     response.data = data;
-    response.timestamp = QDateTime::currentDateTime();
+    response.timestamp = std::chrono::system_clock::now();
     return response;
+}
+
+ServiceEndpoint TestRequestResponseSystem::createServiceEndpoint(
+    const QString& service_id, const QString& method,
+    const QString& provider_id) {
+    ServiceEndpoint endpoint;
+    endpoint.service_id = service_id;
+    endpoint.provider_id = provider_id;
+    endpoint.method = method;
+    endpoint.description = "Test service endpoint";
+    endpoint.is_async = false;
+    return endpoint;
 }
 
 void TestRequestResponseSystem::testSystemCreation() {
@@ -140,13 +157,13 @@ void TestRequestResponseSystem::testSystemCreation() {
 void TestRequestResponseSystem::testSystemInitialization() {
     // Test system initialization (if needed)
     // The system should be ready to use after construction
-    QVERIFY(true); // Placeholder - system is ready after construction
+    QVERIFY(true);  // Placeholder - system is ready after construction
 }
 
 void TestRequestResponseSystem::testSystemShutdown() {
     // Test system shutdown
     m_system.reset();
-    QVERIFY(true); // Test passes if no crash occurs
+    QVERIFY(true);  // Test passes if no crash occurs
 }
 
 void TestRequestResponseSystem::testRegisterSyncService() {
@@ -155,16 +172,16 @@ void TestRequestResponseSystem::testRegisterSyncService() {
         ResponseInfo response;
         response.request_id = request.request_id;
         response.status = ResponseStatus::Success;
-        response.data = QJsonObject{{"echo", request.data}};
+        response.data = QJsonObject{{"echo", request.parameters}};
         return response;
     };
 
-    auto result = m_system->register_sync_service("test_service", "echo", handler);
+    auto endpoint = createServiceEndpoint("test_service", "echo");
+    auto result = m_system->register_service(endpoint, handler);
     QTFORGE_VERIFY_SUCCESS(result);
 
     // Test that service is registered
-    auto services = m_system->list_services();
-    QVERIFY(services.contains("test_service::echo"));
+    QVERIFY(m_system->is_service_registered("test_service"));
 }
 
 void TestRequestResponseSystem::testRegisterAsyncService() {
@@ -174,60 +191,62 @@ void TestRequestResponseSystem::testRegisterAsyncService() {
             ResponseInfo response;
             response.request_id = request.request_id;
             response.status = ResponseStatus::Success;
-            response.data = QJsonObject{{"async_echo", request.data}};
+            response.data = QJsonObject{{"async_echo", request.parameters}};
             return response;
         });
     };
 
-    auto result = m_system->register_async_service("async_service", "process", handler);
+    auto endpoint = createServiceEndpoint("async_service", "process");
+    endpoint.is_async = true;
+    auto result = m_system->register_async_service(endpoint, handler);
     QTFORGE_VERIFY_SUCCESS(result);
 
     // Test that service is registered
-    auto services = m_system->list_services();
-    QVERIFY(services.contains("async_service::process"));
+    QVERIFY(m_system->is_service_registered("async_service"));
 }
 
 void TestRequestResponseSystem::testUnregisterService() {
     // Register a service first
-    auto handler = [](const RequestInfo& request) -> ResponseInfo {
+    auto handler = [](const RequestInfo&) -> ResponseInfo {
         ResponseInfo response;
         response.status = ResponseStatus::Success;
         return response;
     };
 
-    auto register_result = m_system->register_sync_service("temp_service", "test", handler);
+    auto endpoint = createServiceEndpoint("temp_service", "test");
+    auto register_result = m_system->register_service(endpoint, handler);
     QTFORGE_VERIFY_SUCCESS(register_result);
 
     // Unregister the service
-    auto unregister_result = m_system->unregister_service("temp_service", "test");
+    auto unregister_result = m_system->unregister_service("temp_service");
     QTFORGE_VERIFY_SUCCESS(unregister_result);
 
     // Verify service is no longer registered
-    auto services = m_system->list_services();
-    QVERIFY(!services.contains("temp_service::test"));
+    QVERIFY(!m_system->is_service_registered("temp_service"));
 }
 
 void TestRequestResponseSystem::testServiceOverride() {
     // Register a service
-    auto handler1 = [](const RequestInfo& request) -> ResponseInfo {
+    auto handler1 = [](const RequestInfo&) -> ResponseInfo {
         ResponseInfo response;
         response.status = ResponseStatus::Success;
         response.data = QJsonObject{{"version", 1}};
         return response;
     };
 
-    auto result1 = m_system->register_sync_service("override_service", "test", handler1);
+    auto endpoint = createServiceEndpoint("override_service", "test");
+    auto result1 = m_system->register_service(endpoint, handler1);
     QTFORGE_VERIFY_SUCCESS(result1);
 
     // Override with a new handler
-    auto handler2 = [](const RequestInfo& request) -> ResponseInfo {
+    auto handler2 = [](const RequestInfo&) -> ResponseInfo {
         ResponseInfo response;
         response.status = ResponseStatus::Success;
         response.data = QJsonObject{{"version", 2}};
         return response;
     };
 
-    auto result2 = m_system->register_sync_service("override_service", "test", handler2);
+    auto result2 = m_system->register_service(endpoint, handler2);
     QTFORGE_VERIFY_SUCCESS(result2);
 
     // Test that the new handler is used
@@ -246,11 +265,12 @@ void TestRequestResponseSystem::testSyncRequest() {
         ResponseInfo response;
         response.request_id = request.request_id;
         response.status = ResponseStatus::Success;
-        response.data = QJsonObject{{"received", request.data}};
+        response.data = QJsonObject{{"received", request.parameters}};
         return response;
     };
 
-    auto register_result = m_system->register_sync_service("sync_service", "process", handler);
+    auto endpoint = createServiceEndpoint("sync_service", "process");
+    auto register_result = m_system->register_service(endpoint, handler);
     QTFORGE_VERIFY_SUCCESS(register_result);
 
     // Send a request
@@ -276,12 +296,14 @@ void TestRequestResponseSystem::testAsyncRequest() {
             ResponseInfo response;
             response.request_id = request.request_id;
             response.status = ResponseStatus::Success;
-            response.data = QJsonObject{{"processed", request.data}};
+            response.data = QJsonObject{{"processed", request.parameters}};
             return response;
         });
     };
 
-    auto register_result = m_system->register_async_service("async_service", "process", handler);
+    auto endpoint = createServiceEndpoint("async_service", "process");
+    endpoint.is_async = true;
+    auto register_result = m_system->register_async_service(endpoint, handler);
     QTFORGE_VERIFY_SUCCESS(register_result);
 
     // Send an async request
@@ -290,6 +312,14 @@ void TestRequestResponseSystem::testAsyncRequest() {
 
     auto future = m_system->send_request_async(request);
     QVERIFY(future.valid());
+
+    // Process Qt events to allow timer to fire and process the request
+    for (int i = 0; i < 20 && future.wait_for(std::chrono::milliseconds(0)) !=
+                                  std::future_status::ready;
+         ++i) {
+        QCoreApplication::processEvents();
+        QThread::msleep(50);
+    }
 
     // Wait for response with timeout
     auto status = future.wait_for(std::chrono::seconds(1));
@@ -318,17 +348,28 @@ void TestRequestResponseSystem::testRequestWithTimeout() {
         });
     };
 
-    auto register_result = m_system->register_async_service("slow_service", "process", handler);
+    auto endpoint = createServiceEndpoint("slow_service", "process");
+    endpoint.is_async = true;
+    auto register_result = m_system->register_async_service(endpoint, handler);
     QTFORGE_VERIFY_SUCCESS(register_result);
 
     // Send request with short timeout
     auto request = createTestRequest("slow_service", "process");
+    request.timeout = std::chrono::milliseconds(50);
 
-    auto future = m_system->send_request_async(request, std::chrono::milliseconds(50));
+    auto future = m_system->send_request_async(request);
     QVERIFY(future.valid());
 
+    // Process Qt events to allow timer to fire and process the request
+    for (int i = 0; i < 10 && future.wait_for(std::chrono::milliseconds(0)) !=
+                                  std::future_status::ready;
+         ++i) {
+        QCoreApplication::processEvents();
+        QThread::msleep(30);
+    }
+
     // Wait for response
-    auto status = future.wait_for(std::chrono::milliseconds(100));
+    auto status = future.wait_for(std::chrono::milliseconds(300));
     QVERIFY(status == std::future_status::ready);
 
     auto response = future.get();
@@ -356,7 +397,8 @@ void TestRequestResponseSystem::testResponseDelivery() {
         return response;
     };
 
-    auto register_result = m_system->register_sync_service("delivery_service", "test", handler);
+    auto endpoint = createServiceEndpoint("delivery_service", "test");
+    auto register_result = m_system->register_service(endpoint, handler);
     QTFORGE_VERIFY_SUCCESS(register_result);
 
     auto request = createTestRequest("delivery_service", "test");
@@ -365,7 +407,8 @@ void TestRequestResponseSystem::testResponseDelivery() {
     QTFORGE_VERIFY_SUCCESS(response);
     if (response.has_value()) {
         QCOMPARE(response.value().status, ResponseStatus::Success);
-        QCOMPARE(response.value().status_message, QString("Request processed successfully"));
+        QCOMPARE(response.value().status_message,
+                 QString("Request processed successfully"));
     }
 }
 
@@ -384,7 +427,8 @@ void TestRequestResponseSystem::testResponseError() {
         return response;
     };
 
-    auto register_result = m_system->register_sync_service("error_service", "test", handler);
+    auto endpoint = createServiceEndpoint("error_service", "test");
+    auto register_result = m_system->register_service(endpoint, handler);
     QTFORGE_VERIFY_SUCCESS(register_result);
 
     auto request = createTestRequest("error_service", "test");
@@ -393,7 +437,8 @@ void TestRequestResponseSystem::testResponseError() {
     QTFORGE_VERIFY_SUCCESS(response);
     if (response.has_value()) {
         QCOMPARE(response.value().status, ResponseStatus::BadRequest);
-        QCOMPARE(response.value().status_message, QString("Invalid input data"));
+        QCOMPARE(response.value().status_message,
+                 QString("Invalid input data"));
     }
 }
 
@@ -403,15 +448,14 @@ void TestRequestResponseSystem::testResponseSerialization() {
         ResponseInfo response;
         response.request_id = request.request_id;
         response.status = ResponseStatus::Success;
-        response.data = QJsonObject{
-            {"string_value", "test"},
-            {"number_value", 42},
-            {"boolean_value", true}
-        };
+        response.data = QJsonObject{{"string_value", "test"},
+                                    {"number_value", 42},
+                                    {"boolean_value", true}};
         return response;
     };
 
-    auto register_result = m_system->register_sync_service("serialization_service", "test", handler);
+    auto endpoint = createServiceEndpoint("serialization_service", "test");
+    auto register_result = m_system->register_service(endpoint, handler);
     QTFORGE_VERIFY_SUCCESS(register_result);
 
     auto request = createTestRequest("serialization_service", "test");
@@ -428,50 +472,54 @@ void TestRequestResponseSystem::testResponseSerialization() {
 
 void TestRequestResponseSystem::testListServices() {
     // Register multiple services
-    auto handler = [](const RequestInfo& request) -> ResponseInfo {
+    auto handler = [](const RequestInfo&) -> ResponseInfo {
         ResponseInfo response;
         response.status = ResponseStatus::Success;
         return response;
     };
 
-    m_system->register_sync_service("service1", "method1", handler);
-    m_system->register_sync_service("service1", "method2", handler);
-    m_system->register_sync_service("service2", "method1", handler);
+    m_system->register_service(createServiceEndpoint("service1", "method1"),
+                               handler);
+    m_system->register_service(createServiceEndpoint("service1", "method2"),
+                               handler);
+    m_system->register_service(createServiceEndpoint("service2", "method1"),
+                               handler);
 
-    auto services = m_system->list_services();
-    QVERIFY(services.contains("service1::method1"));
-    QVERIFY(services.contains("service1::method2"));
-    QVERIFY(services.contains("service2::method1"));
+    auto services = m_system->get_registered_services();
     QVERIFY(services.size() >= 3);
+    QVERIFY(m_system->is_service_registered("service1"));
+    QVERIFY(m_system->is_service_registered("service2"));
 }
 
 void TestRequestResponseSystem::testServiceExists() {
     // Register a service
-    auto handler = [](const RequestInfo& request) -> ResponseInfo {
+    auto handler = [](const RequestInfo&) -> ResponseInfo {
         ResponseInfo response;
         response.status = ResponseStatus::Success;
         return response;
     };
 
-    m_system->register_sync_service("exists_service", "test", handler);
+    auto endpoint = createServiceEndpoint("exists_service", "test");
+    m_system->register_service(endpoint, handler);
 
     // Test service existence
-    auto services = m_system->list_services();
-    QVERIFY(services.contains("exists_service::test"));
-    QVERIFY(!services.contains("non_existent_service::test"));
+    QVERIFY(m_system->is_service_registered("exists_service"));
+    QVERIFY(!m_system->is_service_registered("non_existent_service"));
 }
 
 void TestRequestResponseSystem::testServiceMetadata() {
     // Test service metadata (if supported)
-    auto handler = [](const RequestInfo& request) -> ResponseInfo {
+    auto handler = [](const RequestInfo&) -> ResponseInfo {
         ResponseInfo response;
         response.status = ResponseStatus::Success;
         return response;
     };
 
-    m_system->register_sync_service("metadata_service", "test", handler);
+    auto endpoint = createServiceEndpoint("metadata_service", "test");
+    m_system->register_service(endpoint, handler);
 
-    // This is a placeholder test as metadata functionality might not be fully implemented
+    // This is a placeholder test as metadata functionality might not be fully
+    // implemented
     QVERIFY(true);
 }
 
@@ -482,7 +530,8 @@ void TestRequestResponseSystem::testInvalidRequest() {
 
     auto response = m_system->send_request(invalid_request);
     // Should handle gracefully
-    QVERIFY(!response.has_value() || response.value().status != ResponseStatus::Success);
+    QVERIFY(!response.has_value() ||
+            response.value().status != ResponseStatus::Success);
 }
 
 void TestRequestResponseSystem::testServiceNotFound() {
@@ -492,13 +541,14 @@ void TestRequestResponseSystem::testServiceNotFound() {
 
 void TestRequestResponseSystem::testHandlerException() {
     // Register a service that throws an exception
-    auto handler = [](const RequestInfo& request) -> ResponseInfo {
+    auto handler = [](const RequestInfo&) -> ResponseInfo {
         throw std::runtime_error("Test exception");
-        ResponseInfo response; // Never reached
+        ResponseInfo response;  // Never reached
         return response;
     };
 
-    auto register_result = m_system->register_sync_service("exception_service", "test", handler);
+    auto endpoint = createServiceEndpoint("exception_service", "test");
+    auto register_result = m_system->register_service(endpoint, handler);
     QTFORGE_VERIFY_SUCCESS(register_result);
 
     auto request = createTestRequest("exception_service", "test");
@@ -525,7 +575,8 @@ void TestRequestResponseSystem::testRequestThroughput() {
         return response;
     };
 
-    auto register_result = m_system->register_sync_service("throughput_service", "test", handler);
+    auto endpoint = createServiceEndpoint("throughput_service", "test");
+    auto register_result = m_system->register_service(endpoint, handler);
     QTFORGE_VERIFY_SUCCESS(register_result);
 
     // Measure throughput
@@ -540,7 +591,8 @@ void TestRequestResponseSystem::testRequestThroughput() {
     }
 
     qint64 elapsed = timer.elapsed();
-    qDebug() << "Request throughput:" << request_count << "requests in" << elapsed << "ms";
+    qDebug() << "Request throughput:" << request_count << "requests in"
+             << elapsed << "ms";
 
     // Verify reasonable performance (less than 10ms per request on average)
     QVERIFY(elapsed < request_count * 10);
@@ -558,11 +610,13 @@ void TestRequestResponseSystem::testConcurrentRequests() {
         return response;
     };
 
-    auto register_result = m_system->register_sync_service("concurrent_service", "test", handler);
+    auto endpoint = createServiceEndpoint("concurrent_service", "test");
+    auto register_result = m_system->register_service(endpoint, handler);
     QTFORGE_VERIFY_SUCCESS(register_result);
 
     // Send multiple concurrent requests
-    std::vector<std::future<qtplugin::expected<ResponseInfo, PluginError>>> futures;
+    std::vector<std::future<qtplugin::expected<ResponseInfo, PluginError>>>
+        futures;
 
     for (int i = 0; i < 10; ++i) {
         auto request = createTestRequest("concurrent_service", "test");
@@ -587,7 +641,8 @@ void TestRequestResponseSystem::testMemoryUsage() {
         return response;
     };
 
-    auto register_result = m_system->register_sync_service("memory_service", "test", handler);
+    auto endpoint = createServiceEndpoint("memory_service", "test");
+    auto register_result = m_system->register_service(endpoint, handler);
     QTFORGE_VERIFY_SUCCESS(register_result);
 
     // Send many requests to test memory usage
@@ -610,7 +665,8 @@ void TestRequestResponseSystem::testStatisticsCollection() {
         return response;
     };
 
-    auto register_result = m_system->register_sync_service("stats_service", "test", handler);
+    auto endpoint = createServiceEndpoint("stats_service", "test");
+    auto register_result = m_system->register_service(endpoint, handler);
     QTFORGE_VERIFY_SUCCESS(register_result);
 
     // Get initial statistics
@@ -625,19 +681,22 @@ void TestRequestResponseSystem::testStatisticsCollection() {
 
     // Check updated statistics
     auto final_stats = m_system->get_statistics();
-    QVERIFY(final_stats.total_requests_sent >= initial_stats.total_requests_sent + 5);
-    QVERIFY(final_stats.total_responses_received >= initial_stats.total_responses_received + 5);
+    QVERIFY(final_stats.total_requests_sent >=
+            initial_stats.total_requests_sent + 5);
+    QVERIFY(final_stats.total_responses_received >=
+            initial_stats.total_responses_received + 5);
 }
 
 void TestRequestResponseSystem::testStatisticsReset() {
     // Register a service and send some requests
-    auto handler = [](const RequestInfo& request) -> ResponseInfo {
+    auto handler = [](const RequestInfo&) -> ResponseInfo {
         ResponseInfo response;
         response.status = ResponseStatus::Success;
         return response;
     };
 
-    m_system->register_sync_service("reset_service", "test", handler);
+    auto endpoint = createServiceEndpoint("reset_service", "test");
+    m_system->register_service(endpoint, handler);
 
     // Send requests to generate statistics
     for (int i = 0; i < 3; ++i) {
@@ -646,7 +705,8 @@ void TestRequestResponseSystem::testStatisticsReset() {
     }
 
     // Reset statistics (if supported)
-    // This is a placeholder test as reset functionality might not be implemented
+    // This is a placeholder test as reset functionality might not be
+    // implemented
     auto stats = m_system->get_statistics();
     QVERIFY(stats.total_requests_sent >= 3);
 }

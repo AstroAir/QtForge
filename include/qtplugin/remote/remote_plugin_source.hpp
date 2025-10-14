@@ -131,6 +131,11 @@ struct RemoteSourceConfig {
 class RemotePluginSource {
 public:
     /**
+     * @brief Default constructor
+     */
+    RemotePluginSource() = default;
+
+    /**
      * @brief Constructor
      * @param url Source URL
      * @param type Source type (auto-detected if not specified)
@@ -368,6 +373,12 @@ public:
      * @brief Destructor
      */
     ~RemoteSourceManager();
+
+    // Delete copy and move operations (contains non-copyable/non-movable mutex)
+    RemoteSourceManager(const RemoteSourceManager&) = delete;
+    RemoteSourceManager& operator=(const RemoteSourceManager&) = delete;
+    RemoteSourceManager(RemoteSourceManager&&) = delete;
+    RemoteSourceManager& operator=(RemoteSourceManager&&) = delete;
 
     /**
      * @brief Add a remote source

@@ -4,7 +4,7 @@
  * @version 3.2.0
  */
 
-#include "../../include/qtplugin/core/dynamic_plugin_interface.hpp"
+#include "../../include/qtplugin/interfaces/core/dynamic_plugin_interface.hpp"
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>

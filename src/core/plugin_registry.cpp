@@ -297,6 +297,4 @@ qtplugin::expected<void, PluginError> PluginRegistry::update_plugin_info(
     return make_success();
 }
 
-
-
 }  // namespace qtplugin

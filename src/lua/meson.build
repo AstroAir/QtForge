@@ -10,7 +10,7 @@ message('Building QtForge Lua bindings')
 # Lua binding sources - minimal components only (matching CMake configuration)
 lua_binding_sources = [
   'qtforge_lua.cpp',
-  # 'qt_conversions.cpp',  # Temporarily disabled due to Qt dependencies
+  'qt_conversions.cpp',  # Required for Qt type conversions in Lua bindings
   'core/core_bindings.cpp',
   # 'core/metadata_bindings.cpp',  # Temporarily disabled due to Qt dependencies
   'utils/utils_bindings.cpp',

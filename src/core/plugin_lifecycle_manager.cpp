@@ -15,10 +15,10 @@
 #include <QUuid>
 #include <algorithm>
 #include <atomic>
+#include <future>
 #include <memory>
 #include <mutex>
 #include <unordered_map>
-#include <future>
 
 Q_LOGGING_CATEGORY(pluginLifecycleLog, "qtplugin.plugin.lifecycle")
 
@@ -320,7 +320,7 @@ void PluginLifecycleManager::Private::create_state_machine(
         return;
 
     // Create our custom state machine
-    QString plugin_id = QString::fromStdString(info->plugin->id());
+    QString plugin_id = QString::fromStdString(info->plugin->metadata().name);
     info->state_machine = std::make_unique<PluginStateMachine>(plugin_id);
 
     // Set up state transition callback to emit lifecycle events
@@ -341,11 +341,12 @@ void PluginLifecycleManager::Private::create_state_machine(
             emit_lifecycle_event(event_data);
 
             // TODO: Re-enable when MOC issues are resolved
-            // emit q_ptr->plugin_state_changed(plugin_id, old_state, new_state);
+            // emit q_ptr->plugin_state_changed(plugin_id, old_state,
+            // new_state);
         });
 
-    qCDebug(pluginLifecycleLog)
-        << "Created custom state machine for plugin:" << info->plugin->id();
+    qCDebug(pluginLifecycleLog) << "Created custom state machine for plugin:"
+                                << info->plugin->metadata().name.c_str();
 }
 
 void PluginLifecycleManager::Private::emit_lifecycle_event(
@@ -632,7 +633,7 @@ qtplugin::expected<void, PluginError> PluginLifecycleManager::register_plugin(
                                 "Plugin is null");
     }
 
-    QString plugin_id = QString::fromStdString(plugin->id());
+    QString plugin_id = QString::fromStdString(plugin->metadata().name);
 
     QMutexLocker locker(&d->mutex);
 
@@ -728,7 +729,8 @@ qtplugin::expected<void, PluginError> PluginLifecycleManager::initialize_plugin(
     // Handle proper state transitions based on current state
     if (current_state == PluginState::Unloaded) {
         // First transition to Loading
-        auto loading_result = info->state_machine->transition_to(PluginState::Loading);
+        auto loading_result =
+            info->state_machine->transition_to(PluginState::Loading);
         if (!loading_result) {
             return make_error<void>(PluginErrorCode::InvalidState,
                                     "Cannot transition to loading state: " +
@@ -736,16 +738,19 @@ qtplugin::expected<void, PluginError> PluginLifecycleManager::initialize_plugin(
         }
 
         // Then transition to Loaded
-        auto loaded_result = info->state_machine->transition_to(PluginState::Loaded);
+        auto loaded_result =
+            info->state_machine->transition_to(PluginState::Loaded);
         if (!loaded_result) {
             return make_error<void>(PluginErrorCode::InvalidState,
                                     "Cannot transition to loaded state: " +
                                         loaded_result.error().message);
         }
     } else if (current_state != PluginState::Loaded) {
-        return make_error<void>(PluginErrorCode::InvalidState,
-                                "Plugin must be in Unloaded or Loaded state to initialize, current state: " +
-                                    std::to_string(static_cast<int>(current_state)));
+        return make_error<void>(
+            PluginErrorCode::InvalidState,
+            "Plugin must be in Unloaded or Loaded state to initialize, current "
+            "state: " +
+                std::to_string(static_cast<int>(current_state)));
     }
 
     // Transition to initializing state
@@ -1283,8 +1288,9 @@ void PluginLifecycleManager::on_operation_timeout() {
 
 // === Enhanced Resource Management and State Migration ===
 
-qtplugin::expected<void, PluginError> PluginLifecycleManager::migrate_plugin_state(
-    const QString& plugin_id, const QJsonObject& state_data) {
+qtplugin::expected<void, PluginError>
+PluginLifecycleManager::migrate_plugin_state(const QString& plugin_id,
+                                             const QJsonObject& state_data) {
     QMutexLocker locker(&d->mutex);
 
     auto it = d->plugins.find(plugin_id);
@@ -1300,14 +1306,13 @@ qtplugin::expected<void, PluginError> PluginLifecycleManager::migrate_plugin_sta
     try {
         // Check if plugin supports state migration
         auto available_commands = plugin->available_commands();
-        bool supports_migration = std::find(available_commands.begin(),
-                                           available_commands.end(),
-                                           "migrate_state") != available_commands.end();
+        bool supports_migration =
+            std::find(available_commands.begin(), available_commands.end(),
+                      "migrate_state") != available_commands.end();
 
         if (!supports_migration) {
-            return make_error<void>(
-                PluginErrorCode::OperationNotSupported,
-                "Plugin does not support state migration");
+            return make_error<void>(PluginErrorCode::OperationNotSupported,
+                                    "Plugin does not support state migration");
         }
 
         // Create migration event
@@ -1342,8 +1347,8 @@ qtplugin::expected<void, PluginError> PluginLifecycleManager::migrate_plugin_sta
     }
 }
 
-qtplugin::expected<QJsonObject, PluginError> PluginLifecycleManager::backup_plugin_state(
-    const QString& plugin_id) {
+qtplugin::expected<QJsonObject, PluginError>
+PluginLifecycleManager::backup_plugin_state(const QString& plugin_id) {
     QMutexLocker locker(&d->mutex);
 
     auto it = d->plugins.find(plugin_id);
@@ -1360,24 +1365,28 @@ qtplugin::expected<QJsonObject, PluginError> PluginLifecycleManager::backup_plug
         QJsonObject backup_data;
 
         // Get basic plugin information
+        auto metadata = plugin->metadata();
         backup_data["plugin_id"] = plugin_id;
-        backup_data["plugin_name"] = QString::fromStdString(std::string(plugin->name()));
-        backup_data["plugin_version"] = QString::fromStdString(plugin->version().to_string());
+        backup_data["plugin_name"] = QString::fromStdString(metadata.name);
+        backup_data["plugin_version"] =
+            QString::fromStdString(metadata.version.to_string());
         backup_data["current_state"] = static_cast<int>(plugin->state());
-        backup_data["backup_timestamp"] = QDateTime::currentDateTime().toString(Qt::ISODate);
+        backup_data["backup_timestamp"] =
+            QDateTime::currentDateTime().toString(Qt::ISODate);
 
         // Try to get plugin-specific state if supported
         auto available_commands = plugin->available_commands();
-        bool supports_backup = std::find(available_commands.begin(),
-                                        available_commands.end(),
-                                        "backup_state") != available_commands.end();
+        bool supports_backup =
+            std::find(available_commands.begin(), available_commands.end(),
+                      "backup_state") != available_commands.end();
 
         if (supports_backup) {
             auto result = plugin->execute_command("backup_state");
             if (result) {
                 backup_data["plugin_state"] = result.value();
             } else {
-                backup_data["backup_error"] = QString::fromStdString(result.error().message);
+                backup_data["backup_error"] =
+                    QString::fromStdString(result.error().message);
             }
         }
 
@@ -1409,8 +1418,9 @@ qtplugin::expected<QJsonObject, PluginError> PluginLifecycleManager::backup_plug
     }
 }
 
-qtplugin::expected<void, PluginError> PluginLifecycleManager::restore_plugin_state(
-    const QString& plugin_id, const QJsonObject& backup_data) {
+qtplugin::expected<void, PluginError>
+PluginLifecycleManager::restore_plugin_state(const QString& plugin_id,
+                                             const QJsonObject& backup_data) {
     QMutexLocker locker(&d->mutex);
 
     auto it = d->plugins.find(plugin_id);
@@ -1427,9 +1437,8 @@ qtplugin::expected<void, PluginError> PluginLifecycleManager::restore_plugin_sta
         // Validate backup data
         if (!backup_data.contains("plugin_id") ||
             backup_data["plugin_id"].toString() != plugin_id) {
-            return make_error<void>(
-                PluginErrorCode::InvalidParameters,
-                "Backup data does not match plugin ID");
+            return make_error<void>(PluginErrorCode::InvalidParameters,
+                                    "Backup data does not match plugin ID");
         }
 
         // Restore lifecycle configuration if present
@@ -1440,13 +1449,14 @@ qtplugin::expected<void, PluginError> PluginLifecycleManager::restore_plugin_sta
 
         // Try to restore plugin-specific state if supported and present
         auto available_commands = plugin->available_commands();
-        bool supports_restore = std::find(available_commands.begin(),
-                                         available_commands.end(),
-                                         "restore_state") != available_commands.end();
+        bool supports_restore =
+            std::find(available_commands.begin(), available_commands.end(),
+                      "restore_state") != available_commands.end();
 
         if (supports_restore && backup_data.contains("plugin_state")) {
             auto plugin_state = backup_data["plugin_state"].toObject();
-            auto result = plugin->execute_command("restore_state", plugin_state);
+            auto result =
+                plugin->execute_command("restore_state", plugin_state);
 
             if (!result) {
                 return make_error<void>(
@@ -1479,8 +1489,8 @@ qtplugin::expected<void, PluginError> PluginLifecycleManager::restore_plugin_sta
     }
 }
 
-qtplugin::expected<void, PluginError> PluginLifecycleManager::cleanup_plugin_resources(
-    const QString& plugin_id) {
+qtplugin::expected<void, PluginError>
+PluginLifecycleManager::cleanup_plugin_resources(const QString& plugin_id) {
     QMutexLocker locker(&d->mutex);
 
     auto it = d->plugins.find(plugin_id);
@@ -1518,16 +1528,16 @@ qtplugin::expected<void, PluginError> PluginLifecycleManager::cleanup_plugin_res
 
         // Try plugin-specific cleanup if supported
         auto available_commands = plugin->available_commands();
-        bool supports_cleanup = std::find(available_commands.begin(),
-                                         available_commands.end(),
-                                         "cleanup_resources") != available_commands.end();
+        bool supports_cleanup =
+            std::find(available_commands.begin(), available_commands.end(),
+                      "cleanup_resources") != available_commands.end();
 
         if (supports_cleanup) {
             auto result = plugin->execute_command("cleanup_resources");
             if (!result) {
                 qCWarning(pluginLifecycleLog)
-                    << "Plugin-specific cleanup failed for" << plugin_id
-                    << ":" << result.error().message.c_str();
+                    << "Plugin-specific cleanup failed for" << plugin_id << ":"
+                    << result.error().message.c_str();
             }
         }
 
@@ -1550,19 +1560,20 @@ qtplugin::expected<void, PluginError> PluginLifecycleManager::cleanup_plugin_res
     }
 }
 
-qtplugin::expected<void, PluginError> PluginLifecycleManager::shutdown_all_plugins_gracefully(
+qtplugin::expected<void, PluginError>
+PluginLifecycleManager::shutdown_all_plugins_gracefully(
     std::chrono::milliseconds timeout) {
-
     auto registered_plugins = get_registered_plugins();
     if (registered_plugins.empty()) {
         return make_success();
     }
 
-    qCInfo(pluginLifecycleLog)
-        << "Starting graceful shutdown of" << registered_plugins.size() << "plugins";
+    qCInfo(pluginLifecycleLog) << "Starting graceful shutdown of"
+                               << registered_plugins.size() << "plugins";
 
     // Create shutdown coordination
-    std::vector<std::future<qtplugin::expected<void, PluginError>>> shutdown_futures;
+    std::vector<std::future<qtplugin::expected<void, PluginError>>>
+        shutdown_futures;
     shutdown_futures.reserve(registered_plugins.size());
 
     auto start_time = std::chrono::steady_clock::now();
@@ -1570,7 +1581,7 @@ qtplugin::expected<void, PluginError> PluginLifecycleManager::shutdown_all_plugi
     // Start shutdown for all plugins in parallel
     for (const auto& plugin_id : registered_plugins) {
         auto future = std::async(std::launch::async, [this, plugin_id]() {
-            return shutdown_plugin(plugin_id, false); // Graceful shutdown
+            return shutdown_plugin(plugin_id, false);  // Graceful shutdown
         });
         shutdown_futures.push_back(std::move(future));
     }
@@ -1585,7 +1596,8 @@ qtplugin::expected<void, PluginError> PluginLifecycleManager::shutdown_all_plugi
         auto elapsed = std::chrono::steady_clock::now() - start_time;
         if (elapsed >= timeout) {
             qCWarning(pluginLifecycleLog)
-                << "Global shutdown timeout exceeded, forcing remaining plugins";
+                << "Global shutdown timeout exceeded, forcing remaining "
+                   "plugins";
 
             // Force shutdown remaining plugins
             for (size_t j = i; j < registered_plugins.size(); ++j) {
@@ -1619,11 +1631,12 @@ qtplugin::expected<void, PluginError> PluginLifecycleManager::shutdown_all_plugi
         for (const auto& plugin : failed_plugins) {
             failed_list << plugin;
         }
-        QString error_msg = QString("Failed to gracefully shutdown %1 plugins: %2")
-                           .arg(failed_plugins.size())
-                           .arg(failed_list.join(", "));
+        QString error_msg =
+            QString("Failed to gracefully shutdown %1 plugins: %2")
+                .arg(failed_plugins.size())
+                .arg(failed_list.join(", "));
         return make_error<void>(PluginErrorCode::ExecutionFailed,
-                               error_msg.toStdString());
+                                error_msg.toStdString());
     }
 
     qCInfo(pluginLifecycleLog)
@@ -1677,7 +1690,8 @@ QJsonObject PluginLifecycleManager::get_lifecycle_statistics() const {
     stats["unhealthy_plugins"] = unhealthy_plugins;
 
     // Event callback statistics
-    stats["registered_event_callbacks"] = static_cast<int>(d->event_callbacks.size());
+    stats["registered_event_callbacks"] =
+        static_cast<int>(d->event_callbacks.size());
 
     // Auto-restart statistics
     int auto_restart_enabled = 0;

@@ -5,18 +5,18 @@
 
 #pragma once
 
-#include <QtTest/QtTest>
-#include <QTemporaryDir>
-#include <QJsonObject>
-#include <QJsonDocument>
 #include <QFile>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QTemporaryDir>
 #include <QTextStream>
 #include <QUuid>
-#include <memory>
+#include <QtTest/QtTest>
 #include <functional>
+#include <memory>
 
-#include <qtplugin/interfaces/core/plugin_interface.hpp>
 #include <qtplugin/core/plugin_manager.hpp>
+#include <qtplugin/interfaces/core/plugin_interface.hpp>
 #include <qtplugin/utils/error_handling.hpp>
 
 namespace QtForgeTest {
@@ -32,7 +32,6 @@ public:
     static QJsonObject generatePluginMetadata(
         const QString& pluginName = "TestPlugin",
         const QString& version = "1.0.0") {
-
         QJsonObject metadata;
         metadata["name"] = pluginName;
         metadata["version"] = version;
@@ -54,7 +53,6 @@ public:
      */
     static QJsonObject generateTestConfiguration(
         const QString& configName = "test_config") {
-
         QJsonObject config;
         config["name"] = configName;
         config["enabled"] = true;
@@ -73,16 +71,15 @@ public:
      * @brief Create a temporary plugin file with metadata
      */
     static QString createTempPluginFile(
-        QTemporaryDir& tempDir,
-        const QString& pluginName = "test_plugin",
+        QTemporaryDir& tempDir, const QString& pluginName = "test_plugin",
         const QJsonObject& metadata = QJsonObject()) {
-
         QString pluginPath = tempDir.path() + "/" + pluginName + ".json";
         QFile file(pluginPath);
 
         if (file.open(QIODevice::WriteOnly)) {
-            QJsonObject finalMetadata = metadata.isEmpty() ?
-                generatePluginMetadata(pluginName) : metadata;
+            QJsonObject finalMetadata = metadata.isEmpty()
+                                            ? generatePluginMetadata(pluginName)
+                                            : metadata;
 
             QJsonDocument doc(finalMetadata);
             file.write(doc.toJson());
@@ -95,44 +92,91 @@ public:
 /**
  * @brief Mock plugin interface for testing
  */
-class MockPlugin : public qtplugin::IPlugin {
+class MockPlugin : public QObject, public qtplugin::IPlugin {
     Q_OBJECT
 
 public:
-    MockPlugin() = default;
+    MockPlugin(QObject* parent = nullptr)
+        : QObject(parent), m_state(qtplugin::PluginState::Unloaded) {}
     ~MockPlugin() override = default;
 
     // IPlugin interface
-    QString name() const override { return "MockPlugin"; }
-    QString version() const override { return "1.0.0"; }
-    QString description() const override { return "Mock plugin for testing"; }
-    QString author() const override { return "Test Suite"; }
-    QString license() const override { return "MIT"; }
-
-    bool initialize() override {
-        m_initialized = true;
-        return true;
+    qtplugin::expected<void, qtplugin::PluginError> initialize() override {
+        if (m_state == qtplugin::PluginState::Running) {
+            return qtplugin::make_error<void>(
+                qtplugin::PluginErrorCode::AlreadyExists,
+                "Plugin already initialized");
+        }
+        m_state = qtplugin::PluginState::Running;
+        m_initializeCalled = true;
+        return {};
     }
 
-    void shutdown() override {
-        m_initialized = false;
+    void shutdown() noexcept override {
+        m_state = qtplugin::PluginState::Stopped;
+        m_shutdownCalled = true;
     }
 
-    bool isInitialized() const override {
-        return m_initialized;
+    qtplugin::PluginMetadata metadata() const override {
+        qtplugin::PluginMetadata meta;
+        meta.name = "MockPlugin";
+        meta.version = qtplugin::Version(1, 0, 0);
+        meta.description = "Mock plugin for testing";
+        meta.author = "Test Suite";
+        meta.license = "MIT";
+        meta.category = "test";
+        meta.capabilities =
+            static_cast<uint32_t>(qtplugin::PluginCapability::None);
+        meta.priority = qtplugin::PluginPriority::Normal;
+        return meta;
     }
 
-    QJsonObject metadata() const override {
-        return TestDataGenerator::generatePluginMetadata(name(), version());
+    qtplugin::PluginState state() const noexcept override { return m_state; }
+
+    uint32_t capabilities() const noexcept override {
+        return static_cast<uint32_t>(qtplugin::PluginCapability::None);
     }
+
+    qtplugin::PluginPriority priority() const noexcept override {
+        return qtplugin::PluginPriority::Normal;
+    }
+
+    bool is_initialized() const noexcept override {
+        return m_state == qtplugin::PluginState::Running;
+    }
+
+    qtplugin::expected<QJsonObject, qtplugin::PluginError> execute_command(
+        std::string_view command, const QJsonObject& params = {}) override {
+        Q_UNUSED(params);
+        Q_UNUSED(command);
+        QJsonObject result;
+        result["status"] = "success";
+        return result;
+    }
+
+    std::vector<std::string> available_commands() const override {
+        return {"test"};
+    }
+
+    qtplugin::expected<void, qtplugin::PluginError> configure(
+        const QJsonObject& config) override {
+        m_config = config;
+        return {};
+    }
+
+    QJsonObject get_configuration() const override { return m_config; }
 
     // Test helpers
-    void setInitialized(bool initialized) { m_initialized = initialized; }
+    void setInitialized(bool initialized) {
+        m_state = initialized ? qtplugin::PluginState::Running
+                              : qtplugin::PluginState::Stopped;
+    }
     bool wasInitializeCalled() const { return m_initializeCalled; }
     bool wasShutdownCalled() const { return m_shutdownCalled; }
 
 private:
-    bool m_initialized = false;
+    qtplugin::PluginState m_state;
+    QJsonObject m_config;
     bool m_initializeCalled = false;
     bool m_shutdownCalled = false;
 };
@@ -181,37 +225,40 @@ protected:
      * @brief Create a test plugin in temporary directory
      */
     QString createTestPlugin(const QString& name = "test_plugin",
-                           const QJsonObject& metadata = QJsonObject()) {
-        if (!m_tempDir) return QString();
-        return TestDataGenerator::createTempPluginFile(*m_tempDir, name, metadata);
+                             const QJsonObject& metadata = QJsonObject()) {
+        if (!m_tempDir)
+            return QString();
+        return TestDataGenerator::createTempPluginFile(*m_tempDir, name,
+                                                       metadata);
     }
 };
 
 /**
  * @brief Utility macros for common test patterns
  */
-#define QTFORGE_VERIFY_SUCCESS(result) \
-    do { \
-        QVERIFY(result.has_value()); \
-        if (!result.has_value()) { \
+#define QTFORGE_VERIFY_SUCCESS(result)                              \
+    do {                                                            \
+        QVERIFY(result.has_value());                                \
+        if (!result.has_value()) {                                  \
             qDebug() << "Error:" << result.error().message.c_str(); \
-        } \
-    } while(0)
+        }                                                           \
+    } while (0)
 
-#define QTFORGE_VERIFY_ERROR(result, expectedCode) \
-    do { \
-        QVERIFY(!result.has_value()); \
-        if (!result.has_value()) { \
+#define QTFORGE_VERIFY_ERROR(result, expectedCode)       \
+    do {                                                 \
+        QVERIFY(!result.has_value());                    \
+        if (!result.has_value()) {                       \
             QCOMPARE(result.error().code, expectedCode); \
-        } \
-    } while(0)
+        }                                                \
+    } while (0)
 
-#define QTFORGE_VERIFY_ERROR_MESSAGE(result, expectedMessage) \
-    do { \
-        QVERIFY(!result.has_value()); \
-        if (!result.has_value()) { \
-            QVERIFY(QString::fromStdString(result.error().message).contains(expectedMessage)); \
-        } \
-    } while(0)
+#define QTFORGE_VERIFY_ERROR_MESSAGE(result, expectedMessage)      \
+    do {                                                           \
+        QVERIFY(!result.has_value());                              \
+        if (!result.has_value()) {                                 \
+            QVERIFY(QString::fromStdString(result.error().message) \
+                        .contains(expectedMessage));               \
+        }                                                          \
+    } while (0)
 
-} // namespace QtForgeTest
+}  // namespace QtForgeTest

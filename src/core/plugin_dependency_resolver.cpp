@@ -23,7 +23,8 @@ namespace qtplugin {
 class PluginDependencyResolver::Impl {
 public:
     std::unordered_map<std::string, DependencyNode> dependency_graph;
-    mutable std::vector<IPluginDependencyResolver::CircularDependency> circular_dependencies;
+    mutable std::vector<IPluginDependencyResolver::CircularDependency>
+        circular_dependencies;
     mutable bool circular_deps_cached = false;
 
     // Helper methods
@@ -39,12 +40,13 @@ public:
     // Enhanced helper methods (v3.2.0)
     void find_all_cycles() const;
     bool find_cycle_from_node(const std::string& node,
-                             std::unordered_set<std::string>& visited,
-                             std::unordered_set<std::string>& rec_stack,
-                             std::vector<std::string>& path) const;
+                              std::unordered_set<std::string>& visited,
+                              std::unordered_set<std::string>& rec_stack,
+                              std::vector<std::string>& path) const;
     std::string find_weakest_link(const std::vector<std::string>& cycle) const;
     void remove_dependency(const std::string& from, const std::string& to);
-    bool is_strongly_connected(const std::string& from, const std::string& to) const;
+    bool is_strongly_connected(const std::string& from,
+                               const std::string& to) const;
 };
 
 PluginDependencyResolver::PluginDependencyResolver(QObject* parent)
@@ -58,7 +60,8 @@ PluginDependencyResolver::~PluginDependencyResolver() {
 }
 
 // Copy constructor
-PluginDependencyResolver::PluginDependencyResolver(const PluginDependencyResolver& other)
+PluginDependencyResolver::PluginDependencyResolver(
+    const PluginDependencyResolver& other)
     : QObject(other.parent()), d(std::make_unique<Impl>()) {
     d->dependency_graph = other.d->dependency_graph;
     d->circular_dependencies = other.d->circular_dependencies;
@@ -66,7 +69,8 @@ PluginDependencyResolver::PluginDependencyResolver(const PluginDependencyResolve
 }
 
 // Copy assignment operator
-PluginDependencyResolver& PluginDependencyResolver::operator=(const PluginDependencyResolver& other) {
+PluginDependencyResolver& PluginDependencyResolver::operator=(
+    const PluginDependencyResolver& other) {
     if (this != &other) {
         d->dependency_graph = other.d->dependency_graph;
         d->circular_dependencies = other.d->circular_dependencies;
@@ -76,13 +80,15 @@ PluginDependencyResolver& PluginDependencyResolver::operator=(const PluginDepend
 }
 
 // Move constructor
-PluginDependencyResolver::PluginDependencyResolver(PluginDependencyResolver&& other) noexcept
+PluginDependencyResolver::PluginDependencyResolver(
+    PluginDependencyResolver&& other) noexcept
     : QObject(other.parent()), d(std::move(other.d)) {
     other.d = std::make_unique<Impl>();
 }
 
 // Move assignment operator
-PluginDependencyResolver& PluginDependencyResolver::operator=(PluginDependencyResolver&& other) noexcept {
+PluginDependencyResolver& PluginDependencyResolver::operator=(
+    PluginDependencyResolver&& other) noexcept {
     if (this != &other) {
         d = std::move(other.d);
         other.d = std::make_unique<Impl>();
@@ -156,7 +162,7 @@ bool PluginDependencyResolver::can_unload_safely(
     const std::string& plugin_id) const {
     auto it = d->dependency_graph.find(plugin_id);
     if (it == d->dependency_graph.end()) {
-        return true;  // Plugin not in graph, safe to unload
+        return false;  // Plugin not in graph, cannot unload non-existent plugin
     }
 
     // Plugin can be safely unloaded if no other plugins depend on it
@@ -183,7 +189,8 @@ bool PluginDependencyResolver::has_circular_dependencies() const {
 
     for (const auto& [plugin_id, node] : d->dependency_graph) {
         if (visited.find(plugin_id) == visited.end()) {
-            if (d->has_circular_dependency(plugin_id, visited, recursion_stack)) {
+            if (d->has_circular_dependency(plugin_id, visited,
+                                           recursion_stack)) {
                 return true;
             }
         }
@@ -222,13 +229,9 @@ void PluginDependencyResolver::clear() {
         << "Dependency graph cleared," << count << "nodes removed";
 }
 
-
-
-
-
-
 // Enhanced features (v3.2.0) implementations
-std::vector<IPluginDependencyResolver::CircularDependency> PluginDependencyResolver::get_circular_dependencies() const {
+std::vector<IPluginDependencyResolver::CircularDependency>
+PluginDependencyResolver::get_circular_dependencies() const {
     std::vector<IPluginDependencyResolver::CircularDependency> circular_deps;
     std::unordered_set<std::string> visited;
     std::unordered_set<std::string> recursion_stack;
@@ -236,11 +239,14 @@ std::vector<IPluginDependencyResolver::CircularDependency> PluginDependencyResol
     for (const auto& [plugin_id, node] : d->dependency_graph) {
         if (visited.find(plugin_id) == visited.end()) {
             std::vector<std::string> cycle;
-            if (d->find_cycle_from_node(plugin_id, visited, recursion_stack, cycle)) {
+            if (d->find_cycle_from_node(plugin_id, visited, recursion_stack,
+                                        cycle)) {
                 IPluginDependencyResolver::CircularDependency circular_dep;
                 circular_dep.cycle_plugins = cycle;
-                circular_dep.suggested_strategy = IPluginDependencyResolver::CircularResolutionStrategy::RemoveWeakest;
-                circular_dep.suggested_break_point = d->find_weakest_link(cycle);
+                circular_dep.suggested_strategy = IPluginDependencyResolver::
+                    CircularResolutionStrategy::RemoveWeakest;
+                circular_dep.suggested_break_point =
+                    d->find_weakest_link(cycle);
                 circular_deps.push_back(circular_dep);
             }
         }
@@ -249,9 +255,9 @@ std::vector<IPluginDependencyResolver::CircularDependency> PluginDependencyResol
     return circular_deps;
 }
 
-qtplugin::expected<void, PluginError> PluginDependencyResolver::resolve_circular_dependencies(
+qtplugin::expected<void, PluginError>
+PluginDependencyResolver::resolve_circular_dependencies(
     IPluginDependencyResolver::CircularResolutionStrategy strategy) {
-
     auto circular_deps = get_circular_dependencies();
     if (circular_deps.empty()) {
         return make_success();
@@ -260,17 +266,22 @@ qtplugin::expected<void, PluginError> PluginDependencyResolver::resolve_circular
     switch (strategy) {
         case IPluginDependencyResolver::CircularResolutionStrategy::None:
             // Just report, don't resolve
-            return make_error<void>(PluginErrorCode::DependencyMissing,
-                                   "Circular dependencies detected but resolution disabled");
+            return make_error<void>(
+                PluginErrorCode::DependencyMissing,
+                "Circular dependencies detected but resolution disabled");
 
-        case IPluginDependencyResolver::CircularResolutionStrategy::RemoveWeakest:
+        case IPluginDependencyResolver::CircularResolutionStrategy::
+            RemoveWeakest:
             // Remove the dependency with the lowest priority
             for (const auto& circular_dep : circular_deps) {
                 if (!circular_dep.cycle_plugins.empty()) {
                     // Remove the weakest link
                     const auto& weak_link = circular_dep.suggested_break_point;
-                    if (!weak_link.empty() && circular_dep.cycle_plugins.size() > 1) {
-                        auto it = std::find(circular_dep.cycle_plugins.begin(), circular_dep.cycle_plugins.end(), weak_link);
+                    if (!weak_link.empty() &&
+                        circular_dep.cycle_plugins.size() > 1) {
+                        auto it = std::find(circular_dep.cycle_plugins.begin(),
+                                            circular_dep.cycle_plugins.end(),
+                                            weak_link);
                         if (it != circular_dep.cycle_plugins.end()) {
                             auto next_it = std::next(it);
                             if (next_it == circular_dep.cycle_plugins.end()) {
@@ -283,12 +294,14 @@ qtplugin::expected<void, PluginError> PluginDependencyResolver::resolve_circular
             }
             break;
 
-        case IPluginDependencyResolver::CircularResolutionStrategy::DisablePlugin:
+        case IPluginDependencyResolver::CircularResolutionStrategy::
+            DisablePlugin:
             // Disable one plugin in each cycle
             for (const auto& circular_dep : circular_deps) {
                 if (!circular_dep.cycle_plugins.empty()) {
                     // For now, just remove the first plugin's dependencies
-                    const auto& plugin_to_disable = circular_dep.cycle_plugins.front();
+                    const auto& plugin_to_disable =
+                        circular_dep.cycle_plugins.front();
                     auto it = d->dependency_graph.find(plugin_to_disable);
                     if (it != d->dependency_graph.end()) {
                         it->second.dependencies.clear();
@@ -298,28 +311,32 @@ qtplugin::expected<void, PluginError> PluginDependencyResolver::resolve_circular
             break;
 
         case IPluginDependencyResolver::CircularResolutionStrategy::LoadAsGroup:
-            // Mark plugins to be loaded as a group (implementation would need group loading support)
-            return make_error<void>(PluginErrorCode::DependencyMissing,
-                                   "Group loading strategy not yet implemented");
+            // Mark plugins to be loaded as a group (implementation would need
+            // group loading support)
+            return make_error<void>(
+                PluginErrorCode::DependencyMissing,
+                "Group loading strategy not yet implemented");
     }
 
     return make_success();
 }
 
-qtplugin::expected<void, PluginError> PluginDependencyResolver::validate_dependencies() const {
+qtplugin::expected<void, PluginError>
+PluginDependencyResolver::validate_dependencies() const {
     // Check for circular dependencies
     auto circular_deps = get_circular_dependencies();
     if (!circular_deps.empty()) {
         return make_error<void>(PluginErrorCode::DependencyMissing,
-                               "Circular dependencies detected");
+                                "Circular dependencies detected");
     }
 
     // Check for missing dependencies
     for (const auto& [plugin_id, node] : d->dependency_graph) {
         for (const auto& dep : node.dependencies) {
             if (d->dependency_graph.find(dep) == d->dependency_graph.end()) {
-                return make_error<void>(PluginErrorCode::DependencyMissing,
-                                       "Missing dependency: " + dep + " for plugin: " + plugin_id);
+                return make_error<void>(
+                    PluginErrorCode::DependencyMissing,
+                    "Missing dependency: " + dep + " for plugin: " + plugin_id);
             }
         }
     }
@@ -329,7 +346,6 @@ qtplugin::expected<void, PluginError> PluginDependencyResolver::validate_depende
 
 std::vector<std::string> PluginDependencyResolver::get_missing_dependencies(
     const std::string& plugin_id) const {
-
     std::vector<std::string> missing_deps;
     auto it = d->dependency_graph.find(plugin_id);
     if (it != d->dependency_graph.end()) {
@@ -345,18 +361,18 @@ std::vector<std::string> PluginDependencyResolver::get_missing_dependencies(
 
 std::vector<std::string> PluginDependencyResolver::suggest_load_order(
     const std::vector<std::string>& plugin_ids) const {
-
     std::vector<std::string> load_order;
     std::unordered_set<std::string> loaded;
     std::unordered_set<std::string> loading;
 
-    std::function<bool(const std::string&)> add_to_order = [&](const std::string& plugin_id) -> bool {
+    std::function<bool(const std::string&)> add_to_order =
+        [&](const std::string& plugin_id) -> bool {
         if (loaded.find(plugin_id) != loaded.end()) {
-            return true; // Already loaded
+            return true;  // Already loaded
         }
 
         if (loading.find(plugin_id) != loading.end()) {
-            return false; // Circular dependency
+            return false;  // Circular dependency
         }
 
         loading.insert(plugin_id);
@@ -365,9 +381,10 @@ std::vector<std::string> PluginDependencyResolver::suggest_load_order(
         auto deps_it = d->dependency_graph.find(plugin_id);
         if (deps_it != d->dependency_graph.end()) {
             for (const auto& dep : deps_it->second.dependencies) {
-                if (std::find(plugin_ids.begin(), plugin_ids.end(), dep) != plugin_ids.end()) {
+                if (std::find(plugin_ids.begin(), plugin_ids.end(), dep) !=
+                    plugin_ids.end()) {
                     if (!add_to_order(dep)) {
-                        return false; // Failed to load dependency
+                        return false;  // Failed to load dependency
                     }
                 }
             }
@@ -386,18 +403,16 @@ std::vector<std::string> PluginDependencyResolver::suggest_load_order(
     return load_order;
 }
 
-
-
 // PluginDependencyResolver::Impl method implementations
 
 void PluginDependencyResolver::Impl::find_all_cycles() const {
     // Implementation for finding all cycles - placeholder for now
 }
 
-bool PluginDependencyResolver::Impl::find_cycle_from_node(const std::string& node,
-                                                         std::unordered_set<std::string>& visited,
-                                                         std::unordered_set<std::string>& rec_stack,
-                                                         std::vector<std::string>& path) const {
+bool PluginDependencyResolver::Impl::find_cycle_from_node(
+    const std::string& node, std::unordered_set<std::string>& visited,
+    std::unordered_set<std::string>& rec_stack,
+    std::vector<std::string>& path) const {
     visited.insert(node);
     rec_stack.insert(node);
     path.push_back(node);
@@ -424,7 +439,8 @@ bool PluginDependencyResolver::Impl::find_cycle_from_node(const std::string& nod
     return false;
 }
 
-std::string PluginDependencyResolver::Impl::find_weakest_link(const std::vector<std::string>& cycle) const {
+std::string PluginDependencyResolver::Impl::find_weakest_link(
+    const std::vector<std::string>& cycle) const {
     if (cycle.empty()) {
         return "";
     }
@@ -437,7 +453,8 @@ std::string PluginDependencyResolver::Impl::find_weakest_link(const std::vector<
     return cycle.front();
 }
 
-void PluginDependencyResolver::Impl::remove_dependency(const std::string& from, const std::string& to) {
+void PluginDependencyResolver::Impl::remove_dependency(const std::string& from,
+                                                       const std::string& to) {
     auto it = dependency_graph.find(from);
     if (it != dependency_graph.end()) {
         it->second.dependencies.erase(to);
@@ -450,14 +467,16 @@ void PluginDependencyResolver::Impl::remove_dependency(const std::string& from, 
     }
 }
 
-bool PluginDependencyResolver::Impl::is_strongly_connected(const std::string& from, const std::string& to) const {
+bool PluginDependencyResolver::Impl::is_strongly_connected(
+    const std::string& from, const std::string& to) const {
     // Implementation for checking strong connectivity - placeholder for now
     Q_UNUSED(from)
     Q_UNUSED(to)
     return false;
 }
 
-std::vector<std::string> PluginDependencyResolver::Impl::topological_sort() const {
+std::vector<std::string> PluginDependencyResolver::Impl::topological_sort()
+    const {
     std::vector<std::string> result;
     std::unordered_set<std::string> visited;
     std::unordered_set<std::string> temp_visited;
@@ -518,7 +537,8 @@ int PluginDependencyResolver::Impl::calculate_dependency_level(
     for (const auto& dep : dependencies) {
         auto it = dependency_graph.find(dep);
         if (it != dependency_graph.end()) {
-            std::vector<std::string> dep_dependencies(it->second.dependencies.begin(), it->second.dependencies.end());
+            std::vector<std::string> dep_dependencies(
+                it->second.dependencies.begin(), it->second.dependencies.end());
             int dep_level = calculate_dependency_level(dep, dep_dependencies);
             max_level = std::max(max_level, dep_level + 1);
         }
@@ -527,7 +547,8 @@ int PluginDependencyResolver::Impl::calculate_dependency_level(
     return max_level;
 }
 
-void PluginDependencyResolver::Impl::detect_circular_dependencies(PluginDependencyResolver* /* resolver */) {
+void PluginDependencyResolver::Impl::detect_circular_dependencies(
+    PluginDependencyResolver* /* resolver */) {
     std::unordered_set<std::string> visited;
     std::unordered_set<std::string> recursion_stack;
     QStringList circular_plugins;

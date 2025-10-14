@@ -26,18 +26,33 @@ public:
     ~MockPlugin() override = default;
 
     // IPlugin interface - required methods
-    std::string id() const noexcept override { return "mock_plugin"; }
-    std::string_view name() const noexcept override { return "MockPlugin"; }
-    std::string_view description() const noexcept override { return "Mock plugin for testing"; }
-    qtplugin::Version version() const noexcept override { return qtplugin::Version{1, 0, 0}; }
-    std::string_view author() const noexcept override { return "Test Suite"; }
-    std::string_view license() const noexcept override { return "MIT"; }
-    qtplugin::PluginCapabilities capabilities() const noexcept override { return static_cast<qtplugin::PluginCapabilities>(qtplugin::PluginCapability::Configuration); }
+    qtplugin::PluginMetadata metadata() const override {
+        qtplugin::PluginMetadata meta;
+        meta.name = "MockPlugin";
+        meta.version = qtplugin::Version{1, 0, 0};
+        meta.description = "Mock plugin for testing";
+        meta.author = "Test Suite";
+        meta.license = "MIT";
+        return meta;
+    }
+
     qtplugin::PluginState state() const noexcept override { return m_state; }
+
+    uint32_t capabilities() const noexcept override {
+        return static_cast<uint32_t>(qtplugin::PluginCapability::Configuration);
+    }
+
+    qtplugin::PluginPriority priority() const noexcept override {
+        return qtplugin::PluginPriority::Normal;
+    }
+
+    bool is_initialized() const noexcept override { return m_initialized; }
 
     qtplugin::expected<void, qtplugin::PluginError> initialize() override {
         if (m_initialized) {
-            return qtplugin::make_error<void>(qtplugin::PluginErrorCode::AlreadyLoaded, "Already initialized");
+            return qtplugin::make_error<void>(
+                qtplugin::PluginErrorCode::AlreadyLoaded,
+                "Already initialized");
         }
         m_initialized = true;
         m_state = qtplugin::PluginState::Running;
@@ -60,9 +75,8 @@ public:
             result["success"] = true;
         } else {
             return qtplugin::make_error<QJsonObject>(
-                qtplugin::PluginErrorCode::CommandNotFound, 
-                std::string("Unknown command: ") + std::string(command)
-            );
+                qtplugin::PluginErrorCode::CommandNotFound,
+                std::string("Unknown command: ") + std::string(command));
         }
         return result;
     }
@@ -71,9 +85,15 @@ public:
         return {"test"};
     }
 
-    bool isInitialized() const {
-        return m_initialized;
+    qtplugin::expected<void, qtplugin::PluginError> configure(
+        const QJsonObject& config) override {
+        m_config = config;
+        return qtplugin::make_success();
     }
+
+    QJsonObject get_configuration() const override { return m_config; }
+
+    bool isInitialized() const { return m_initialized; }
 
 signals:
     void initialized();
@@ -82,6 +102,7 @@ signals:
 private:
     bool m_initialized = false;
     qtplugin::PluginState m_state = qtplugin::PluginState::Unloaded;
+    QJsonObject m_config;
 };
 
 /**
@@ -156,38 +177,36 @@ void TestPluginInterfaceAdvanced::testPluginCreation() {
 }
 
 void TestPluginInterfaceAdvanced::testPluginMetadata() {
-    QCOMPARE(QString::fromStdString(std::string(m_plugin->name())), QString("MockPlugin"));
-    QCOMPARE(m_plugin->version().to_string(), std::string("1.0.0"));
-    QCOMPARE(QString::fromStdString(std::string(m_plugin->description())), QString("Mock plugin for testing"));
-    QCOMPARE(QString::fromStdString(std::string(m_plugin->author())), QString("Test Suite"));
-    QCOMPARE(QString::fromStdString(std::string(m_plugin->license())), QString("MIT"));
-
     auto metadata = m_plugin->metadata();
     QVERIFY(!metadata.name.empty());
     QCOMPARE(QString::fromStdString(metadata.name), QString("MockPlugin"));
     QCOMPARE(metadata.version.to_string(), std::string("1.0.0"));
+    QCOMPARE(QString::fromStdString(metadata.description),
+             QString("Mock plugin for testing"));
+    QCOMPARE(QString::fromStdString(metadata.author), QString("Test Suite"));
+    QCOMPARE(QString::fromStdString(metadata.license), QString("MIT"));
 }
 
 void TestPluginInterfaceAdvanced::testPluginInitialization() {
     QSignalSpy spy(m_plugin.get(), &MockPlugin::initialized);
-    
+
     QVERIFY(!m_plugin->isInitialized());
     auto result = m_plugin->initialize();
     QVERIFY(result.has_value());
     QVERIFY(m_plugin->isInitialized());
-    
+
     QCOMPARE(spy.count(), 1);
 }
 
 void TestPluginInterfaceAdvanced::testPluginShutdown() {
     QSignalSpy spy(m_plugin.get(), &MockPlugin::shutdown_signal);
-    
+
     m_plugin->initialize();
     QVERIFY(m_plugin->isInitialized());
-    
+
     m_plugin->shutdown();
     QVERIFY(!m_plugin->isInitialized());
-    
+
     QCOMPARE(spy.count(), 1);
 }
 
@@ -206,12 +225,12 @@ void TestPluginInterfaceAdvanced::testPluginLifecycle() {
 void TestPluginInterfaceAdvanced::testPluginSignals() {
     QSignalSpy initSpy(m_plugin.get(), &MockPlugin::initialized);
     QSignalSpy shutdownSpy(m_plugin.get(), &MockPlugin::shutdown_signal);
-    
+
     auto init_result = m_plugin->initialize();
     QVERIFY(init_result.has_value());
     QCOMPARE(initSpy.count(), 1);
     QCOMPARE(shutdownSpy.count(), 0);
-    
+
     m_plugin->shutdown();
     QCOMPARE(initSpy.count(), 1);
     QCOMPARE(shutdownSpy.count(), 1);
@@ -219,14 +238,14 @@ void TestPluginInterfaceAdvanced::testPluginSignals() {
 
 void TestPluginInterfaceAdvanced::testPluginMetadataValidation() {
     auto metadata = m_plugin->metadata();
-    
+
     // Validate required fields
     QVERIFY(!metadata.name.empty());
     QVERIFY(metadata.version.major() >= 0);
     QVERIFY(!metadata.description.empty());
     QVERIFY(!metadata.author.empty());
     QVERIFY(!metadata.license.empty());
-    
+
     // Validate specific values
     QCOMPARE(QString::fromStdString(metadata.name), QString("MockPlugin"));
     QCOMPARE(metadata.version.to_string(), std::string("1.0.0"));
@@ -235,19 +254,19 @@ void TestPluginInterfaceAdvanced::testPluginMetadataValidation() {
 void TestPluginInterfaceAdvanced::testPluginStateConsistency() {
     // Test state consistency across multiple operations
     QVERIFY(!m_plugin->isInitialized());
-    
+
     // Multiple initialization calls - second should fail
     auto first_init = m_plugin->initialize();
     QVERIFY(first_init.has_value());
     QVERIFY(m_plugin->isInitialized());
-    auto second_init = m_plugin->initialize(); // Should fail
+    auto second_init = m_plugin->initialize();  // Should fail
     QVERIFY(!second_init.has_value());
     QVERIFY(m_plugin->isInitialized());
-    
+
     // Multiple shutdown calls should be safe
     m_plugin->shutdown();
     QVERIFY(!m_plugin->isInitialized());
-    m_plugin->shutdown(); // Should be safe
+    m_plugin->shutdown();  // Should be safe
     QVERIFY(!m_plugin->isInitialized());
 }
 
@@ -255,14 +274,14 @@ void TestPluginInterfaceAdvanced::testInitializationFailure() {
     // This test would require a mock that can fail initialization
     // For now, we test that the interface handles the failure case
     auto result = m_plugin->initialize();
-    QVERIFY(result.has_value()); // Our mock always succeeds
+    QVERIFY(result.has_value());  // Our mock always succeeds
 }
 
 void TestPluginInterfaceAdvanced::testShutdownSafety() {
     // Test shutdown without initialization
-    m_plugin->shutdown(); // Should be safe
+    m_plugin->shutdown();  // Should be safe
     QVERIFY(!m_plugin->isInitialized());
-    
+
     // Test shutdown after initialization
     auto init_result = m_plugin->initialize();
     QVERIFY(init_result.has_value());
@@ -281,51 +300,55 @@ void TestPluginInterfaceAdvanced::testInvalidMetadata() {
 void TestPluginInterfaceAdvanced::testInitializationPerformance() {
     const int iterations = 1000;
     auto start = std::chrono::high_resolution_clock::now();
-    
+
     for (int i = 0; i < iterations; ++i) {
         auto init_result = m_plugin->initialize();
         QVERIFY(init_result.has_value());
         m_plugin->shutdown();
     }
-    
+
     auto end = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    
-    // Should complete within reasonable time (less than 1 second for 1000 iterations)
+    auto duration =
+        std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+
+    // Should complete within reasonable time (less than 1 second for 1000
+    // iterations)
     QVERIFY(duration.count() < 1000);
 }
 
 void TestPluginInterfaceAdvanced::testShutdownPerformance() {
     const int iterations = 1000;
-    
+
     auto start = std::chrono::high_resolution_clock::now();
-    
+
     for (int i = 0; i < iterations; ++i) {
         auto init_result = m_plugin->initialize();
         QVERIFY(init_result.has_value());
         m_plugin->shutdown();
     }
-    
+
     auto end = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    
+    auto duration =
+        std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+
     // Should complete within reasonable time
     QVERIFY(duration.count() < 1000);
 }
 
 void TestPluginInterfaceAdvanced::testMetadataAccessPerformance() {
     const int iterations = 10000;
-    
+
     auto start = std::chrono::high_resolution_clock::now();
-    
+
     for (int i = 0; i < iterations; ++i) {
         auto metadata = m_plugin->metadata();
         Q_UNUSED(metadata);
     }
-    
+
     auto end = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    
+    auto duration =
+        std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+
     // Metadata access should be very fast
     QVERIFY(duration.count() < 100);
 }
@@ -334,10 +357,10 @@ void TestPluginInterfaceAdvanced::testConcurrentAccess() {
     // Test concurrent metadata access
     const int threadCount = 4;
     const int iterationsPerThread = 100;
-    
+
     std::vector<std::thread> threads;
     std::atomic<int> successCount{0};
-    
+
     for (int t = 0; t < threadCount; ++t) {
         threads.emplace_back([this, iterationsPerThread, &successCount]() {
             for (int i = 0; i < iterationsPerThread; ++i) {
@@ -348,22 +371,22 @@ void TestPluginInterfaceAdvanced::testConcurrentAccess() {
             }
         });
     }
-    
+
     for (auto& thread : threads) {
         thread.join();
     }
-    
+
     QCOMPARE(successCount.load(), threadCount * iterationsPerThread);
 }
 
 void TestPluginInterfaceAdvanced::testThreadSafeInitialization() {
     // Note: This test assumes the plugin implementation is thread-safe
     // Our mock implementation may not be fully thread-safe
-    
+
     const int threadCount = 2;
     std::vector<std::thread> threads;
     std::atomic<int> initSuccessCount{0};
-    
+
     for (int t = 0; t < threadCount; ++t) {
         threads.emplace_back([this, &initSuccessCount]() {
             auto result = m_plugin->initialize();
@@ -372,11 +395,11 @@ void TestPluginInterfaceAdvanced::testThreadSafeInitialization() {
             }
         });
     }
-    
+
     for (auto& thread : threads) {
         thread.join();
     }
-    
+
     // At least one initialization should succeed
     QVERIFY(initSuccessCount.load() >= 1);
     QVERIFY(m_plugin->isInitialized());
@@ -385,48 +408,46 @@ void TestPluginInterfaceAdvanced::testThreadSafeInitialization() {
 void TestPluginInterfaceAdvanced::testThreadSafeShutdown() {
     auto init_result = m_plugin->initialize();
     QVERIFY(init_result.has_value());
-    
+
     const int threadCount = 2;
     std::vector<std::thread> threads;
-    
+
     for (int t = 0; t < threadCount; ++t) {
-        threads.emplace_back([this]() {
-            m_plugin->shutdown();
-        });
+        threads.emplace_back([this]() { m_plugin->shutdown(); });
     }
-    
+
     for (auto& thread : threads) {
         thread.join();
     }
-    
+
     QVERIFY(!m_plugin->isInitialized());
 }
 
 void TestPluginInterfaceAdvanced::testMemoryLeaks() {
     // Test for obvious memory leaks by creating and destroying many plugins
     const int iterations = 1000;
-    
+
     for (int i = 0; i < iterations; ++i) {
         auto plugin = std::make_unique<MockPlugin>();
         plugin->initialize();
         plugin->shutdown();
         // plugin automatically destroyed here
     }
-    
+
     // If we get here without crashing, memory management is likely correct
     QVERIFY(true);
 }
 
 void TestPluginInterfaceAdvanced::testResourceCleanup() {
     m_plugin->initialize();
-    
+
     // Verify plugin is initialized
     QVERIFY(m_plugin->isInitialized());
-    
+
     // Shutdown should clean up resources
     m_plugin->shutdown();
     QVERIFY(!m_plugin->isInitialized());
-    
+
     // Should be safe to call shutdown again
     m_plugin->shutdown();
     QVERIFY(!m_plugin->isInitialized());

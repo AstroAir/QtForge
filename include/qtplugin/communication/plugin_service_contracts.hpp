@@ -203,7 +203,8 @@ public:
     ServiceCapabilities capabilities() const noexcept;
 
     const std::unordered_map<QString, ServiceMethod>& methods() const noexcept;
-    const std::unordered_map<QString, ServiceVersion>& dependencies() const noexcept;
+    const std::unordered_map<QString, ServiceVersion>& dependencies()
+        const noexcept;
 
     bool has_method(const QString& method_name) const;
     const ServiceMethod* get_method(const QString& method_name) const;

@@ -12,9 +12,11 @@
 #include <memory>
 #include <unordered_map>
 
+#include "../workflow/workflow_validator.hpp"
 #include "remote_plugin_loader.hpp"
 
 namespace qtplugin {
+using qtplugin::workflow::validation::ValidationResult;
 
 /**
  * @brief HTTP/HTTPS plugin loader implementation
@@ -155,6 +157,13 @@ private:
             const qtplugin::expected<RemotePluginLoadResult, PluginError>&)>
             completion_callback;
         std::chrono::system_clock::time_point start_time;
+
+        // Explicitly define move semantics
+        AsyncOperation() = default;
+        AsyncOperation(const AsyncOperation&) = delete;
+        AsyncOperation& operator=(const AsyncOperation&) = delete;
+        AsyncOperation(AsyncOperation&&) = default;
+        AsyncOperation& operator=(AsyncOperation&&) = default;
     };
 
     mutable std::mutex m_async_operations_mutex;
@@ -165,9 +174,9 @@ private:
 
     // Helper methods
     RemotePluginSource create_source_from_url(const QUrl& url) const;
-    qtplugin::expected<ValidationResult, PluginError> validate_http_source(
-        const RemotePluginSource& source,
-        const RemotePluginLoadOptions& options);
+    qtplugin::expected<RemoteValidationResult, PluginError>
+    validate_http_source(const RemotePluginSource& source,
+                         const RemotePluginLoadOptions& options);
     qtplugin::expected<DownloadResult, PluginError> download_plugin_file(
         const RemotePluginSource& source,
         const RemotePluginLoadOptions& options);

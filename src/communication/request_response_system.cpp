@@ -128,19 +128,16 @@ RequestResponseSystem::send_request(const RequestInfo& request) {
         }
     }
 
-    // No handler found
-    ResponseInfo not_found_response;
-    not_found_response.request_id = request_id;
-    not_found_response.status = ResponseStatus::NotFound;
-    not_found_response.status_message =
-        QString("No handler for service %1::%2")
-            .arg(request.receiver_id, request.method);
-
+    // No handler found - return error
     QMutexLocker stats_lock(&d->stats_mutex);
     d->statistics.total_requests_sent++;
     d->statistics.total_errors++;
 
-    return not_found_response;
+    return make_error<ResponseInfo>(
+        PluginErrorCode::PluginNotFound,
+        QString("No handler for service %1::%2")
+            .arg(request.receiver_id, request.method)
+            .toStdString());
 }
 
 qtplugin::expected<void, PluginError> RequestResponseSystem::register_service(
@@ -151,15 +148,10 @@ qtplugin::expected<void, PluginError> RequestResponseSystem::register_service(
     }
 
     QMutexLocker lock(&d->services_mutex);
-    auto service_key = endpoint.provider_id + "::" + endpoint.method;
+    auto service_key = endpoint.service_id + "::" + endpoint.method;
 
-    if (d->sync_handlers.find(service_key) != d->sync_handlers.end()) {
-        return make_error<void>(
-            PluginErrorCode::AlreadyExists,
-            "Service already registered: " + service_key.toStdString());
-    }
-
-    d->registered_services[endpoint.service_id] = endpoint;
+    // Allow overriding existing services
+    d->registered_services[service_key] = endpoint;
     d->sync_handlers[service_key] = std::move(handler);
 
     qCDebug(rrsLog) << "Registered sync service:" << service_key;
@@ -178,15 +170,10 @@ RequestResponseSystem::register_async_service(const ServiceEndpoint& endpoint,
     }
 
     QMutexLocker lock(&d->services_mutex);
-    auto service_key = endpoint.provider_id + "::" + endpoint.method;
+    auto service_key = endpoint.service_id + "::" + endpoint.method;
 
-    if (d->async_handlers.find(service_key) != d->async_handlers.end()) {
-        return make_error<void>(
-            PluginErrorCode::AlreadyExists,
-            "Async service already registered: " + service_key.toStdString());
-    }
-
-    d->registered_services[endpoint.service_id] = endpoint;
+    // Allow overriding existing services
+    d->registered_services[service_key] = endpoint;
     d->async_handlers[service_key] = std::move(handler);
 
     qCDebug(rrsLog) << "Registered async service:" << service_key;
@@ -444,28 +431,40 @@ std::vector<ServiceEndpoint> RequestResponseSystem::get_registered_services(
 bool RequestResponseSystem::is_service_registered(
     const QString& service_id) const {
     QMutexLocker lock(&d->services_mutex);
-    return d->registered_services.find(service_id) !=
-           d->registered_services.end();
+    // Check if any service with this service_id exists (may have multiple
+    // methods)
+    for (const auto& [key, endpoint] : d->registered_services) {
+        if (endpoint.service_id == service_id) {
+            return true;
+        }
+    }
+    return false;
 }
 
 qtplugin::expected<void, PluginError> RequestResponseSystem::unregister_service(
     const QString& service_id) {
     QMutexLocker lock(&d->services_mutex);
 
-    auto service_it = d->registered_services.find(service_id);
-    if (service_it == d->registered_services.end()) {
+    // Find all services with this service_id and remove them
+    std::vector<QString> keys_to_remove;
+    for (const auto& [key, endpoint] : d->registered_services) {
+        if (endpoint.service_id == service_id) {
+            keys_to_remove.push_back(key);
+        }
+    }
+
+    if (keys_to_remove.empty()) {
         return make_error<void>(
             PluginErrorCode::NotFound,
             "Service not found: " + service_id.toStdString());
     }
 
-    const auto& endpoint = service_it->second;
-    auto service_key = endpoint.provider_id + "::" + endpoint.method;
-
-    // Remove handlers
-    d->sync_handlers.erase(service_key);
-    d->async_handlers.erase(service_key);
-    d->registered_services.erase(service_it);
+    // Remove all handlers and registrations for this service
+    for (const auto& key : keys_to_remove) {
+        d->sync_handlers.erase(key);
+        d->async_handlers.erase(key);
+        d->registered_services.erase(key);
+    }
 
     qCDebug(rrsLog) << "Unregistered service:" << service_id;
     emit service_unregistered(service_id);

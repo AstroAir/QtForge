@@ -102,9 +102,9 @@ public:
      * @brief Clear dependency graph
      */
     virtual void clear() = 0;
-    
+
     // === Enhanced Features (v3.2.0) ===
-    
+
     /**
      * @brief Circular dependency resolution strategy
      */
@@ -114,7 +114,7 @@ public:
         DisablePlugin,  ///< Disable one of the plugins in the cycle
         LoadAsGroup     ///< Load circular dependent plugins as a group
     };
-    
+
     /**
      * @brief Circular dependency information
      */
@@ -123,27 +123,30 @@ public:
         std::string suggested_break_point;
         CircularResolutionStrategy suggested_strategy;
     };
-    
+
     /**
      * @brief Get all circular dependencies
      * @return Vector of circular dependency information
      */
-    virtual std::vector<CircularDependency> get_circular_dependencies() const = 0;
-    
+    virtual std::vector<CircularDependency> get_circular_dependencies()
+        const = 0;
+
     /**
      * @brief Resolve circular dependencies automatically
      * @param strategy Resolution strategy to use
      * @return Success or error with details
      */
     virtual qtplugin::expected<void, PluginError> resolve_circular_dependencies(
-        CircularResolutionStrategy strategy = CircularResolutionStrategy::RemoveWeakest) = 0;
-    
+        CircularResolutionStrategy strategy =
+            CircularResolutionStrategy::RemoveWeakest) = 0;
+
     /**
      * @brief Validate dependency graph for consistency
      * @return Success or error with validation issues
      */
-    virtual qtplugin::expected<void, PluginError> validate_dependencies() const = 0;
-    
+    virtual qtplugin::expected<void, PluginError> validate_dependencies()
+        const = 0;
+
     /**
      * @brief Get missing dependencies for a plugin
      * @param plugin_id Plugin identifier
@@ -151,7 +154,7 @@ public:
      */
     virtual std::vector<std::string> get_missing_dependencies(
         const std::string& plugin_id) const = 0;
-    
+
     /**
      * @brief Suggest load order for a set of plugins
      * @param plugin_ids Plugin identifiers to order
@@ -182,7 +185,8 @@ public:
 
     // Move constructor and assignment operator
     PluginDependencyResolver(PluginDependencyResolver&& other) noexcept;
-    PluginDependencyResolver& operator=(PluginDependencyResolver&& other) noexcept;
+    PluginDependencyResolver& operator=(
+        PluginDependencyResolver&& other) noexcept;
 
     // IPluginDependencyResolver interface
     qtplugin::expected<void, PluginError> update_dependency_graph(
@@ -202,12 +206,13 @@ public:
     std::vector<std::string> get_dependencies(
         const std::string& plugin_id) const override;
     void clear() override;
-    
+
     // Enhanced features (v3.2.0)
     std::vector<CircularDependency> get_circular_dependencies() const override;
     qtplugin::expected<void, PluginError> resolve_circular_dependencies(
         CircularResolutionStrategy strategy) override;
-    qtplugin::expected<void, PluginError> validate_dependencies() const override;
+    qtplugin::expected<void, PluginError> validate_dependencies()
+        const override;
     std::vector<std::string> get_missing_dependencies(
         const std::string& plugin_id) const override;
     std::vector<std::string> suggest_load_order(

@@ -63,10 +63,14 @@ int main(int argc, char* argv[]) {
     }
 
     qInfo() << "✅ Service plugin instance obtained";
-    qInfo() << "Plugin name:"
-            << QString::fromStdString(std::string(plugin->name()));
-    qInfo() << "Plugin ID:" << QString::fromStdString(plugin->id());
-    qInfo() << "Plugin version:" << plugin->version().to_string().c_str();
+
+    // Get plugin metadata
+    auto meta = plugin->metadata();
+    qInfo() << "Plugin name:" << QString::fromStdString(meta.name);
+    qInfo() << "Plugin version:"
+            << QString::fromStdString(meta.version.to_string());
+    qInfo() << "Plugin description:"
+            << QString::fromStdString(meta.description);
 
     // Check plugin initialization status
     print_separator("🔧 PLUGIN INITIALIZATION");
@@ -92,12 +96,10 @@ int main(int argc, char* argv[]) {
     // Test configuration
     print_separator("⚙️ CONFIGURATION TESTING");
 
-    // Get default configuration
-    auto default_config = plugin->default_configuration();
-    if (default_config) {
-        qInfo() << "Default configuration:";
-        qInfo() << QJsonDocument(default_config.value()).toJson();
-    }
+    // Get current configuration
+    auto current_config = plugin->get_configuration();
+    qInfo() << "Current configuration:";
+    qInfo() << QJsonDocument(current_config).toJson();
 
     // Test custom configuration
     QJsonObject custom_config{{"processing_interval", 3000},
@@ -110,9 +112,9 @@ int main(int argc, char* argv[]) {
     if (config_result) {
         qInfo() << "✅ Custom configuration applied successfully";
 
-        auto current_config = plugin->current_configuration();
-        qInfo() << "Current configuration:";
-        qInfo() << QJsonDocument(current_config).toJson();
+        auto updated_config = plugin->get_configuration();
+        qInfo() << "Updated configuration:";
+        qInfo() << QJsonDocument(updated_config).toJson();
     } else {
         qWarning() << "❌ Configuration failed:"
                    << QString::fromStdString(config_result.error().message);
@@ -223,26 +225,10 @@ int main(int argc, char* argv[]) {
 
     // Test direct API methods
     qInfo() << "\n--- Direct API Testing ---";
-    qInfo() << "Plugin UUID:" << plugin->uuid().toString();
     qInfo() << "Is initialized:" << plugin->is_initialized();
-    qInfo() << "Is thread safe:" << plugin->is_thread_safe();
-    qInfo() << "Thread model:"
-            << QString::fromStdString(std::string(plugin->thread_model()));
-    qInfo() << "Dependencies satisfied:" << plugin->dependencies_satisfied();
-    qInfo() << "Uptime (ms):" << plugin->uptime().count();
-
-    // Test pause/resume
-    qInfo() << "\n--- Testing Pause/Resume ---";
-    auto pause_result = plugin->pause();
-    if (pause_result) {
-        qInfo() << "✅ Plugin paused successfully";
-        std::this_thread::sleep_for(std::chrono::seconds(2));
-
-        auto resume_result = plugin->resume();
-        if (resume_result) {
-            qInfo() << "✅ Plugin resumed successfully";
-        }
-    }
+    qInfo() << "Plugin state:" << static_cast<int>(plugin->state());
+    qInfo() << "Plugin capabilities:" << plugin->capabilities();
+    qInfo() << "Plugin priority:" << static_cast<int>(plugin->priority());
 
     // Let the plugin run and demonstrate background processing
     print_separator("⏱️ BACKGROUND PROCESSING DEMONSTRATION");

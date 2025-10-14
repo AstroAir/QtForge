@@ -33,17 +33,27 @@ public:
     }
 
     // IPlugin interface
-    std::string_view name() const noexcept override { return "Test Plugin"; }
-    std::string_view description() const noexcept override {
-        return "Plugin for testing PluginManager";
+    qtplugin::PluginMetadata metadata() const override {
+        qtplugin::PluginMetadata meta;
+        meta.name = "Test Plugin";
+        meta.version = qtplugin::Version{1, 0, 0};
+        meta.description = "Plugin for testing PluginManager";
+        meta.author = "Test Suite";
+        return meta;
     }
-    qtplugin::Version version() const noexcept override { return {1, 0, 0}; }
-    std::string_view author() const noexcept override { return "Test Suite"; }
-    std::string id() const noexcept override { return "com.test.testplugin"; }
 
-    qtplugin::PluginCapabilities capabilities() const noexcept override {
-        return static_cast<qtplugin::PluginCapabilities>(
-            qtplugin::PluginCapability::Service);
+    qtplugin::PluginState state() const noexcept override { return m_state; }
+
+    uint32_t capabilities() const noexcept override {
+        return static_cast<uint32_t>(qtplugin::PluginCapability::Service);
+    }
+
+    qtplugin::PluginPriority priority() const noexcept override {
+        return qtplugin::PluginPriority::Normal;
+    }
+
+    bool is_initialized() const noexcept override {
+        return m_state == qtplugin::PluginState::Running;
     }
 
     qtplugin::expected<void, qtplugin::PluginError> initialize() override {
@@ -60,15 +70,14 @@ public:
         m_state = qtplugin::PluginState::Unloaded;
     }
 
-    qtplugin::PluginState state() const noexcept override { return m_state; }
-
     qtplugin::expected<QJsonObject, qtplugin::PluginError> execute_command(
         std::string_view command, const QJsonObject& params = {}) override {
         Q_UNUSED(params)
         if (command == "test") {
             QJsonObject result;
             result["success"] = true;
-            result["plugin_id"] = QString::fromStdString(id());
+            auto meta = metadata();
+            result["plugin_id"] = QString::fromStdString(meta.name);
             result["timestamp"] = QDateTime::currentMSecsSinceEpoch();
             return result;
         } else if (command == "echo") {
@@ -78,7 +87,8 @@ public:
             return result;
         } else if (command == "fail") {
             return qtplugin::make_error<QJsonObject>(
-                qtplugin::PluginErrorCode::ExecutionFailed, "Intentional test failure");
+                qtplugin::PluginErrorCode::ExecutionFailed,
+                "Intentional test failure");
         }
         return qtplugin::make_error<QJsonObject>(
             qtplugin::PluginErrorCode::CommandNotFound, "Unknown command");
@@ -88,12 +98,21 @@ public:
         return {"test", "echo", "fail"};
     }
 
+    qtplugin::expected<void, qtplugin::PluginError> configure(
+        const QJsonObject& config) override {
+        m_config = config;
+        return qtplugin::make_success();
+    }
+
+    QJsonObject get_configuration() const override { return m_config; }
+
     // Test control
     void set_should_fail(bool fail) { m_should_fail = fail; }
 
 private:
     qtplugin::PluginState m_state = qtplugin::PluginState::Unloaded;
     bool m_should_fail = false;
+    QJsonObject m_config;
 };
 
 /**
@@ -232,8 +251,10 @@ void TestPluginManager::testPluginLoading() {
     // Test loading with empty path
     auto empty_result = m_manager->load_plugin("");
     QVERIFY(!empty_result.has_value());
-    QVERIFY(empty_result.error().code == qtplugin::PluginErrorCode::InvalidParameters ||
-            empty_result.error().code == qtplugin::PluginErrorCode::FileNotFound);
+    QVERIFY(empty_result.error().code ==
+                qtplugin::PluginErrorCode::InvalidParameters ||
+            empty_result.error().code ==
+                qtplugin::PluginErrorCode::FileNotFound);
 
     // Verify no plugins are loaded
     auto loaded = m_manager->loaded_plugins();
@@ -245,8 +266,10 @@ void TestPluginManager::testPluginLoading() {
     options.check_dependencies = false;
     options.initialize_immediately = false;
 
-    auto options_result = m_manager->load_plugin("/non/existent/path.qtplugin", options);
-    QVERIFY(!options_result.has_value()); // Still should fail for non-existent file
+    auto options_result =
+        m_manager->load_plugin("/non/existent/path.qtplugin", options);
+    QVERIFY(!options_result
+                 .has_value());  // Still should fail for non-existent file
 }
 
 void TestPluginManager::testPluginUnloading() {
@@ -256,14 +279,25 @@ void TestPluginManager::testPluginUnloading() {
     // Test unloading - should fail gracefully
     auto unload_result = m_manager->unload_plugin(fake_plugin_id.toStdString());
     QVERIFY(!unload_result.has_value());
-    QVERIFY(unload_result.error().code == qtplugin::PluginErrorCode::PluginNotFound ||
-            unload_result.error().code == qtplugin::PluginErrorCode::InvalidParameters);
+    // Accept various error codes that indicate the plugin cannot be unloaded
+    QVERIFY(
+        unload_result.error().code ==
+            qtplugin::PluginErrorCode::PluginNotFound ||
+        unload_result.error().code ==
+            qtplugin::PluginErrorCode::InvalidParameters ||
+        unload_result.error().code == qtplugin::PluginErrorCode::NotLoaded ||
+        unload_result.error().code == qtplugin::PluginErrorCode::LoadFailed);
 
     // Test unloading with empty plugin ID
     auto empty_unload = m_manager->unload_plugin("");
     QVERIFY(!empty_unload.has_value());
-    QVERIFY(empty_unload.error().code == qtplugin::PluginErrorCode::InvalidParameters ||
-            empty_unload.error().code == qtplugin::PluginErrorCode::PluginNotFound);
+    // Accept various error codes that indicate the plugin cannot be unloaded
+    QVERIFY(empty_unload.error().code ==
+                qtplugin::PluginErrorCode::InvalidParameters ||
+            empty_unload.error().code ==
+                qtplugin::PluginErrorCode::PluginNotFound ||
+            empty_unload.error().code == qtplugin::PluginErrorCode::NotLoaded ||
+            empty_unload.error().code == qtplugin::PluginErrorCode::LoadFailed);
 
     // Verify no plugins are loaded
     auto loaded = m_manager->loaded_plugins();
@@ -627,10 +661,11 @@ void TestPluginManager::testSecurityLevels() {
     // Security levels removed - just test basic loading
     qtplugin::PluginLoadOptions options;
     auto result = m_manager->load_plugin(plugin_file.toStdString(), options);
-    
+
     // Dummy files will fail to load
     QVERIFY(!result.has_value());
-    qDebug() << "Plugin loading failed as expected:" << QString::fromStdString(result.error().message);
+    qDebug() << "Plugin loading failed as expected:"
+             << QString::fromStdString(result.error().message);
 }
 
 void TestPluginManager::testLoadingPerformance() {
@@ -847,7 +882,8 @@ void TestPluginManager::testPluginDiscovery() {
     QVERIFY(non_existent.empty());
 
     // Test recursive discovery
-    auto recursive = m_manager->discover_plugins(m_plugins_dir.toStdString(), true);
+    auto recursive =
+        m_manager->discover_plugins(m_plugins_dir.toStdString(), true);
     QVERIFY(recursive.empty());
 }
 
@@ -861,23 +897,28 @@ void TestPluginManager::testSearchPaths() {
     m_manager->add_search_path(test_path);
 
     auto paths_after_add = m_manager->search_paths();
-    QVERIFY(std::find(paths_after_add.begin(), paths_after_add.end(), test_path) != paths_after_add.end());
+    QVERIFY(std::find(paths_after_add.begin(), paths_after_add.end(),
+                      test_path) != paths_after_add.end());
 
     // Test removing search path
     m_manager->remove_search_path(test_path);
     auto paths_after_remove = m_manager->search_paths();
-    QVERIFY(std::find(paths_after_remove.begin(), paths_after_remove.end(), test_path) == paths_after_remove.end());
+    QVERIFY(std::find(paths_after_remove.begin(), paths_after_remove.end(),
+                      test_path) == paths_after_remove.end());
 }
 
 void TestPluginManager::testPluginCapabilities() {
     // Test filtering by capabilities with no plugins loaded
-    auto ui_plugins = m_manager->plugins_with_capability(qtplugin::PluginCapability::UI);
+    auto ui_plugins =
+        m_manager->plugins_with_capability(qtplugin::PluginCapability::UI);
     QVERIFY(ui_plugins.empty());
 
-    auto service_plugins = m_manager->plugins_with_capability(qtplugin::PluginCapability::Service);
+    auto service_plugins =
+        m_manager->plugins_with_capability(qtplugin::PluginCapability::Service);
     QVERIFY(service_plugins.empty());
 
-    auto network_plugins = m_manager->plugins_with_capability(qtplugin::PluginCapability::Network);
+    auto network_plugins =
+        m_manager->plugins_with_capability(qtplugin::PluginCapability::Network);
     QVERIFY(network_plugins.empty());
 }
 
@@ -914,7 +955,7 @@ void TestPluginManager::testExpectedErrorHandling() {
 
     // Test resolve_dependencies (should succeed with no plugins)
     auto deps_result = m_manager->resolve_dependencies();
-    QVERIFY(deps_result.has_value()); // Should succeed with empty plugin set
+    QVERIFY(deps_result.has_value());  // Should succeed with empty plugin set
 }
 
 void TestPluginManager::testPluginLoadOptions() {

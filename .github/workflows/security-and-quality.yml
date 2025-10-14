@@ -7,16 +7,16 @@ on:
     branches: [main, develop, project-organization]
   schedule:
     # Run security scans weekly
-    - cron: '0 6 * * 1'
+    - cron: "0 6 * * 1"
   workflow_call:
     inputs:
       platform:
-        description: 'Platform to run quality checks for'
+        description: "Platform to run quality checks for"
         required: false
-        default: 'all'
+        default: "all"
         type: string
       skip_security_scan:
-        description: 'Skip security scanning'
+        description: "Skip security scanning"
         required: false
         default: false
         type: boolean
@@ -66,16 +66,16 @@ jobs:
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@0.28.0
         with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
+          scan-type: "fs"
+          scan-ref: "."
+          format: "sarif"
+          output: "trivy-results.sarif"
 
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
-          sarif_file: 'trivy-results.sarif'
+          sarif_file: "trivy-results.sarif"
 
   # CodeQL security analysis
   codeql-analysis:
@@ -91,17 +91,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: ['cpp']
-        
+        language: ["cpp"]
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        
+
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
-          
+
       - name: Setup Qt
         uses: ./.github/workflows/shared/setup-qt
         with:
@@ -112,7 +112,7 @@ jobs:
         uses: ./.github/workflows/shared/setup-build-env
         with:
           cmake-version: ${{ env.CMAKE_VERSION }}
-          
+
       - name: Configure and build
         run: |
           cmake -S . -B build \
@@ -120,7 +120,7 @@ jobs:
             -DQTFORGE_BUILD_TESTS=OFF \
             -DQTFORGE_BUILD_EXAMPLES=OFF
           cmake --build build --parallel
-          
+
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
         with:
@@ -162,14 +162,14 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
-          cache: 'pip'
+          python-version: "3.11"
+          cache: "pip"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install documentation tools
         run: |
@@ -275,15 +275,15 @@ jobs:
         if: hashFiles('Dockerfile') != ''
         uses: aquasecurity/trivy-action@0.28.0
         with:
-          image-ref: 'qtforge:latest'
-          format: 'sarif'
-          output: 'trivy-container-results.sarif'
+          image-ref: "qtforge:latest"
+          format: "sarif"
+          output: "trivy-container-results.sarif"
 
       - name: Upload container scan results
         if: hashFiles('Dockerfile') != ''
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: 'trivy-container-results.sarif'
+          sarif_file: "trivy-container-results.sarif"
 
   # Supply chain security
   supply-chain-security:

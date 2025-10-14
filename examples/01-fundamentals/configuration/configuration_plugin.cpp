@@ -42,33 +42,25 @@ ConfigurationPlugin::~ConfigurationPlugin() {
     qDebug() << "ConfigurationPlugin: Destroyed";
 }
 
-bool ConfigurationPlugin::initialize(const QJsonObject& config) {
+qtplugin::expected<void, qtplugin::PluginError>
+ConfigurationPlugin::initialize() {
     QMutexLocker locker(&m_config_mutex);
 
     if (m_state.load() != qtplugin::PluginState::Unloaded) {
-        qWarning() << "ConfigurationPlugin: Already initialized";
-        return false;
+        return qtplugin::unexpected(qtplugin::PluginError{
+            qtplugin::PluginErrorCode::InitializationFailed,
+            "Already initialized"});
     }
 
     qDebug() << "ConfigurationPlugin: Initializing...";
     m_state.store(qtplugin::PluginState::Loading);
 
     try {
-        // Initialize configuration manager
-        m_config_manager = std::make_unique<qtplugin::ConfigurationManager>();
-
         // Load configuration
         if (!load_configuration()) {
             qWarning() << "ConfigurationPlugin: Failed to load configuration, "
                           "using defaults";
             m_configuration = m_default_configuration;
-        }
-
-        // Apply any provided config overrides
-        if (!config.isEmpty()) {
-            for (auto it = config.begin(); it != config.end(); ++it) {
-                m_configuration[it.key()] = it.value();
-            }
         }
 
         // Validate configuration
@@ -91,13 +83,14 @@ bool ConfigurationPlugin::initialize(const QJsonObject& config) {
 
         m_state.store(qtplugin::PluginState::Initialized);
         qDebug() << "ConfigurationPlugin: Initialized successfully!";
-        return true;
+        return {};
 
     } catch (const std::exception& e) {
         qCritical() << "ConfigurationPlugin: Initialization failed:"
                     << e.what();
         m_state.store(qtplugin::PluginState::Error);
-        return false;
+        return qtplugin::unexpected(qtplugin::PluginError{
+            qtplugin::PluginErrorCode::InitializationFailed, e.what()});
     }
 }
 

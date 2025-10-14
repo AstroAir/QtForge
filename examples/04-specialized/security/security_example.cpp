@@ -13,10 +13,10 @@ int main(int argc, char** argv) {
     }
 
     // Demonstrate metadata validation on a non-existent file (stubbed API)
-    auto res = validator.validate_metadata(QString::fromUtf8("./nonexistent.json"));
+    auto res =
+        validator.validate_metadata(QString::fromUtf8("./nonexistent.json"));
     qInfo() << "Validation result (enum):" << static_cast<int>(res);
     qInfo() << "Report:" << validator.getValidationReport();
 
     return 0;
 }
-

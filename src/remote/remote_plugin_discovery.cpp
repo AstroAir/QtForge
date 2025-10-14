@@ -3,7 +3,6 @@
  * @brief Implementation of remote plugin discovery system
  */
 
-#include <QXmlStreamReader>
 #include <QEventLoop>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -12,6 +11,7 @@
 #include <QTimer>
 #include <QUrlQuery>
 #include <QUuid>
+#include <QXmlStreamReader>
 #include <algorithm>
 #include <qtplugin/remote/remote_plugin_discovery.hpp>
 
@@ -650,8 +650,8 @@ HttpDiscoveryEngine::parse_discovery_response(
 
 qtplugin::expected<std::vector<RemotePluginDiscoveryResult>, PluginError>
 HttpDiscoveryEngine::discover_from_registry_api(
-    const RemotePluginSource& /* source */,
-    const PluginDiscoveryFilter& /* filter */) const {
+    const RemotePluginSource& source,
+    const PluginDiscoveryFilter& filter) const {
     std::vector<RemotePluginDiscoveryResult> results;
 
     try {
@@ -671,25 +671,32 @@ HttpDiscoveryEngine::discover_from_registry_api(
         // Build query parameters from filter
         QUrlQuery query;
         if (filter.name_pattern) {
-            query.addQueryItem("name", QString::fromStdString(*filter.name_pattern));
+            query.addQueryItem("name",
+                               QString::fromStdString(*filter.name_pattern));
         }
         if (filter.category) {
-            query.addQueryItem("category", QString::fromStdString(*filter.category));
+            query.addQueryItem("category",
+                               QString::fromStdString(*filter.category));
         }
         if (filter.author_pattern) {
-            query.addQueryItem("author", QString::fromStdString(*filter.author_pattern));
+            query.addQueryItem("author",
+                               QString::fromStdString(*filter.author_pattern));
         }
         if (filter.license) {
-            query.addQueryItem("license", QString::fromStdString(*filter.license));
+            query.addQueryItem("license",
+                               QString::fromStdString(*filter.license));
         }
         if (filter.min_rating) {
-            query.addQueryItem("min_rating", QString::number(*filter.min_rating));
+            query.addQueryItem("min_rating",
+                               QString::number(*filter.min_rating));
         }
         if (filter.version_range) {
-            query.addQueryItem("version", QString::fromStdString(*filter.version_range));
+            query.addQueryItem("version",
+                               QString::fromStdString(*filter.version_range));
         }
         if (filter.max_size_bytes) {
-            query.addQueryItem("max_size", QString::number(*filter.max_size_bytes));
+            query.addQueryItem("max_size",
+                               QString::number(*filter.max_size_bytes));
         }
         if (filter.verified_only) {
             query.addQueryItem("verified", "true");
@@ -725,24 +732,29 @@ HttpDiscoveryEngine::discover_from_registry_api(
         QEventLoop loop;
         QTimer timeout_timer;
         timeout_timer.setSingleShot(true);
-        timeout_timer.start(source.config().timeout);
+        timeout_timer.start(source.configuration().timeout);
 
-        QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-        QObject::connect(&timeout_timer, &QTimer::timeout, &loop, &QEventLoop::quit);
+        QObject::connect(reply, &QNetworkReply::finished, &loop,
+                         &QEventLoop::quit);
+        QObject::connect(&timeout_timer, &QTimer::timeout, &loop,
+                         &QEventLoop::quit);
         loop.exec();
 
         if (!timeout_timer.isActive()) {
             reply->abort();
             reply->deleteLater();
-            return qtplugin::make_error<std::vector<RemotePluginDiscoveryResult>>(
-                PluginErrorCode::NetworkError, "Registry API request timed out");
+            return qtplugin::make_error<
+                std::vector<RemotePluginDiscoveryResult>>(
+                PluginErrorCode::NetworkError,
+                "Registry API request timed out");
         }
         timeout_timer.stop();
 
         if (reply->error() != QNetworkReply::NoError) {
             QString error_msg = reply->errorString();
             reply->deleteLater();
-            return qtplugin::make_error<std::vector<RemotePluginDiscoveryResult>>(
+            return qtplugin::make_error<
+                std::vector<RemotePluginDiscoveryResult>>(
                 PluginErrorCode::NetworkError,
                 "Registry API request failed: " + error_msg.toStdString());
         }
@@ -752,11 +764,14 @@ HttpDiscoveryEngine::discover_from_registry_api(
         reply->deleteLater();
 
         QJsonParseError parse_error;
-        QJsonDocument doc = QJsonDocument::fromJson(response_data, &parse_error);
+        QJsonDocument doc =
+            QJsonDocument::fromJson(response_data, &parse_error);
         if (parse_error.error != QJsonParseError::NoError) {
-            return qtplugin::make_error<std::vector<RemotePluginDiscoveryResult>>(
+            return qtplugin::make_error<
+                std::vector<RemotePluginDiscoveryResult>>(
                 PluginErrorCode::InvalidFormat,
-                "Invalid JSON response from registry API: " + parse_error.errorString().toStdString());
+                "Invalid JSON response from registry API: " +
+                    parse_error.errorString().toStdString());
         }
 
         QJsonObject root = doc.object();
@@ -772,7 +787,8 @@ HttpDiscoveryEngine::discover_from_registry_api(
         } else if (doc.isArray()) {
             plugins_array = doc.array();
         } else {
-            return qtplugin::make_error<std::vector<RemotePluginDiscoveryResult>>(
+            return qtplugin::make_error<
+                std::vector<RemotePluginDiscoveryResult>>(
                 PluginErrorCode::InvalidFormat,
                 "Unexpected registry API response format");
         }
@@ -789,10 +805,13 @@ HttpDiscoveryEngine::discover_from_registry_api(
             // Extract required fields
             result.plugin_id = plugin_obj.value("id").toString().toStdString();
             result.name = plugin_obj.value("name").toString().toStdString();
-            result.version = plugin_obj.value("version").toString().toStdString();
-            result.description = plugin_obj.value("description").toString().toStdString();
+            result.version =
+                plugin_obj.value("version").toString().toStdString();
+            result.description =
+                plugin_obj.value("description").toString().toStdString();
             result.author = plugin_obj.value("author").toString().toStdString();
-            result.category = plugin_obj.value("category").toString().toStdString();
+            result.category =
+                plugin_obj.value("category").toString().toStdString();
 
             // Extract download URL
             QString download_url = plugin_obj.value("download_url").toString();
@@ -812,7 +831,8 @@ HttpDiscoveryEngine::discover_from_registry_api(
             }
 
             if (plugin_obj.contains("checksum")) {
-                result.checksum = plugin_obj["checksum"].toString().toStdString();
+                result.checksum =
+                    plugin_obj["checksum"].toString().toStdString();
             }
 
             if (plugin_obj.contains("size")) {
@@ -857,7 +877,8 @@ HttpDiscoveryEngine::discover_from_direct_url(
 
         // Create network request
         QNetworkRequest request(url);
-        request.setRawHeader("Accept", "application/json, text/html, application/xml, text/xml");
+        request.setRawHeader(
+            "Accept", "application/json, text/html, application/xml, text/xml");
         request.setRawHeader("User-Agent", "QtForge-PluginDiscovery/3.0.0");
 
         // Apply authentication if configured
@@ -870,16 +891,19 @@ HttpDiscoveryEngine::discover_from_direct_url(
         QEventLoop loop;
         QTimer timeout_timer;
         timeout_timer.setSingleShot(true);
-        timeout_timer.start(source.config().timeout);
+        timeout_timer.start(source.configuration().timeout);
 
-        QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-        QObject::connect(&timeout_timer, &QTimer::timeout, &loop, &QEventLoop::quit);
+        QObject::connect(reply, &QNetworkReply::finished, &loop,
+                         &QEventLoop::quit);
+        QObject::connect(&timeout_timer, &QTimer::timeout, &loop,
+                         &QEventLoop::quit);
         loop.exec();
 
         if (!timeout_timer.isActive()) {
             reply->abort();
             reply->deleteLater();
-            return qtplugin::make_error<std::vector<RemotePluginDiscoveryResult>>(
+            return qtplugin::make_error<
+                std::vector<RemotePluginDiscoveryResult>>(
                 PluginErrorCode::NetworkError, "Direct URL request timed out");
         }
         timeout_timer.stop();
@@ -887,20 +911,25 @@ HttpDiscoveryEngine::discover_from_direct_url(
         if (reply->error() != QNetworkReply::NoError) {
             QString error_msg = reply->errorString();
             reply->deleteLater();
-            return qtplugin::make_error<std::vector<RemotePluginDiscoveryResult>>(
+            return qtplugin::make_error<
+                std::vector<RemotePluginDiscoveryResult>>(
                 PluginErrorCode::NetworkError,
                 "Direct URL request failed: " + error_msg.toStdString());
         }
 
         // Get content type and data
-        QString content_type = reply->header(QNetworkRequest::ContentTypeHeader).toString().toLower();
+        QString content_type = reply->header(QNetworkRequest::ContentTypeHeader)
+                                   .toString()
+                                   .toLower();
         QByteArray response_data = reply->readAll();
         reply->deleteLater();
 
         // Parse based on content type
-        if (content_type.contains("application/json") || content_type.contains("text/json")) {
+        if (content_type.contains("application/json") ||
+            content_type.contains("text/json")) {
             // Parse as JSON
-            auto json_result = parse_json_plugin_metadata(response_data, source);
+            auto json_result =
+                parse_json_plugin_metadata(response_data, source);
             if (json_result) {
                 for (auto& result : *json_result) {
                     if (filter.matches(result)) {
@@ -912,7 +941,8 @@ HttpDiscoveryEngine::discover_from_direct_url(
             }
         } else if (content_type.contains("text/html")) {
             // Parse as HTML - extract plugin metadata from HTML content
-            auto html_result = parse_html_plugin_metadata(response_data, source);
+            auto html_result =
+                parse_html_plugin_metadata(response_data, source);
             if (html_result) {
                 for (auto& result : *html_result) {
                     if (filter.matches(result)) {
@@ -922,7 +952,8 @@ HttpDiscoveryEngine::discover_from_direct_url(
             } else {
                 return qtplugin::unexpected(html_result.error());
             }
-        } else if (content_type.contains("application/xml") || content_type.contains("text/xml")) {
+        } else if (content_type.contains("application/xml") ||
+                   content_type.contains("text/xml")) {
             // Parse as XML
             auto xml_result = parse_xml_plugin_metadata(response_data, source);
             if (xml_result) {
@@ -939,8 +970,10 @@ HttpDiscoveryEngine::discover_from_direct_url(
             QString content_str = QString::fromUtf8(response_data);
 
             // Try JSON first
-            if (content_str.trimmed().startsWith("{") || content_str.trimmed().startsWith("[")) {
-                auto json_result = parse_json_plugin_metadata(response_data, source);
+            if (content_str.trimmed().startsWith("{") ||
+                content_str.trimmed().startsWith("[")) {
+                auto json_result =
+                    parse_json_plugin_metadata(response_data, source);
                 if (json_result) {
                     for (auto& result : *json_result) {
                         if (filter.matches(result)) {
@@ -951,7 +984,8 @@ HttpDiscoveryEngine::discover_from_direct_url(
             }
             // Try XML
             else if (content_str.trimmed().startsWith("<")) {
-                auto xml_result = parse_xml_plugin_metadata(response_data, source);
+                auto xml_result =
+                    parse_xml_plugin_metadata(response_data, source);
                 if (xml_result) {
                     for (auto& result : *xml_result) {
                         if (filter.matches(result)) {
@@ -960,9 +994,11 @@ HttpDiscoveryEngine::discover_from_direct_url(
                     }
                 }
             } else {
-                return qtplugin::make_error<std::vector<RemotePluginDiscoveryResult>>(
+                return qtplugin::make_error<
+                    std::vector<RemotePluginDiscoveryResult>>(
                     PluginErrorCode::InvalidFormat,
-                    "Unsupported content type for direct URL discovery: " + content_type.toStdString());
+                    "Unsupported content type for direct URL discovery: " +
+                        content_type.toStdString());
             }
         }
 
@@ -976,7 +1012,8 @@ HttpDiscoveryEngine::discover_from_direct_url(
 }
 
 qtplugin::expected<std::vector<RemotePluginDiscoveryResult>, PluginError>
-HttpDiscoveryEngine::parse_json_plugin_metadata(const QByteArray& data, const RemotePluginSource& source) const {
+HttpDiscoveryEngine::parse_json_plugin_metadata(
+    const QByteArray& data, const RemotePluginSource& source) const {
     std::vector<RemotePluginDiscoveryResult> results;
 
     QJsonParseError parse_error;
@@ -984,7 +1021,8 @@ HttpDiscoveryEngine::parse_json_plugin_metadata(const QByteArray& data, const Re
     if (parse_error.error != QJsonParseError::NoError) {
         return qtplugin::make_error<std::vector<RemotePluginDiscoveryResult>>(
             PluginErrorCode::InvalidFormat,
-            "Invalid JSON in plugin metadata: " + parse_error.errorString().toStdString());
+            "Invalid JSON in plugin metadata: " +
+                parse_error.errorString().toStdString());
     }
 
     // Handle both single plugin object and array of plugins
@@ -1013,7 +1051,8 @@ HttpDiscoveryEngine::parse_json_plugin_metadata(const QByteArray& data, const Re
         result.plugin_id = plugin_obj.value("id").toString().toStdString();
         result.name = plugin_obj.value("name").toString().toStdString();
         result.version = plugin_obj.value("version").toString().toStdString();
-        result.description = plugin_obj.value("description").toString().toStdString();
+        result.description =
+            plugin_obj.value("description").toString().toStdString();
         result.author = plugin_obj.value("author").toString().toStdString();
         result.category = plugin_obj.value("category").toString().toStdString();
 
@@ -1058,21 +1097,26 @@ HttpDiscoveryEngine::parse_json_plugin_metadata(const QByteArray& data, const Re
 }
 
 qtplugin::expected<std::vector<RemotePluginDiscoveryResult>, PluginError>
-HttpDiscoveryEngine::parse_html_plugin_metadata(const QByteArray& data, const RemotePluginSource& source) const {
+HttpDiscoveryEngine::parse_html_plugin_metadata(
+    const QByteArray& data, const RemotePluginSource& source) const {
     std::vector<RemotePluginDiscoveryResult> results;
 
     QString html_content = QString::fromUtf8(data);
 
     // Look for JSON-LD structured data
-    QRegularExpression json_ld_regex(R"(<script[^>]*type\s*=\s*["\']application/ld\+json["\'][^>]*>(.*?)</script>)",
-                                     QRegularExpression::CaseInsensitiveOption | QRegularExpression::DotMatchesEverythingOption);
+    QRegularExpression json_ld_regex(
+        R"(<script[^>]*type\s*=\s*["\']application/ld\+json["\'][^>]*>(.*?)</script>)",
+        QRegularExpression::CaseInsensitiveOption |
+            QRegularExpression::DotMatchesEverythingOption);
 
-    QRegularExpressionMatchIterator json_ld_matches = json_ld_regex.globalMatch(html_content);
+    QRegularExpressionMatchIterator json_ld_matches =
+        json_ld_regex.globalMatch(html_content);
     while (json_ld_matches.hasNext()) {
         QRegularExpressionMatch match = json_ld_matches.next();
         QString json_content = match.captured(1);
 
-        auto json_result = parse_json_plugin_metadata(json_content.toUtf8(), source);
+        auto json_result =
+            parse_json_plugin_metadata(json_content.toUtf8(), source);
         if (json_result) {
             for (auto& result : *json_result) {
                 results.push_back(std::move(result));
@@ -1086,15 +1130,18 @@ HttpDiscoveryEngine::parse_html_plugin_metadata(const QByteArray& data, const Re
         result.source = source;
 
         // Extract plugin name from title or meta tags
-        QRegularExpression title_regex(R"(<title[^>]*>(.*?)</title>)", QRegularExpression::CaseInsensitiveOption);
+        QRegularExpression title_regex(
+            R"(<title[^>]*>(.*?)</title>)",
+            QRegularExpression::CaseInsensitiveOption);
         QRegularExpressionMatch title_match = title_regex.match(html_content);
         if (title_match.hasMatch()) {
             result.name = title_match.captured(1).trimmed().toStdString();
         }
 
         // Extract description from meta description
-        QRegularExpression desc_regex(R"(<meta[^>]*name\s*=\s*["\']description["\'][^>]*content\s*=\s*["\']([^"']*)["\'])",
-                                      QRegularExpression::CaseInsensitiveOption);
+        QRegularExpression desc_regex(
+            R"(<meta[^>]*name\s*=\s*["\']description["\'][^>]*content\s*=\s*["\']([^"']*)["\'])",
+            QRegularExpression::CaseInsensitiveOption);
         QRegularExpressionMatch desc_match = desc_regex.match(html_content);
         if (desc_match.hasMatch()) {
             result.description = desc_match.captured(1).trimmed().toStdString();
@@ -1111,7 +1158,8 @@ HttpDiscoveryEngine::parse_html_plugin_metadata(const QByteArray& data, const Re
 }
 
 qtplugin::expected<std::vector<RemotePluginDiscoveryResult>, PluginError>
-HttpDiscoveryEngine::parse_xml_plugin_metadata(const QByteArray& data, const RemotePluginSource& source) const {
+HttpDiscoveryEngine::parse_xml_plugin_metadata(
+    const QByteArray& data, const RemotePluginSource& source) const {
     std::vector<RemotePluginDiscoveryResult> results;
 
     QXmlStreamReader xml(data);
@@ -1134,7 +1182,8 @@ HttpDiscoveryEngine::parse_xml_plugin_metadata(const QByteArray& data, const Rem
                 // Extract attributes
                 QXmlStreamAttributes attributes = xml.attributes();
                 if (attributes.hasAttribute("id")) {
-                    current_result.plugin_id = attributes.value("id").toString().toStdString();
+                    current_result.plugin_id =
+                        attributes.value("id").toString().toStdString();
                 }
             } else if (in_plugin && current_element == "tags") {
                 in_tags = true;
@@ -1144,7 +1193,8 @@ HttpDiscoveryEngine::parse_xml_plugin_metadata(const QByteArray& data, const Rem
 
             if (element_name == "plugin" && in_plugin) {
                 // Finished parsing a plugin
-                if (!current_result.name.empty() || !current_result.plugin_id.empty()) {
+                if (!current_result.name.empty() ||
+                    !current_result.plugin_id.empty()) {
                     results.push_back(std::move(current_result));
                 }
                 in_plugin = false;
@@ -1153,7 +1203,8 @@ HttpDiscoveryEngine::parse_xml_plugin_metadata(const QByteArray& data, const Rem
             }
 
             current_element.clear();
-        } else if (xml.isCharacters() && in_plugin && !current_element.isEmpty()) {
+        } else if (xml.isCharacters() && in_plugin &&
+                   !current_element.isEmpty()) {
             QString text = xml.text().toString().trimmed();
             if (text.isEmpty()) {
                 continue;
@@ -1171,7 +1222,8 @@ HttpDiscoveryEngine::parse_xml_plugin_metadata(const QByteArray& data, const Rem
                 current_result.author = text.toStdString();
             } else if (current_element == "category") {
                 current_result.category = text.toStdString();
-            } else if (current_element == "download_url" || current_element == "url") {
+            } else if (current_element == "download_url" ||
+                       current_element == "url") {
                 current_result.download_url = QUrl(text);
             } else if (current_element == "checksum") {
                 current_result.checksum = text.toStdString();
@@ -1194,7 +1246,8 @@ HttpDiscoveryEngine::parse_xml_plugin_metadata(const QByteArray& data, const Rem
     return results;
 }
 
-void HttpDiscoveryEngine::apply_authentication(QNetworkRequest& request, const AuthenticationCredentials& auth) const {
+void HttpDiscoveryEngine::apply_authentication(
+    QNetworkRequest& request, const AuthenticationCredentials& auth) const {
     switch (auth.type) {
         case AuthenticationType::Basic: {
             QString credentials = auth.username + ":" + auth.password;
@@ -1203,7 +1256,8 @@ void HttpDiscoveryEngine::apply_authentication(QNetworkRequest& request, const A
             break;
         }
         case AuthenticationType::Bearer:
-            request.setRawHeader("Authorization", "Bearer " + auth.token.toUtf8());
+            request.setRawHeader("Authorization",
+                                 "Bearer " + auth.token.toUtf8());
             break;
         case AuthenticationType::ApiKey:
             request.setRawHeader("X-API-Key", auth.api_key.toUtf8());
@@ -1492,5 +1546,3 @@ void RemotePluginDiscoveryManager::finalize_discovery_operation(
 }
 
 }  // namespace qtplugin
-
-#include "remote_plugin_discovery.moc"

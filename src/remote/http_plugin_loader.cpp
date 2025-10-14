@@ -19,9 +19,9 @@ HttpPluginLoader::HttpPluginLoader(
     std::shared_ptr<RemotePluginConfiguration> configuration,
     std::shared_ptr<PluginDownloadManager> download_manager,
     std::shared_ptr<RemotePluginValidator> validator, QObject* parent)
-    : RemotePluginLoaderBase(configuration, download_manager, validator,
-                             parent),
+    : RemotePluginLoaderBase(configuration, download_manager, validator),
       m_network_manager(std::make_unique<QNetworkAccessManager>(this)) {
+    setParent(parent);
     // Connect download manager signals for async operations
     if (m_download_manager) {
         QObject::connect(m_download_manager.get(),
@@ -86,7 +86,7 @@ QString HttpPluginLoader::load_remote_async(
             return;
         }
 
-        if (validation_result.value().is_failed()) {
+        if (!validation_result.value().is_valid()) {
             PluginError error{PluginErrorCode::SecurityViolation,
                               validation_result.value().message};
             complete_async_operation(operation_id, qtplugin::unexpected(error));
@@ -102,13 +102,14 @@ QString HttpPluginLoader::load_remote_async(
                 auto plugin_result = load_from_cache(*cached_path);
                 if (plugin_result) {
                     RemotePluginLoadResult result{
-                        *plugin_result,    // plugin
-                        source,            // source
-                        DownloadResult{},  // download_result (default
-                                           // constructed)
-                        *cached_path,      // cached_path
+                        *plugin_result,      // plugin
+                        source,              // source
+                        DownloadResult{},    // download_result (default
+                                             // constructed)
+                        *validation_result,  // validation_result
+                        *cached_path,        // cached_path
                         std::chrono::system_clock::now(),  // load_time
-                        *validation_result                 // validation_result
+                        QJsonObject{}                      // metadata
                     };
 
                     m_cache_hits++;
@@ -365,9 +366,10 @@ HttpPluginLoader::perform_remote_load(const RemotePluginSource& source,
                     *plugin_result,    // plugin
                     source,            // source
                     DownloadResult{},  // download_result (default constructed)
-                    *cached_path,      // cached_path
+                    validation_result.value(),         // validation_result
+                    *cached_path,                      // cached_path
                     std::chrono::system_clock::now(),  // load_time
-                    validation_result.value()          // validation_result
+                    QJsonObject{}                      // metadata
                 };
 
                 m_cache_hits++;
@@ -393,12 +395,13 @@ HttpPluginLoader::perform_remote_load(const RemotePluginSource& source,
 
     // Create result
     RemotePluginLoadResult result{
-        *plugin_result,                    // plugin
-        source,                            // source
-        *download_result,                  // download_result
-        download_result->file_path,        // cached_path
-        std::chrono::system_clock::now(),  // load_time
-        validation_result.value()          // validation_result
+        *plugin_result,                     // plugin
+        source,                             // source
+        *download_result,                   // download_result
+        validation_result.value(),          // validation_result
+        download_result.value().file_path,  // cached_path
+        std::chrono::system_clock::now(),   // load_time
+        QJsonObject{}                       // metadata
     };
 
     m_remote_loads_successful++;
@@ -444,9 +447,11 @@ void HttpPluginLoader::on_async_load_completed(const QString& download_id,
             *plugin_result,                    // plugin
             op_it->second->source,             // source
             result,                            // download_result
+            RemoteValidationResult{},          // validation_result (default
+                                               // constructed)
             result.file_path,                  // cached_path
             std::chrono::system_clock::now(),  // load_time
-            ValidationResult{}  // validation_result (default constructed)
+            QJsonObject{}                      // metadata
         };
 
         m_remote_loads_successful++;
@@ -496,11 +501,11 @@ RemotePluginSource HttpPluginLoader::create_source_from_url(
     return source;
 }
 
-qtplugin::expected<ValidationResult, PluginError>
+qtplugin::expected<RemoteValidationResult, PluginError>
 HttpPluginLoader::validate_http_source(const RemotePluginSource& source,
                                        const RemotePluginLoadOptions& options) {
     if (!options.validate_source) {
-        ValidationResult result;
+        RemoteValidationResult result;
         result.level = ValidationLevel::Passed;
         result.message = "Source validation skipped";
         result.timestamp = std::chrono::system_clock::now();
@@ -508,7 +513,7 @@ HttpPluginLoader::validate_http_source(const RemotePluginSource& source,
     }
 
     if (!m_validator) {
-        return qtplugin::make_error<ValidationResult>(
+        return qtplugin::make_error<RemoteValidationResult>(
             PluginErrorCode::InvalidConfiguration, "No validator available");
     }
 
@@ -779,20 +784,23 @@ void HttpPluginLoader::apply_authentication(
         case AuthenticationType::Certificate:
             // Client certificate authentication would require SSL configuration
             // For now, just log that it's not fully implemented
-            qWarning() << "Certificate authentication requires SSL configuration";
+            qWarning()
+                << "Certificate authentication requires SSL configuration";
             break;
         case AuthenticationType::OAuth2:
             // OAuth2 would require a full OAuth2 flow implementation
             // For now, treat it as a bearer token if available
             if (!auth.token.isEmpty()) {
-                request.setRawHeader("Authorization", "Bearer " + auth.token.toUtf8());
+                request.setRawHeader("Authorization",
+                                     "Bearer " + auth.token.toUtf8());
             } else {
                 qWarning() << "OAuth2 authentication requires a valid token";
             }
             break;
         default:
             // Unknown authentication type
-            qWarning() << "Unknown authentication type:" << static_cast<int>(auth.type);
+            qWarning() << "Unknown authentication type:"
+                       << static_cast<int>(auth.type);
             break;
     }
 }
@@ -935,8 +943,7 @@ bool HttpPluginLoader::is_valid_discovery_response(
 
 std::unique_ptr<HttpPluginLoader> HttpPluginLoaderFactory::create_default(
     QObject* parent) {
-    auto config = std::make_shared<RemotePluginConfiguration>(
-        RemotePluginConfiguration::create_default());
+    auto config = RemotePluginConfiguration::create_default();
 
     return std::make_unique<HttpPluginLoader>(config, nullptr, nullptr, parent);
 }
@@ -949,8 +956,7 @@ std::unique_ptr<HttpPluginLoader> HttpPluginLoaderFactory::create_with_config(
 
 std::unique_ptr<HttpPluginLoader> HttpPluginLoaderFactory::create_enterprise(
     QObject* parent) {
-    auto config = std::make_shared<RemotePluginConfiguration>(
-        RemotePluginConfiguration::create_enterprise());
+    auto config = RemotePluginConfiguration::create_enterprise();
 
     return std::make_unique<HttpPluginLoader>(config, nullptr, nullptr, parent);
 }
@@ -964,5 +970,3 @@ std::unique_ptr<HttpPluginLoader> HttpPluginLoaderFactory::create_custom(
 }
 
 }  // namespace qtplugin
-
-#include "http_plugin_loader.moc"

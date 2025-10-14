@@ -1,49 +1,49 @@
-name: 'Performance Monitor'
-description: 'Monitor build performance and detect regressions'
+name: "Performance Monitor"
+description: "Monitor build performance and detect regressions"
 
 inputs:
   build-time:
-    description: 'Build time in seconds'
+    description: "Build time in seconds"
     required: true
   test-time:
-    description: 'Test time in seconds'
+    description: "Test time in seconds"
     required: false
-    default: '0'
+    default: "0"
   platform:
-    description: 'Platform name'
+    description: "Platform name"
     required: true
   build-type:
-    description: 'Build type'
+    description: "Build type"
     required: true
   compiler:
-    description: 'Compiler used'
+    description: "Compiler used"
     required: true
   cache-hit-rate:
-    description: 'Cache hit rate percentage'
+    description: "Cache hit rate percentage"
     required: false
-    default: '0'
+    default: "0"
 
 outputs:
   performance-status:
-    description: 'Performance status (good/warning/critical)'
+    description: "Performance status (good/warning/critical)"
     value: ${{ steps.analyze.outputs.status }}
   regression-detected:
-    description: 'Whether performance regression was detected'
+    description: "Whether performance regression was detected"
     value: ${{ steps.analyze.outputs.regression }}
 
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
     - name: Store performance data
       shell: bash
       run: |
         # Create performance data directory
         mkdir -p .github/performance-data
-        
+
         # Create performance record
         TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
         PERFORMANCE_FILE=".github/performance-data/build-${TIMESTAMP}.json"
-        
+
         cat > "$PERFORMANCE_FILE" << EOF
         {
           "timestamp": "$TIMESTAMP",
@@ -57,7 +57,7 @@ runs:
           "run_id": "${{ github.run_id }}"
         }
         EOF
-        
+
         echo "Performance data stored in $PERFORMANCE_FILE"
 
     - name: Analyze performance
@@ -68,7 +68,7 @@ runs:
         TEST_TIME=${{ inputs.test-time }}
         PLATFORM="${{ inputs.platform }}"
         BUILD_TYPE="${{ inputs.build-type }}"
-        
+
         # Define performance thresholds (in seconds)
         case "$PLATFORM" in
           "Linux")
@@ -103,33 +103,33 @@ runs:
             BUILD_WARNING=450
             ;;
         esac
-        
+
         # Analyze build performance
         STATUS="good"
         REGRESSION="false"
-        
+
         if [ "$BUILD_TIME" -gt "$BUILD_THRESHOLD" ]; then
           STATUS="critical"
           REGRESSION="true"
         elif [ "$BUILD_TIME" -gt "$BUILD_WARNING" ]; then
           STATUS="warning"
         fi
-        
+
         # Check test performance (if tests were run)
         if [ "$TEST_TIME" -gt 0 ]; then
           TEST_THRESHOLD=300  # 5 minutes
           TEST_WARNING=180    # 3 minutes
-          
+
           if [ "$TEST_TIME" -gt "$TEST_THRESHOLD" ]; then
             if [ "$STATUS" = "good" ]; then
               STATUS="warning"
             fi
           fi
         fi
-        
+
         echo "status=$STATUS" >> $GITHUB_OUTPUT
         echo "regression=$REGRESSION" >> $GITHUB_OUTPUT
-        
+
         # Set environment variables for summary
         echo "PERF_STATUS=$STATUS" >> $GITHUB_ENV
         echo "PERF_REGRESSION=$REGRESSION" >> $GITHUB_ENV
@@ -144,15 +144,15 @@ runs:
         echo "- **Build Type**: ${{ inputs.build-type }}" >> $GITHUB_STEP_SUMMARY
         echo "- **Compiler**: ${{ inputs.compiler }}" >> $GITHUB_STEP_SUMMARY
         echo "- **Build Time**: ${{ inputs.build-time }}s" >> $GITHUB_STEP_SUMMARY
-        
+
         if [ "${{ inputs.test-time }}" != "0" ]; then
           echo "- **Test Time**: ${{ inputs.test-time }}s" >> $GITHUB_STEP_SUMMARY
         fi
-        
+
         if [ "${{ inputs.cache-hit-rate }}" != "0" ]; then
           echo "- **Cache Hit Rate**: ${{ inputs.cache-hit-rate }}%" >> $GITHUB_STEP_SUMMARY
         fi
-        
+
         # Performance status with emoji
         case "$PERF_STATUS" in
           "good")
@@ -167,7 +167,7 @@ runs:
             echo "- **Critical Threshold**: ${BUILD_THRESHOLD}s" >> $GITHUB_STEP_SUMMARY
             ;;
         esac
-        
+
         if [ "$PERF_REGRESSION" = "true" ]; then
           echo "- **Regression Detected**: ⚠️ Yes" >> $GITHUB_STEP_SUMMARY
         else

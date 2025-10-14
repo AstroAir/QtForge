@@ -27,7 +27,8 @@
 #include <unordered_set>
 #include "../../include/qtplugin/communication/message_bus.hpp"
 #include "../../include/qtplugin/core/plugin_dependency_resolver.hpp"
-// #include "../../include/qtplugin/core/plugin_loader.hpp"  // Temporarily disabled
+// #include "../../include/qtplugin/core/plugin_loader.hpp"  // Temporarily
+// disabled
 #include "../../include/qtplugin/core/plugin_registry.hpp"
 #include "../../include/qtplugin/interfaces/core/service_plugin_interface.hpp"
 #include "../../include/qtplugin/managers/configuration_manager_impl.hpp"
@@ -38,7 +39,6 @@
 #include "../../include/qtplugin/managers/resource_monitor_impl.hpp"
 #include "../../include/qtplugin/monitoring/plugin_hot_reload_manager.hpp"
 #include "../../include/qtplugin/monitoring/plugin_metrics_collector.hpp"
-
 
 Q_LOGGING_CATEGORY(pluginManagerLog, "qtplugin.manager")
 
@@ -54,11 +54,17 @@ public:
     std::unique_ptr<ILoggingManager> logging_manager;
     std::unique_ptr<IResourceManager> resource_manager;
     std::unique_ptr<IResourceLifecycleManager> resource_lifecycle_manager;
-    std::unique_ptr<IResourceMonitor, detail::IResourceMonitorDeleter> resource_monitor;
-    std::unique_ptr<IPluginRegistry, detail::IPluginRegistryDeleter> plugin_registry;
+    std::unique_ptr<IResourceMonitor, detail::IResourceMonitorDeleter>
+        resource_monitor;
+    std::unique_ptr<IPluginRegistry, detail::IPluginRegistryDeleter>
+        plugin_registry;
     std::unique_ptr<IPluginDependencyResolver> dependency_resolver;
-    std::unique_ptr<IPluginHotReloadManager, detail::IPluginHotReloadManagerDeleter> hot_reload_manager;
-    std::unique_ptr<IPluginMetricsCollector, detail::IPluginMetricsCollectorDeleter> metrics_collector;
+    std::unique_ptr<IPluginHotReloadManager,
+                    detail::IPluginHotReloadManagerDeleter>
+        hot_reload_manager;
+    std::unique_ptr<IPluginMetricsCollector,
+                    detail::IPluginMetricsCollectorDeleter>
+        metrics_collector;
     std::unique_ptr<IPluginVersionManager> version_manager;
 
     // Enhanced Features (v3.2.0)
@@ -81,7 +87,8 @@ public:
     std::vector<std::unique_ptr<PluginTransaction>> active_transactions;
     mutable std::mutex transaction_mutex;
 
-    // Plugin storage (now handled by PluginRegistry and PluginDependencyResolver)
+    // Plugin storage (now handled by PluginRegistry and
+    // PluginDependencyResolver)
     mutable std::shared_mutex plugins_mutex;
     std::unordered_map<std::string, std::unique_ptr<PluginInfo>> plugins;
     std::unordered_map<std::string, DependencyNode> dependency_graph;
@@ -96,13 +103,15 @@ public:
 
     // Helper methods
     qtplugin::expected<void, PluginError> validate_plugin_file(
-        const std::filesystem::path& file_path, const PluginManager* manager) const;
+        const std::filesystem::path& file_path,
+        const PluginManager* manager) const;
     qtplugin::expected<void, PluginError> check_plugin_dependencies(
         const PluginInfo& info, const PluginManager* manager) const;
     void update_dependency_graph(PluginManager* manager);
     std::vector<std::string> topological_sort() const;
     void cleanup_plugin(const std::string& plugin_id, PluginManager* manager);
-    void update_plugin_metrics(const std::string& plugin_id, PluginManager* manager);
+    void update_plugin_metrics(const std::string& plugin_id,
+                               PluginManager* manager);
 
     // Dependency graph helpers
     int calculate_dependency_level(
@@ -170,62 +179,168 @@ PluginManager::PluginManager(
         metrics_collector,
     std::unique_ptr<IPluginVersionManager> version_manager, QObject* parent)
     : QObject(parent), d(std::make_unique<Impl>()) {
-
     // Initialize components in d-pointer
-    d->loader = std::move(loader);  // Note: loader may be nullptr if QtPluginLoader is disabled
-    d->message_bus = message_bus ? std::move(message_bus) : std::make_unique<MessageBus>();
-    d->configuration_manager = configuration_manager ? std::move(configuration_manager) : create_configuration_manager(this);
-    d->logging_manager = logging_manager ? std::move(logging_manager) : create_logging_manager(this);
-    d->resource_manager = resource_manager ? std::move(resource_manager) : create_resource_manager(this);
-    d->resource_lifecycle_manager = resource_lifecycle_manager ? std::move(resource_lifecycle_manager) : create_resource_lifecycle_manager(this);
-    d->resource_monitor = resource_monitor ? std::move(resource_monitor) : std::unique_ptr<IResourceMonitor, detail::IResourceMonitorDeleter>(create_resource_monitor(this).release());
-    d->plugin_registry = plugin_registry ? std::move(plugin_registry) : std::unique_ptr<IPluginRegistry, detail::IPluginRegistryDeleter>(new PluginRegistry(this));
-    d->dependency_resolver = dependency_resolver ? std::move(dependency_resolver) : std::make_unique<PluginDependencyResolver>(this);
-    d->hot_reload_manager = hot_reload_manager ? std::move(hot_reload_manager) : std::unique_ptr<IPluginHotReloadManager, detail::IPluginHotReloadManagerDeleter>(new PluginHotReloadManager(this));
-    d->metrics_collector = metrics_collector ? std::move(metrics_collector) : std::unique_ptr<IPluginMetricsCollector, detail::IPluginMetricsCollectorDeleter>(new PluginMetricsCollector(this));
-    d->version_manager = version_manager ? std::move(version_manager) : create_plugin_version_manager(
-        std::shared_ptr<IPluginRegistry>(d->plugin_registry.get(), [](IPluginRegistry*) {}),
-        std::shared_ptr<IConfigurationManager>(d->configuration_manager.get(), [](IConfigurationManager*) {}),
-        std::shared_ptr<ILoggingManager>(d->logging_manager.get(), [](ILoggingManager*) {}),
-        this);
+    // NOTE: Do NOT pass 'this' as QObject parent for components managed by
+    // unique_ptr This would cause double-delete (Qt parent cleanup + unique_ptr
+    // cleanup)
+    d->loader = std::move(
+        loader);  // Note: loader may be nullptr if QtPluginLoader is disabled
+    d->message_bus =
+        message_bus ? std::move(message_bus) : std::make_unique<MessageBus>();
+    d->configuration_manager = configuration_manager
+                                   ? std::move(configuration_manager)
+                                   : create_configuration_manager(nullptr);
+    d->logging_manager = logging_manager ? std::move(logging_manager)
+                                         : create_logging_manager(nullptr);
+    d->resource_manager = resource_manager ? std::move(resource_manager)
+                                           : create_resource_manager(nullptr);
+    d->resource_lifecycle_manager =
+        resource_lifecycle_manager ? std::move(resource_lifecycle_manager)
+                                   : create_resource_lifecycle_manager(nullptr);
+    d->resource_monitor =
+        resource_monitor ? std::move(resource_monitor)
+                         : std::unique_ptr<IResourceMonitor,
+                                           detail::IResourceMonitorDeleter>(
+                               create_resource_monitor(nullptr).release());
+    d->plugin_registry =
+        plugin_registry
+            ? std::move(plugin_registry)
+            : std::unique_ptr<IPluginRegistry, detail::IPluginRegistryDeleter>(
+                  new PluginRegistry(nullptr));
+    d->dependency_resolver =
+        dependency_resolver
+            ? std::move(dependency_resolver)
+            : std::make_unique<PluginDependencyResolver>(nullptr);
+    d->hot_reload_manager =
+        hot_reload_manager
+            ? std::move(hot_reload_manager)
+            : std::unique_ptr<IPluginHotReloadManager,
+                              detail::IPluginHotReloadManagerDeleter>(
+                  new PluginHotReloadManager(nullptr));
+    d->metrics_collector =
+        metrics_collector
+            ? std::move(metrics_collector)
+            : std::unique_ptr<IPluginMetricsCollector,
+                              detail::IPluginMetricsCollectorDeleter>(
+                  new PluginMetricsCollector(nullptr));
+    d->version_manager =
+        version_manager
+            ? std::move(version_manager)
+            : create_plugin_version_manager(
+                  std::shared_ptr<IPluginRegistry>(d->plugin_registry.get(),
+                                                   [](IPluginRegistry*) {}),
+                  std::shared_ptr<IConfigurationManager>(
+                      d->configuration_manager.get(),
+                      [](IConfigurationManager*) {}),
+                  std::shared_ptr<ILoggingManager>(d->logging_manager.get(),
+                                                   [](ILoggingManager*) {}),
+                  nullptr);
 
     // Initialize timers
-    d->monitoring_timer = std::make_unique<QTimer>(this);
+    // NOTE: Do NOT pass 'this' as parent - we manage lifetime with unique_ptr
+    // Passing 'this' would cause double-delete (Qt + unique_ptr)
+    d->monitoring_timer = std::make_unique<QTimer>();
 
     // Set up hot reload callback
-    d->hot_reload_manager->set_reload_callback([this](const std::string& plugin_id) {
-        reload_plugin(plugin_id, true);
-    });
+    d->hot_reload_manager->set_reload_callback(
+        [this](const std::string& plugin_id) {
+            reload_plugin(plugin_id, true);
+        });
 
     // Connect monitoring timer (legacy - will be removed)
-    connect(d->monitoring_timer.get(), &QTimer::timeout, this, &PluginManager::on_monitoring_timer);
+    connect(d->monitoring_timer.get(), &QTimer::timeout, this,
+            &PluginManager::on_monitoring_timer);
 }
 
 PluginManager::~PluginManager() {
-    shutdown_all_plugins();
+    if (!d) {
+        return;  // Already destroyed or moved from
+    }
+
+    // 1. Clear hot reload callback FIRST to prevent dangling 'this' pointer
+    //    The callback captures 'this', so it must be cleared before destruction
+    try {
+        if (d->hot_reload_manager) {
+            d->hot_reload_manager->set_reload_callback(nullptr);
+            d->hot_reload_manager->clear();
+        }
+    } catch (...) {
+        // Ignore exceptions during hot reload cleanup
+    }
+
+    // 2. Stop timers to prevent any callbacks during destruction
+    try {
+        if (d->monitoring_timer) {
+            d->monitoring_timer->stop();
+            d->monitoring_timer->disconnect();
+        }
+        if (d->health_timer) {
+            d->health_timer->stop();
+            d->health_timer->disconnect();
+        }
+    } catch (...) {
+        // Ignore exceptions during timer cleanup
+    }
+
+    // 3. Clear active transactions before shutting down plugins
+    try {
+        std::lock_guard<std::mutex> lock(d->transaction_mutex);
+        d->active_transactions.clear();
+    } catch (...) {
+        // Ignore exceptions during transaction cleanup
+    }
+
+    // 4. Shutdown all plugins while registry is still valid
+    try {
+        if (d->plugin_registry) {
+            shutdown_all_plugins();
+        }
+    } catch (...) {
+        // Ignore exceptions during plugin shutdown
+    }
+
+    // 5. The unique_ptr members in Impl will be destroyed in reverse order
+    //    of declaration, which should be safe now that plugins are shutdown
 }
 
 // Copy constructor
-PluginManager::PluginManager(const PluginManager& other) : QObject(other.parent()), d(std::make_unique<Impl>()) {
-    // Deep copy implementation - note: this is complex due to Qt objects and unique_ptrs
-    // For now, we'll create new instances rather than copying
+PluginManager::PluginManager(const PluginManager& other)
+    : QObject(other.parent()), d(std::make_unique<Impl>()) {
+    // Deep copy implementation - note: this is complex due to Qt objects and
+    // unique_ptrs For now, we'll create new instances rather than copying
+    // NOTE: Do NOT pass 'this' as QObject parent - we manage lifetime with
+    // unique_ptr
     d->loader = nullptr;  // Note: loader disabled during Pimpl refactoring
     d->message_bus = std::make_unique<MessageBus>();
-    d->configuration_manager = create_configuration_manager(this);
-    d->logging_manager = create_logging_manager(this);
-    d->resource_manager = create_resource_manager(this);
-    d->resource_lifecycle_manager = create_resource_lifecycle_manager(this);
-    d->resource_monitor = std::unique_ptr<IResourceMonitor, detail::IResourceMonitorDeleter>(create_resource_monitor(this).release());
-    d->plugin_registry = std::unique_ptr<IPluginRegistry, detail::IPluginRegistryDeleter>(new PluginRegistry(this));
-    d->dependency_resolver = std::make_unique<PluginDependencyResolver>(this);
-    d->hot_reload_manager = std::unique_ptr<IPluginHotReloadManager, detail::IPluginHotReloadManagerDeleter>(new PluginHotReloadManager(this));
-    d->metrics_collector = std::unique_ptr<IPluginMetricsCollector, detail::IPluginMetricsCollectorDeleter>(new PluginMetricsCollector(this));
+    d->configuration_manager = create_configuration_manager(nullptr);
+    d->logging_manager = create_logging_manager(nullptr);
+    d->resource_manager = create_resource_manager(nullptr);
+    d->resource_lifecycle_manager = create_resource_lifecycle_manager(nullptr);
+    d->resource_monitor =
+        std::unique_ptr<IResourceMonitor, detail::IResourceMonitorDeleter>(
+            create_resource_monitor(nullptr).release());
+    d->plugin_registry =
+        std::unique_ptr<IPluginRegistry, detail::IPluginRegistryDeleter>(
+            new PluginRegistry(nullptr));
+    d->dependency_resolver =
+        std::make_unique<PluginDependencyResolver>(nullptr);
+    d->hot_reload_manager =
+        std::unique_ptr<IPluginHotReloadManager,
+                        detail::IPluginHotReloadManagerDeleter>(
+            new PluginHotReloadManager(nullptr));
+    d->metrics_collector =
+        std::unique_ptr<IPluginMetricsCollector,
+                        detail::IPluginMetricsCollectorDeleter>(
+            new PluginMetricsCollector(nullptr));
     d->version_manager = create_plugin_version_manager(
-        std::shared_ptr<IPluginRegistry>(d->plugin_registry.get(), [](IPluginRegistry*) {}),
-        std::shared_ptr<IConfigurationManager>(d->configuration_manager.get(), [](IConfigurationManager*) {}),
-        std::shared_ptr<ILoggingManager>(d->logging_manager.get(), [](ILoggingManager*) {}),
-        this);
-    d->monitoring_timer = std::make_unique<QTimer>(this);
+        std::shared_ptr<IPluginRegistry>(d->plugin_registry.get(),
+                                         [](IPluginRegistry*) {}),
+        std::shared_ptr<IConfigurationManager>(d->configuration_manager.get(),
+                                               [](IConfigurationManager*) {}),
+        std::shared_ptr<ILoggingManager>(d->logging_manager.get(),
+                                         [](ILoggingManager*) {}),
+        nullptr);
+    d->monitoring_timer = std::make_unique<QTimer>();
 
     // Copy simple data
     d->pre_load_hooks = other.d->pre_load_hooks;
@@ -244,23 +359,40 @@ PluginManager& PluginManager::operator=(const PluginManager& other) {
         shutdown_all_plugins();
 
         // Recreate components
+        // NOTE: Do NOT pass 'this' as QObject parent - we manage lifetime with
+        // unique_ptr
         d->loader = nullptr;  // Note: loader disabled during Pimpl refactoring
         d->message_bus = std::make_unique<MessageBus>();
-        d->configuration_manager = create_configuration_manager(this);
-        d->logging_manager = create_logging_manager(this);
-        d->resource_manager = create_resource_manager(this);
-        d->resource_lifecycle_manager = create_resource_lifecycle_manager(this);
-        d->resource_monitor = std::unique_ptr<IResourceMonitor, detail::IResourceMonitorDeleter>(create_resource_monitor(this).release());
-        d->plugin_registry = std::unique_ptr<IPluginRegistry, detail::IPluginRegistryDeleter>(new PluginRegistry(this));
-        d->dependency_resolver = std::make_unique<PluginDependencyResolver>(this);
-        d->hot_reload_manager = std::unique_ptr<IPluginHotReloadManager, detail::IPluginHotReloadManagerDeleter>(new PluginHotReloadManager(this));
-        d->metrics_collector = std::unique_ptr<IPluginMetricsCollector, detail::IPluginMetricsCollectorDeleter>(new PluginMetricsCollector(this));
+        d->configuration_manager = create_configuration_manager(nullptr);
+        d->logging_manager = create_logging_manager(nullptr);
+        d->resource_manager = create_resource_manager(nullptr);
+        d->resource_lifecycle_manager =
+            create_resource_lifecycle_manager(nullptr);
+        d->resource_monitor =
+            std::unique_ptr<IResourceMonitor, detail::IResourceMonitorDeleter>(
+                create_resource_monitor(nullptr).release());
+        d->plugin_registry =
+            std::unique_ptr<IPluginRegistry, detail::IPluginRegistryDeleter>(
+                new PluginRegistry(nullptr));
+        d->dependency_resolver =
+            std::make_unique<PluginDependencyResolver>(nullptr);
+        d->hot_reload_manager =
+            std::unique_ptr<IPluginHotReloadManager,
+                            detail::IPluginHotReloadManagerDeleter>(
+                new PluginHotReloadManager(nullptr));
+        d->metrics_collector =
+            std::unique_ptr<IPluginMetricsCollector,
+                            detail::IPluginMetricsCollectorDeleter>(
+                new PluginMetricsCollector(nullptr));
         d->version_manager = create_plugin_version_manager(
-            std::shared_ptr<IPluginRegistry>(d->plugin_registry.get(), [](IPluginRegistry*) {}),
-            std::shared_ptr<IConfigurationManager>(d->configuration_manager.get(), [](IConfigurationManager*) {}),
-            std::shared_ptr<ILoggingManager>(d->logging_manager.get(), [](ILoggingManager*) {}),
-            this);
-        d->monitoring_timer = std::make_unique<QTimer>(this);
+            std::shared_ptr<IPluginRegistry>(d->plugin_registry.get(),
+                                             [](IPluginRegistry*) {}),
+            std::shared_ptr<IConfigurationManager>(
+                d->configuration_manager.get(), [](IConfigurationManager*) {}),
+            std::shared_ptr<ILoggingManager>(d->logging_manager.get(),
+                                             [](ILoggingManager*) {}),
+            nullptr);
+        d->monitoring_timer = std::make_unique<QTimer>();
 
         // Copy simple data
         d->pre_load_hooks = other.d->pre_load_hooks;
@@ -275,7 +407,8 @@ PluginManager& PluginManager::operator=(const PluginManager& other) {
 }
 
 // Move constructor
-PluginManager::PluginManager(PluginManager&& other) noexcept : QObject(other.parent()), d(std::move(other.d)) {
+PluginManager::PluginManager(PluginManager&& other) noexcept
+    : QObject(other.parent()), d(std::move(other.d)) {
     other.d = std::make_unique<Impl>();
 }
 
@@ -292,7 +425,8 @@ PluginManager& PluginManager::operator=(PluginManager&& other) noexcept {
 // === Impl Helper Method Implementations ===
 
 qtplugin::expected<void, PluginError> PluginManager::Impl::validate_plugin_file(
-    const std::filesystem::path& file_path, const PluginManager* manager) const {
+    const std::filesystem::path& file_path,
+    const PluginManager* manager) const {
     Q_UNUSED(manager);
 
     if (!std::filesystem::exists(file_path)) {
@@ -302,18 +436,21 @@ qtplugin::expected<void, PluginError> PluginManager::Impl::validate_plugin_file(
 
     // Skip loader validation if loader is disabled during Pimpl refactoring
     if (loader && !loader->can_load(file_path)) {
-        return make_error<void>(PluginErrorCode::InvalidFormat,
-                                "Invalid plugin file format: " + file_path.string());
+        return make_error<void>(
+            PluginErrorCode::InvalidFormat,
+            "Invalid plugin file format: " + file_path.string());
     }
 
     return make_success();
 }
 
-void PluginManager::Impl::update_plugin_metrics(const std::string& plugin_id, PluginManager* manager) {
+void PluginManager::Impl::update_plugin_metrics(const std::string& plugin_id,
+                                                PluginManager* manager) {
     Q_UNUSED(manager);
 
     if (metrics_collector && plugin_registry) {
-        metrics_collector->update_plugin_metrics(plugin_id, plugin_registry.get());
+        metrics_collector->update_plugin_metrics(plugin_id,
+                                                 plugin_registry.get());
     }
 }
 
@@ -334,10 +471,18 @@ void PluginManager::on_monitoring_timer() {
 
 qtplugin::expected<std::string, PluginError> PluginManager::load_plugin(
     const std::filesystem::path& file_path, const PluginLoadOptions& options) {
-    // Validate plugin file
+    // Validate plugin file FIRST (this checks file existence and format)
+    // This must come before loader check to return correct error codes
     auto validation_result = d->validate_plugin_file(file_path, this);
     if (!validation_result) {
         return qtplugin::unexpected<PluginError>{validation_result.error()};
+    }
+
+    // Check if loader is available (after file validation)
+    if (!d->loader) {
+        return make_error<std::string>(
+            PluginErrorCode::LoadFailed,
+            "Plugin loader not initialized - cannot load plugins");
     }
 
     // SHA256 validation
@@ -361,7 +506,7 @@ qtplugin::expected<std::string, PluginError> PluginManager::load_plugin(
     }
 
     auto plugin = plugin_result.value();
-    std::string plugin_id = plugin->id();
+    std::string plugin_id = plugin->metadata().name;
 
     // Check if already loaded
     if (d->plugin_registry->is_plugin_registered(plugin_id)) {
@@ -506,6 +651,11 @@ std::vector<std::filesystem::path> PluginManager::discover_plugins(
 
     if (!std::filesystem::exists(directory) ||
         !std::filesystem::is_directory(directory)) {
+        return discovered_plugins;
+    }
+
+    // Check if loader is available
+    if (!d->loader) {
         return discovered_plugins;
     }
 
@@ -666,7 +816,7 @@ int PluginManager::stop_all_services() {
 qtplugin::expected<void, PluginError> PluginManager::enable_hot_reload(
     std::string_view plugin_id) {
     return d->hot_reload_manager->enable_hot_reload(std::string(plugin_id),
-                                                   std::filesystem::path{});
+                                                    std::filesystem::path{});
 }
 
 // Dependency checking moved to PluginDependencyResolver
@@ -831,7 +981,7 @@ qtplugin::expected<void, PluginError> PluginManager::configure_plugin(
 // Plugin metrics collection moved to PluginMetricsCollector
 QJsonObject PluginManager::plugin_metrics(std::string_view plugin_id) const {
     return d->metrics_collector->get_plugin_metrics(std::string(plugin_id),
-                                                   d->plugin_registry.get());
+                                                    d->plugin_registry.get());
 }
 
 // Monitoring functionality moved to PluginMetricsCollector
@@ -923,8 +1073,8 @@ std::vector<PluginVersionInfo> PluginManager::get_plugin_versions(
 
 qtplugin::expected<void, PluginError> PluginManager::set_plugin_active_version(
     std::string_view plugin_id, const Version& version, bool migrate_data) {
-    auto result =
-        d->version_manager->set_active_version(plugin_id, version, migrate_data);
+    auto result = d->version_manager->set_active_version(plugin_id, version,
+                                                         migrate_data);
     if (!result) {
         return qtplugin::unexpected(PluginError{
             PluginErrorCode::StateError,
@@ -949,7 +1099,8 @@ std::vector<std::string> PluginManager::plugins_with_capability(
     for (const auto& [id, info] : d->plugins) {
         if (info->instance) {
             auto metadata = info->instance->metadata();
-            if (metadata.capabilities & static_cast<PluginCapabilities>(capability)) {
+            if (metadata.capabilities &
+                static_cast<PluginCapabilities>(capability)) {
                 result.push_back(id);
             }
         }
@@ -978,11 +1129,12 @@ std::vector<std::string> PluginManager::plugins_in_category(
 qtplugin::expected<void, PluginError> PluginManager::resolve_dependencies() {
     if (!d->dependency_resolver) {
         return make_error<void>(PluginErrorCode::StateError,
-                               "Dependency resolver not available");
+                                "Dependency resolver not available");
     }
 
     // Update dependency graph from plugin registry
-    auto result = d->dependency_resolver->update_dependency_graph(d->plugin_registry.get());
+    auto result = d->dependency_resolver->update_dependency_graph(
+        d->plugin_registry.get());
     if (!result) {
         return qtplugin::unexpected(result.error());
     }
@@ -990,13 +1142,14 @@ qtplugin::expected<void, PluginError> PluginManager::resolve_dependencies() {
     // Check for circular dependencies
     if (d->dependency_resolver->has_circular_dependencies()) {
         return make_error<void>(PluginErrorCode::CircularDependency,
-                               "Circular dependencies detected");
+                                "Circular dependencies detected");
     }
 
     return make_success();
 }
 
-std::unordered_map<std::string, DependencyNode> PluginManager::dependency_graph() const {
+std::unordered_map<std::string, DependencyNode>
+PluginManager::dependency_graph() const {
     if (!d->dependency_resolver) {
         return {};
     }
@@ -1039,13 +1192,10 @@ void IResourceMonitorDeleter::operator()(IResourceMonitor* p) const {
 
 // PluginTransaction implementation
 PluginManager::PluginTransaction::PluginTransaction(PluginManager* manager)
-    : m_manager(manager) {
-}
+    : m_manager(manager) {}
 
 void PluginManager::PluginTransaction::add_load(
-    const std::filesystem::path& path,
-    const PluginLoadOptions& options) {
-
+    const std::filesystem::path& path, const PluginLoadOptions& options) {
     if (m_committed || m_rolled_back) {
         throw std::runtime_error("Cannot modify completed transaction");
     }
@@ -1065,20 +1215,19 @@ void PluginManager::PluginTransaction::add_load(
                 m_manager->unload_plugin(plugin_id, true);
                 m_loaded_plugins.pop_back();
             }
-        }
-    );
+        });
 }
 
-void PluginManager::PluginTransaction::add_unload(
-    std::string_view plugin_id, bool force) {
-
+void PluginManager::PluginTransaction::add_unload(std::string_view plugin_id,
+                                                  bool force) {
     if (m_committed || m_rolled_back) {
         throw std::runtime_error("Cannot modify completed transaction");
     }
 
     // Store plugin info for potential rollback
     auto plugin_info = m_manager->get_plugin_info(plugin_id);
-    auto file_path = plugin_info ? plugin_info->file_path : std::filesystem::path{};
+    auto file_path =
+        plugin_info ? plugin_info->file_path : std::filesystem::path{};
 
     add_operation(
         [this, plugin_id = std::string(plugin_id), force]() {
@@ -1089,13 +1238,11 @@ void PluginManager::PluginTransaction::add_unload(
                 // Attempt to reload the plugin
                 m_manager->load_plugin(file_path);
             }
-        }
-    );
+        });
 }
 
-void PluginManager::PluginTransaction::add_operation(
-    Operation op, Rollback rollback) {
-
+void PluginManager::PluginTransaction::add_operation(Operation op,
+                                                     Rollback rollback) {
     if (m_committed || m_rolled_back) {
         throw std::runtime_error("Cannot modify completed transaction");
     }
@@ -1103,14 +1250,15 @@ void PluginManager::PluginTransaction::add_operation(
     m_operations.emplace_back(std::move(op), std::move(rollback));
 }
 
-qtplugin::expected<void, PluginError> PluginManager::PluginTransaction::commit() {
+qtplugin::expected<void, PluginError>
+PluginManager::PluginTransaction::commit() {
     if (m_committed) {
         return make_success();
     }
 
     if (m_rolled_back) {
         return make_error<void>(PluginErrorCode::InvalidState,
-                               "Transaction already rolled back");
+                                "Transaction already rolled back");
     }
 
     for (size_t i = m_completed; i < m_operations.size(); ++i) {
@@ -1147,8 +1295,8 @@ std::unique_ptr<PluginManager::PluginTransaction>
 PluginManager::begin_transaction() {
     std::lock_guard<std::mutex> lock(d->transaction_mutex);
 
-    auto transaction = std::unique_ptr<PluginTransaction>(
-        new PluginTransaction(this));
+    auto transaction =
+        std::unique_ptr<PluginTransaction>(new PluginTransaction(this));
 
     d->active_transactions.push_back(
         std::unique_ptr<PluginTransaction>(new PluginTransaction(this)));
@@ -1161,9 +1309,9 @@ std::unordered_map<std::filesystem::path,
                    qtplugin::expected<std::string, PluginError>>
 PluginManager::batch_load(const std::vector<std::filesystem::path>& paths,
                           const PluginLoadOptions& options) {
-
     std::unordered_map<std::filesystem::path,
-                       qtplugin::expected<std::string, PluginError>> results;
+                       qtplugin::expected<std::string, PluginError>>
+        results;
 
     auto transaction = begin_transaction();
 
@@ -1192,8 +1340,8 @@ PluginManager::batch_load(const std::vector<std::filesystem::path>& paths,
 std::unordered_map<std::string, qtplugin::expected<void, PluginError>>
 PluginManager::batch_unload(const std::vector<std::string>& plugin_ids,
                             bool force) {
-
-    std::unordered_map<std::string, qtplugin::expected<void, PluginError>> results;
+    std::unordered_map<std::string, qtplugin::expected<void, PluginError>>
+        results;
 
     auto transaction = begin_transaction();
 
@@ -1222,7 +1370,8 @@ PluginManager::batch_unload(const std::vector<std::string>& plugin_ids,
 std::string PluginManager::register_pre_load_hook(PluginHook hook) {
     std::unique_lock lock(d->hooks_mutex);
 
-    std::string hook_id = QUuid::createUuid().toString(QUuid::WithoutBraces).toStdString();
+    std::string hook_id =
+        QUuid::createUuid().toString(QUuid::WithoutBraces).toStdString();
     d->pre_load_hooks.push_back({hook_id, std::move(hook)});
 
     return hook_id;
@@ -1231,7 +1380,8 @@ std::string PluginManager::register_pre_load_hook(PluginHook hook) {
 std::string PluginManager::register_post_load_hook(PluginHook hook) {
     std::unique_lock lock(d->hooks_mutex);
 
-    std::string hook_id = QUuid::createUuid().toString(QUuid::WithoutBraces).toStdString();
+    std::string hook_id =
+        QUuid::createUuid().toString(QUuid::WithoutBraces).toStdString();
     d->post_load_hooks.push_back({hook_id, std::move(hook)});
 
     return hook_id;
@@ -1240,7 +1390,8 @@ std::string PluginManager::register_post_load_hook(PluginHook hook) {
 std::string PluginManager::register_pre_unload_hook(PluginHook hook) {
     std::unique_lock lock(d->hooks_mutex);
 
-    std::string hook_id = QUuid::createUuid().toString(QUuid::WithoutBraces).toStdString();
+    std::string hook_id =
+        QUuid::createUuid().toString(QUuid::WithoutBraces).toStdString();
     d->pre_unload_hooks.push_back({hook_id, std::move(hook)});
 
     return hook_id;
@@ -1250,13 +1401,11 @@ void PluginManager::unregister_hook(const std::string& hook_id) {
     std::unique_lock lock(d->hooks_mutex);
 
     auto remove_hook = [&hook_id](std::vector<Impl::HookEntry>& hooks) {
-        hooks.erase(
-            std::remove_if(hooks.begin(), hooks.end(),
-                [&hook_id](const Impl::HookEntry& entry) {
-                    return entry.id == hook_id;
-                }),
-            hooks.end()
-        );
+        hooks.erase(std::remove_if(hooks.begin(), hooks.end(),
+                                   [&hook_id](const Impl::HookEntry& entry) {
+                                       return entry.id == hook_id;
+                                   }),
+                    hooks.end());
     };
 
     remove_hook(d->pre_load_hooks);
@@ -1265,18 +1414,12 @@ void PluginManager::unregister_hook(const std::string& hook_id) {
 }
 
 // Health monitoring
-PluginManager::HealthStatus
-PluginManager::check_plugin_health(std::string_view plugin_id) {
-
+PluginManager::HealthStatus PluginManager::check_plugin_health(
+    std::string_view plugin_id) {
     auto plugin = get_plugin(plugin_id);
     if (!plugin) {
-        return HealthStatus{
-            false,
-            "Plugin not found",
-            std::chrono::system_clock::now(),
-            0,
-            QJsonObject()
-        };
+        return HealthStatus{false, "Plugin not found",
+                            std::chrono::system_clock::now(), 0, QJsonObject()};
     }
 
     HealthStatus status;
@@ -1326,7 +1469,6 @@ PluginManager::check_plugin_health(std::string_view plugin_id) {
 
 std::unordered_map<std::string, PluginManager::HealthStatus>
 PluginManager::check_all_plugin_health() {
-
     std::unordered_map<std::string, HealthStatus> results;
 
     auto plugins = loaded_plugins();
@@ -1337,12 +1479,12 @@ PluginManager::check_all_plugin_health() {
     return results;
 }
 
-void PluginManager::enable_health_monitoring(
-    std::chrono::milliseconds interval,
-    bool auto_restart) {
-
+void PluginManager::enable_health_monitoring(std::chrono::milliseconds interval,
+                                             bool auto_restart) {
     if (!d->health_timer) {
-        d->health_timer = std::make_unique<QTimer>(this);
+        // NOTE: Do NOT pass 'this' as parent - we manage lifetime with
+        // unique_ptr
+        d->health_timer = std::make_unique<QTimer>();
     }
 
     d->auto_restart_unhealthy = auto_restart;
@@ -1354,7 +1496,7 @@ void PluginManager::enable_health_monitoring(
             for (const auto& [plugin_id, status] : health_results) {
                 if (!status.is_healthy && status.consecutive_failures >= 3) {
                     qWarning() << "Auto-restarting unhealthy plugin:"
-                              << QString::fromStdString(plugin_id);
+                               << QString::fromStdString(plugin_id);
 
                     // Try to reload the plugin
                     reload_plugin(plugin_id, true);
@@ -1365,8 +1507,9 @@ void PluginManager::enable_health_monitoring(
 
     d->health_timer->start(interval.count());
 
-    qCDebug(pluginManagerLog) << "Health monitoring enabled with interval:"
-                       << interval.count() << "ms";
+    qCDebug(pluginManagerLog)
+        << "Health monitoring enabled with interval:" << interval.count()
+        << "ms";
 }
 
 void PluginManager::disable_health_monitoring() {
@@ -1381,15 +1524,12 @@ void PluginManager::disable_health_monitoring() {
 }
 
 // Configuration hot reload
-qtplugin::expected<void, PluginError>
-PluginManager::update_plugin_config(
-    std::string_view plugin_id,
-    const QJsonObject& config) {
-
+qtplugin::expected<void, PluginError> PluginManager::update_plugin_config(
+    std::string_view plugin_id, const QJsonObject& config) {
     auto plugin = get_plugin(plugin_id);
     if (!plugin) {
         return make_error<void>(PluginErrorCode::LoadFailed,
-                               "Plugin not found: " + std::string(plugin_id));
+                                "Plugin not found: " + std::string(plugin_id));
     }
 
     // Call plugin's configure method
@@ -1397,15 +1537,18 @@ PluginManager::update_plugin_config(
 
     if (result) {
         // Update stored configuration
-        auto plugin_info_opt = d->plugin_registry->get_plugin_info(std::string(plugin_id));
+        auto plugin_info_opt =
+            d->plugin_registry->get_plugin_info(std::string(plugin_id));
         if (plugin_info_opt) {
-            auto& plugin_info = const_cast<PluginInfo&>(plugin_info_opt.value());
+            auto& plugin_info =
+                const_cast<PluginInfo&>(plugin_info_opt.value());
             plugin_info.configuration = config;
             plugin_info.last_activity = std::chrono::system_clock::now();
         }
 
-        qCDebug(pluginManagerLog) << "Updated configuration for plugin:"
-                          << QString::fromStdString(std::string(plugin_id));
+        qCDebug(pluginManagerLog)
+            << "Updated configuration for plugin:"
+            << QString::fromStdString(std::string(plugin_id));
     }
 
     return result;
@@ -1414,8 +1557,8 @@ PluginManager::update_plugin_config(
 std::unordered_map<std::string, qtplugin::expected<void, PluginError>>
 PluginManager::batch_update_configs(
     const std::unordered_map<std::string, QJsonObject>& configs) {
-
-    std::unordered_map<std::string, qtplugin::expected<void, PluginError>> results;
+    std::unordered_map<std::string, qtplugin::expected<void, PluginError>>
+        results;
 
     for (const auto& [plugin_id, config] : configs) {
         results[plugin_id] = update_plugin_config(plugin_id, config);
@@ -1426,7 +1569,8 @@ PluginManager::batch_update_configs(
 
 // === SHA256 Validation Implementation ===
 
-std::string PluginManager::calculate_file_sha256(const std::filesystem::path& file_path) const {
+std::string PluginManager::calculate_file_sha256(
+    const std::filesystem::path& file_path) const {
     try {
         QFile file(QString::fromStdString(file_path.string()));
         if (!file.open(QIODevice::ReadOnly)) {
@@ -1466,9 +1610,7 @@ bool PluginManager::verify_file_sha256(const std::filesystem::path& file_path,
 }
 
 // Implementation of methods that were moved from inline to out-of-line
-IMessageBus& PluginManager::message_bus() const {
-    return *d->message_bus;
-}
+IMessageBus& PluginManager::message_bus() const { return *d->message_bus; }
 
 bool PluginManager::is_monitoring_active() const noexcept {
     return d->monitoring_active;

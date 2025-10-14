@@ -1,77 +1,77 @@
-name: 'Install Platform Dependencies'
-description: 'Install platform-specific dependencies for QtForge builds'
+name: "Install Platform Dependencies"
+description: "Install platform-specific dependencies for QtForge builds"
 
 inputs:
   install-dev-tools:
-    description: 'Install development tools (compilers, debuggers)'
+    description: "Install development tools (compilers, debuggers)"
     required: false
-    default: 'false'
+    default: "false"
   install-analysis-tools:
-    description: 'Install static analysis tools'
+    description: "Install static analysis tools"
     required: false
-    default: 'false'
+    default: "false"
   install-packaging-tools:
-    description: 'Install packaging tools'
+    description: "Install packaging tools"
     required: false
-    default: 'false'
+    default: "false"
   additional-packages:
-    description: 'Additional packages to install (space-separated)'
+    description: "Additional packages to install (space-separated)"
     required: false
-    default: ''
+    default: ""
 
 outputs:
   tools-installed:
-    description: 'List of tools that were installed'
+    description: "List of tools that were installed"
     value: ${{ steps.summary.outputs.tools }}
 
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
     - name: Install Linux dependencies
       if: runner.os == 'Linux'
       shell: bash
       run: |
         echo "::group::Installing Linux Dependencies"
-        
+
         # Update package list
         sudo apt-get update
-        
+
         PACKAGES=()
         TOOLS_INSTALLED=()
-        
+
         # Development tools
         if [ "${{ inputs.install-dev-tools }}" = "true" ]; then
           PACKAGES+=(build-essential gdb valgrind)
           TOOLS_INSTALLED+=("build-essential" "gdb" "valgrind")
         fi
-        
+
         # Analysis tools
         if [ "${{ inputs.install-analysis-tools }}" = "true" ]; then
           PACKAGES+=(cppcheck clang-tidy clang-format)
           TOOLS_INSTALLED+=("cppcheck" "clang-tidy" "clang-format")
         fi
-        
+
         # Packaging tools
         if [ "${{ inputs.install-packaging-tools }}" = "true" ]; then
           PACKAGES+=(rpm alien fakeroot)
           TOOLS_INSTALLED+=("rpm" "alien" "fakeroot")
         fi
-        
+
         # Additional packages
         if [ -n "${{ inputs.additional-packages }}" ]; then
           PACKAGES+=(${{ inputs.additional-packages }})
           TOOLS_INSTALLED+=(${{ inputs.additional-packages }})
         fi
-        
+
         # Install packages if any
         if [ ${#PACKAGES[@]} -gt 0 ]; then
           sudo apt-get install -y "${PACKAGES[@]}"
           echo "Installed: ${PACKAGES[*]}"
         fi
-        
+
         # Save tools list for output
         echo "LINUX_TOOLS=${TOOLS_INSTALLED[*]}" >> $GITHUB_ENV
-        
+
         echo "::endgroup::"
 
     - name: Install macOS dependencies
@@ -79,37 +79,37 @@ runs:
       shell: bash
       run: |
         echo "::group::Installing macOS Dependencies"
-        
+
         PACKAGES=()
         TOOLS_INSTALLED=()
-        
+
         # Development tools
         if [ "${{ inputs.install-dev-tools }}" = "true" ]; then
           PACKAGES+=(llvm)
           TOOLS_INSTALLED+=("llvm")
         fi
-        
+
         # Analysis tools
         if [ "${{ inputs.install-analysis-tools }}" = "true" ]; then
           PACKAGES+=(cppcheck)
           TOOLS_INSTALLED+=("cppcheck")
         fi
-        
+
         # Additional packages
         if [ -n "${{ inputs.additional-packages }}" ]; then
           PACKAGES+=(${{ inputs.additional-packages }})
           TOOLS_INSTALLED+=(${{ inputs.additional-packages }})
         fi
-        
+
         # Install packages if any
         if [ ${#PACKAGES[@]} -gt 0 ]; then
           brew install "${PACKAGES[@]}"
           echo "Installed: ${PACKAGES[*]}"
         fi
-        
+
         # Save tools list for output
         echo "MACOS_TOOLS=${TOOLS_INSTALLED[*]}" >> $GITHUB_ENV
-        
+
         echo "::endgroup::"
 
     - name: Install Windows dependencies
@@ -117,29 +117,29 @@ runs:
       shell: pwsh
       run: |
         Write-Host "::group::Installing Windows Dependencies"
-        
+
         $packages = @()
         $toolsInstalled = @()
-        
+
         # Development tools
         if ("${{ inputs.install-dev-tools }}" -eq "true") {
           $packages += @("visualstudio2022buildtools", "windows-sdk-10.0")
           $toolsInstalled += @("visualstudio2022buildtools", "windows-sdk-10.0")
         }
-        
+
         # Packaging tools
         if ("${{ inputs.install-packaging-tools }}" -eq "true") {
           $packages += @("nsis", "wixtoolset")
           $toolsInstalled += @("nsis", "wixtoolset")
         }
-        
+
         # Additional packages
         if ("${{ inputs.additional-packages }}" -ne "") {
           $additionalPkgs = "${{ inputs.additional-packages }}".Split(" ")
           $packages += $additionalPkgs
           $toolsInstalled += $additionalPkgs
         }
-        
+
         # Install packages if any
         if ($packages.Count -gt 0) {
           foreach ($package in $packages) {
@@ -151,11 +151,11 @@ runs:
             }
           }
         }
-        
+
         # Save tools list for output
         $toolsList = $toolsInstalled -join " "
         echo "WINDOWS_TOOLS=$toolsList" >> $env:GITHUB_ENV
-        
+
         Write-Host "::endgroup::"
 
     - name: Set output

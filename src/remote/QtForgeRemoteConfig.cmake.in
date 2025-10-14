@@ -1,0 +1,82 @@
+
+@PACKAGE_INIT@
+
+# QtForge Remote Plugin System Package Configuration
+# Version @QtForge_VERSION@
+
+include(CMakeFindDependencyMacro)
+
+# Find required dependencies
+find_dependency(Qt6 REQUIRED COMPONENTS Core Network Concurrent)
+find_dependency(OpenSSL REQUIRED)
+
+# Include target definitions
+include("${CMAKE_CURRENT_LIST_DIR}/QtForgeRemoteTargets.cmake")
+
+# Define convenience variables
+set(QtForgeRemote_LIBRARIES
+    QtForge::RemoteManager
+    QtForge::RemoteIntegration
+    QtForge::Remote
+)
+
+set(QtForgeRemote_INCLUDE_DIRS "${PACKAGE_PREFIX_DIR}/include")
+
+# Compatibility aliases
+add_library(QtForge::RemotePluginSystem ALIAS QtForge::Remote)
+
+check_required_components(QtForgeRemote)
+
+# Additional configuration
+set(QTFORGE_REMOTE_VERSION "@QtForge_VERSION@")
+set(QTFORGE_REMOTE_VERSION_MAJOR @QtForge_VERSION_MAJOR@)
+set(QTFORGE_REMOTE_VERSION_MINOR @QtForge_VERSION_MINOR@)
+set(QTFORGE_REMOTE_VERSION_PATCH @QtForge_VERSION_PATCH@)
+
+# Helper macro for adding remote plugins
+macro(qtforge_add_remote_plugin target)
+    cmake_parse_arguments(PLUGIN
+        "SIGNATURE_REQUIRED"
+        "PUBLISHER_ID;REPOSITORY_URL;CATEGORY"
+        "SOURCES;HEADERS;METADATA;TAGS"
+        ${ARGN}
+    )
+
+    # Create the plugin target
+    add_library(${target} SHARED ${PLUGIN_SOURCES} ${PLUGIN_HEADERS})
+
+    # Link with remote plugin system
+    target_link_libraries(${target}
+        QtForge::Remote
+        Qt6::Core
+    )
+
+    # Set plugin properties
+    set_target_properties(${target} PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/plugins"
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/plugins"
+    )
+
+    # Add metadata if provided
+    if(PLUGIN_METADATA)
+        configure_file(${PLUGIN_METADATA}
+                      "${CMAKE_BINARY_DIR}/plugins/${target}.json"
+                      COPYONLY)
+    endif()
+
+    # Generate signature if required
+    if(PLUGIN_SIGNATURE_REQUIRED)
+        find_program(QTFORGE_SIGN_TOOL qtforge-sign)
+        if(QTFORGE_SIGN_TOOL)
+            add_custom_command(TARGET ${target} POST_BUILD
+                COMMAND ${QTFORGE_SIGN_TOOL}
+                    --plugin $<TARGET_FILE:${target}>
+                    --publisher ${PLUGIN_PUBLISHER_ID}
+                    --output $<TARGET_FILE:${target}>.sig
+                COMMENT "Signing plugin ${target}"
+            )
+        endif()
+    endif()
+endmacro()
+
+message(STATUS "Found QtForge Remote Plugin System version ${QTFORGE_REMOTE_VERSION}")

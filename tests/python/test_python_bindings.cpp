@@ -103,6 +103,21 @@ void TestPythonBindings::cleanupTestCase() {
 }
 
 void TestPythonBindings::init() {
+    // Skip all tests if Python or QtForge module is not available
+    bool pythonAvail = isPythonAvailable();
+    qDebug() << "DEBUG init(): isPythonAvailable() =" << pythonAvail;
+
+    if (!pythonAvail) {
+        QSKIP("Python not available for testing");
+    }
+
+    bool qtforgeAvail = isQtForgeModuleAvailable();
+    qDebug() << "DEBUG init(): isQtForgeModuleAvailable() =" << qtforgeAvail;
+
+    if (!qtforgeAvail) {
+        QSKIP("QtForge Python module not available for testing");
+    }
+
     // Setup for each test
 }
 
@@ -161,6 +176,7 @@ except Exception as e:
 )";
 
     QString result = runPythonScript(script);
+    qDebug() << "DEBUG testModuleVersion(): result =" << result;
     QVERIFY(result.contains("SUCCESS: Version"));
 }
 
@@ -797,7 +813,22 @@ except Exception as e:
 bool TestPythonBindings::isPythonAvailable() {
     QProcess process;
     process.start(m_python_executable, QStringList() << "--version");
-    return process.waitForFinished(3000) && process.exitCode() == 0;
+
+    if (!process.waitForFinished(3000)) {
+        return false;  // Process didn't finish in time
+    }
+
+    if (process.exitCode() != 0) {
+        return false;  // Process exited with error
+    }
+
+    // Check if output contains "Python" to verify it's actually Python
+    QString output = process.readAllStandardOutput();
+    if (!output.contains("Python", Qt::CaseInsensitive)) {
+        return false;  // Not Python or unexpected output
+    }
+
+    return true;
 }
 
 bool TestPythonBindings::isQtForgeModuleAvailable() {
@@ -812,7 +843,12 @@ except Exception as e:
 )";
 
     QString result = runPythonScript(script);
-    return result.contains("AVAILABLE");
+    qDebug() << "DEBUG isQtForgeModuleAvailable(): result =" << result;
+    bool available = result.contains("AVAILABLE") &&
+                     !result.contains("NOT_AVAILABLE") &&
+                     !result.contains("ERROR");
+    qDebug() << "DEBUG isQtForgeModuleAvailable(): returning" << available;
+    return available;
 }
 
 QString TestPythonBindings::runPythonScript(const QString& script) {
@@ -835,9 +871,9 @@ QString TestPythonBindings::runPythonScript(const QString& script) {
     // Navigate up to find the build directory containing the qtforge module
     QDir dir(build_dir);
     while (!dir.exists("qtforge.cp312-mingw_x86_64_msvcrt_gnu.pyd") &&
-           !dir.exists("qtforge.pyd") &&
-           dir.cdUp()) {
-        // Keep going up until we find the build directory with the Python module
+           !dir.exists("qtforge.pyd") && dir.cdUp()) {
+        // Keep going up until we find the build directory with the Python
+        // module
     }
 
     stream << "sys.path.insert(0, r'" << dir.absolutePath() << "')\n";

@@ -13,9 +13,9 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#include "../interfaces/core/plugin_interface.hpp"
 #include "../utils/concepts.hpp"
 #include "../utils/error_handling.hpp"
-#include "../interfaces/core/plugin_interface.hpp"
 
 namespace qtplugin {
 
@@ -76,9 +76,10 @@ public:
     QtPluginLoader();
     ~QtPluginLoader() override;
 
-    // Copy constructor and assignment operator
-    QtPluginLoader(const QtPluginLoader& other);
-    QtPluginLoader& operator=(const QtPluginLoader& other);
+    // Copy constructor and assignment operator (deleted - plugin loaders should
+    // not be copied)
+    QtPluginLoader(const QtPluginLoader& other) = delete;
+    QtPluginLoader& operator=(const QtPluginLoader& other) = delete;
 
     // Move constructor and assignment operator
     QtPluginLoader(QtPluginLoader&& other) noexcept;
@@ -114,13 +115,13 @@ public:
     bool is_loaded(std::string_view plugin_id) const;
 
     // === Enhanced functionality (v3.2.0) ===
-    
+
     /**
      * @brief Enable/disable metadata caching
      * @param enabled Whether to enable caching
      */
     void set_cache_enabled(bool enabled);
-    
+
     /**
      * @brief Get cache statistics
      * @return Cache hit rate and other statistics
@@ -132,23 +133,23 @@ public:
         size_t cache_size = 0;
     };
     CacheStatistics get_cache_statistics() const;
-    
+
     /**
      * @brief Clear metadata cache
      */
     void clear_cache();
-    
+
     /**
      * @brief Get detailed error report
      * @return Error report string with stack trace
      */
     std::string get_error_report() const;
-    
+
     /**
      * @brief Clear error history
      */
     void clear_error_history();
-    
+
     /**
      * @brief Get plugin resource usage
      * @param plugin_id Plugin identifier
@@ -161,9 +162,9 @@ public:
         std::chrono::system_clock::time_point last_access;
     };
     ResourceUsage get_resource_usage(std::string_view plugin_id) const;
-    
+
     // === Parallel Loading Features (v3.2.0) ===
-    
+
     /**
      * @brief Batch loading result structure
      */
@@ -172,7 +173,7 @@ public:
         qtplugin::expected<std::shared_ptr<IPlugin>, PluginError> result;
         std::chrono::milliseconds load_time;
     };
-    
+
     /**
      * @brief Load multiple plugins in parallel
      * @param paths Vector of plugin file paths
@@ -180,7 +181,7 @@ public:
      */
     std::vector<BatchLoadResult> batch_load(
         const std::vector<std::filesystem::path>& paths);
-    
+
     /**
      * @brief Unload multiple plugins in parallel
      * @param plugin_ids Vector of plugin identifiers
@@ -188,15 +189,15 @@ public:
      */
     std::vector<qtplugin::expected<void, PluginError>> batch_unload(
         const std::vector<std::string>& plugin_ids);
-    
+
     /**
      * @brief Read metadata for multiple plugins in parallel
      * @param paths Vector of plugin file paths
      * @return Vector of metadata read results
      */
-    std::vector<qtplugin::expected<QJsonObject, PluginError>> 
+    std::vector<qtplugin::expected<QJsonObject, PluginError>>
     batch_read_metadata(const std::vector<std::filesystem::path>& paths);
-    
+
     /**
      * @brief Thread pool statistics
      */
@@ -204,13 +205,13 @@ public:
         size_t queue_size = 0;
         size_t max_threads = 0;
     };
-    
+
     /**
      * @brief Get thread pool statistics
      * @return Current thread pool statistics
      */
     ThreadPoolStats get_thread_pool_stats() const;
-    
+
     /**
      * @brief Configure maximum loading threads
      * @param count Maximum number of concurrent loading threads

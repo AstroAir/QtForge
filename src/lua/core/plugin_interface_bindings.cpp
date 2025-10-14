@@ -23,7 +23,7 @@
 #include <sol/sol.hpp>
 
 // QtForge includes
-#include "../qt_conversions.cpp"
+#include "../qt_conversions.hpp"
 #include "../qtforge_lua_bindings.hpp"
 #include "qtplugin/interfaces/core/plugin_interface.hpp"
 #include "qtplugin/utils/error_handling.hpp"

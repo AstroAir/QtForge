@@ -5,19 +5,19 @@
  */
 
 #include <QDebug>
-#include <QLoggingCategory>
+#include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <QJsonArray>
+#include <QLoggingCategory>
 
 #ifdef QTFORGE_LUA_BINDINGS
 #include <sol/sol.hpp>
 #endif
 
 #include <qtplugin/communication/message_bus.hpp>
-#include <qtplugin/communication/request_response_system.hpp>
 #include <qtplugin/communication/plugin_service_contracts.hpp>
-#include "../qt_conversions.cpp"
+#include <qtplugin/communication/request_response_system.hpp>
+#include "../qt_conversions.hpp"
 
 Q_LOGGING_CATEGORY(communicationBindingsLog, "qtforge.lua.communication");
 
@@ -30,11 +30,14 @@ namespace qtforge_lua {
  */
 void register_message_bus_bindings(sol::state& lua) {
     Q_UNUSED(lua)
-    // TODO: Lua bindings need to be redesigned to work with the template-based message system
-    // The current implementation has issues with template types that can't be directly bound to Lua
-    // For now, these bindings are disabled pending a proper redesign
+    // TODO: Lua bindings need to be redesigned to work with the template-based
+    // message system The current implementation has issues with template types
+    // that can't be directly bound to Lua For now, these bindings are disabled
+    // pending a proper redesign
 
-    qCDebug(communicationBindingsLog) << "MessageBus bindings temporarily disabled - needs redesign for template system";
+    qCDebug(communicationBindingsLog)
+        << "MessageBus bindings temporarily disabled - needs redesign for "
+           "template system";
 }
 
 /**
@@ -43,7 +46,8 @@ void register_message_bus_bindings(sol::state& lua) {
 void register_request_response_bindings(sol::state& lua) {
     Q_UNUSED(lua)
     // TODO: Request-Response bindings also need redesign
-    qCDebug(communicationBindingsLog) << "Request-Response bindings temporarily disabled - needs redesign";
+    qCDebug(communicationBindingsLog)
+        << "Request-Response bindings temporarily disabled - needs redesign";
 }
 
 /**
@@ -51,26 +55,32 @@ void register_request_response_bindings(sol::state& lua) {
  */
 void register_communication_bindings(sol::state& lua) {
     Q_UNUSED(lua)
-    qCDebug(communicationBindingsLog) << "Communication bindings temporarily disabled - needs redesign for template system";
+    qCDebug(communicationBindingsLog)
+        << "Communication bindings temporarily disabled - needs redesign for "
+           "template system";
 
-    // TODO: All communication bindings need to be redesigned to work with the new template-based message system
-    // The current implementation has issues with template types that can't be directly bound to Lua
+    // TODO: All communication bindings need to be redesigned to work with the
+    // new template-based message system The current implementation has issues
+    // with template types that can't be directly bound to Lua
 
     // Register disabled bindings (they will log their disabled status)
     register_message_bus_bindings(lua);
     register_request_response_bindings(lua);
 }
 
-#else // QTFORGE_LUA_BINDINGS not defined
+#else  // QTFORGE_LUA_BINDINGS not defined
 
 // Forward declare sol::state for when Lua is not available
-namespace sol { class state; }
-
-void register_communication_bindings(sol::state& lua) {
-    (void)lua; // Suppress unused parameter warning
-    qCWarning(communicationBindingsLog) << "Communication bindings not available - Lua support not compiled";
+namespace sol {
+class state;
 }
 
-#endif // QTFORGE_LUA_BINDINGS
+void register_communication_bindings(sol::state& lua) {
+    (void)lua;  // Suppress unused parameter warning
+    qCWarning(communicationBindingsLog)
+        << "Communication bindings not available - Lua support not compiled";
+}
 
-} // namespace qtforge_lua
+#endif  // QTFORGE_LUA_BINDINGS
+
+}  // namespace qtforge_lua

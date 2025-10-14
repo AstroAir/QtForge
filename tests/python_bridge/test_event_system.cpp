@@ -3,28 +3,28 @@
  * @brief Comprehensive tests for the Python bridge event system
  */
 
-#include <QtTest/QtTest>
 #include <QCoreApplication>
+#include <QDateTime>
 #include <QDir>
-#include <QTemporaryDir>
+#include <QElapsedTimer>
+#include <QFuture>
+#include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <QJsonArray>
-#include <QTimer>
-#include <QSignalSpy>
-#include <QThread>
-#include <QDateTime>
-#include <QElapsedTimer>
 #include <QMutex>
+#include <QProcess>
+#include <QSignalSpy>
+#include <QTemporaryDir>
+#include <QThread>
+#include <QTimer>
 #include <QWaitCondition>
 #include <QtConcurrent/QtConcurrent>
-#include <QFuture>
+#include <QtTest/QtTest>
 #include <atomic>
 
 #include <qtplugin/bridges/python_plugin_bridge.hpp>
 
-class TestEventSystem : public QObject
-{
+class TestEventSystem : public QObject {
     Q_OBJECT
 
 private slots:
@@ -63,10 +63,12 @@ private slots:
 private:
     void createEventTestPlugin();
     void waitForEvents(int expectedCount, int timeoutMs = 5000);
+    bool isPythonAvailable();
 
     QTemporaryDir* m_tempDir;
     QString m_testPluginPath;
     std::unique_ptr<qtplugin::PythonPluginBridge> m_bridge;
+    bool m_pythonAvailable;
 
     // Event tracking
     QMutex m_eventMutex;
@@ -75,35 +77,34 @@ private:
     int m_expectedEventCount;
 };
 
-void TestEventSystem::initTestCase()
-{
+void TestEventSystem::initTestCase() {
+    m_pythonAvailable = isPythonAvailable();
+
     m_tempDir = new QTemporaryDir();
     QVERIFY(m_tempDir->isValid());
     createEventTestPlugin();
 }
 
-void TestEventSystem::cleanupTestCase()
-{
-    delete m_tempDir;
-}
+void TestEventSystem::cleanupTestCase() { delete m_tempDir; }
 
-void TestEventSystem::init()
-{
+void TestEventSystem::init() {
+    if (!m_pythonAvailable) {
+        QSKIP("Python not available for testing");
+    }
+
     m_bridge = std::make_unique<qtplugin::PythonPluginBridge>(m_testPluginPath);
     m_receivedEvents.clear();
     m_expectedEventCount = 0;
 }
 
-void TestEventSystem::cleanup()
-{
+void TestEventSystem::cleanup() {
     if (m_bridge) {
         m_bridge->shutdown();
         m_bridge.reset();
     }
 }
 
-void TestEventSystem::createEventTestPlugin()
-{
+void TestEventSystem::createEventTestPlugin() {
     QString pluginContent = R"(
 import time
 import threading
@@ -215,12 +216,12 @@ def create_plugin():
     file.close();
 }
 
-void TestEventSystem::testEventSubscription()
-{
+void TestEventSystem::testEventSubscription() {
     QVERIFY(m_bridge->initialize().has_value());
 
     bool subscriptionSuccessful = false;
-    auto callback = [&](const QString& eventName, const QJsonObject& eventData) {
+    auto callback = [&](const QString& eventName,
+                        const QJsonObject& eventData) {
         Q_UNUSED(eventName)
         Q_UNUSED(eventData)
         subscriptionSuccessful = true;
@@ -232,8 +233,7 @@ void TestEventSystem::testEventSubscription()
     QVERIFY(result.has_value());
 }
 
-void TestEventSystem::testEventUnsubscription()
-{
+void TestEventSystem::testEventUnsubscription() {
     QVERIFY(m_bridge->initialize().has_value());
 
     auto callback = [](const QString&, const QJsonObject&) {};
@@ -248,8 +248,7 @@ void TestEventSystem::testEventUnsubscription()
     QVERIFY(unsub_result.has_value());
 }
 
-void TestEventSystem::testEventEmission()
-{
+void TestEventSystem::testEventEmission() {
     QVERIFY(m_bridge->initialize().has_value());
 
     QJsonObject eventData;
@@ -260,15 +259,15 @@ void TestEventSystem::testEventEmission()
     QVERIFY(result.has_value());
 }
 
-void TestEventSystem::testEventCallbackExecution()
-{
+void TestEventSystem::testEventCallbackExecution() {
     QVERIFY(m_bridge->initialize().has_value());
 
     bool callbackExecuted = false;
     QString receivedEventName;
     QJsonObject receivedEventData;
 
-    auto callback = [&](const QString& eventName, const QJsonObject& eventData) {
+    auto callback = [&](const QString& eventName,
+                        const QJsonObject& eventData) {
         callbackExecuted = true;
         receivedEventName = eventName;
         receivedEventData = eventData;
@@ -297,32 +296,35 @@ void TestEventSystem::testEventCallbackExecution()
     QCOMPARE(receivedEventData["test_key"].toString(), QString("test_value"));
 }
 
-void TestEventSystem::waitForEvents(int expectedCount, int timeoutMs)
-{
+void TestEventSystem::waitForEvents(int expectedCount, int timeoutMs) {
     QMutexLocker locker(&m_eventMutex);
     m_expectedEventCount = expectedCount;
 
     QElapsedTimer timer;
     timer.start();
 
-    while (m_receivedEvents.size() < expectedCount && timer.elapsed() < timeoutMs) {
+    while (m_receivedEvents.size() < expectedCount &&
+           timer.elapsed() < timeoutMs) {
         m_eventCondition.wait(&m_eventMutex, timeoutMs - timer.elapsed());
     }
 
     QVERIFY2(m_receivedEvents.size() >= expectedCount,
-             QString("Expected %1 events, got %2").arg(expectedCount).arg(m_receivedEvents.size()).toUtf8());
+             QString("Expected %1 events, got %2")
+                 .arg(expectedCount)
+                 .arg(m_receivedEvents.size())
+                 .toUtf8());
 }
 
 // === Missing Method Implementations ===
 
-void TestEventSystem::testMultipleEventTypes()
-{
+void TestEventSystem::testMultipleEventTypes() {
     QVERIFY(m_bridge->initialize().has_value());
 
     QStringList eventTypes = {"event_type_1", "event_type_2", "event_type_3"};
     int eventsReceived = 0;
 
-    auto callback = [&](const QString& eventName, const QJsonObject& eventData) {
+    auto callback = [&](const QString& eventName,
+                        const QJsonObject& eventData) {
         Q_UNUSED(eventData)
         eventsReceived++;
 
@@ -337,7 +339,8 @@ void TestEventSystem::testMultipleEventTypes()
         eventTypesVec.push_back(type);
     }
 
-    auto sub_result = m_bridge->subscribe_to_events("", eventTypesVec, callback);
+    auto sub_result =
+        m_bridge->subscribe_to_events("", eventTypesVec, callback);
     QVERIFY(sub_result.has_value());
 
     // Emit events of different types
@@ -354,8 +357,7 @@ void TestEventSystem::testMultipleEventTypes()
     QCOMPARE(eventsReceived, eventTypes.size());
 }
 
-void TestEventSystem::testMultipleSubscribers()
-{
+void TestEventSystem::testMultipleSubscribers() {
     QVERIFY(m_bridge->initialize().has_value());
 
     int subscriber1Events = 0;
@@ -372,27 +374,29 @@ void TestEventSystem::testMultipleSubscribers()
     std::vector<QString> eventTypes = {"multi_subscriber_event"};
 
     // Subscribe with both callbacks
-    auto sub1_result = m_bridge->subscribe_to_events("subscriber1", eventTypes, callback1);
+    auto sub1_result =
+        m_bridge->subscribe_to_events("subscriber1", eventTypes, callback1);
     QVERIFY(sub1_result.has_value());
 
-    auto sub2_result = m_bridge->subscribe_to_events("subscriber2", eventTypes, callback2);
+    auto sub2_result =
+        m_bridge->subscribe_to_events("subscriber2", eventTypes, callback2);
     QVERIFY(sub2_result.has_value());
 
     // Emit an event
     QJsonObject eventData;
     eventData["message"] = "multi subscriber test";
 
-    auto emit_result = m_bridge->emit_event("multi_subscriber_event", eventData);
+    auto emit_result =
+        m_bridge->emit_event("multi_subscriber_event", eventData);
     QVERIFY(emit_result.has_value());
 
     // Both subscribers should receive the event
-    QThread::msleep(100); // Give time for callbacks
+    QThread::msleep(100);  // Give time for callbacks
     QVERIFY(subscriber1Events > 0);
     QVERIFY(subscriber2Events > 0);
 }
 
-void TestEventSystem::testEventDataTransmission()
-{
+void TestEventSystem::testEventDataTransmission() {
     QVERIFY(m_bridge->initialize().has_value());
 
     QJsonObject receivedData;
@@ -422,7 +426,8 @@ void TestEventSystem::testEventDataTransmission()
     nestedObject["nested_key"] = "nested_value";
     originalData["object_value"] = nestedObject;
 
-    auto emit_result = m_bridge->emit_event("data_transmission_event", originalData);
+    auto emit_result =
+        m_bridge->emit_event("data_transmission_event", originalData);
     QVERIFY(emit_result.has_value());
 
     waitForEvents(1);
@@ -433,13 +438,13 @@ void TestEventSystem::testEventDataTransmission()
     QCOMPARE(receivedData["boolean_value"].toBool(), true);
 }
 
-void TestEventSystem::testEventOrderPreservation()
-{
+void TestEventSystem::testEventOrderPreservation() {
     QVERIFY(m_bridge->initialize().has_value());
 
     QStringList receivedOrder;
 
-    auto callback = [&](const QString& eventName, const QJsonObject& eventData) {
+    auto callback = [&](const QString& eventName,
+                        const QJsonObject& eventData) {
         QString eventId = eventData["id"].toString();
         receivedOrder.append(eventId);
 
@@ -474,8 +479,7 @@ void TestEventSystem::testEventOrderPreservation()
     }
 }
 
-void TestEventSystem::testInvalidEventSubscription()
-{
+void TestEventSystem::testInvalidEventSubscription() {
     QVERIFY(m_bridge->initialize().has_value());
 
     auto callback = [](const QString&, const QJsonObject&) {};
@@ -487,8 +491,7 @@ void TestEventSystem::testInvalidEventSubscription()
     // Just verify it doesn't crash
 }
 
-void TestEventSystem::testCallbackExceptions()
-{
+void TestEventSystem::testCallbackExceptions() {
     QVERIFY(m_bridge->initialize().has_value());
 
     auto throwingCallback = [](const QString&, const QJsonObject&) {
@@ -496,7 +499,8 @@ void TestEventSystem::testCallbackExceptions()
     };
 
     std::vector<QString> eventTypes = {"exception_test_event"};
-    auto sub_result = m_bridge->subscribe_to_events("", eventTypes, throwingCallback);
+    auto sub_result =
+        m_bridge->subscribe_to_events("", eventTypes, throwingCallback);
     QVERIFY(sub_result.has_value());
 
     QJsonObject eventData;
@@ -510,8 +514,7 @@ void TestEventSystem::testCallbackExceptions()
     QThread::msleep(100);
 }
 
-void TestEventSystem::testEventEmissionErrors()
-{
+void TestEventSystem::testEventEmissionErrors() {
     QVERIFY(m_bridge->initialize().has_value());
 
     // Test emitting to non-existent event type (should still succeed)
@@ -519,11 +522,10 @@ void TestEventSystem::testEventEmissionErrors()
     eventData["test"] = "error handling";
 
     auto result = m_bridge->emit_event("non_existent_event", eventData);
-    QVERIFY(result.has_value()); // Should succeed even if no subscribers
+    QVERIFY(result.has_value());  // Should succeed even if no subscribers
 }
 
-void TestEventSystem::testHighFrequencyEvents()
-{
+void TestEventSystem::testHighFrequencyEvents() {
     QVERIFY(m_bridge->initialize().has_value());
 
     int eventsReceived = 0;
@@ -557,14 +559,15 @@ void TestEventSystem::testHighFrequencyEvents()
         QThread::msleep(10);
     }
 
-    qDebug() << "High frequency test:" << totalEvents << "events in" << elapsed << "ms";
+    qDebug() << "High frequency test:" << totalEvents << "events in" << elapsed
+             << "ms";
     qDebug() << "Events received:" << eventsReceived;
 
-    QVERIFY(eventsReceived >= totalEvents * 0.9); // Allow some loss under stress
+    QVERIFY(eventsReceived >=
+            totalEvents * 0.9);  // Allow some loss under stress
 }
 
-void TestEventSystem::testLargeEventData()
-{
+void TestEventSystem::testLargeEventData() {
     QVERIFY(m_bridge->initialize().has_value());
 
     bool largeDataReceived = false;
@@ -600,8 +603,7 @@ void TestEventSystem::testLargeEventData()
     QCOMPARE(receivedDataSize, dataSize);
 }
 
-void TestEventSystem::testConcurrentEventHandling()
-{
+void TestEventSystem::testConcurrentEventHandling() {
     QVERIFY(m_bridge->initialize().has_value());
 
     std::atomic<int> eventsReceived{0};
@@ -626,8 +628,9 @@ void TestEventSystem::testConcurrentEventHandling()
                 eventData["thread"] = t;
                 eventData["index"] = i;
 
-                auto result = m_bridge->emit_event("concurrent_event", eventData);
-                Q_UNUSED(result) // Don't assert in thread
+                auto result =
+                    m_bridge->emit_event("concurrent_event", eventData);
+                Q_UNUSED(result)  // Don't assert in thread
             }
         });
         futures.append(future);
@@ -647,13 +650,14 @@ void TestEventSystem::testConcurrentEventHandling()
         QThread::msleep(10);
     }
 
-    qDebug() << "Concurrent test: expected" << expectedEvents << "received" << eventsReceived.load();
+    qDebug() << "Concurrent test: expected" << expectedEvents << "received"
+             << eventsReceived.load();
 
-    QVERIFY(eventsReceived >= expectedEvents * 0.9); // Allow some loss under concurrent stress
+    QVERIFY(eventsReceived >=
+            expectedEvents * 0.9);  // Allow some loss under concurrent stress
 }
 
-void TestEventSystem::testPythonToCppEvents()
-{
+void TestEventSystem::testPythonToCppEvents() {
     QVERIFY(m_bridge->initialize().has_value());
 
     // This would test events originating from Python plugin
@@ -680,8 +684,7 @@ void TestEventSystem::testPythonToCppEvents()
     QVERIFY(eventReceived);
 }
 
-void TestEventSystem::testCppToPythonEvents()
-{
+void TestEventSystem::testCppToPythonEvents() {
     QVERIFY(m_bridge->initialize().has_value());
 
     // This would test events sent from C++ to Python
@@ -695,14 +698,14 @@ void TestEventSystem::testCppToPythonEvents()
     QVERIFY(emit_result.has_value());
 }
 
-void TestEventSystem::testBidirectionalEvents()
-{
+void TestEventSystem::testBidirectionalEvents() {
     QVERIFY(m_bridge->initialize().has_value());
 
     // Test bidirectional event communication
     bool responseReceived = false;
 
-    auto callback = [&](const QString& eventName, const QJsonObject& eventData) {
+    auto callback = [&](const QString& eventName,
+                        const QJsonObject& eventData) {
         Q_UNUSED(eventData)
         if (eventName == "response_event") {
             responseReceived = true;
@@ -731,6 +734,32 @@ void TestEventSystem::testBidirectionalEvents()
 
     QThread::msleep(100);
     QVERIFY(responseReceived);
+}
+
+bool TestEventSystem::isPythonAvailable() {
+    QProcess process;
+    QStringList python_names = {"python3",   "python",     "python3.8",
+                                "python3.9", "python3.10", "python3.11",
+                                "python3.12"};
+
+    for (const QString& name : python_names) {
+        process.start(name, QStringList() << "--version");
+
+        if (!process.waitForFinished(3000)) {
+            continue;
+        }
+
+        if (process.exitCode() != 0) {
+            continue;
+        }
+
+        QString output = process.readAllStandardOutput();
+        if (output.contains("Python", Qt::CaseInsensitive)) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 QTEST_MAIN(TestEventSystem)

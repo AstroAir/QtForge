@@ -9,17 +9,23 @@
 #include <QObject>
 #include <QString>
 #include <filesystem>
+#include <future>
 #include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
+#include "../managers/configuration_manager.hpp"
+#include "../managers/logging_manager.hpp"
 #include "../managers/plugin_version_manager.hpp"
+#include "../managers/resource_lifecycle.hpp"
+#include "../managers/resource_manager.hpp"
+#include "../managers/resource_monitor.hpp"
 
+#include "../interfaces/core/plugin_interface.hpp"
 #include "../utils/concepts.hpp"
 #include "../utils/error_handling.hpp"
 #include "plugin_dependency_resolver.hpp"
-#include "../interfaces/core/plugin_interface.hpp"
 #include "plugin_loader.hpp"
 // Forward-declare dependent components to reduce header coupling
 
@@ -33,15 +39,7 @@ class IPluginHotReloadManager;
 class IPluginMetricsCollector;
 class IMessageBus;
 
-class IConfigurationManager;
-class ILoggingManager;
-class IResourceManager;
-class IResourceLifecycleManager;
-class IResourceMonitor;
-class IPluginVersionManager;
-class IResourceLifecycleManager;
-class IResourceMonitor;
-class IPluginVersionManager;
+// Interfaces are now included above
 
 namespace detail {
 struct IPluginRegistryDeleter {
@@ -62,14 +60,15 @@ struct IResourceMonitorDeleter {
  * @brief Plugin loading options
  */
 struct PluginLoadOptions {
-    bool validate_sha256 = false;        ///< Validate plugin SHA256 checksum
-    std::string expected_sha256;          ///< Expected SHA256 hash (if validation enabled)
+    bool validate_sha256 = false;  ///< Validate plugin SHA256 checksum
+    std::string
+        expected_sha256;  ///< Expected SHA256 hash (if validation enabled)
     bool check_dependencies = true;      ///< Check plugin dependencies
     bool initialize_immediately = true;  ///< Initialize plugin after loading
-    bool enable_hot_reload = false;      ///< Enable hot reloading for this plugin
+    bool enable_hot_reload = false;  ///< Enable hot reloading for this plugin
     std::chrono::milliseconds timeout =
-        std::chrono::seconds{30};         ///< Loading timeout
-    QJsonObject configuration;           ///< Initial plugin configuration
+        std::chrono::seconds{30};  ///< Loading timeout
+    QJsonObject configuration;     ///< Initial plugin configuration
 };
 
 /**
@@ -235,11 +234,12 @@ public:
      */
     class PluginTransaction {
     public:
-        using Operation = std::function<qtplugin::expected<void, PluginError>()>;
+        using Operation =
+            std::function<qtplugin::expected<void, PluginError>()>;
         using Rollback = std::function<void()>;
 
         void add_load(const std::filesystem::path& path,
-                     const PluginLoadOptions& options = {});
+                      const PluginLoadOptions& options = {});
         void add_unload(std::string_view plugin_id, bool force = false);
         void add_reload(std::string_view plugin_id, bool preserve_state = true);
         void add_operation(Operation op, Rollback rollback);
@@ -249,7 +249,9 @@ public:
 
         bool is_committed() const { return m_committed; }
         bool is_rolled_back() const { return m_rolled_back; }
-        std::vector<std::string> loaded_plugins() const { return m_loaded_plugins; }
+        std::vector<std::string> loaded_plugins() const {
+            return m_loaded_plugins;
+        }
 
     private:
         friend class PluginManager;
@@ -287,7 +289,8 @@ public:
      * @return Map of plugin IDs to results
      */
     std::unordered_map<std::string, qtplugin::expected<void, PluginError>>
-    batch_unload(const std::vector<std::string>& plugin_ids, bool force = false);
+    batch_unload(const std::vector<std::string>& plugin_ids,
+                 bool force = false);
 
     // === Plugin Lifecycle Hooks ===
 
@@ -353,7 +356,7 @@ public:
      * @param auto_restart Whether to auto-restart unhealthy plugins
      */
     void enable_health_monitoring(std::chrono::milliseconds interval,
-                                 bool auto_restart = false);
+                                  bool auto_restart = false);
 
     /**
      * @brief Disable automatic health monitoring
@@ -369,8 +372,7 @@ public:
      * @return Success or error
      */
     qtplugin::expected<void, PluginError> update_plugin_config(
-        std::string_view plugin_id,
-        const QJsonObject& config);
+        std::string_view plugin_id, const QJsonObject& config);
 
     /**
      * @brief Batch update plugin configurations
@@ -714,7 +716,8 @@ public:
      * @param file_path Path to the file
      * @return SHA256 hash as hex string, empty if error
      */
-    std::string calculate_file_sha256(const std::filesystem::path& file_path) const;
+    std::string calculate_file_sha256(
+        const std::filesystem::path& file_path) const;
 
     /**
      * @brief Verify file SHA256 hash

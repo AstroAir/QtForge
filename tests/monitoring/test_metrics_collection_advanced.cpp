@@ -4,42 +4,41 @@
  * @version 3.2.0
  */
 
-#include <QtTest/QtTest>
 #include <QCoreApplication>
-#include <QSignalSpy>
-#include <QTimer>
 #include <QElapsedTimer>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QSignalSpy>
+#include <QTimer>
+#include <QtTest/QtTest>
 
-#include <qtplugin/monitoring/plugin_metrics_collector.hpp>
 #include <qtplugin/core/plugin_manager.hpp>
 #include <qtplugin/core/plugin_registry.hpp>
-#include <qtplugin/core/plugin_interface.hpp>
+#include <qtplugin/interfaces/core/plugin_interface.hpp>
+#include <qtplugin/monitoring/plugin_metrics_collector.hpp>
 
-#include <memory>
-#include <chrono>
 #include <atomic>
+#include <chrono>
+#include <memory>
 #include <thread>
 
 using namespace qtplugin;
 
 // Mock plugin for testing metrics collection
-class MockMetricsPlugin : public IPlugin
-{
+class MockMetricsPlugin : public IPlugin {
 public:
     MockMetricsPlugin() : m_command_count(0), m_error_count(0) {}
 
     std::string id() const override { return "mock_metrics_plugin"; }
     std::string name() const override { return "Mock Metrics Plugin"; }
     std::string version() const override { return "1.0.0"; }
-    std::string description() const override { return "Plugin for testing metrics collection"; }
+    std::string description() const override {
+        return "Plugin for testing metrics collection";
+    }
 
     PluginCapabilities capabilities() const override {
-        return static_cast<PluginCapabilities>(
-            PluginCapability::Monitoring |
-            PluginCapability::Configuration
-        );
+        return static_cast<PluginCapabilities>(PluginCapability::Monitoring |
+                                               PluginCapability::Configuration);
     }
 
     qtplugin::expected<void, PluginError> initialize() override {
@@ -54,7 +53,6 @@ public:
 
     qtplugin::expected<QJsonObject, PluginError> execute_command(
         std::string_view command, const QJsonObject& params = {}) override {
-
         m_command_count.fetch_add(1);
 
         if (command == "get_metrics") {
@@ -63,17 +61,15 @@ public:
             metrics["error_count"] = static_cast<int>(m_error_count.load());
             metrics["uptime_ms"] = static_cast<qint64>(
                 std::chrono::duration_cast<std::chrono::milliseconds>(
-                    std::chrono::steady_clock::now() - m_start_time
-                ).count()
-            );
-            metrics["memory_usage_kb"] = 1024; // Mock memory usage
-            metrics["cpu_usage_percent"] = 5.5; // Mock CPU usage
+                    std::chrono::steady_clock::now() - m_start_time)
+                    .count());
+            metrics["memory_usage_kb"] = 1024;   // Mock memory usage
+            metrics["cpu_usage_percent"] = 5.5;  // Mock CPU usage
             return metrics;
         } else if (command == "simulate_error") {
             m_error_count.fetch_add(1);
             return qtplugin::make_error<QJsonObject>(
-                PluginErrorCode::ExecutionFailed, "Simulated error"
-            );
+                PluginErrorCode::ExecutionFailed, "Simulated error");
         } else if (command == "heavy_operation") {
             // Simulate heavy operation
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -81,8 +77,7 @@ public:
         }
 
         return qtplugin::make_error<QJsonObject>(
-            PluginErrorCode::CommandNotFound, "Unknown command"
-        );
+            PluginErrorCode::CommandNotFound, "Unknown command");
     }
 
     // Test helper methods
@@ -94,11 +89,11 @@ private:
     std::atomic<int> m_command_count;
     std::atomic<int> m_error_count;
     bool m_initialized = false;
-    std::chrono::steady_clock::time_point m_start_time = std::chrono::steady_clock::now();
+    std::chrono::steady_clock::time_point m_start_time =
+        std::chrono::steady_clock::now();
 };
 
-class MetricsCollectionComprehensiveTest : public QObject
-{
+class MetricsCollectionComprehensiveTest : public QObject {
     Q_OBJECT
 
 private slots:
@@ -151,18 +146,15 @@ private:
     bool waitForMetricsUpdate(int timeout_ms = 5000);
 };
 
-void MetricsCollectionComprehensiveTest::initTestCase()
-{
+void MetricsCollectionComprehensiveTest::initTestCase() {
     qDebug() << "Starting comprehensive metrics collection tests";
 }
 
-void MetricsCollectionComprehensiveTest::cleanupTestCase()
-{
+void MetricsCollectionComprehensiveTest::cleanupTestCase() {
     qDebug() << "Comprehensive metrics collection tests completed";
 }
 
-void MetricsCollectionComprehensiveTest::init()
-{
+void MetricsCollectionComprehensiveTest::init() {
     // Create fresh instances for each test
     m_metrics_collector = std::make_unique<PluginMetricsCollector>();
     m_plugin_manager = std::make_unique<PluginManager>();
@@ -172,8 +164,7 @@ void MetricsCollectionComprehensiveTest::init()
     setupMockPlugin();
 }
 
-void MetricsCollectionComprehensiveTest::cleanup()
-{
+void MetricsCollectionComprehensiveTest::cleanup() {
     // Stop monitoring and clean up
     if (m_metrics_collector && m_metrics_collector->is_monitoring_active()) {
         m_metrics_collector->stop_monitoring();
@@ -185,8 +176,7 @@ void MetricsCollectionComprehensiveTest::cleanup()
     m_metrics_collector.reset();
 }
 
-void MetricsCollectionComprehensiveTest::testMetricsCollectorCreation()
-{
+void MetricsCollectionComprehensiveTest::testMetricsCollectorCreation() {
     // Test basic creation and initialization
     QVERIFY(m_metrics_collector != nullptr);
 
@@ -200,10 +190,10 @@ void MetricsCollectionComprehensiveTest::testMetricsCollectorCreation()
     QCOMPARE(metrics["monitoring_active"].toBool(), false);
 }
 
-void MetricsCollectionComprehensiveTest::testStartStopMonitoring()
-{
+void MetricsCollectionComprehensiveTest::testStartStopMonitoring() {
     // Test starting monitoring
-    auto start_result = m_metrics_collector->start_monitoring(std::chrono::milliseconds(1000));
+    auto start_result =
+        m_metrics_collector->start_monitoring(std::chrono::milliseconds(1000));
     QVERIFY(start_result.has_value());
     QVERIFY(m_metrics_collector->is_monitoring_active());
 
@@ -213,19 +203,19 @@ void MetricsCollectionComprehensiveTest::testStartStopMonitoring()
     QVERIFY(!m_metrics_collector->is_monitoring_active());
 }
 
-void MetricsCollectionComprehensiveTest::testPluginMetricsUpdate()
-{
+void MetricsCollectionComprehensiveTest::testPluginMetricsUpdate() {
     // Start monitoring
-    auto start_result = m_metrics_collector->start_monitoring(std::chrono::milliseconds(500));
+    auto start_result =
+        m_metrics_collector->start_monitoring(std::chrono::milliseconds(500));
     QVERIFY(start_result.has_value());
 
     // Set up signal spy for metrics updates
-    QSignalSpy spy(m_metrics_collector.get(), &PluginMetricsCollector::plugin_metrics_updated);
+    QSignalSpy spy(m_metrics_collector.get(),
+                   &PluginMetricsCollector::plugin_metrics_updated);
 
     // Update metrics for mock plugin
     auto update_result = m_metrics_collector->update_plugin_metrics(
-        m_mock_plugin->id(), m_plugin_registry.get()
-    );
+        m_mock_plugin->id(), m_plugin_registry.get());
     QVERIFY(update_result.has_value());
 
     // Verify signal was emitted
@@ -234,11 +224,11 @@ void MetricsCollectionComprehensiveTest::testPluginMetricsUpdate()
 
     // Verify signal parameters
     QList<QVariant> arguments = spy.takeFirst();
-    QCOMPARE(arguments.at(0).toString(), QString::fromStdString(m_mock_plugin->id()));
+    QCOMPARE(arguments.at(0).toString(),
+             QString::fromStdString(m_mock_plugin->id()));
 }
 
-void MetricsCollectionComprehensiveTest::testPluginSpecificMetrics()
-{
+void MetricsCollectionComprehensiveTest::testPluginSpecificMetrics() {
     // Execute some commands on the mock plugin to generate metrics
     auto result1 = m_mock_plugin->execute_command("get_metrics");
     QVERIFY(result1.has_value());
@@ -259,13 +249,14 @@ void MetricsCollectionComprehensiveTest::testPluginSpecificMetrics()
     // Verify command count increased
     QVERIFY(metrics["command_count"].toInt() >= 2);
 
-    qDebug() << "Plugin metrics:" << QJsonDocument(metrics).toJson(QJsonDocument::Compact);
+    qDebug() << "Plugin metrics:"
+             << QJsonDocument(metrics).toJson(QJsonDocument::Compact);
 }
 
-void MetricsCollectionComprehensiveTest::testMetricsCollectionPerformance()
-{
+void MetricsCollectionComprehensiveTest::testMetricsCollectionPerformance() {
     // Start high-frequency monitoring
-    auto start_result = m_metrics_collector->start_monitoring(std::chrono::milliseconds(100));
+    auto start_result =
+        m_metrics_collector->start_monitoring(std::chrono::milliseconds(100));
     QVERIFY(start_result.has_value());
 
     // Measure performance of metrics collection
@@ -273,7 +264,8 @@ void MetricsCollectionComprehensiveTest::testMetricsCollectionPerformance()
     timer.start();
 
     const int collection_cycles = 10;
-    QSignalSpy spy(m_metrics_collector.get(), &PluginMetricsCollector::system_metrics_updated);
+    QSignalSpy spy(m_metrics_collector.get(),
+                   &PluginMetricsCollector::system_metrics_updated);
 
     // Wait for multiple collection cycles
     while (spy.count() < collection_cycles && timer.elapsed() < 5000) {
@@ -284,20 +276,21 @@ void MetricsCollectionComprehensiveTest::testMetricsCollectionPerformance()
     qint64 elapsed = timer.elapsed();
 
     // Performance expectations
-    QVERIFY(elapsed < 3000); // Should complete within 3 seconds
+    QVERIFY(elapsed < 3000);  // Should complete within 3 seconds
     QVERIFY(spy.count() >= collection_cycles);
 
     double avg_cycle_time = static_cast<double>(elapsed) / spy.count();
-    QVERIFY(avg_cycle_time < 200); // Each cycle should be under 200ms
+    QVERIFY(avg_cycle_time < 200);  // Each cycle should be under 200ms
 
-    qDebug() << "Metrics collection performance:" << elapsed << "ms for" << spy.count() << "cycles";
+    qDebug() << "Metrics collection performance:" << elapsed << "ms for"
+             << spy.count() << "cycles";
     qDebug() << "Average cycle time:" << avg_cycle_time << "ms";
 }
 
-void MetricsCollectionComprehensiveTest::testSystemMetricsCollection()
-{
+void MetricsCollectionComprehensiveTest::testSystemMetricsCollection() {
     // Start monitoring
-    auto start_result = m_metrics_collector->start_monitoring(std::chrono::milliseconds(500));
+    auto start_result =
+        m_metrics_collector->start_monitoring(std::chrono::milliseconds(500));
     QVERIFY(start_result.has_value());
 
     // Get system metrics
@@ -310,11 +303,11 @@ void MetricsCollectionComprehensiveTest::testSystemMetricsCollection()
     QCOMPARE(system_metrics["monitoring_active"].toBool(), true);
     QCOMPARE(system_metrics["monitoring_interval_ms"].toInt(), 500);
 
-    qDebug() << "System metrics:" << QJsonDocument(system_metrics).toJson(QJsonDocument::Compact);
+    qDebug() << "System metrics:"
+             << QJsonDocument(system_metrics).toJson(QJsonDocument::Compact);
 }
 
-void MetricsCollectionComprehensiveTest::testMetricsErrorHandling()
-{
+void MetricsCollectionComprehensiveTest::testMetricsErrorHandling() {
     // Test metrics collection with plugin that generates errors
     auto error_result = m_mock_plugin->execute_command("simulate_error");
     QVERIFY(!error_result.has_value());
@@ -324,20 +317,20 @@ void MetricsCollectionComprehensiveTest::testMetricsErrorHandling()
     QCOMPARE(m_mock_plugin->getErrorCount(), 1);
 
     // Test metrics collection continues despite errors
-    auto start_result = m_metrics_collector->start_monitoring(std::chrono::milliseconds(500));
+    auto start_result =
+        m_metrics_collector->start_monitoring(std::chrono::milliseconds(500));
     QVERIFY(start_result.has_value());
 
     // Update metrics should still work
     auto update_result = m_metrics_collector->update_plugin_metrics(
-        m_mock_plugin->id(), m_plugin_registry.get()
-    );
+        m_mock_plugin->id(), m_plugin_registry.get());
     QVERIFY(update_result.has_value());
 }
 
-void MetricsCollectionComprehensiveTest::testConcurrentMetricsAccess()
-{
+void MetricsCollectionComprehensiveTest::testConcurrentMetricsAccess() {
     // Start monitoring
-    auto start_result = m_metrics_collector->start_monitoring(std::chrono::milliseconds(200));
+    auto start_result =
+        m_metrics_collector->start_monitoring(std::chrono::milliseconds(200));
     QVERIFY(start_result.has_value());
 
     // Simulate concurrent access to metrics
@@ -379,15 +372,15 @@ void MetricsCollectionComprehensiveTest::testConcurrentMetricsAccess()
     QVERIFY(successful_reads.load() > 0);
 
     // Most reads should succeed (allow some failures due to timing)
-    double success_rate = static_cast<double>(successful_reads.load()) / total_reads;
-    QVERIFY(success_rate > 0.8); // At least 80% success rate
+    double success_rate =
+        static_cast<double>(successful_reads.load()) / total_reads;
+    QVERIFY(success_rate > 0.8);  // At least 80% success rate
 
-    qDebug() << "Concurrent metrics access:" << successful_reads.load() << "successful,"
-             << failed_reads.load() << "failed";
+    qDebug() << "Concurrent metrics access:" << successful_reads.load()
+             << "successful," << failed_reads.load() << "failed";
 }
 
-void MetricsCollectionComprehensiveTest::setupMockPlugin()
-{
+void MetricsCollectionComprehensiveTest::setupMockPlugin() {
     // Initialize the mock plugin
     auto init_result = m_mock_plugin->initialize();
     QVERIFY(init_result.has_value());
@@ -397,9 +390,9 @@ void MetricsCollectionComprehensiveTest::setupMockPlugin()
     // Note: This would require registry implementation details
 }
 
-bool MetricsCollectionComprehensiveTest::waitForMetricsUpdate(int timeout_ms)
-{
-    QSignalSpy spy(m_metrics_collector.get(), &PluginMetricsCollector::system_metrics_updated);
+bool MetricsCollectionComprehensiveTest::waitForMetricsUpdate(int timeout_ms) {
+    QSignalSpy spy(m_metrics_collector.get(),
+                   &PluginMetricsCollector::system_metrics_updated);
     return spy.wait(timeout_ms);
 }
 

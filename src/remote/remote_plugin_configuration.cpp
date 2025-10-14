@@ -217,31 +217,20 @@ RemotePluginConfiguration::RemotePluginConfiguration() {
 }
 
 RemotePluginConfiguration::RemotePluginConfiguration(const QJsonObject& json) {
-    *this = from_json(json);
-}
+    // Parse JSON directly into this instance
+    m_version = json["version"].toString();
+    m_remote_plugins_enabled = json["remote_plugins_enabled"].toBool();
+    m_security_policy = SecurityPolicyConfiguration::from_json(
+        json["security_policy"].toObject());
+    m_cache_config =
+        CacheConfiguration::from_json(json["cache_config"].toObject());
+    m_network_config =
+        NetworkConfiguration::from_json(json["network_config"].toObject());
+    m_update_config =
+        UpdateConfiguration::from_json(json["update_config"].toObject());
 
-RemotePluginConfiguration::RemotePluginConfiguration(
-    const RemotePluginConfiguration& other)
-    : m_remote_plugins_enabled(other.m_remote_plugins_enabled),
-      m_version(other.m_version),
-      m_security_policy(other.m_security_policy),
-      m_cache_config(other.m_cache_config),
-      m_network_config(other.m_network_config),
-      m_update_config(other.m_update_config),
-      m_source_manager(other.m_source_manager) {}
-
-RemotePluginConfiguration& RemotePluginConfiguration::operator=(
-    const RemotePluginConfiguration& other) {
-    if (this != &other) {
-        m_remote_plugins_enabled = other.m_remote_plugins_enabled;
-        m_version = other.m_version;
-        m_security_policy = other.m_security_policy;
-        m_cache_config = other.m_cache_config;
-        m_network_config = other.m_network_config;
-        m_update_config = other.m_update_config;
-        m_source_manager = other.m_source_manager;
-    }
-    return *this;
+    // Load sources
+    m_source_manager.load_from_config(json["sources"].toObject());
 }
 
 RemotePluginConfiguration::~RemotePluginConfiguration() = default;
@@ -336,22 +325,22 @@ QJsonObject RemotePluginConfiguration::to_json() const {
     return json;
 }
 
-RemotePluginConfiguration RemotePluginConfiguration::from_json(
+std::shared_ptr<RemotePluginConfiguration> RemotePluginConfiguration::from_json(
     const QJsonObject& json) {
-    RemotePluginConfiguration config;
-    config.m_version = json["version"].toString();
-    config.m_remote_plugins_enabled = json["remote_plugins_enabled"].toBool();
-    config.m_security_policy = SecurityPolicyConfiguration::from_json(
+    auto config = std::make_shared<RemotePluginConfiguration>();
+    config->m_version = json["version"].toString();
+    config->m_remote_plugins_enabled = json["remote_plugins_enabled"].toBool();
+    config->m_security_policy = SecurityPolicyConfiguration::from_json(
         json["security_policy"].toObject());
-    config.m_cache_config =
+    config->m_cache_config =
         CacheConfiguration::from_json(json["cache_config"].toObject());
-    config.m_network_config =
+    config->m_network_config =
         NetworkConfiguration::from_json(json["network_config"].toObject());
-    config.m_update_config =
+    config->m_update_config =
         UpdateConfiguration::from_json(json["update_config"].toObject());
 
     // Load sources
-    config.m_source_manager.load_from_config(json["sources"].toObject());
+    config->m_source_manager.load_from_config(json["sources"].toObject());
 
     return config;
 }
@@ -422,38 +411,42 @@ void RemotePluginConfiguration::apply_security_level(
     }
 }
 
-RemotePluginConfiguration RemotePluginConfiguration::create_default() {
-    RemotePluginConfiguration config;
-    config.initialize_defaults();
+std::shared_ptr<RemotePluginConfiguration>
+RemotePluginConfiguration::create_default() {
+    auto config = std::make_shared<RemotePluginConfiguration>();
+    config->initialize_defaults();
     return config;
 }
 
-RemotePluginConfiguration RemotePluginConfiguration::create_secure() {
-    RemotePluginConfiguration config;
-    config.initialize_defaults();
-    config.apply_security_level(RemoteSecurityLevel::Paranoid);
+std::shared_ptr<RemotePluginConfiguration>
+RemotePluginConfiguration::create_secure() {
+    auto config = std::make_shared<RemotePluginConfiguration>();
+    config->initialize_defaults();
+    config->apply_security_level(RemoteSecurityLevel::Paranoid);
     return config;
 }
 
-RemotePluginConfiguration RemotePluginConfiguration::create_permissive() {
-    RemotePluginConfiguration config;
-    config.initialize_defaults();
-    config.apply_security_level(RemoteSecurityLevel::Minimal);
+std::shared_ptr<RemotePluginConfiguration>
+RemotePluginConfiguration::create_permissive() {
+    auto config = std::make_shared<RemotePluginConfiguration>();
+    config->initialize_defaults();
+    config->apply_security_level(RemoteSecurityLevel::Minimal);
     return config;
 }
 
-RemotePluginConfiguration RemotePluginConfiguration::create_enterprise() {
-    RemotePluginConfiguration config;
-    config.initialize_defaults();
-    config.apply_security_level(RemoteSecurityLevel::High);
+std::shared_ptr<RemotePluginConfiguration>
+RemotePluginConfiguration::create_enterprise() {
+    auto config = std::make_shared<RemotePluginConfiguration>();
+    config->initialize_defaults();
+    config->apply_security_level(RemoteSecurityLevel::High);
 
     // Enterprise-specific settings
-    config.m_security_policy.require_signature_verification = true;
-    config.m_security_policy.enable_certificate_pinning = true;
-    config.m_security_policy.require_https = true;
-    config.m_update_config.policy = AutoUpdatePolicy::CheckOnly;
-    config.m_update_config.backup_before_update = true;
-    config.m_update_config.rollback_on_failure = true;
+    config->m_security_policy.require_signature_verification = true;
+    config->m_security_policy.enable_certificate_pinning = true;
+    config->m_security_policy.require_https = true;
+    config->m_update_config.policy = AutoUpdatePolicy::CheckOnly;
+    config->m_update_config.backup_before_update = true;
+    config->m_update_config.rollback_on_failure = true;
 
     return config;
 }
@@ -466,8 +459,8 @@ RemotePluginConfigurationManager& RemotePluginConfigurationManager::instance() {
 }
 
 void RemotePluginConfigurationManager::set_configuration(
-    const RemotePluginConfiguration& config) {
-    m_configuration = config;
+    std::shared_ptr<RemotePluginConfiguration> config) {
+    m_configuration = std::move(config);
 }
 
 std::filesystem::path RemotePluginConfigurationManager::default_config_path()
